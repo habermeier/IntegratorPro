@@ -4,6 +4,7 @@ import { ZoomIn, ZoomOut, Move, Eye, Save, Layers, Upload, Zap, Lightbulb, Image
 import STRUCTURAL_IMAGE from '../images/floor-plan-clean.jpg';
 import ELECTRICAL_IMAGE from '../images/electric-plan-plain-full-clean-2025-11-22.jpg';
 import PRELOADED_LAYOUT from '../layout.json';
+import { MapSymbols } from './MapSymbols';
 
 interface FloorPlanMapProps {
     modules: HardwareModule[];
@@ -12,11 +13,11 @@ interface FloorPlanMapProps {
 
 // Marker Types for "Toolbox"
 const TOOLBOX_ITEMS = [
-    { type: 'LIGHT', icon: Lightbulb, label: 'Light', color: '#f59e0b' },
-    { type: 'SWITCH', icon: ToggleLeft, label: 'Switch', color: '#64748b' },
-    { type: 'FAN', icon: Fan, label: 'Fan', color: '#0ea5e9' },
-    { type: 'SENSOR', icon: Activity, label: 'Sensor', color: '#10b981' },
-    { type: 'EXTERIOR', icon: Shield, label: 'Exterior', color: '#ef4444' },
+    { type: 'LIGHT', component: MapSymbols.LIGHT, label: 'Light', color: '#f59e0b' },
+    { type: 'SWITCH', component: MapSymbols.SWITCH, label: 'Switch', color: '#64748b' },
+    { type: 'FAN', component: MapSymbols.FAN, label: 'Fan', color: '#0ea5e9' },
+    { type: 'SENSOR', component: MapSymbols.SENSOR, label: 'Sensor', color: '#10b981' },
+    { type: 'EXTERIOR', component: MapSymbols.EXTERIOR, label: 'Exterior', color: '#ef4444' },
 ];
 
 // Zone Definitions (4 Quadrants)
@@ -272,7 +273,7 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules }) => {
                                     onDragStart={(e) => e.dataTransfer.setData("type", item.type)}
                                     className="bg-slate-800 p-2 rounded border border-slate-700 hover:border-blue-500 hover:bg-slate-700 cursor-grab active:cursor-grabbing flex flex-col items-center gap-1 transition-all"
                                 >
-                                    <item.icon size={20} style={{ color: item.color }} />
+                                    <item.component size={28} color={item.color} />
                                     <span className="text-[10px] text-slate-300">{item.label}</span>
                                 </div>
                             ))}
@@ -405,22 +406,19 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules }) => {
                         {/* Markers */}
                         {markers.map(m => {
                             const def = TOOLBOX_ITEMS.find(t => t.type === m.type) || TOOLBOX_ITEMS[0];
-                            const Icon = def.icon;
+                            const SymbolComponent = def.component;
                             let size = 24 * markerScale; // Base size 24px
 
                             return (
                                 <div
                                     key={m.id}
-                                    className="absolute transform -translate-x-1/2 -translate-y-1/2 interactive-element cursor-grab active:cursor-grabbing group"
+                                    className="absolute transform -translate-x-1/2 -translate-y-1/2 interactive-element cursor-grab active:cursor-grabbing group z-50 hover:z-[60]"
                                     style={{ left: `${m.x}%`, top: `${m.y}%` }}
                                     onMouseDown={(e) => e.stopPropagation()}
                                     onContextMenu={(e) => { e.preventDefault(); removeMarker(m.id, e); }}
                                 >
-                                    <div
-                                        className="rounded-full shadow-lg border-2 border-white transition-transform hover:scale-110 flex items-center justify-center"
-                                        style={{ backgroundColor: def.color, width: `${size}px`, height: `${size}px` }}
-                                    >
-                                        <Icon size={size * 0.6} className="text-white" />
+                                    <div className="transition-transform hover:scale-110 drop-shadow-md filter">
+                                        <SymbolComponent size={size} color={def.color} />
                                     </div>
 
                                     {/* Tooltip */}
