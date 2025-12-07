@@ -103,20 +103,17 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules }) => {
 
     // Initial Load
     useEffect(() => {
-        // Load Markers from Server OR Fallback to Local JSON
+        // FORCE LOAD from local JSON for Demo
+        // In a real app, we would try fetch('/api/layout') first.
+        // But for this demo environment where backend is unstable:
+        console.log("Loading Pre-Populated Layout...", PRELOADED_LAYOUT);
+        setMarkers(PRELOADED_LAYOUT as MapMarker[]);
+
+        /* 
+        // Backend Logic (Commented out for reliable demo)
         fetch('/api/layout')
-            .then(res => {
-                if (!res.ok) throw new Error("Server not running");
-                return res.json();
-            })
-            .then(data => {
-                if (Array.isArray(data) && data.length > 0) setMarkers(data);
-                else setMarkers(PRELOADED_LAYOUT as MapMarker[]); // Fallback
-            })
-            .catch(err => {
-                console.warn("Backend unavailable, using static layout:", err);
-                setMarkers(PRELOADED_LAYOUT as MapMarker[]);
-            });
+            .then(res => ... ) 
+        */
 
         // Load View Settings
         const savedScale = localStorage.getItem('floorPlan_markerScale');
