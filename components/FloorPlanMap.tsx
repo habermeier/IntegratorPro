@@ -3,6 +3,7 @@ import { HardwareModule, ModuleType } from '../types';
 import { ZoomIn, ZoomOut, Move, Eye, Save, Layers, Upload, Zap, Lightbulb, ImageOff, Trash2, MousePointer2, Fan, Shield, ToggleLeft, Activity, Info } from 'lucide-react';
 import STRUCTURAL_IMAGE from '../images/floor-plan-clean.jpg';
 import ELECTRICAL_IMAGE from '../images/electric-plan-plain-full-clean-2025-11-22.jpg';
+import PRELOADED_LAYOUT from '../layout.json';
 
 interface FloorPlanMapProps {
     modules: HardwareModule[];
@@ -97,14 +98,25 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules }) => {
     }, []);
 
     // Initial Load
+
+    // ... (existing imports)
+
+    // Initial Load
     useEffect(() => {
-        // Load Markers from Server
+        // Load Markers from Server OR Fallback to Local JSON
         fetch('/api/layout')
-            .then(res => res.json())
-            .then(data => {
-                if (Array.isArray(data)) setMarkers(data);
+            .then(res => {
+                if (!res.ok) throw new Error("Server not running");
+                return res.json();
             })
-            .catch(err => console.error("Failed to load layout:", err));
+            .then(data => {
+                if (Array.isArray(data) && data.length > 0) setMarkers(data);
+                else setMarkers(PRELOADED_LAYOUT as MapMarker[]); // Fallback
+            })
+            .catch(err => {
+                console.warn("Backend unavailable, using static layout:", err);
+                setMarkers(PRELOADED_LAYOUT as MapMarker[]);
+            });
 
         // Load View Settings
         const savedScale = localStorage.getItem('floorPlan_markerScale');
