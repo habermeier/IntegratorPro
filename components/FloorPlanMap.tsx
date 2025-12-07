@@ -379,19 +379,20 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules }) => {
                 >
                     <div ref={mapRef} className="relative inline-block shadow-2xl bg-slate-900 border border-slate-800" style={{ minWidth: '800px', minHeight: '600px' }}>
 
-                        {/* Background Image */}
+                        {/* Background Image - Explicit Z-Index 1 */}
                         <img
                             src={activeLayer === 'STRUCTURAL' ? structuralMap! : electricalMap!}
-                            className="pointer-events-none select-none block max-w-none"
+                            className="pointer-events-none select-none block max-w-none relative"
+                            style={{ zIndex: 1 }}
                             draggable={false}
                             alt="Map"
                         />
 
-                        {/* Zone Overlays */}
+                        {/* Zone Overlays - Z-Index 10 */}
                         {showZones && ZONES.map(z => (
                             <div
                                 key={z.id}
-                                className="absolute flex items-center justify-center border-2 pointer-events-none"
+                                className="absolute flex items-center justify-center border-2 pointer-events-none z-10"
                                 style={{
                                     left: `${z.x}%`, top: `${z.y}%`, width: `${z.w}%`, height: `${z.h}%`,
                                     backgroundColor: z.color, borderColor: z.border
@@ -403,7 +404,7 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules }) => {
                             </div>
                         ))}
 
-                        {/* Markers */}
+                        {/* Markers - Z-Index 100 (Top) */}
                         {markers.map(m => {
                             const def = TOOLBOX_ITEMS.find(t => t.type === m.type) || TOOLBOX_ITEMS[0];
                             const SymbolComponent = def.component;
@@ -412,8 +413,8 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules }) => {
                             return (
                                 <div
                                     key={m.id}
-                                    className="absolute transform -translate-x-1/2 -translate-y-1/2 interactive-element cursor-grab active:cursor-grabbing group z-50 hover:z-[60]"
-                                    style={{ left: `${m.x}%`, top: `${m.y}%` }}
+                                    className="absolute transform -translate-x-1/2 -translate-y-1/2 interactive-element cursor-grab active:cursor-grabbing group"
+                                    style={{ left: `${m.x}%`, top: `${m.y}%`, zIndex: 100 }}
                                     onMouseDown={(e) => e.stopPropagation()}
                                     onContextMenu={(e) => { e.preventDefault(); removeMarker(m.id, e); }}
                                 >
@@ -422,7 +423,7 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules }) => {
                                     </div>
 
                                     {/* Tooltip */}
-                                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-black/80 text-white text-[9px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none z-50">
+                                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-black/80 text-white text-[9px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none" style={{ zIndex: 101 }}>
                                         {m.notes ? <span className="text-yellow-400 font-bold mr-1">⚠ {m.notes}</span> : null}
                                         {def.label}
                                     </div>
