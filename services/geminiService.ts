@@ -1,8 +1,19 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { HardwareModule, Connection } from "../types";
 
-// Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Lazy Initialize Gemini Client
+let ai: GoogleGenAI | null = null;
+
+const getAiClient = () => {
+  if (!ai) {
+    const apiKey = process.env.API_KEY || '';
+    if (!apiKey) {
+      console.warn("Gemini API Key is missing. AI features will be disabled.");
+    }
+    ai = new GoogleGenAI({ apiKey });
+  }
+  return ai;
+};
 
 export const analyzeProject = async (modules: HardwareModule[], connections: Connection[]) => {
   const prompt = `
@@ -85,10 +96,76 @@ export const generateModulesFromText = async (text: string): Promise<Partial<Har
         }
       }
     });
-    
+
     return JSON.parse(response.text) as Partial<HardwareModule>[];
   } catch (error) {
     console.error("Gemini Extraction Error:", error);
+    return [];
+  }
+};
+
+export const extractMapSymbols = async (base64Image: string): Promise<any[]> => {
+  const aiClient = getAiClient();
+  if (!aiClient) return [];
+
+  const prompt = `
+    Analyze this architectural electrical floor plan.
+    Identify the locations of the following devices:
+    1.  **Recessed/Canned Lights**: Typically circles. Type: "LIGHT".
+    2.  **Switches**: The symbol '$' or '$LV' or just '$'. Type: "SWITCH".
+    3.  **Fans**: Fan blade symbol. Type: "FAN".
+    4.  **Sensors**: Triangles or motion cones. Type: "SENSOR".
+    5.  **Exterior Sensors**: Sensors outside the walls. Type: "EXTERIOR".
+
+    Return a JSON array of objects. Each object must have:
+    -   type: One of ["LIGHT", "SWITCH", "FAN", "SENSOR", "EXTERIOR"]
+    -   x: The X coordinate as a percentage (0-100) from the left.
+    -   y: The Y coordinate as a percentage (0-100) from the top.
+    
+    Example:
+    [
+        {"type": "LIGHT", "x": 10.5, "y": 20.0},
+        {"type": "SWITCH", "x": 95.0, "y": 50.2}
+    ]
+    
+    Be precise with the coordinates. Detect ALL symbols visible.
+  `;
+
+  try {
+    // Clean base64 header if present
+    const cleanBase64 = base64Image.replace(/^data:image\/\w+;base64,/, "");
+
+    const response = await aiClient.models.generateContent({
+      model: 'gemini-2.0-flash-exp',
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            { text: prompt },
+            { inlineData: { mimeType: 'image/jpeg', data: cleanBase64 } }
+          ]
+        }
+      ],
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              type: { type: Type.STRING, enum: ['LIGHT', 'SWITCH', 'FAN', 'SENSOR', 'EXTERIOR'] },
+              x: { type: Type.NUMBER },
+              y: { type: Type.NUMBER },
+            },
+            required: ['type', 'x', 'y']
+          }
+        }
+      }
+    });
+
+    return JSON.parse(response.text) as any[];
+  } catch (error) {
+    console.error("Gemini Vision Error:", error);
     return [];
   }
 };
