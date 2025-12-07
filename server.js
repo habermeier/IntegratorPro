@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3005;
+const PORT = 3001;
 const DATA_FILE = path.join(__dirname, 'layout.json');
 
 app.use(cors());
@@ -41,6 +41,22 @@ app.post('/api/layout', (req, res) => {
     } catch (err) {
         console.error('Error writing layout.json:', err);
         res.status(500).json({ error: 'Failed to save layout data' });
+    }
+});
+
+// POST debug log
+const LOG_FILE = path.join(__dirname, 'client_debug.log');
+app.post('/api/debug-log', (req, res) => {
+    try {
+        const { event, details } = req.body;
+        const timestamp = new Date().toISOString();
+        const logEntry = `[${timestamp}] ${event}: ${JSON.stringify(details)}\n`;
+        fs.appendFileSync(LOG_FILE, logEntry);
+        res.json({ success: true });
+    } catch (err) {
+        // Fail silently on log error to not break client
+        console.error('Error writing to debug log:', err);
+        res.json({ success: false });
     }
 });
 
