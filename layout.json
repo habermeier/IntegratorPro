@@ -1,1 +1,66 @@
-[]
+[
+    {
+        "id": "demo-sw-1",
+        "type": "SWITCH",
+        "x": 48.5,
+        "y": 92.0,
+        "notes": "Main Entry"
+    },
+    {
+        "id": "demo-sw-2",
+        "type": "SWITCH",
+        "x": 75.0,
+        "y": 68.0,
+        "notes": "Master Bed Entry"
+    },
+    {
+        "id": "demo-lt-1",
+        "type": "LIGHT",
+        "x": 20.0,
+        "y": 20.0,
+        "notes": "Office"
+    },
+    {
+        "id": "demo-lt-2",
+        "type": "LIGHT",
+        "x": 25.0,
+        "y": 20.0
+    },
+    {
+        "id": "demo-lt-3",
+        "type": "LIGHT",
+        "x": 75.0,
+        "y": 75.0
+    },
+    {
+        "id": "demo-lt-4",
+        "type": "LIGHT",
+        "x": 80.0,
+        "y": 75.0
+    },
+    {
+        "id": "demo-fn-1",
+        "type": "FAN",
+        "x": 77.5,
+        "y": 77.5
+    },
+    {
+        "id": "demo-sw-3",
+        "type": "SWITCH",
+        "x": 45.0,
+        "y": 45.0,
+        "notes": "Kitchen"
+    },
+    {
+        "id": "demo-lt-5",
+        "type": "LIGHT",
+        "x": 45.0,
+        "y": 40.0
+    },
+    {
+        "id": "demo-lt-6",
+        "type": "LIGHT",
+        "x": 50.0,
+        "y": 40.0
+    }
+]
