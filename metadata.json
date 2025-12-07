@@ -1,0 +1,5 @@
+{
+  "name": "IntegratorPro",
+  "description": "Professional planning tool for KNX, DALI, and Home Automation integrations. Visualizes DIN layouts, calculates costs, and uses AI to validate wiring plans.",
+  "requestFramePermissions": []
+}
