@@ -56,9 +56,9 @@ const LOG_FILE = path.join(__dirname, 'client_debug.log');
 app.post('/api/debug-log', (req, res) => {
     try {
         const { event, details } = req.body;
-        // const timestamp = new Date().toISOString();
-        // const logEntry = `[${timestamp}] ${event}: ${JSON.stringify(details)}\n`;
-        // fs.appendFileSync(LOG_FILE, logEntry); 
+        const timestamp = new Date().toISOString();
+        const logEntry = `[${timestamp}] ${event}: ${JSON.stringify(details)}\n`;
+        fs.appendFileSync(LOG_FILE, logEntry);
         // Disabled for production to avoid disk fill
         res.json({ success: true });
     } catch (err) {

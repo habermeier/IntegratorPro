@@ -1,7 +1,6 @@
-# Task: Implement Mobile Blocker
-
-- [x] Create `components/MobileBlocker.tsx` <!-- id: 1 -->
-    - [x] Design a simple, dark-themed overlay <!-- id: 2 -->
-    - [x] Add professional copy text <!-- id: 3 -->
-- [x] Integrate into `App.tsx` <!-- id: 4 -->
-    - [x] Use Tailwind classes (`block md:hidden`) to show conditional overlay <!-- id: 5 -->
+- [x] Analyze `types.ts` and `layout.json` structure <!-- id: 0 -->
+- [x] Create `implementation_plan.md` <!-- id: 1 -->
+- [x] Modify `WallDetector` to be controlled by parent and return data <!-- id: 2 -->
+- [x] Modify `FloorPlanMap` to handle wall data (save/delete/display) <!-- id: 3 -->
+- [x] Refactor `FloorPlanMap` UI controls and add Debug Monitor Toggle <!-- id: 5 -->
+- [ ] Verify functionality (Blocked by OpenCV Library Crash) <!-- id: 4 -->

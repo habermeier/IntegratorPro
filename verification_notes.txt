@@ -1,0 +1,1 @@
+Verified fix by memoizing WallDetector and disabling logs.
