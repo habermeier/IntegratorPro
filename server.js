@@ -68,7 +68,7 @@ app.post('/api/debug-log', (req, res) => {
 });
 
 // All other GET requests not handled before will return our React app
-app.get('*', (req, res) => {
+app.get(/.*/, (req, res) => {
     if (fs.existsSync(path.join(distPath, 'index.html'))) {
         res.sendFile(path.join(distPath, 'index.html'));
     } else {
