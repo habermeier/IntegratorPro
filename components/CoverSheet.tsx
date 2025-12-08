@@ -11,7 +11,7 @@ interface CoverSheetProps {
 const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate }) => {
     return (
         <div className="h-full overflow-y-auto p-8 bg-slate-950 text-slate-300 font-sans max-w-5xl mx-auto">
-            <h1 className="text-4xl font-bold text-white mb-2">Project Brief: Automated Building Systems (ABS)</h1>
+            <h1 className="text-4xl font-bold text-white mb-2">Project Brief</h1>
             <div className="flex gap-4 text-sm mb-8 text-slate-400">
                 <span><strong>Location:</strong> 270 Bolla Ave, Alamo, CA</span>
                 <span>•</span>
@@ -28,7 +28,7 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate }) => {
                 <div className="space-y-4">
                     <div className="bg-slate-900 p-4 rounded-lg border border-slate-800">
                         <h3 className="font-bold text-slate-200 mb-1">Regulatory Compliance</h3>
-                        <p className="text-sm">Strict adherence to <strong>California Building Standards Code (Title 24, Part 6)</strong> (lighting controls, occupancy sensing, energy efficiency).</p>
+                        <p className="text-sm">Adherence to <strong>California Building Standards Code (Title 24, Part 6)</strong> (lighting controls, occupancy sensing, energy efficiency).</p>
                     </div>
                     <div className="bg-slate-900 p-4 rounded-lg border border-slate-800">
                         <h3 className="font-bold text-slate-200 mb-1">Inspection Readiness</h3>
@@ -97,14 +97,17 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate }) => {
                 <h2 className="text-2xl font-bold text-purple-400 mb-4 border-b border-purple-900/30 pb-2">4. Collaboration Model</h2>
                 <div className="bg-slate-900/50 p-6 rounded-xl border border-dashed border-slate-700">
                     <p className="mb-4">
-                        <strong>"Hybrid" Deployment:</strong> The Owner (Software Engineer) will contribute ~80 hours (2 weeks) of labor.
+                        <strong>Flexible Collaboration Model:</strong> The Owner (Software Engineer) has significant hands-on home improvement experience (framing modifications, window casing, hardwood flooring, stair building) and is willing to contribute labor where helpful.
+                    </p>
+                    <p className="mb-4 text-xs text-slate-400">
+                        The following breakdown is a proposed guideline. The Owner is flexible and open to the Integrator's workflow recommendations.
                     </p>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm text-left">
                             <thead className="text-xs text-slate-500 uppercase bg-slate-800">
                                 <tr>
                                     <th className="px-4 py-2">Scope Item</th>
-                                    <th className="px-4 py-2">Lead</th>
+                                    <th className="px-4 py-2">Collaboration Approach</th>
                                     <th className="px-4 py-2">Notes</th>
                                 </tr>
                             </thead>
@@ -112,22 +115,27 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate }) => {
                                 <tr className="bg-slate-900/30">
                                     <td className="px-4 py-2 font-medium">High Voltage (HV)</td>
                                     <td className="px-4 py-2 text-orange-400">Pro / Electrician</td>
-                                    <td className="px-4 py-2">Safety/Code Strict.</td>
+                                    <td className="px-4 py-2">Professional scope (Safety/Code).</td>
                                 </tr>
                                 <tr>
-                                    <td className="px-4 py-2 font-medium">LV Wire Pulling</td>
+                                    <td className="px-4 py-2 font-medium">Panel Build (Physical)</td>
                                     <td className="px-4 py-2 text-blue-400">Pro Integrator</td>
-                                    <td className="px-4 py-2">Efficient rough-in.</td>
+                                    <td className="px-4 py-2">Owner prefers Pro to handle physical build; Owner willing to assist.</td>
                                 </tr>
                                 <tr className="bg-slate-900/30">
-                                    <td className="px-4 py-2 font-medium">Panel Build</td>
-                                    <td className="px-4 py-2 text-purple-400">Joint Effort</td>
-                                    <td className="px-4 py-2">Owner: Assembly / Pro: Termination.</td>
+                                    <td className="px-4 py-2 font-medium">LV Wire Pulling</td>
+                                    <td className="px-4 py-2 text-purple-400">Joint / Flexible</td>
+                                    <td className="px-4 py-2">Owner is capable and willing to assist with drilling/pulling.</td>
                                 </tr>
                                 <tr>
+                                    <td className="px-4 py-2 font-medium">Device Registration</td>
+                                    <td className="px-4 py-2 text-purple-400">Owner</td>
+                                    <td className="px-4 py-2">Bench registration/labeling pre-install.</td>
+                                </tr>
+                                <tr className="bg-slate-900/30">
                                     <td className="px-4 py-2 font-medium">Commissioning</td>
-                                    <td className="px-4 py-2 text-purple-400">Joint Effort</td>
-                                    <td className="px-4 py-2">Owner: Logic/AI/Home Assistant.</td>
+                                    <td className="px-4 py-2 text-purple-400">Joint / Flexible</td>
+                                    <td className="px-4 py-2">Owner interested in leading Logic/AI/HA; Pro to validate electrical function.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -184,37 +192,37 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate }) => {
             </section>
 
             <section className="mb-12">
-                <h2 className="text-2xl font-bold text-red-400 mb-4 border-b border-red-900/30 pb-2">6. Ownership Requirements</h2>
-                <div className="bg-slate-900/50 p-6 rounded-xl border border-dashed border-red-900/30">
+                <h2 className="text-2xl font-bold text-slate-200 mb-4 border-b border-slate-700 pb-2">6. Ownership & Handoff Guidelines</h2>
+                <div className="bg-slate-900/50 p-6 rounded-xl border border-dashed border-slate-700">
                     <p className="mb-4 text-sm text-slate-300">
-                        Final payment is contingent upon the handover of the following items. These components constitute "System Ownership" and must transfer with the property title upon sale.
+                        The Owner's goal is to ensure the system is maintainable and transferrable, treating the automation infrastructure as a fixed asset of the home.
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="bg-slate-950 p-4 rounded border border-slate-800">
-                            <h4 className="font-bold text-red-300 mb-1">1. Hardware License (Dongle)</h4>
+                            <h4 className="font-bold text-slate-200 mb-1">1. Hardware License (Dongle)</h4>
                             <p className="text-sm text-slate-400">
-                                The physical KNX USB Interface (or "Dongle") is a licensed asset owned by the homeowner. It must remain on-site in the MDF rack.
+                                The physical KNX USB Interface is a licensed asset and should remain on-site in the MDF rack.
                             </p>
                         </div>
                         <div className="bg-slate-950 p-4 rounded border border-slate-800">
-                            <h4 className="font-bold text-red-300 mb-1">2. Master Data File (.knxproj)</h4>
+                            <h4 className="font-bold text-slate-200 mb-1">2. Master Data File (.knxproj)</h4>
                             <p className="text-sm text-slate-400">
                                 The unencrypted project file containing all programming, logic, and device parameters.
-                                <br /><em className="text-red-400/80">Requirement: Must be emailed to owner after every major revision.</em>
+                                <br /><em className="text-blue-400/80">Goal: Emailed to owner after every major revision.</em>
                             </p>
                         </div>
                         <div className="bg-slate-950 p-4 rounded border border-slate-800">
-                            <h4 className="font-bold text-red-300 mb-1">3. Administrative Passwords</h4>
+                            <h4 className="font-bold text-slate-200 mb-1">3. Administrative Passwords</h4>
                             <ul className="list-disc list-inside text-sm text-slate-400">
                                 <li><strong>Project Password:</strong> Required to edit the .knxproj file.</li>
                                 <li><strong>BCU Keys:</strong> Device-level passwords required to reprogram switches.</li>
                             </ul>
                         </div>
                         <div className="bg-slate-950 p-4 rounded border border-slate-800">
-                            <h4 className="font-bold text-red-300 mb-1">4. Transferability</h4>
+                            <h4 className="font-bold text-slate-200 mb-1">4. Transferability</h4>
                             <p className="text-sm text-slate-400">
-                                All items above are considered fixtures of the home (like a boiler manual) and must be transferable to any future qualified integrator.
+                                All items above are considered fixtures of the home (like a boiler manual) and should be transferable to any future qualified integrator.
                             </p>
                         </div>
                     </div>

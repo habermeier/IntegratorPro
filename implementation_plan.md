@@ -1,36 +1,35 @@
-# Implementation Plan - Refine Project Brief
+# Implementation Plan - Refactor Navigation & Brief
 
 ## Goal Description
-Refine the `adjustments-and-cover-sheet.md` document to include a soft-toned "Ownership Requirements" section and adjust the "Collaboration Model" to reflect a more ambiguous/flexible workflow, acknowledging the learning curve for KNX.
-
-## User Review Required
-> [!IMPORTANT]
-> The "Ownership Requirements" section has been rephrased to focus on "Expectations" rather than "Payment Contingency".
-
-> [!NOTE]
-> The Collaboration Model now reflects a loose "Joint Effort" approach, specifically for Panel Build and Commissioning, acknowledging that the Owner's involvement is flexible and the Integrator might be learning KNX.
+Move the "Field & Rough-in Requirements" section from the Project Brief (Cover Sheet) to a dedicated application tab called "Rough-in Guide". This improves readability and separates physical installation details from the high-level project overview.
 
 ## Proposed Changes
+
+### Components
+
+#### [NEW] [components/RoughInGuide.tsx](file:///home/quagoo/IntegratorPro/components/RoughInGuide.tsx)
+- Create a new React component to display the "Field & Rough-in Requirements" table.
+- Logic will be extracted from the existing `CoverSheet.tsx`.
+
+#### [MODIFY] [components/CoverSheet.tsx](file:///home/quagoo/IntegratorPro/components/CoverSheet.tsx)
+- **Remove:** Section 7 ("Field & Rough-in Requirements").
+
+#### [MODIFY] [App.tsx](file:///home/quagoo/IntegratorPro/App.tsx)
+- **Import:** `RoughInGuide` component.
+- **Navigation:** Add new sidebar item "Rough-in Guide" (Icon: `Construction` or `Hammer` if available, otherwise `List`).
+- **Render:** conditional rendering for `view === 'ROUGH_IN'`.
+
+#### [MODIFY] [types.ts](file:///home/quagoo/IntegratorPro/types.ts)
+- **Update:** `ViewMode` type to include `'ROUGH_IN'`.
 
 ### Documentation
 
 #### [MODIFY] [adjustments-and-cover-sheet.md](file:///home/quagoo/IntegratorPro/adjustments-and-cover-sheet.md)
-- **Add Section:** "Ownership & Handoff Expectations" (placed logically, possibly as Section 5 or appended).
-    - Content: Define Hardware License, Master Data File, Admin Passwords, and Transferability as standard fixtures/expectations, removing "payment contingent" language.
-- **Update Section 4:** "Collaboration Model & Scope of Work".
-    - Change "The Owner will contribute" to "The Owner is willing to contribute...".
-    - Update the Scope Table:
-        - **HV & Panel Build (Physical):** Pro Integrator/Electrician. (Owner prefers to aid with LV/Config, less with physical box build).
-        - **LV Wire Pulling & Termination:** Joint Effort (Owner willing to assist).
-        - **Device Registration (Bench):** Owner (Willing to handle pre-install registration/labeling).
-        - **Commissioning/Programming:** Joint Effort (Owner prefers leading configuration).
+- **Remove:** Section 7 to keep the markdown brief in sync with the web app.
 
-- **Global Tone Softening (New Requirement):**
-    - **Ownership Section:** Rewrite to remove "Final payment contingent" and "Must be". Use "Owner's goal is..." or "Project expectation is...".
-    - **General Scan:** Replace "Requirement:", "Strictly", "Must" with collaborative phrasing like "Key Objective:", "Important for...", "Ideally...".
-
+## Verification Plan
 
 ### Manual Verification
-1.  **Read** the updated file content to ensure tone matches user request (non-adversarial, flexible).
-2.  **Verify** that all 4 ownership items (Dongle, .knxproj, Passwords, Transferability) are present.
-3.  **Verify** that the Collaboration Model accurately reflects the user's hesitation about "Panel Build" and LV wiring.
+1.  **Check Navigation:** Verify "Rough-in Guide" appears in the sidebar.
+2.  **Check Routing:** Click the new tab and verify the table renders correctly.
+3.  **Check Brief:** Verify the "Project Brief" tab no longer shows the Rough-in section.

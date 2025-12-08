@@ -7,12 +7,12 @@ Here is the final project brief, structured to prioritize the system's functiona
 
 -----
 
-# Project Brief: Automated Building Systems (ABS)
+# Project Brief
 
 **Project Location:** 270 Bolla Ave, Alamo, CA
 **Project Status:** Down-to-studs Remodel / Framing Phase
 
-## 1\. Functional Objectives & Design Philosophy
+## 1. Functional Objectives & Design Philosophy
 
 The objective is to deploy a comprehensive, hardwired building automation system that prioritizes reliability, code compliance, and environmental intelligence. The system is designed to operate locally (offline) with a high degree of sensor-driven automation, reducing reliance on physical wall switches.
 
@@ -27,7 +27,7 @@ The objective is to deploy a comprehensive, hardwired building automation system
       * **Data Sovereignty:** The system will avoid cloud dependencies for critical infrastructure. Lighting, Access, and HVAC should function 100% locally.
       * **System Rights:** The Owner will retain the ETS Project File (`.knxproj`), the ETS license, and administrative credentials for all gateways to prevent vendor lock-in.
 
-## 2\. Technical Architecture
+## 2. Technical Architecture
 
 The system architecture relies on **KNX** for the control plane (sensors, keypads, logic) and **DALI-2** for the lighting plane.
 
@@ -40,7 +40,7 @@ The system architecture relies on **KNX** for the control plane (sensors, keypad
       * **LCP-2 (Right Wing/Bedrooms):** Structured Media Center housing distribution for the right side of the residence.
       * **MDF (Main Data):** Houses the core Logic Server (Home Assistant/Unix), Network Core, and Gateway Bridges.
 
-## 3\. Hardware Specification & Standards
+## 3. Hardware Specification & Standards
 
 The following hardware standards have been selected to meet the specific "Deep Dimming" and "Sensor Density" requirements of the project.
 
@@ -74,23 +74,24 @@ The following hardware standards have been selected to meet the specific "Deep D
 
 ## 4. Collaboration Model & Scope of Work
 
-This project utilizes a **Collaborative "Hybrid" Deployment**. The Owner is a technical professional (Software Engineer) with remodeling experience and intends to be an active participant in the physical and logical deployment of the system.
+This project utilizes a **Flexible Collaboration Model**. The Owner is a technical professional (Software Engineer) with significant hands-on home improvement experience (framing modifications, window casing, hardwood flooring, stair building).
 
 **Owner Contribution:**
 
   * **Labor Resource:** The Owner is **willing to contribute** approximately **80 hours** of focused labor to the project.
-  * **Capabilities:** Owner is proficient in low-voltage termination and complex software programming.
-  * **Objective:** To utilize Owner-labor to optimize the project budget and ensure the Owner possesses deep familiarity with the physical infrastructure for long-term maintenance.
+  * **Capabilities:** proficient in complex software programming and comfortable with physical renovation tasks (drilling, running cabling).
+  * **Objective:** To optimize the project budget and ensure deep familiarity with the infrastructure.
 
 **Proposed Scope of Responsibilities:**
+The following breakdown is a proposed guideline. The Owner is flexible and open to the Integrator's workflow recommendations.
 
-| Scope Item | Suggested Lead | Collaboration Notes |
+| Scope Item | Collaboration Approach | Notes |
 | :--- | :--- | :--- |
 | **High Voltage (HV)** | **Pro / Electrician** | Professional scope (Safety/Code). |
-| **Panel Build (Physical)** | **Pro Integrator** | DIN Rail assembly and physical build best handled by Pro. |
-| **LV Wire Pulling** | **Joint Effort** | Owner willing to assist; efficient rough-in led by Pro. |
-| **Device Registration** | **Owner** | Owner to handle bench registration/labeling of KNX/DALI devices pre-install. |
-| **Commissioning** | **Joint Effort** | **Pro:** Basic validation.<br>**Owner:** Lead on Logic, Scenes, AI, Home Assistant. |
+| **Panel Build (Physical)** | **Pro Integrator** | Owner prefers Pro to handle physical build; Owner willing to assist. |
+| **LV Wire Pulling** | **Joint / Flexible** | Owner is capable and willing to assist with drilling/pulling. |
+| **Device Registration** | **Owner** | Owner can handle bench registration/labeling of KNX/DALI devices pre-install. |
+| **Commissioning** | **Joint / Flexible** | Owner interested in leading Logic/AI/HA; Pro to validate electrical function. |
 
 ## 5. Ownership & Handoff Guidelines
 

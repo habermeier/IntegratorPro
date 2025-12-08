@@ -1,7 +1,13 @@
-# Task: Refine Project Brief
+# Task: Refactor "Rough-in Requirements" to New Tab
 
-- [x] Refine "Ownership Requirements" section <!-- id: 1 -->
-- [x] Refine "Collaboration Model" section <!-- id: 2 -->
-- [x] Soften tone across the entire document <!-- id: 3 -->
-    - [x] Rewrite "Ownership" section to be goal-oriented (e.g., "Owner's goal is...") <!-- id: 4 -->
-    - [x] Remove "hard facts" and "demands" (e.g., "Must be", "Requirement", "Contingent") <!-- id: 5 -->
+- [ ] Create `components/RoughInGuide.tsx` <!-- id: 1 -->
+    - [ ] Implementation will contain the "Field & Rough-in Requirements" table <!-- id: 2 -->
+- [ ] Update `types.ts` to include `ROUGH_IN` ViewMode <!-- id: 3 -->
+- [ ] Update `App.tsx` <!-- id: 4 -->
+    - [ ] Add `RoughInGuide` to imports <!-- id: 5 -->
+    - [ ] Add sidebar navigation item <!-- id: 6 -->
+    - [ ] Render component in main content area <!-- id: 7 -->
+- [ ] Cleanup `components/CoverSheet.tsx` <!-- id: 8 -->
+    - [ ] Remove Section 7 (Field & Rough-in Requirements) <!-- id: 9 -->
+- [ ] Cleanup `adjustments-and-cover-sheet.md` <!-- id: 10 -->
+    - [ ] Remove Section 7 (Field & Rough-in Requirements) <!-- id: 11 -->
