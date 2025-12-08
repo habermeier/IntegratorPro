@@ -11,6 +11,7 @@ import { MapSymbols } from './MapSymbols';
 interface FloorPlanMapProps {
     modules: HardwareModule[];
     setModules: React.Dispatch<React.SetStateAction<HardwareModule[]>>;
+    onLocate: (id: string) => void;
 }
 
 const MapController = ({ activeLayer, setFitFn }: { activeLayer: string, setFitFn: (fn: () => void) => void }) => {
@@ -66,7 +67,7 @@ const MapController = ({ activeLayer, setFitFn }: { activeLayer: string, setFitF
     return null;
 };
 
-const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules }) => {
+const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLocate }) => {
     const [activeLayer, setActiveLayer] = useState<'STRUCTURAL' | 'ELECTRICAL'>('STRUCTURAL');
     const currentMapImage = activeLayer === 'STRUCTURAL' ? STRUCTURAL_IMAGE : ELECTRICAL_IMAGE;
     const [fitToScreen, setFitToScreen] = useState<() => void>(() => () => { });
@@ -79,7 +80,7 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules }) => {
 
     useEffect(() => {
         // Load initial layout data (Manually positioned elements like LCP panels)
-        fetch('http://localhost:3002/api/layout')
+        fetch('/api/layout')
             .then(res => res.json())
             .then(data => setLayoutData(data))
             .catch(err => console.error("Failed to load layout.json", err));
@@ -116,7 +117,7 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules }) => {
 
     const handleSaveLayout = async () => {
         try {
-            const res = await fetch('http://localhost:3002/api/layout', {
+            const res = await fetch('/api/layout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(layoutData)
@@ -188,16 +189,15 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules }) => {
                     minScale={0.01}
                     maxScale={8}
                     centerOnInit={true}
-                    centerZoomedOut={false} // DISABLE: Causes "Snap Back" fighting near edges
-                    smooth={false} // RAW CONTROL: Solves "Huge Delay" (Physics Build-up)
-                    limitToBounds={true} // HARD STOPS: Solves "Lost in Void" (top-left in middle)
-                    disabled={!isLocked} // DISABLE PANNING WHEN EDITING
+                    centerZoomedOut={false}
+                    smooth={false}
+                    limitToBounds={true}
+                    disabled={!isLocked}
                     wheel={{
-                        step: 0.01, // INCREASED: 5x more responsive (was 0.002)
-                        smoothStep: 0.001
+                        step: 0.1,
                     }}
                     panning={{
-                        velocityDisabled: true // No momentum panning
+                        velocityDisabled: true
                     }}
                 >
                     {({ zoomIn, zoomOut, resetTransform, centerView }) => (
@@ -239,7 +239,13 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules }) => {
                                             <div
                                                 key={i}
                                                 onPointerDown={(e) => handlePointerDown(e, s)}
-                                                className={isDraggable ? "cursor-move hover:scale-110 transition-transform" : ""}
+                                                onClick={(e) => {
+                                                    if (isLocked /* View Mode */) {
+                                                        e.stopPropagation();
+                                                        onLocate(s.id);
+                                                    }
+                                                }}
+                                                className={isDraggable ? "cursor-move hover:scale-110 transition-transform" : "cursor-pointer hover:bg-white/10 rounded-lg transition-colors"}
                                                 style={{
                                                     position: 'absolute',
                                                     left: `${s.x}%`,
@@ -248,7 +254,7 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules }) => {
                                                     width: size,
                                                     height: s.type === 'ENCLOSURE' ? '60px' : size, // Keep aspect ratio for panels
                                                     zIndex: 30,
-                                                    pointerEvents: isDraggable ? 'auto' : 'none',
+                                                    pointerEvents: 'auto', // Always catch clicks now
                                                     touchAction: 'none'
                                                 }}
                                             >
@@ -322,7 +328,7 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules }) => {
                     <li className="flex items-center gap-2"><MousePointer2 size={12} /> Scroll to Zoom</li>
                 </ul>
             </div>
-        </div>
+        </div >
     );
 };
 

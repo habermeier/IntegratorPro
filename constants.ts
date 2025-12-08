@@ -4,19 +4,20 @@ export const INITIAL_MODULES: HardwareModule[] = [
   // --- LCP-1 (Garage) ---
   {
     id: 'lcp1-enc',
-    name: 'Saginaw SCE-242408LP',
+    name: 'Saginaw SCE-24H2408LP',
     manufacturer: 'Saginaw',
-    description: '24x24x8 NEMA Enclosure',
+    description: '24x24x8 NEMA 4/12 Hinged',
     location: 'LCP-1',
     type: ModuleType.ENCLOSURE,
     mountType: MountType.SURFACE,
     size: 0,
-    cost: 318.95, // JMAC Pricing
+    cost: 394.30, // MeCampbell Pricing
     powerWatts: 0,
     quantity: 1,
-    url: 'https://www.jmac.com/Saginaw_Control_SCE_242408LP_p/saginaw-control-sce-242408lp.htm',
+    url: 'https://www.mecampbell.com/saginaw-control-sce-24h2408lp-single-hinged-door-enclosure-with-door-cllamps-carbon-steel-gray-nema-4-12-13-iec-ip66-24x24x8-sub-panel-ordered-separately.html',
+    backupUrl: 'https://www.google.com/search?q=buy+Saginaw+SCE-24H2408LP',
     dimensions: { width: 24, height: 24, depth: 8, unit: 'in' },
-    notes: 'FIRE CODE: Surface mount ON TOP of drywall. 8" depth required for PSU.',
+    notes: 'FIRE CODE: Surface mount. NEMA 4/12 Sealed (Better than NEMA 1).',
     position: { x: 72, y: 60 } // Garage area
   },
   {
@@ -31,8 +32,72 @@ export const INITIAL_MODULES: HardwareModule[] = [
     cost: 42.50, // JMAC Pricing
     powerWatts: 0,
     quantity: 1,
-    url: 'https://www.jmac.com/Saginaw_Control_SCE_24P24_p/saginaw-control-sce-24p24.htm',
+    url: 'https://www.radwell.com/Search?q=SCE-24P24',
+    backupUrl: 'https://www.google.com/search?q=buy+Saginaw+SCE-24P24',
     notes: 'Required to mount DIN rails.'
+  },
+  {
+    id: 'lcp1-din',
+    name: 'DIN Rail 35mm Slotted',
+    manufacturer: 'Generic',
+    description: '10-Pack (Aluminum) 1 Meter',
+    location: 'LCP-1',
+    type: ModuleType.ACCESSORY,
+    mountType: MountType.SURFACE,
+    size: 0,
+    cost: 35.00,
+    powerWatts: 0,
+    quantity: 1,
+    url: 'https://www.amazon.com/s?k=din+rail+slotted+aluminum+10+pack',
+    backupUrl: 'https://www.radwell.com/Search?q=DIN+Rail+35mm',
+    notes: 'Cut to size for Backplate (Horizontal rows).'
+  },
+  //...
+  {
+    id: 'lcp1-acc-psu',
+    name: 'Altronix eFlow6N',
+    manufacturer: 'Altronix',
+    description: 'Access Power Controller',
+    location: 'LCP-1',
+    type: ModuleType.POWER,
+    mountType: MountType.WALL_MOUNT,
+    size: 0,
+    cost: 320.00,
+    powerWatts: 10,
+    quantity: 1,
+    url: 'https://www.jmac.com/search.php?search_query=eFlow6N',
+    notes: 'Powers HES Strikes. High inrush current handling. Battery Backup.'
+  },
+  //...
+  {
+    id: 'cable-knx',
+    name: 'KNX Bus Cable',
+    manufacturer: 'Belden',
+    description: '2500 ft (2-pair Shielded)',
+    location: 'Infra',
+    type: ModuleType.ACCESSORY,
+    mountType: MountType.NA,
+    size: 0,
+    cost: 850.00,
+    powerWatts: 0,
+    quantity: 1,
+    url: 'https://www.jmac.com/search.php?search_query=Belden+YE00906',
+    notes: 'Green sheath.'
+  },
+  {
+    id: 'cable-cat6',
+    name: 'Cat6a Riser',
+    manufacturer: 'TrueCable',
+    description: '1000 ft (PoE certified)',
+    location: 'Infra',
+    type: ModuleType.ACCESSORY,
+    mountType: MountType.NA,
+    size: 0,
+    cost: 650.00,
+    powerWatts: 0,
+    quantity: 1,
+    url: 'https://www.truecable.com/pages/search-results-page?q=cat6a+riser',
+    notes: '3000ft total estimated.'
   },
   {
     id: 'lcp1-gw1',
@@ -76,7 +141,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     location: 'LCP-1',
     type: ModuleType.HVAC,
     mountType: MountType.DIN_RAIL,
-    size: 2, 
+    size: 2,
     cost: 82.50,
     powerWatts: 1,
     quantity: 1,
@@ -144,7 +209,8 @@ export const INITIAL_MODULES: HardwareModule[] = [
     powerWatts: 480,
     heatDissipation: 34, // ~7% loss at full load
     quantity: 1,
-    url: 'https://www.meanwell.com/productWebApp/product/view/SDR-480',
+    url: 'https://www.amazon.com/s?k=MEAN+WELL+SDR-480-24',
+    backupUrl: 'https://www.google.com/search?q=buy+Mean+Well+SDR-480-24',
     notes: 'Dedicated for Garage LEDs. Requires air gap.'
   },
   {
@@ -350,7 +416,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     powerWatts: 45,
     quantity: 1,
     url: 'https://www.asus.com/us/displays-desktops/nucs/nuc-kits/asus-nuc-13-pro-kit/',
-    notes: 'Runs Home Assistant OS',
+    notes: 'Runs Home Assistant OS + Asterisk (SIP Server) for Intercom.',
     position: { x: 62, y: 38 } // Tech Room
   },
   {
@@ -381,7 +447,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     cost: 325.00,
     powerWatts: 5,
     quantity: 1,
-    url: 'https://www.veluxusa.com/products/smart-home/klf-200',
+    url: 'https://www.amazon.com/Velux-Home-Automation-Integration-Kit/dp/B079979G5H',
     notes: 'Skylights & Shades',
     position: { x: 63, y: 37 }
   },
@@ -473,10 +539,10 @@ export const INITIAL_MODULES: HardwareModule[] = [
     type: ModuleType.SECURITY,
     mountType: MountType.WALL_MOUNT,
     size: 0,
-    cost: 1150.00,
+    cost: 2800.00,
     powerWatts: 12,
     quantity: 1,
-    url: 'https://akuvoxdealer.com/products/akuvox-x915s-8-inch-android-door-phone',
+    url: 'https://akuvoxdealer.com/?s=x915',
     notes: 'Main Entry. Install back-box before stone.',
     position: { x: 40, y: 80 } // Entry
   },
@@ -493,7 +559,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     powerWatts: 10,
     quantity: 3,
     url: 'https://akuvoxdealer.com/products/akuvox-e16c-facial-recognition-door-phone',
-    notes: 'Side/Garage doors.'
+    notes: 'Side/Garage doors. PoE.'
   },
   {
     id: 'field-str',
@@ -508,7 +574,23 @@ export const INITIAL_MODULES: HardwareModule[] = [
     powerWatts: 8,
     quantity: 4,
     url: 'https://www.jmac.com/HES_1006_Series_Electric_Strike_Body_p/hes-1006.htm',
-    notes: 'Fail Secure. Black.'
+    notes: 'Fail Secure. Requires diode protection.'
+  },
+  {
+    id: 'lcp1-acc-psu',
+    name: 'Altronix eFlow6N',
+    manufacturer: 'Altronix',
+    description: 'Access Power Controller',
+    location: 'LCP-1',
+    type: ModuleType.POWER,
+    mountType: MountType.WALL_MOUNT,
+    size: 0,
+    cost: 320.00,
+    powerWatts: 10,
+    quantity: 1,
+    url: 'https://www.amazon.com/s?k=Altronix+eFlow6N',
+    backupUrl: 'https://www.jmac.com/search.php?search_query=eFlow6N',
+    notes: 'Powers HES Strikes. High inrush current handling. Battery Backup.'
   },
   {
     id: 'field-puck',
@@ -522,7 +604,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     cost: 98.00,
     powerWatts: 0.5,
     quantity: 8,
-    url: 'https://www.lunatone.com/en/product/dali-2-pd-phase-dimmer/',
+    url: 'https://www.eibabo.com/en/search?sSearch=lunatone+dali-2+pd',
     notes: 'Install in attic J-Box near fixture.',
     universe: 1,
     position: { x: 50, y: 40 } // Dining
@@ -539,7 +621,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     cost: 850.00,
     powerWatts: 0,
     quantity: 1,
-    url: 'https://www.jmac.com/Belden_YE00906_p/belden-ye00906.htm',
+    url: 'https://www.jmac.com/search.php?search_query=Belden+YE00906',
     notes: 'Green sheath.'
   },
   {
@@ -554,7 +636,8 @@ export const INITIAL_MODULES: HardwareModule[] = [
     cost: 650.00,
     powerWatts: 0,
     quantity: 1,
-    url: 'https://www.truecable.com/collections/cat6a-riser-ethernet-cable'
+    url: 'https://www.truecable.com/pages/search-results-page?q=cat6a+riser',
+    notes: '3000ft total estimated.'
   }
 ];
 

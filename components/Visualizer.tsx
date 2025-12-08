@@ -24,8 +24,17 @@ const Visualizer: React.FC<VisualizerProps> = ({ modules, highlightedModuleId })
 
   // Auto-scroll effect
   useEffect(() => {
-    if (highlightedModuleId && moduleRefs.current[highlightedModuleId]) {
-      moduleRefs.current[highlightedModuleId]?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+    if (highlightedModuleId) {
+      const el = moduleRefs.current[highlightedModuleId];
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+      } else {
+        // Fallback: try to find a header with this ID (if it's a location like LCP-1)
+        const locationHeader = document.getElementById(`header-${highlightedModuleId}`);
+        if (locationHeader) {
+          locationHeader.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
     }
   }, [highlightedModuleId]);
 
@@ -301,7 +310,7 @@ const Visualizer: React.FC<VisualizerProps> = ({ modules, highlightedModuleId })
     return (
       <div key={location} className="flex flex-col" style={{ width: ENCLOSURE_WIDTH_PX }}>
         <div className="flex justify-between items-end mb-2 px-1">
-          <h3 className="text-xl font-bold text-white flex items-center">
+          <h3 id={`header-${location}`} className="text-xl font-bold text-white flex items-center">
             <span className={`w-2 h-6 mr-3 rounded-full ${location === 'LCP-1' ? 'bg-red-500' : 'bg-emerald-500'}`}></span>
             {location}
           </h3>

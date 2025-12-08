@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
 import { ViewMode, HardwareModule, Connection } from './types';
 import { INITIAL_MODULES, MOCK_CONNECTIONS } from './constants';
-import Dashboard from './components/Dashboard';
+import ProjectBOM from './components/ProjectBOM';
 import Visualizer from './components/Visualizer';
 import WiringDiagram from './components/WiringDiagram';
 import GeminiAdvisor from './components/GeminiAdvisor';
 import FloorPlanMap from './components/FloorPlanMap';
+import CoverSheet from './components/CoverSheet';
 
 // Icons
-import { LayoutDashboard, Activity, Cpu, BrainCircuit, Map } from 'lucide-react';
+import { LayoutDashboard, Activity, Cpu, BrainCircuit, Map, FileText } from 'lucide-react';
 
 const App = () => {
   console.log('IntegratorPro: App component rendering');
-  const [view, setView] = useState<ViewMode>('DASHBOARD');
+  const [view, setView] = useState<ViewMode | 'COVER_SHEET'>('COVER_SHEET'); // Start on Cover Sheet
   const [modules, setModules] = useState<HardwareModule[]>(INITIAL_MODULES);
   const [connections, setConnections] = useState<Connection[]>(MOCK_CONNECTIONS);
   const [highlightedModuleId, setHighlightedModuleId] = useState<string | null>(null);
@@ -22,7 +23,7 @@ const App = () => {
     setView('VISUALIZER');
   };
 
-  const NavItem = ({ mode, icon: Icon, label }: { mode: ViewMode; icon: any; label: string }) => (
+  const NavItem = ({ mode, icon: Icon, label }: { mode: ViewMode | 'COVER_SHEET'; icon: any; label: string }) => (
     <button
       onClick={() => setView(mode)}
       className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${view === mode
@@ -45,15 +46,20 @@ const App = () => {
             <Activity className="text-blue-500 mr-2" />
             Integrator<span className="text-blue-500">Pro</span>
           </h1>
-          <p className="text-xs text-slate-500 mt-1">System Planning Suite v1.13</p>
+          <p className="text-xs text-slate-500 mt-1">System Planning Suite v1.14</p>
         </div>
 
         <nav className="flex-1 px-4 space-y-2">
-          <NavItem mode="DASHBOARD" icon={LayoutDashboard} label="Mission Control" />
+          {/* REORDERED & RENAMED NAV */}
+          <NavItem mode="COVER_SHEET" icon={FileText} label="Project Brief" />
           <NavItem mode="VISUALIZER" icon={Cpu} label="Rack & DIN Layout" />
           <NavItem mode="FLOORPLAN" icon={Map} label="Floor Plan Map" />
+          <NavItem mode="DASHBOARD" icon={LayoutDashboard} label="Bill of Materials" />
+
+          {/* HIDDEN FOR NOW
           <NavItem mode="TOPOLOGY" icon={Activity} label="Wiring Topology" />
           <NavItem mode="ADVISOR" icon={BrainCircuit} label="AI Validator" />
+          */}
         </nav>
 
         <div className="p-4 border-t border-slate-800">
@@ -69,7 +75,7 @@ const App = () => {
         {/* Top Header */}
         <header className="h-16 border-b border-slate-800 bg-slate-950/50 backdrop-blur flex items-center justify-between px-8 z-10">
           <h2 className="text-lg font-semibold text-white capitalize">
-            {view === 'DASHBOARD' ? 'Project Overview' : view.toLowerCase().replace('_', ' ')}
+            {view === 'DASHBOARD' ? 'Bill of Materials' : view === 'COVER_SHEET' ? 'Project Brief' : view.toLowerCase().replace('_', ' ')}
           </h2>
           <div className="flex items-center space-x-4">
             <span className="text-sm text-slate-400">Total BOM:</span>
@@ -80,23 +86,23 @@ const App = () => {
         </header>
 
         {/* Dynamic Viewport */}
-        <main className="flex-1 overflow-hidden relative bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
-          {/* Subtle pattern overlay opacity tweak */}
-          <div className="absolute inset-0 bg-slate-950/90 z-0 pointer-events-none"></div>
-
-          <div className="relative z-10 h-full">
-            {view === 'DASHBOARD' && (
-              <Dashboard
-                modules={modules}
-                setModules={setModules}
-                onLocate={handleLocateModule}
-              />
-            )}
-            {view === 'VISUALIZER' && <Visualizer modules={modules} highlightedModuleId={highlightedModuleId} />}
-            {view === 'TOPOLOGY' && <WiringDiagram modules={modules} connections={connections} />}
-            {view === 'ADVISOR' && <GeminiAdvisor modules={modules} connections={connections} />}
-            {view === 'FLOORPLAN' && <FloorPlanMap modules={modules} setModules={setModules} />}
-          </div>
+        {/* Dynamic Viewport */}
+        <main className="flex-1 flex flex-col min-w-0 bg-slate-950 text-slate-200 overflow-hidden relative">
+          {(view === 'FLOORPLAN' || view === 'VISUALIZER' || view === 'TOPOLOGY') ? (
+            <div className="absolute inset-0 z-10">
+              {view === 'VISUALIZER' && <Visualizer modules={modules} highlightedModuleId={highlightedModuleId} />}
+              {view === 'TOPOLOGY' && <WiringDiagram modules={modules} connections={connections} />}
+              {view === 'FLOORPLAN' && <FloorPlanMap modules={modules} setModules={setModules} onLocate={handleLocateModule} />}
+            </div>
+          ) : (
+            <div className="flex-1 overflow-auto p-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+              <div className="max-w-7xl mx-auto">
+                {view === 'COVER_SHEET' && <CoverSheet modules={modules} onNavigate={setView} />}
+                {view === 'DASHBOARD' && <ProjectBOM modules={modules} />}
+                {view === 'ADVISOR' && <GeminiAdvisor modules={modules} connections={connections} />}
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>

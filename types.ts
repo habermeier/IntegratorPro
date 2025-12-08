@@ -34,6 +34,7 @@ export interface HardwareModule {
   powerWatts: number; // Consumption
   quantity: number;
   url?: string;
+  backupUrl?: string; // Secondary/Search link for robustness
   dimensions?: {
     width: number;
     height: number;

@@ -15,6 +15,13 @@ const DATA_FILE = path.join(__dirname, 'layout.json');
 app.use(cors());
 app.use(bodyParser.json());
 
+// Serve static files from the React app (dist folder)
+// Ensure 'dist' exists (run 'npm run build' first)
+const distPath = path.join(__dirname, 'dist');
+if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+}
+
 // Initialize layout.json if not exists
 if (!fs.existsSync(DATA_FILE)) {
     fs.writeFileSync(DATA_FILE, JSON.stringify([], null, 2));
@@ -49,17 +56,27 @@ const LOG_FILE = path.join(__dirname, 'client_debug.log');
 app.post('/api/debug-log', (req, res) => {
     try {
         const { event, details } = req.body;
-        const timestamp = new Date().toISOString();
-        const logEntry = `[${timestamp}] ${event}: ${JSON.stringify(details)}\n`;
-        fs.appendFileSync(LOG_FILE, logEntry);
+        // const timestamp = new Date().toISOString();
+        // const logEntry = `[${timestamp}] ${event}: ${JSON.stringify(details)}\n`;
+        // fs.appendFileSync(LOG_FILE, logEntry); 
+        // Disabled for production to avoid disk fill
         res.json({ success: true });
     } catch (err) {
-        // Fail silently on log error to not break client
         console.error('Error writing to debug log:', err);
         res.json({ success: false });
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`API Server running on http://localhost:${PORT}`);
+// All other GET requests not handled before will return our React app
+app.get('*', (req, res) => {
+    if (fs.existsSync(path.join(distPath, 'index.html'))) {
+        res.sendFile(path.join(distPath, 'index.html'));
+    } else {
+        res.status(404).send('App not built. Run "npm run build" first.');
+    }
+});
+
+const APP_PORT = process.env.PORT || 3001;
+app.listen(APP_PORT, () => {
+    console.log(`API Server running on port ${APP_PORT}`);
 });
