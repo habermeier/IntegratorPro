@@ -84,21 +84,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     url: 'https://www.jmac.com/search.php?search_query=Belden+YE00906',
     notes: 'Green sheath.'
   },
-  {
-    id: 'cable-cat6',
-    name: 'Cat6a Riser',
-    manufacturer: 'TrueCable',
-    description: '1000 ft (PoE certified)',
-    location: 'Infra',
-    type: ModuleType.ACCESSORY,
-    mountType: MountType.NA,
-    size: 0,
-    cost: 650.00,
-    powerWatts: 0,
-    quantity: 1,
-    url: 'https://www.truecable.com/pages/search-results-page?q=cat6a+riser',
-    notes: '3000ft total estimated.'
-  },
+
   {
     id: 'lcp1-gw1',
     name: 'DALI Control Gateway',
@@ -626,19 +612,19 @@ export const INITIAL_MODULES: HardwareModule[] = [
   },
   {
     id: 'cable-cat6',
-    name: 'Cat6a Riser',
+    name: 'Cat6 / Cat6a Riser',
     manufacturer: 'TrueCable',
-    description: '3000 ft (PoE certified)',
+    description: '3000 ft Bulk',
     location: 'Infra',
     type: ModuleType.ACCESSORY,
     mountType: MountType.NA,
     size: 0,
-    cost: 650.00,
+    cost: 550.00, // Blended cost
     powerWatts: 0,
     quantity: 1,
-    url: 'https://www.truecable.com/pages/search-results-page?q=cat6a+riser',
-    notes: '3000ft total estimated.'
-  }
+    url: 'https://www.truecable.com/pages/search-results-page?q=cat6+riser',
+    notes: '3000ft total est. Use Cat6a for high-bandwidth/PoE++, Cat6 for standard.'
+  },
 ];
 
 export const MOCK_CONNECTIONS = [

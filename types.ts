@@ -66,4 +66,4 @@ export interface ProjectState {
   currency: string;
 }
 
-export type ViewMode = 'DASHBOARD' | 'VISUALIZER' | 'TOPOLOGY' | 'ADVISOR' | 'FLOORPLAN';
+export type ViewMode = 'DASHBOARD' | 'VISUALIZER' | 'TOPOLOGY' | 'ADVISOR' | 'FLOORPLAN' | 'ROUGH_IN';

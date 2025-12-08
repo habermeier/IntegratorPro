@@ -7,9 +7,11 @@ import WiringDiagram from './components/WiringDiagram';
 import GeminiAdvisor from './components/GeminiAdvisor';
 import FloorPlanMap from './components/FloorPlanMap';
 import CoverSheet from './components/CoverSheet';
+import RoughInGuide from './components/RoughInGuide';
+import MobileBlocker from './components/MobileBlocker';
 
 // Icons
-import { LayoutDashboard, Activity, Cpu, BrainCircuit, Map, FileText } from 'lucide-react';
+import { LayoutDashboard, Activity, Cpu, BrainCircuit, Map, FileText, Hammer } from 'lucide-react';
 
 const App = () => {
   console.log('IntegratorPro: App component rendering');
@@ -37,75 +39,82 @@ const App = () => {
   );
 
   return (
-    <div className="flex h-screen bg-slate-950 text-slate-200 overflow-hidden font-sans">
+    <>
+      <div className="block md:hidden">
+        <MobileBlocker />
+      </div>
+      <div className="hidden md:flex h-screen bg-slate-950 text-slate-200 overflow-hidden font-sans">
 
-      {/* Sidebar */}
-      <div className="w-64 flex flex-col border-r border-slate-800 bg-slate-950 z-20">
-        <div className="p-6">
-          <h1 className="text-2xl font-bold tracking-tight text-white flex items-center">
-            <Activity className="text-blue-500 mr-2" />
-            Integrator<span className="text-blue-500">Pro</span>
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">System Planning Suite v1.14</p>
-        </div>
+        {/* Sidebar */}
+        <div className="w-64 flex flex-col border-r border-slate-800 bg-slate-950 z-20">
+          <div className="p-6">
+            <h1 className="text-2xl font-bold tracking-tight text-white flex items-center">
+              <Activity className="text-blue-500 mr-2" />
+              Integrator<span className="text-blue-500">Pro</span>
+            </h1>
+            <p className="text-xs text-slate-500 mt-1">System Planning Suite v1.14</p>
+          </div>
 
-        <nav className="flex-1 px-4 space-y-2">
-          {/* REORDERED & RENAMED NAV */}
-          <NavItem mode="COVER_SHEET" icon={FileText} label="Project Brief" />
-          <NavItem mode="VISUALIZER" icon={Cpu} label="Rack & DIN Layout" />
-          <NavItem mode="FLOORPLAN" icon={Map} label="Floor Plan Map" />
-          <NavItem mode="DASHBOARD" icon={LayoutDashboard} label="Bill of Materials" />
+          <nav className="flex-1 px-4 space-y-2">
+            {/* REORDERED & RENAMED NAV */}
+            <NavItem mode="COVER_SHEET" icon={FileText} label="Project Brief" />
+            <NavItem mode="VISUALIZER" icon={Cpu} label="Rack & DIN Layout" />
+            <NavItem mode="FLOORPLAN" icon={Map} label="Floor Plan Map" />
+            <NavItem mode="DASHBOARD" icon={LayoutDashboard} label="Bill of Materials" />
+            <NavItem mode="ROUGH_IN" icon={Hammer} label="Rough-in Guide" />
 
-          {/* HIDDEN FOR NOW
+            {/* HIDDEN FOR NOW
           <NavItem mode="TOPOLOGY" icon={Activity} label="Wiring Topology" />
           <NavItem mode="ADVISOR" icon={BrainCircuit} label="AI Validator" />
           */}
-        </nav>
+          </nav>
 
-        <div className="p-4 border-t border-slate-800">
-          <div className="bg-slate-900 rounded p-3 text-xs text-slate-500">
-            Project: <span className="text-slate-300">270 Boll Ave</span><br />
-            Status: <span className="text-amber-500">Draft</span>
+          <div className="p-4 border-t border-slate-800">
+            <div className="bg-slate-900 rounded p-3 text-xs text-slate-500">
+              Project: <span className="text-slate-300">270 Boll Ave</span><br />
+              Status: <span className="text-amber-500">Draft</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden relative">
-        {/* Top Header */}
-        <header className="h-16 border-b border-slate-800 bg-slate-950/50 backdrop-blur flex items-center justify-between px-8 z-10">
-          <h2 className="text-lg font-semibold text-white capitalize">
-            {view === 'DASHBOARD' ? 'Bill of Materials' : view === 'COVER_SHEET' ? 'Project Brief' : view.toLowerCase().replace('_', ' ')}
-          </h2>
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-slate-400">Total BOM:</span>
-            <span className="text-lg font-bold text-emerald-400">
-              ${modules.reduce((acc, m) => acc + (m.cost * m.quantity), 0).toLocaleString()}
-            </span>
-          </div>
-        </header>
-
-        {/* Dynamic Viewport */}
-        {/* Dynamic Viewport */}
-        <main className="flex-1 flex flex-col min-w-0 bg-slate-950 text-slate-200 overflow-hidden relative">
-          {(view === 'FLOORPLAN' || view === 'VISUALIZER' || view === 'TOPOLOGY') ? (
-            <div className="absolute inset-0 z-10">
-              {view === 'VISUALIZER' && <Visualizer modules={modules} highlightedModuleId={highlightedModuleId} />}
-              {view === 'TOPOLOGY' && <WiringDiagram modules={modules} connections={connections} />}
-              {view === 'FLOORPLAN' && <FloorPlanMap modules={modules} setModules={setModules} onLocate={handleLocateModule} />}
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col overflow-hidden relative">
+          {/* Top Header */}
+          <header className="h-16 border-b border-slate-800 bg-slate-950/50 backdrop-blur flex items-center justify-between px-8 z-10">
+            <h2 className="text-lg font-semibold text-white capitalize">
+              {view === 'DASHBOARD' ? 'Bill of Materials' : view === 'COVER_SHEET' ? 'Project Brief' : view.toLowerCase().replace('_', ' ')}
+            </h2>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-slate-400">Total BOM:</span>
+              <span className="text-lg font-bold text-emerald-400">
+                ${modules.reduce((acc, m) => acc + (m.cost * m.quantity), 0).toLocaleString()}
+              </span>
             </div>
-          ) : (
-            <div className="flex-1 overflow-auto p-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-              <div className="max-w-7xl mx-auto">
-                {view === 'COVER_SHEET' && <CoverSheet modules={modules} onNavigate={setView} />}
-                {view === 'DASHBOARD' && <ProjectBOM modules={modules} />}
-                {view === 'ADVISOR' && <GeminiAdvisor modules={modules} connections={connections} />}
+          </header>
+
+          {/* Dynamic Viewport */}
+          {/* Dynamic Viewport */}
+          <main className="flex-1 flex flex-col min-w-0 bg-slate-950 text-slate-200 overflow-hidden relative">
+            {(view === 'FLOORPLAN' || view === 'VISUALIZER' || view === 'TOPOLOGY') ? (
+              <div className="absolute inset-0 z-10">
+                {view === 'VISUALIZER' && <Visualizer modules={modules} highlightedModuleId={highlightedModuleId} />}
+                {view === 'TOPOLOGY' && <WiringDiagram modules={modules} connections={connections} />}
+                {view === 'FLOORPLAN' && <FloorPlanMap modules={modules} setModules={setModules} onLocate={handleLocateModule} />}
               </div>
-            </div>
-          )}
-        </main>
+            ) : (
+              <div className="flex-1 overflow-auto p-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+                <div className="max-w-7xl mx-auto">
+                  {view === 'COVER_SHEET' && <CoverSheet modules={modules} onNavigate={setView} />}
+                  {view === 'ROUGH_IN' && <RoughInGuide modules={modules} onNavigate={setView} />}
+                  {view === 'DASHBOARD' && <ProjectBOM modules={modules} />}
+                  {view === 'ADVISOR' && <GeminiAdvisor modules={modules} connections={connections} />}
+                </div>
+              </div>
+            )}
+          </main>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

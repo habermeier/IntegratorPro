@@ -1,24 +1,21 @@
-# Walkthrough - Refined Project Brief (Round 2)
+# Walkthrough - Mobile Blocker
 
-I have applied the second round of refinements to the project brief in both the markdown document and the web application.
+I have implemented a responsive overlay to prevent users from accessing the dense dashboard on mobile devices.
 
 ## Changes
 
-### 1. Title Update
-- **Simplified:** Changed "Project Brief: Automated Building Systems (ABS)" to just **"Project Brief"**.
-- **Reason:** Removes formal/awkward titling.
+### 1. New Component: `MobileBlocker.tsx`
+- **Design:** Dark-themed, full-screen fixed overlay.
+- **Icons:** Uses `Monitor` and `Smartphone` icons to visually convey the requirement.
+- **Message:** "Desktop Experience Required. This portal is optimized for larger displays..."
 
-### 2. Collaboration Model (Section 4)
-- **Flexible Approach:** Removed the rigid "Suggested Lead" column, replacing it with **"Collaboration Approach"**.
-- **Values:** Changed definitive assignments to **"Joint / Flexible"** or **"Owner prefers..."**.
-- **Owner Capabilities:** Added a specific note highlighting the Owner's significant hands-on home improvement experience (framing, flooring, stairs) to validte the willingness to assist with LV wire pulling and drilling.
-
-### 3. Application Sync
-- **Updated Code:** All changes were applied to `components/CoverSheet.tsx` to ensure `localhost:3002` displays the latest version.
+### 2. App Integration
+- **Responsive Logic:** Updated `App.tsx` to conditionally render:
+    - `MobileBlocker` on screens smaller than 768px (`md` breakpoint).
+    - Main App on screens 768px and larger.
 
 ## Verification results
 
 ### Manual Verification
-- Verified title is clean and simple.
-- Verified Collaboration section emphasizes flexibility and mentions typical renovation skills.
-- Confirmed web app component (`CoverSheet.tsx`) contains the exact text requested.
+- Code review confirms `block md:hidden` on the blocker and `hidden md:flex` on the main app ensures exclusive rendering based on screen width.
+- Verified imports and syntax are correct.
