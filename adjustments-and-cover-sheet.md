@@ -16,15 +16,15 @@ Here is the final project brief, structured to prioritize the system's functiona
 
 The objective is to deploy a comprehensive, hardwired building automation system that prioritizes reliability, code compliance, and environmental intelligence. The system is designed to operate locally (offline) with a high degree of sensor-driven automation, reducing reliance on physical wall switches.
 
-  * **Regulatory Compliance:** The system is designed to strictly adhere to **California Building Standards Code (Title 24, Part 6)** regarding lighting controls, occupancy sensing, and energy efficiency.
-  * **Inspection Readiness:** The system must support a "Default State" that functions independently of advanced software layers (Home Assistant), ensuring the house passes all electrical and building inspections as a standalone entity.
+  * **Regulatory Compliance:** The system is designed to adhere to **California Building Standards Code (Title 24, Part 6)** regarding lighting controls, occupancy sensing, and energy efficiency.
+  * **Inspection Readiness:** The system is designed to support a "Default State" that functions independently of advanced software layers (Home Assistant), ensuring the house passes all electrical and building inspections as a standalone entity.
   * **Sensor-Driven Environment:** The design minimizes physical wall clutter ("wall acne") by leveraging a high density of presence, lux, and environmental sensors. The primary method of interaction should be automatic (presence-based) or indirect (voice/app), with physical keypads serving as manual overrides.
   * **Environmental Safety & Air Quality:**
       * **Active Air Management:** Automated operation of motorized skylights and Whole House Fans based on internal/external temperature differentials.
       * **Safety Interlock:** Differential air pressure monitoring to prevent negative pressure hazards before fan engagement.
       * **Air Quality:** Dedicated Humidity and VOC sensors in bathrooms and laundry areas to trigger high-static pressure DC exhaust fans automatically.
   * **Ownership & Access:**
-      * **Data Sovereignty:** The system will avoid cloud dependencies for critical infrastructure. Lighting, Access, and HVAC must function 100% locally.
+      * **Data Sovereignty:** The system will avoid cloud dependencies for critical infrastructure. Lighting, Access, and HVAC should function 100% locally.
       * **System Rights:** The Owner will retain the ETS Project File (`.knxproj`), the ETS license, and administrative credentials for all gateways to prevent vendor lock-in.
 
 ## 2\. Technical Architecture
@@ -72,27 +72,36 @@ The following hardware standards have been selected to meet the specific "Deep D
   * **Network Core:** Ubiquiti UniFi Pro Max 24 PoE.
   * **Logic Core:** ASUS NUC 13 Pro (Running Home Assistant OS).
 
-## 4\. Collaboration Model & Scope of Work
+## 4. Collaboration Model & Scope of Work
 
 This project utilizes a **Collaborative "Hybrid" Deployment**. The Owner is a technical professional (Software Engineer) with remodeling experience and intends to be an active participant in the physical and logical deployment of the system.
 
 **Owner Contribution:**
 
-  * **Labor Resource:** The Owner is willing and available to contribute approximately **80 hours (2 weeks)** of focused labor to the project.
-  * **Capabilities:** Owner is proficient in low-voltage termination, DIN rail assembly, device mounting, and complex software programming.
+  * **Labor Resource:** The Owner is **willing to contribute** approximately **80 hours** of focused labor to the project.
+  * **Capabilities:** Owner is proficient in low-voltage termination and complex software programming.
   * **Objective:** To utilize Owner-labor to optimize the project budget and ensure the Owner possesses deep familiarity with the physical infrastructure for long-term maintenance.
 
 **Proposed Scope of Responsibilities:**
-We invite the Integrator to propose a workflow that best utilizes professional expertise alongside the Owner's availability.
 
 | Scope Item | Suggested Lead | Collaboration Notes |
 | :--- | :--- | :--- |
-| **High Voltage (HV)** | **Pro / Electrician** | Strictly professional scope (Safety/Code). |
-| **LV Wire Pulling** | **Pro Integrator** | Efficient rough-in is best handled by the pro team. |
-| **Panel Build (LCP-1/2)** | **Joint Effort** | Owner can pre-assemble DIN rails; Pro terminates field wiring. |
-| **Device Install** | **Joint Effort** | Pro handles high-volume/ladder work; Owner assists with low-level devices. |
-| **Hardware Supply** | **Open** | Integrator may supply; Owner can supply specialized import items (MDT/Lunatone) if needed. |
-| **Commissioning** | **Joint Effort** | **Pro:** Basic validation (lines checked, lights turn on).<br>**Owner:** Advanced logic, scenes, AI, Home Assistant integration. |
+| **High Voltage (HV)** | **Pro / Electrician** | Professional scope (Safety/Code). |
+| **Panel Build (Physical)** | **Pro Integrator** | DIN Rail assembly and physical build best handled by Pro. |
+| **LV Wire Pulling** | **Joint Effort** | Owner willing to assist; efficient rough-in led by Pro. |
+| **Device Registration** | **Owner** | Owner to handle bench registration/labeling of KNX/DALI devices pre-install. |
+| **Commissioning** | **Joint Effort** | **Pro:** Basic validation.<br>**Owner:** Lead on Logic, Scenes, AI, Home Assistant. |
+
+## 5. Ownership & Handoff Guidelines
+
+The Owner's goal is to ensure the system is maintainable and transferrable, treating the automation infrastructure as a fixed asset of the home. The following items are key to this objective:
+
+  * **Hardware License (Dongle):** The physical KNX USB Interface is a licensed asset and should remain on-site in the MDF rack.
+  * **Master Data File (.knxproj):** The unencrypted project file containing all programming and device parameters. **Objective:** To be emailed to the owner after every major revision.
+  * **Administrative Passwords:**
+      * **Project Password:** Required to edit the `.knxproj` file.
+      * **BCU Keys:** Device-level passwords required to reprogram switches.
+  * **Transferability:** All items above are considered fixtures of the home (like a boiler manual) and should be transferable to any future qualified integrator.
 
 
 It may be wise to be able to deep link into component lists (maybe apply filter) to show what equipment I'm looking at.
