@@ -181,10 +181,55 @@ const Visualizer: React.FC<VisualizerProps> = ({ modules, highlightedModuleId })
           </div>
         </div>
 
-        {/* Rail Usage Stats */}
-        <div className="absolute -right-2 top-10 translate-x-full flex flex-col text-[9px] text-slate-500 w-16 pl-2">
-          <span className={isOverfilled ? 'text-red-500 font-bold' : 'text-slate-500'}>{usedTE.toFixed(1)} / {usableWidthTE} TE</span>
-          <span>{fillPercent.toFixed(0)}% Fill</span>
+        {/* Rail Usage Stats (Re-positioned for Clarity) */}
+        <div className="absolute right-1 top-2 flex flex-col items-end pointer-events-none z-10">
+          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm border ${isOverfilled ? 'bg-red-900/80 text-white border-red-700' : 'bg-slate-200/90 text-slate-700 border-slate-300'}`}>
+            {usedTE.toFixed(1)} / {usableWidthTE} TE
+          </span>
+          {isOverfilled && <span className="text-[9px] text-red-600 font-bold bg-white px-1 rounded mt-0.5">OVERFILLED</span>}
+        </div>
+      </div>
+    );
+  };
+
+  const renderPanelSchedule = (cabinetModules: HardwareModule[]) => {
+    return (
+      <div className="flex flex-col bg-slate-900 border border-slate-800 rounded-lg overflow-hidden flex-1 h-full min-h-[400px]">
+        <div className="bg-slate-950 px-4 py-2 border-b border-slate-800 font-bold text-slate-300 text-xs uppercase tracking-wider flex justify-between">
+          <span>Panel Schedule</span>
+          <span>{cabinetModules.length} Devices</span>
+        </div>
+        <div className="overflow-y-auto p-0">
+          <table className="w-full text-left text-[10px] sm:text-xs">
+            <thead className="bg-slate-900/50 text-slate-500 font-semibold border-b border-slate-800">
+              <tr>
+                <th className="px-3 py-2 w-12">#</th>
+                <th className="px-3 py-2">Device</th>
+                <th className="px-3 py-2">Purpose / Notes</th>
+                <th className="px-3 py-2 w-16 text-right">Power</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/50">
+              {cabinetModules.map((m, i) => {
+                if (m.name === 'Air Gap') return null; // Skip spacers in schedule
+                return (
+                  <tr key={i} className="hover:bg-slate-800/30 transition-colors">
+                    <td className="px-3 py-2 text-slate-600 font-mono">{i + 1}</td>
+                    <td className="px-3 py-2">
+                      <div className="font-medium text-slate-300">{m.name}</div>
+                      <div className="text-[9px] text-slate-500">{m.manufacturer}</div>
+                    </td>
+                    <td className="px-3 py-2 text-slate-400">
+                      {m.notes || m.description || <span className="opacity-30">--</span>}
+                    </td>
+                    <td className="px-3 py-2 text-right text-slate-500 font-mono">
+                      {m.powerWatts > 0 ? `${m.powerWatts}W` : '-'}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     );
@@ -192,6 +237,7 @@ const Visualizer: React.FC<VisualizerProps> = ({ modules, highlightedModuleId })
 
   const renderCabinet = (location: string) => {
     const cabinetModules = getCabinetModulesWithSpacers(location);
+    const validModules = cabinetModules.filter(m => m.name !== 'Air Gap');
     const enclosure = modules.find(m => m.location === location && m.type === ModuleType.ENCLOSURE);
 
     // Determine Physical Constraints based on Enclosure Model
@@ -204,27 +250,27 @@ const Visualizer: React.FC<VisualizerProps> = ({ modules, highlightedModuleId })
     let notes: string[] = [];
 
     if (location === 'LCP-1') {
-      // Saginaw 24x24. 24 inches wide.
-      // Usable width roughly 20 inches accounting for wire duct side channels.
-      // 20 inches / 0.7 = ~28 TE
+      // Saginaw 24x24.
       RAIL_WIDTH_TE = 28;
-      ENCLOSURE_WIDTH_PX = 600;
-      NUM_RAILS = 4; // 24" height allows about 4 rails with 2" ducts
+      ENCLOSURE_WIDTH_PX = 700; // Increased width
+      NUM_RAILS = 4;
       notes = [
         "**Thermal Management:** 480W PSU requires 2-inch vertical air gap for convection.",
+        "**Depth Requirement:** Enclosure must be 8-inches deep. Mean Well SDR-480-24 is 5.06\" deep + DIN Rail + Wiring Clearance.",
+        "**Clearance:** Standard zero-clearance mounting. Thermal gaps (0.5TE) visualized for high-wattage devices (>3W).",
         "**High Voltage:** 120V terminations must be separated from KNX bus cable (Class 1 vs Class 2).",
         "**Topology:** Contains MDT IP Router for backbone connection to MDF."
       ];
     } else if (location === 'LCP-2') {
-      // Leviton 14.5" wide Structured Media Center.
-      // Usable width roughly 12.5 inches (leaving 1" on ea side for wire mgmt).
-      // 12.5 / 0.7 = ~17 TE
+      // Leviton 14.5" wide.
+      // We visually "zoom in" by giving it more pixel width, even if TE is less.
       RAIL_WIDTH_TE = 17;
-      ENCLOSURE_WIDTH_PX = 380;
-      NUM_RAILS = 4; // 21" height allows 4 tight rails (5.25" pitch)
+      ENCLOSURE_WIDTH_PX = 550; // Widen to make modules readable
+      NUM_RAILS = 4;
       notes = [
         "**Hardware Warning:** Default 'Vertical-Mount' brackets (47605-DIN) provided by Leviton have insufficient capacity for this load.",
         "**Solution:** Custom Horizontal DIN rails must be installed (e.g. screwed into backplate) to achieve this 3-row density.",
+        "**Clearance:** Standard zero-clearance mounting. Thermal gaps (0.5TE) visualized for high-wattage devices.",
         "**Thermal:** Tightly packed media center. Ensure sufficient airflow.",
         "**Topology:** Connected to MDF via Cat6a (PoE)."
       ];
@@ -236,7 +282,7 @@ const Visualizer: React.FC<VisualizerProps> = ({ modules, highlightedModuleId })
       ];
     }
 
-    // Layout Rows
+    // Layout Rows for DIN
     const rows: HardwareModule[][] = [];
     let currentRow: HardwareModule[] = [];
     let currentWidth = 0;
@@ -253,154 +299,144 @@ const Visualizer: React.FC<VisualizerProps> = ({ modules, highlightedModuleId })
     });
     if (currentRow.length > 0) rows.push(currentRow);
 
-    // MDF Logic
-    if (location === 'MDF') {
-      const rackModules = modules.filter(m => m.location === 'MDF' && m.mountType === MountType.RACK_UNIT);
-      return (
-        <div key={location} className="min-w-[300px] flex flex-col">
-          <h3 className="text-xl font-bold text-white mb-2 flex items-center">
-            <span className="w-2 h-6 bg-blue-500 mr-3 rounded-full"></span> {location} (19" Rack)
-          </h3>
-          <div className="bg-slate-900 border-2 border-slate-700 rounded-lg p-4 shadow-xl relative min-h-[500px]">
-            {/* Rack Rails */}
-            <div className="absolute left-2 top-0 bottom-0 w-4 border-r border-slate-700 bg-slate-800 flex flex-col justify-around py-2">
-              {Array.from({ length: 20 }).map((_, i) => <div key={i} className="w-1.5 h-1.5 bg-slate-900 rounded-full mx-auto"></div>)}
-            </div>
-            <div className="absolute right-2 top-0 bottom-0 w-4 border-l border-slate-700 bg-slate-800 flex flex-col justify-around py-2">
-              {Array.from({ length: 20 }).map((_, i) => <div key={i} className="w-1.5 h-1.5 bg-slate-900 rounded-full mx-auto"></div>)}
-            </div>
-
-            <div className="mt-2 space-y-1 mx-6">
-              {rackModules.map((m, i) => (
-                <div
-                  key={i}
-                  ref={(el) => { moduleRefs.current[m.id] = el; }}
-                  className={`h-12 bg-slate-800 border rounded flex items-center px-4 justify-between group relative shadow-lg
-                                  ${highlightedModuleId === m.id ? 'border-blue-500 ring-2 ring-blue-500/50' : 'border-slate-600'}
-                                `}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded bg-slate-900 flex items-center justify-center text-[10px] text-slate-500 border border-slate-700">1U</div>
-                    <div>
-                      <div className="text-sm font-medium text-slate-300">{m.name}</div>
-                      <div className="text-[10px] text-slate-500 uppercase tracking-widest">{m.manufacturer}</div>
-                    </div>
-                  </div>
-                  <div className="text-emerald-500 text-xs">${m.cost}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-          {/* Engineering Notes - MDF */}
-          <div className="mt-3 bg-slate-900/50 p-3 rounded border border-slate-800">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Integrator Notes</h4>
-            <ul className="space-y-1">
-              {notes.map((note, i) => (
-                <li key={i} className="text-[10px] text-slate-400 flex items-start">
-                  <span className="mr-1.5 mt-0.5 text-blue-500">•</span>
-                  <span dangerouslySetInnerHTML={{ __html: note.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-200">$1</strong>') }}></span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )
-    }
+    // Header Content
+    const dimLabel = enclosure?.dimensions
+      ? `${enclosure.dimensions.width}" W x ${enclosure.dimensions.height}" H x ${enclosure.dimensions.depth}" D`
+      : location === 'LCP-1' ? '24" W x 24" H' : location === 'LCP-2' ? '14.5" W x 21" H' : '';
 
     return (
-      <div key={location} className="flex flex-col" style={{ width: ENCLOSURE_WIDTH_PX }}>
-        <div className="flex justify-between items-end mb-2 px-1">
-          <h3 id={`header-${location}`} className="text-xl font-bold text-white flex items-center">
-            <span className={`w-2 h-6 mr-3 rounded-full ${location === 'LCP-1' ? 'bg-red-500' : 'bg-emerald-500'}`}></span>
+      <div key={location} className="w-full flex flex-col mb-16 border-b border-slate-800/50 pb-12 last:border-0">
+        {/* HEADER */}
+        <div className="flex items-end gap-4 mb-6">
+          <h3 id={`header-${location}`} className="text-3xl font-bold text-white flex items-center">
+            <span className={`w-3 h-8 mr-4 rounded-full ${location === 'LCP-1' ? 'bg-red-500' : location === 'LCP-2' ? 'bg-emerald-500' : 'bg-blue-600'}`}></span>
             {location}
           </h3>
-          <div className="text-right">
-            <div className="text-xs text-slate-300">{enclosure?.description}</div>
-            <div className="text-[10px] text-slate-500">{enclosure?.dimensions ? `${enclosure.dimensions.width}"W x ${enclosure.dimensions.height}"H x ${enclosure.dimensions.depth}"D` : ''}</div>
+          <div className="mb-1 text-slate-400 font-mono text-sm border-l border-slate-700 pl-4">
+            {enclosure?.description} <span className="text-slate-600 mx-2">|</span> <span className="text-amber-500">{dimLabel}</span>
           </div>
         </div>
 
-        {/* ENCLOSURE BOX */}
-        <div className="bg-slate-300 border-[12px] border-slate-400 rounded-sm p-0 shadow-2xl relative">
-          {/* Backplate */}
-          <div className="bg-white/90 min-h-[500px] relative p-4 flex flex-col gap-1">
-            <div className="absolute top-0 left-0 right-0 h-4 bg-yellow-400/20 flex justify-center items-center text-[9px] text-yellow-800 font-bold border-b border-yellow-400/30">
-              DANGER: HIGH VOLTAGE
-            </div>
+        {/* CONTENT ROW */}
+        <div className="flex flex-col xl:flex-row gap-8 items-start">
 
-            {/* DIN Rows */}
-            <div className="mt-6 flex flex-col gap-1">
-              {rows.map((row, idx) => renderRail(row, idx, RAIL_WIDTH_TE))}
-
-              {/* Empty Spare Rails */}
-              {Array.from({ length: Math.max(0, NUM_RAILS - rows.length) }).map((_, i) => (
-                <div key={`empty-${i}`} className="opacity-50 grayscale">
-                  {renderRail([], rows.length + i, RAIL_WIDTH_TE)}
+          {/* LEFT: VISUAL - ALLOW GROWTH */}
+          <div className="flex-none shadow-2xl rounded-sm" style={{ width: location === 'MDF' ? '100%' : ENCLOSURE_WIDTH_PX, maxWidth: location === 'MDF' ? '600px' : 'none' }}>
+            {location === 'MDF' ? (
+              // RACK VISUAL (Unchanged logic, just placeholder for diff context)
+              <div className="bg-slate-900 border-2 border-slate-700 rounded-lg p-4 relative min-h-[500px]">
+                {/* Rack Rails */}
+                <div className="absolute left-2 top-0 bottom-0 w-4 border-r border-slate-700 bg-slate-800 flex flex-col justify-around py-2">
+                  {Array.from({ length: 20 }).map((_, i) => <div key={i} className="w-1.5 h-1.5 bg-slate-900 rounded-full mx-auto"></div>)}
                 </div>
-              ))}
+                <div className="absolute right-2 top-0 bottom-0 w-4 border-l border-slate-700 bg-slate-800 flex flex-col justify-around py-2">
+                  {Array.from({ length: 20 }).map((_, i) => <div key={i} className="w-1.5 h-1.5 bg-slate-900 rounded-full mx-auto"></div>)}
+                </div>
+                <div className="mt-2 space-y-1 mx-6">
+                  {modules.filter(m => m.location === 'MDF' && m.mountType === MountType.RACK_UNIT).map((m, i) => (
+                    <div key={i} ref={(el) => { moduleRefs.current[m.id] = el; }}
+                      className={`h-12 bg-slate-800 border rounded flex items-center px-4 justify-between shadow-lg ${highlightedModuleId === m.id ? 'border-blue-500 ring-2 ring-blue-500/50' : 'border-slate-600'}`}>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded bg-slate-900 flex items-center justify-center text-[10px] text-slate-500 border border-slate-700">1U</div>
+                        <div>
+                          <div className="text-sm font-medium text-slate-300">{m.name}</div>
+                          <div className="text-[10px] text-slate-500 uppercase tracking-widest">{m.manufacturer}</div>
+                        </div>
+                      </div>
+                      <div className="text-emerald-500 text-xs">${m.cost}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              // DIN ENCLOSURE VISUAL
+              <div className="bg-slate-300 border-[12px] border-slate-400 rounded-sm p-0 relative">
+                <div className="bg-white/90 min-h-[500px] relative p-4 flex flex-col gap-1">
+                  <div className="absolute top-0 left-0 right-0 h-4 bg-yellow-400/20 flex justify-center items-center text-[9px] text-yellow-800 font-bold border-b border-yellow-400/30">
+                    DANGER: HIGH VOLTAGE
+                  </div>
+                  <div className="mt-6 flex flex-col gap-1">
+                    {rows.map((row, idx) => renderRail(row, idx, RAIL_WIDTH_TE))}
+                    {Array.from({ length: Math.max(0, NUM_RAILS - rows.length) }).map((_, i) => (
+                      <div key={`empty-${i}`} className="opacity-50 grayscale">{renderRail([], rows.length + i, RAIL_WIDTH_TE)}</div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT: SCHEDULE & NOTES - SHRINK SLIGHTLY */}
+          <div className="flex-1 w-full flex flex-col gap-6 min-w-[300px] max-w-2xl">
+            {/* SCHEDULE */}
+            {renderPanelSchedule(location === 'MDF' ? modules.filter(m => m.location === 'MDF') : validModules)}
+
+            {/* NOTES */}
+            <div className="bg-slate-900/40 p-4 rounded border border-slate-800/60">
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> Install Notes
+              </h4>
+              <ul className="space-y-2">
+                {notes.map((note, i) => (
+                  <li key={i} className="text-xs text-slate-400 flex items-start leading-relaxed pl-2 border-l-2 border-slate-800">
+                    <span dangerouslySetInnerHTML={{ __html: note.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-200">$1</strong>') }}></span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
-        </div>
-
-        {/* Engineering Notes - Standard Layout */}
-        <div className="mt-3 bg-slate-900/50 p-3 rounded border border-slate-800">
-          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Integrator Notes</h4>
-          <ul className="space-y-1">
-            {notes.map((note, i) => (
-              <li key={i} className="text-[10px] text-slate-400 flex items-start">
-                <span className="mr-1.5 mt-0.5 text-blue-500">•</span>
-                <span dangerouslySetInnerHTML={{ __html: note.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-200">$1</strong>') }}></span>
-              </li>
-            ))}
-          </ul>
         </div>
       </div>
     );
   };
 
   return (
-    <div className="h-full overflow-y-auto p-8 bg-slate-950">
+    <div className="h-full overflow-y-auto p-12 bg-slate-950 scroll-smooth">
+      <div className="max-w-7xl mx-auto">
 
-      {/* Cabinet Layouts Row */}
-      <div className="flex flex-col xl:flex-row gap-12 pb-12 overflow-x-auto items-start">
-        {cabinets.map(loc => renderCabinet(loc))}
-      </div>
+        {/* Cabinets Stack */}
+        <div className="flex flex-col gap-8 pb-12">
+          {cabinets.map(loc => renderCabinet(loc))}
+        </div>
 
-      {/* Field Devices Section */}
-      <div className="border-t border-slate-800 pt-8 mt-8">
-        <h3 className="text-xl font-bold text-white mb-6 flex items-center">
-          <span className="w-2 h-8 bg-amber-500 mr-3 rounded-full"></span>
-          Field & Rough-In Devices (Bill of Materials)
-        </h3>
+        {/* Field Devices Section */}
+        <div className="border-t border-slate-800 pt-12 mt-8">
+          <h3 className="text-2xl font-bold text-white mb-8 flex items-center">
+            <span className="w-2 h-8 bg-amber-500 mr-4 rounded-full"></span>
+            Field & Rough-In Devices
+          </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {fieldModules.map((mod, idx) => (
-            <a
-              key={`${mod.id}-${idx}`}
-              href={mod.url}
-              target="_blank"
-              rel="noreferrer"
-              className="bg-slate-900 border border-slate-800 rounded-lg p-4 flex items-start space-x-3 hover:border-blue-500 hover:bg-slate-800 transition-all group"
-            >
-              <div className={`mt-1 w-8 h-8 rounded flex items-center justify-center shrink-0 
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {fieldModules
+              .filter(m => !['MDF', 'LCP-1', 'LCP-2', 'Infra'].includes(m.location || '')) // Explicit Filter
+              .map((mod, idx) => (
+                <a
+                  key={`${mod.id}-${idx}`}
+                  href={mod.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-slate-900 border border-slate-800 rounded-lg p-4 flex items-start space-x-3 hover:border-blue-500 hover:bg-slate-800 transition-all group"
+                >
+                  <div className={`mt-1 w-8 h-8 rounded flex items-center justify-center shrink-0 
                           ${mod.mountType === MountType.CEILING_MOUNT ? 'bg-blue-900/30 text-blue-400' :
-                  mod.type === 'SECURITY' ? 'bg-red-900/30 text-red-400' : 'bg-amber-900/30 text-amber-400'}`}>
-                <span className="font-bold text-xs">{mod.quantity}</span>
-              </div>
-              <div className="overflow-hidden flex-1">
-                <div className="flex justify-between">
-                  <div className="text-sm font-medium text-slate-200 truncate group-hover:text-blue-400">{mod.name}</div>
-                  <span className="text-xs text-emerald-500 font-mono">${mod.cost}</span>
-                </div>
-                <div className="text-xs text-slate-500 truncate">{mod.manufacturer} • {mod.description}</div>
-                <div className="mt-2 flex gap-2">
-                  <span className="text-[10px] bg-slate-950 px-1.5 py-0.5 rounded text-slate-400 border border-slate-700">{mod.location}</span>
-                  {mod.url && <span className="text-[10px] text-blue-500 flex items-center gap-1">View Product &rarr;</span>}
-                </div>
-                {mod.notes && <div className="mt-2 text-[10px] text-amber-500 italic truncate">{mod.notes}</div>}
-              </div>
-            </a>
-          ))}
+                      mod.type === 'SECURITY' ? 'bg-red-900/30 text-red-400' : 'bg-amber-900/30 text-amber-400'}`}>
+                    <span className="font-bold text-xs">{mod.quantity}</span>
+                  </div>
+                  <div className="overflow-hidden flex-1">
+                    <div className="flex justify-between">
+                      <div className="text-sm font-medium text-slate-200 truncate group-hover:text-blue-400">{mod.name}</div>
+                      <span className="text-xs text-emerald-500 font-mono">${mod.cost}</span>
+                    </div>
+                    <div className="text-xs text-slate-500 truncate">{mod.manufacturer} • {mod.description}</div>
+                    <div className="mt-2 flex gap-2">
+                      <span className="text-[10px] bg-slate-950 px-1.5 py-0.5 rounded text-slate-400 border border-slate-700">{mod.location}</span>
+                      {mod.url && <span className="text-[10px] text-blue-500 flex items-center gap-1">View Product &rarr;</span>}
+                    </div>
+                    {mod.notes && <div className="mt-2 text-[10px] text-amber-500 italic truncate">{mod.notes}</div>}
+                  </div>
+                </a>
+              ))}
+          </div>
         </div>
       </div>
     </div>

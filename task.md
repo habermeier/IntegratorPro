@@ -3,4 +3,5 @@
 - [x] Modify `WallDetector` to be controlled by parent and return data <!-- id: 2 -->
 - [x] Modify `FloorPlanMap` to handle wall data (save/delete/display) <!-- id: 3 -->
 - [x] Refactor `FloorPlanMap` UI controls and add Debug Monitor Toggle <!-- id: 5 -->
+- [x] Refactor Rack & DIN Layout (Visualizer changes) <!-- id: 6 -->
 - [ ] Verify functionality (Blocked by OpenCV Library Crash) <!-- id: 4 -->
