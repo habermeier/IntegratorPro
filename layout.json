@@ -1,163 +1,178 @@
 [
-    {
-        "id": "entry-sw-1",
-        "type": "SWITCH",
-        "x": 48.5,
-        "y": 92.0,
-        "notes": "Main Entry"
-    },
-    {
-        "id": "living-lt-1",
-        "type": "LIGHT",
-        "x": 35.0,
-        "y": 70.0
-    },
-    {
-        "id": "living-lt-2",
-        "type": "LIGHT",
-        "x": 45.0,
-        "y": 70.0
-    },
-    {
-        "id": "living-lt-3",
-        "type": "LIGHT",
-        "x": 55.0,
-        "y": 70.0
-    },
-    {
-        "id": "living-lt-4",
-        "type": "LIGHT",
-        "x": 35.0,
-        "y": 80.0
-    },
-    {
-        "id": "living-lt-5",
-        "type": "LIGHT",
-        "x": 45.0,
-        "y": 80.0
-    },
-    {
-        "id": "living-lt-6",
-        "type": "LIGHT",
-        "x": 55.0,
-        "y": 80.0
-    },
-    {
-        "id": "kitchen-sw-1",
-        "type": "SWITCH",
-        "x": 45.0,
-        "y": 45.0,
-        "notes": "Kitchen Entry"
-    },
-    {
-        "id": "kitchen-lt-1",
-        "type": "LIGHT",
-        "x": 35.0,
-        "y": 35.0
-    },
-    {
-        "id": "kitchen-lt-2",
-        "type": "LIGHT",
-        "x": 45.0,
-        "y": 35.0
-    },
-    {
-        "id": "kitchen-lt-3",
-        "type": "LIGHT",
-        "x": 35.0,
-        "y": 45.0
-    },
-    {
-        "id": "kitchen-lt-4",
-        "type": "LIGHT",
-        "x": 45.0,
-        "y": 45.0
-    },
-    {
-        "id": "dining-lt-1",
-        "type": "LIGHT",
-        "x": 65.0,
-        "y": 40.0,
-        "notes": "Chandelier"
-    },
-    {
-        "id": "master-sw-1",
-        "type": "SWITCH",
-        "x": 75.0,
-        "y": 68.0,
-        "notes": "Master Entry"
-    },
-    {
-        "id": "master-lt-1",
-        "type": "LIGHT",
-        "x": 70.0,
-        "y": 75.0
-    },
-    {
-        "id": "master-lt-2",
-        "type": "LIGHT",
-        "x": 80.0,
-        "y": 75.0
-    },
-    {
-        "id": "master-lt-3",
-        "type": "LIGHT",
-        "x": 70.0,
-        "y": 85.0
-    },
-    {
-        "id": "master-lt-4",
-        "type": "LIGHT",
-        "x": 80.0,
-        "y": 85.0
-    },
-    {
-        "id": "master-fn-1",
-        "type": "FAN",
-        "x": 75.0,
-        "y": 80.0
-    },
-    {
-        "id": "office-lt-1",
-        "type": "LIGHT",
-        "x": 15.0,
-        "y": 20.0
-    },
-    {
-        "id": "office-lt-2",
-        "type": "LIGHT",
-        "x": 25.0,
-        "y": 20.0
-    },
-    {
-        "id": "office-lt-3",
-        "type": "LIGHT",
-        "x": 15.0,
-        "y": 30.0
-    },
-    {
-        "id": "office-lt-4",
-        "type": "LIGHT",
-        "x": 25.0,
-        "y": 30.0
-    },
-    {
-        "id": "garage-sens-1",
-        "type": "SENSOR",
-        "x": 85.0,
-        "y": 20.0,
-        "notes": "Garage Occ"
-    },
-    {
-        "id": "ext-1",
-        "type": "EXTERIOR",
-        "x": 50.0,
-        "y": 96.0
-    },
-    {
-        "id": "ext-2",
-        "type": "EXTERIOR",
-        "x": 50.0,
-        "y": 5.0
-    }
+  {
+    "id": "entry-sw-1",
+    "type": "SWITCH",
+    "x": 48.5,
+    "y": 92,
+    "notes": "Main Entry"
+  },
+  {
+    "id": "living-lt-1",
+    "type": "LIGHT",
+    "x": 35,
+    "y": 70
+  },
+  {
+    "id": "living-lt-2",
+    "type": "LIGHT",
+    "x": 45,
+    "y": 70
+  },
+  {
+    "id": "living-lt-3",
+    "type": "LIGHT",
+    "x": 55,
+    "y": 70
+  },
+  {
+    "id": "living-lt-4",
+    "type": "LIGHT",
+    "x": 35,
+    "y": 80
+  },
+  {
+    "id": "living-lt-5",
+    "type": "LIGHT",
+    "x": 45,
+    "y": 80
+  },
+  {
+    "id": "living-lt-6",
+    "type": "LIGHT",
+    "x": 55,
+    "y": 80
+  },
+  {
+    "id": "kitchen-sw-1",
+    "type": "SWITCH",
+    "x": 45,
+    "y": 45,
+    "notes": "Kitchen Entry"
+  },
+  {
+    "id": "kitchen-lt-1",
+    "type": "LIGHT",
+    "x": 35,
+    "y": 35
+  },
+  {
+    "id": "kitchen-lt-2",
+    "type": "LIGHT",
+    "x": 45,
+    "y": 35
+  },
+  {
+    "id": "kitchen-lt-3",
+    "type": "LIGHT",
+    "x": 35,
+    "y": 45
+  },
+  {
+    "id": "kitchen-lt-4",
+    "type": "LIGHT",
+    "x": 45,
+    "y": 45
+  },
+  {
+    "id": "dining-lt-1",
+    "type": "LIGHT",
+    "x": 65,
+    "y": 40,
+    "notes": "Chandelier"
+  },
+  {
+    "id": "master-sw-1",
+    "type": "SWITCH",
+    "x": 75,
+    "y": 68,
+    "notes": "Master Entry"
+  },
+  {
+    "id": "master-lt-1",
+    "type": "LIGHT",
+    "x": 70,
+    "y": 75
+  },
+  {
+    "id": "master-lt-2",
+    "type": "LIGHT",
+    "x": 80,
+    "y": 75
+  },
+  {
+    "id": "master-lt-3",
+    "type": "LIGHT",
+    "x": 70,
+    "y": 85
+  },
+  {
+    "id": "master-lt-4",
+    "type": "LIGHT",
+    "x": 80,
+    "y": 85
+  },
+  {
+    "id": "master-fn-1",
+    "type": "FAN",
+    "x": 75,
+    "y": 80
+  },
+  {
+    "id": "office-lt-1",
+    "type": "LIGHT",
+    "x": 15,
+    "y": 20
+  },
+  {
+    "id": "office-lt-2",
+    "type": "LIGHT",
+    "x": 25,
+    "y": 20
+  },
+  {
+    "id": "office-lt-3",
+    "type": "LIGHT",
+    "x": 15,
+    "y": 30
+  },
+  {
+    "id": "office-lt-4",
+    "type": "LIGHT",
+    "x": 25,
+    "y": 30
+  },
+  {
+    "id": "garage-sens-1",
+    "type": "SENSOR",
+    "x": 85,
+    "y": 20,
+    "notes": "Garage Occ"
+  },
+  {
+    "id": "ext-1",
+    "type": "EXTERIOR",
+    "x": 50,
+    "y": 96
+  },
+  {
+    "id": "ext-2",
+    "type": "EXTERIOR",
+    "x": 50,
+    "y": 5
+  },
+  {
+    "id": "LCP-1",
+    "type": "ENCLOSURE",
+    "x": 65.12729015106804,
+    "y": 53.71755495293087,
+    "rotation": -45,
+    "notes": "Garage Panel"
+  },
+  {
+    "id": "LCP-2",
+    "type": "ENCLOSURE",
+    "x": 31.585051985561073,
+    "y": 51.670826735382995,
+    "notes": "Laundry Panel"
+  }
 ]

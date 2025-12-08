@@ -35,8 +35,15 @@ export const MapSymbols = {
     ),
     EXTERIOR: ({ color = '#ef4444', size = '100%', ...props }: SymbolProps) => (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-            <rect x="4" y="4" width="16" height="16" stroke={color} strokeWidth="2" fill="white" fillOpacity="0.7" />
-            <text x="50%" y="50%" textAnchor="middle" dy=".35em" fontSize="10" fontWeight="bold" fill={color}>WP</text>
+            <rect x="4" y="4" width="16" height="16" stroke={color} strokeWidth="3" fill="white" fillOpacity="0.7" />
+            <text x="50%" y="50%" textAnchor="middle" dy=".35em" fontSize="12" fontWeight="900" fill={color}>WP</text>
+        </svg>
+    ),
+    ENCLOSURE: ({ color = '#8b5cf6', size = '100%', ...props }: SymbolProps) => (
+        <svg width={size} height={size} viewBox="0 0 48 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+            {/* Rectangular Panel Box (Double Wide) - Ultra Thick Borders */}
+            <rect x="2" y="2" width="44" height="20" rx="2" stroke={color} strokeWidth="8" fill="white" fillOpacity="0.9" />
+            <rect x="6" y="6" width="36" height="12" rx="1" stroke={color} strokeWidth="4" strokeDasharray="4 4" />
         </svg>
     )
 };

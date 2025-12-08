@@ -26,8 +26,8 @@ const App = () => {
     <button
       onClick={() => setView(mode)}
       className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${view === mode
-          ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50'
-          : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+        ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50'
+        : 'text-slate-400 hover:bg-slate-800 hover:text-white'
         }`}
     >
       <Icon size={20} />
@@ -45,7 +45,7 @@ const App = () => {
             <Activity className="text-blue-500 mr-2" />
             Integrator<span className="text-blue-500">Pro</span>
           </h1>
-          <p className="text-xs text-slate-500 mt-1">System Planning Suite v1.1</p>
+          <p className="text-xs text-slate-500 mt-1">System Planning Suite v1.13</p>
         </div>
 
         <nav className="flex-1 px-4 space-y-2">
