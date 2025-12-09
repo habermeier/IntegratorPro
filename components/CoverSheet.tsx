@@ -5,21 +5,40 @@ import { ViewMode } from '../types';
 
 interface CoverSheetProps {
     modules: HardwareModule[];
-    onNavigate?: (view: ViewMode) => void;
+    onNavigate?: (mode: ViewMode | 'COVER_SHEET', itemId?: string) => void;
+    highlightedModuleId?: string | null;
 }
 
-const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate }) => {
+const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate, highlightedModuleId }) => {
+
+    // Auto-scroll logic for text sections
+    React.useEffect(() => {
+        if (highlightedModuleId) {
+            // Check if it's a section or module
+            const el = document.getElementById(highlightedModuleId) || document.getElementById(`row-${highlightedModuleId}`);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    }, [highlightedModuleId]);
+
     return (
-        <div className="h-full overflow-y-auto p-8 bg-slate-950 text-slate-300 font-sans max-w-5xl mx-auto">
-            <h1 className="text-4xl font-bold text-white mb-2">Project Brief</h1>
+        <div className="p-8 bg-slate-950 text-slate-300 font-sans max-w-5xl mx-auto">
+            <h1 id="header-brief" className="text-4xl font-bold text-white mb-2">Project Brief</h1>
+
             <div className="flex gap-4 text-sm mb-8 text-slate-400">
                 <span><strong>Location:</strong> 270 Bolla Ave, Alamo, CA</span>
                 <span>•</span>
                 <span><strong>Status:</strong> Down-to-studs Remodel / Framing Phase</span>
             </div>
 
-            <section className="mb-12">
-                <h2 className="text-2xl font-bold text-blue-400 mb-4 border-b border-blue-900/30 pb-2">1. Functional Objectives & Design Philosophy</h2>
+            <section id="section-objectives" className={`mb-12 transition-all duration-500 p-6 rounded-xl ${highlightedModuleId === 'section-objectives' ? 'bg-blue-900/40 border-2 border-blue-500/50 shadow-[0_0_30px_rgba(59,130,246,0.2)]' : 'border border-transparent'}`}>
+                <h2
+                    onClick={() => window.location.hash = '#project-brief/section-objectives'}
+                    className="text-2xl font-bold text-blue-400 mb-4 border-b border-blue-900/30 pb-2 cursor-pointer hover:text-blue-300 transition-colors"
+                >
+                    1. Functional Objectives & Design Philosophy
+                </h2>
                 <p className="mb-4">
                     The objective is to deploy a comprehensive, hardwired building automation system that prioritizes reliability,
                     code compliance, and environmental intelligence. The system is designed to operate locally (offline) with a high degree
@@ -41,8 +60,13 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate }) => {
                 </div>
             </section>
 
-            <section className="mb-12">
-                <h2 className="text-2xl font-bold text-emerald-400 mb-4 border-b border-emerald-900/30 pb-2">2. Technical Architecture</h2>
+            <section id="section-architecture" className={`mb-12 transition-all duration-500 p-6 rounded-xl ${highlightedModuleId === 'section-architecture' ? 'bg-emerald-900/40 border-2 border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.2)]' : 'border border-transparent'}`}>
+                <h2
+                    onClick={() => window.location.hash = '#project-brief/section-architecture'}
+                    className="text-2xl font-bold text-emerald-400 mb-4 border-b border-emerald-900/30 pb-2 cursor-pointer hover:text-emerald-300 transition-colors"
+                >
+                    2. Technical Architecture
+                </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <h3 className="text-lg font-bold text-white mb-2">Lighting Topology (DALI-2 / KNX)</h3>
@@ -63,8 +87,13 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate }) => {
                 </div>
             </section>
 
-            <section className="mb-12">
-                <h2 className="text-2xl font-bold text-amber-400 mb-4 border-b border-amber-900/30 pb-2">3. Component Standards</h2>
+            <section id="section-standards" className={`mb-12 transition-all duration-500 p-6 rounded-xl ${highlightedModuleId === 'section-standards' ? 'bg-amber-900/40 border-2 border-amber-500/50 shadow-[0_0_30px_rgba(245,158,11,0.2)]' : 'border border-transparent'}`}>
+                <h2
+                    onClick={() => window.location.hash = '#project-brief/section-standards'}
+                    className="text-2xl font-bold text-amber-400 mb-4 border-b border-amber-900/30 pb-2 cursor-pointer hover:text-amber-300 transition-colors"
+                >
+                    3. Component Standards
+                </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm mb-6">
                     <div className="bg-slate-900 p-3 rounded border border-slate-800">
                         <h4 className="font-bold text-slate-200">Enclosures</h4>
@@ -93,8 +122,13 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate }) => {
                 </div>
             </section>
 
-            <section className="mb-12">
-                <h2 className="text-2xl font-bold text-purple-400 mb-4 border-b border-purple-900/30 pb-2">4. Collaboration Model</h2>
+            <section id="section-collaboration" className={`mb-12 transition-all duration-500 p-6 rounded-xl ${highlightedModuleId === 'section-collaboration' ? 'bg-purple-900/40 border-2 border-purple-500/50 shadow-[0_0_30px_rgba(139,92,246,0.2)]' : 'border border-transparent'}`}>
+                <h2
+                    onClick={() => window.location.hash = '#project-brief/section-collaboration'}
+                    className="text-2xl font-bold text-purple-400 mb-4 border-b border-purple-900/30 pb-2 cursor-pointer hover:text-purple-300 transition-colors"
+                >
+                    4. Collaboration Model
+                </h2>
                 <div className="bg-slate-900/50 p-6 rounded-xl border border-dashed border-slate-700">
                     <p className="mb-4">
                         <strong>Flexible Collaboration Model:</strong> The Owner (Software Engineer) has significant hands-on home improvement experience (framing modifications, window casing, hardwood flooring, stair building) and is willing to contribute labor where helpful.
@@ -143,8 +177,13 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate }) => {
                 </div>
             </section>
 
-            <section className="mb-12">
-                <h2 className="text-2xl font-bold text-blue-400 mb-4 border-b border-blue-900/30 pb-2">5. Sourcing Strategy</h2>
+            <section id="section-sourcing" className={`mb-12 transition-all duration-500 p-6 rounded-xl ${highlightedModuleId === 'section-sourcing' ? 'bg-blue-900/40 border-2 border-blue-500/50 shadow-[0_0_30px_rgba(59,130,246,0.2)]' : 'border border-transparent'}`}>
+                <h2
+                    onClick={() => window.location.hash = '#project-brief/section-sourcing'}
+                    className="text-2xl font-bold text-blue-400 mb-4 border-b border-blue-900/30 pb-2 cursor-pointer hover:text-blue-300 transition-colors"
+                >
+                    5. Sourcing Strategy
+                </h2>
                 <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700">
                     <p className="mb-4 text-sm text-slate-400">
                         To streamline procurement, equipment has been consolidated to three primary reputable vendors.
@@ -191,8 +230,13 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate }) => {
                 </div>
             </section>
 
-            <section className="mb-12">
-                <h2 className="text-2xl font-bold text-slate-200 mb-4 border-b border-slate-700 pb-2">6. Ownership & Handoff Guidelines</h2>
+            <section id="section-ownership" className={`mb-12 transition-all duration-500 p-6 rounded-xl ${highlightedModuleId === 'section-ownership' ? 'bg-slate-800/60 border-2 border-slate-500/50 shadow-[0_0_30px_rgba(148,163,184,0.2)]' : 'border border-transparent'}`}>
+                <h2
+                    onClick={() => window.location.hash = '#project-brief/section-ownership'}
+                    className="text-2xl font-bold text-slate-200 mb-4 border-b border-slate-700 pb-2 cursor-pointer hover:text-white transition-colors"
+                >
+                    6. Ownership & Handoff Guidelines
+                </h2>
                 <div className="bg-slate-900/50 p-6 rounded-xl border border-dashed border-slate-700">
                     <p className="mb-4 text-sm text-slate-300">
                         The Owner's goal is to ensure the system is maintainable and transferrable, treating the automation infrastructure as a fixed asset of the home.
@@ -229,9 +273,6 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate }) => {
                 </div>
             </section>
 
-
-
-
             <section className="mb-12">
                 <div className="flex justify-between items-center mb-6 border-b border-slate-700 pb-2">
                     <h2 className="text-2xl font-bold text-slate-200">7. Budget & Equipment Overview</h2>
@@ -240,21 +281,10 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate }) => {
                     </div>
                 </div>
 
-                <ProjectBOM modules={modules} summaryOnly={true} />
+                <ProjectBOM modules={modules} summaryOnly={true} highlightedModuleId={highlightedModuleId} linkPrefix="project-brief" />
 
-                <div className="mt-6 flex justify-center">
-                    <div className="text-center p-4 bg-slate-900/50 rounded-lg border border-slate-800">
-                        <p className="text-slate-400 text-sm mb-2">Detailed line-item pricing and part numbers are available in the full Bill of Materials view.</p>
-                        {onNavigate && (
-                            <button
-                                onClick={() => onNavigate('DASHBOARD')}
-                                className="text-blue-400 text-xs font-bold uppercase tracking-wider hover:text-blue-300 transition-colors"
-                            >
-                                &larr; Go to Bill of Materials
-                            </button>
-                        )}
-                    </div>
-                </div>
+
+
             </section>
         </div>
     );

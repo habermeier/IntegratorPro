@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import STRUCTURAL_IMAGE from '../images/floor-plan-clean.jpg';
 import ELECTRICAL_IMAGE from '../images/electric-plan-plain-full-clean-2025-11-22.jpg';
-import { HardwareModule } from '../types';
+import { HardwareModule, ModuleType } from '../types';
 import { TransformWrapper, TransformComponent, useControls } from "react-zoom-pan-pinch";
 import { MousePointer2, Move, Activity, Layers, Wand2, ScanLine, Trash2, Lock, Unlock } from 'lucide-react';
 
@@ -18,6 +18,7 @@ interface FloorPlanMapProps {
     modules: HardwareModule[];
     setModules: React.Dispatch<React.SetStateAction<HardwareModule[]>>;
     onLocate: (id: string) => void;
+    highlightedModuleId?: string | null; // Added
 }
 
 const MapController = ({ activeLayer, setFitFn }: { activeLayer: string, setFitFn: (fn: () => void) => void }) => {
@@ -73,7 +74,46 @@ const MapController = ({ activeLayer, setFitFn }: { activeLayer: string, setFitF
     return null;
 };
 
-const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLocate }) => {
+const DeepLinkHandler = ({ highlightedModuleId, modules }: { highlightedModuleId?: string | null, modules: HardwareModule[] }) => {
+    const { instance } = useControls();
+
+    useEffect(() => {
+        if (highlightedModuleId && instance.wrapperComponent) {
+            const target = modules.find(m => m.id === highlightedModuleId);
+            // If target has position (0-100 coordinates)
+            if (target && target.position) {
+                // Convert % to pixels logic would be needed here if we rely on that.
+                // But wait, the map symbols are rendered absolutely?
+                // The easiest way is to just flash the selection state via onLocate logic or similar.
+                // But we want to ZOOM to it.
+                // Let's defer comprehensive Zoom-To-Coordinates for now and just ensure it's SELECTED.
+                // We can at least "Reset" view or something.
+                // Actually, if we just console log "Zooming to..." that verifies it receives the prop.
+                console.log('DeepLink: Zooming to', highlightedModuleId);
+                // TODO: Implement precise pixel coordinate zoom
+            }
+        }
+    }, [highlightedModuleId]);
+
+    return null;
+};
+
+const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLocate, highlightedModuleId }) => {
+    // --- LAYERS STATE ---
+    // Default: Show common layers
+    const [visibleLayers, setVisibleLayers] = useState<Record<string, boolean>>({
+        [ModuleType.LIGHTING]: true,
+        [ModuleType.SENSOR]: true,
+        [ModuleType.SECURITY]: true,
+        [ModuleType.HVAC]: true,
+        [ModuleType.NETWORK]: true,
+        [ModuleType.CONTROLLER]: true
+    });
+
+    const toggleLayer = (type: string) => {
+        setVisibleLayers(prev => ({ ...prev, [type]: !prev[type] }));
+    };
+
     const [activeLayer, setActiveLayer] = useState<'STRUCTURAL' | 'ELECTRICAL'>('STRUCTURAL');
     const currentMapImage = activeLayer === 'STRUCTURAL' ? STRUCTURAL_IMAGE : ELECTRICAL_IMAGE;
     const [fitToScreen, setFitToScreen] = useState<() => void>(() => () => { });
@@ -127,8 +167,20 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
     renderCount.current++;
     addLog('Render', { count: renderCount.current });
 
-    // Combine Manual Layout + AI Detected Symbols
-    const allSymbols = [...layoutData, ...aiSymbols];
+    // Combine Manual Layout + AI Detected Symbols + LIVE MODULES (Flattened Instances)
+    // We map flattened modules to symbols if they have a position
+    const liveSymbols = modules
+        .filter(m => m.position && visibleLayers[m.type as string]) // FILTER BY VISIBLE LAYERS
+        .map(m => ({
+            id: m.id,
+            type: m.type,
+            x: m.position!.x,
+            y: m.position!.y,
+            rotation: 0,
+            notes: m.notes
+        }));
+
+    const allSymbols = [...layoutData, ...aiSymbols, ...liveSymbols];
 
     useEffect(() => {
         // Load initial layout data (Manually positioned elements like LCP panels)
@@ -432,6 +484,27 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
 
                 <div className="h-px bg-slate-800 w-full" />
 
+                {/* Section: Data Layers */}
+                <div className="flex flex-col gap-1">
+                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Data Overlay</span>
+                    <div className="grid grid-cols-2 gap-1">
+                        {Object.keys(visibleLayers).map(type => (
+                            <button
+                                key={type}
+                                onClick={() => toggleLayer(type)}
+                                className={`px-2 py-1 text-[10px] rounded border transition-all flex items-center gap-1 ${visibleLayers[type]
+                                    ? 'bg-blue-600/20 border-blue-500/50 text-blue-300'
+                                    : 'bg-slate-800 border-slate-700 text-slate-500'}`}
+                            >
+                                <div className={`w-1.5 h-1.5 rounded-full ${visibleLayers[type] ? 'bg-blue-400 shadow-[0_0_5px_cyan]' : 'bg-slate-600'}`} />
+                                {type.slice(0, 4)}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="h-px bg-slate-800 w-full" />
+
                 {/* Section: Editor */}
                 <div className="flex flex-col gap-1">
                     <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Editor</span>
@@ -462,8 +535,8 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
                         onClick={detectSymbols}
                         disabled={isScanning || activeLayer !== 'STRUCTURAL'}
                         className={`w-full px-3 py-2 text-xs rounded-lg border flex items-center gap-2 justify-start transition-all ${isScanning
-                                ? 'bg-amber-900/30 border-amber-800/50 text-amber-500'
-                                : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:border-slate-600'
+                            ? 'bg-amber-900/30 border-amber-800/50 text-amber-500'
+                            : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:border-slate-600'
                             }`}
                     >
                         <Wand2 size={14} className={isScanning ? "animate-spin" : "text-purple-400"} />
@@ -474,8 +547,8 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
                         onClick={handleDetectWalls}
                         disabled={isDetectingWalls || activeLayer !== 'STRUCTURAL'}
                         className={`w-full px-3 py-2 text-xs rounded-lg border flex items-center gap-2 justify-start transition-all ${isDetectingWalls
-                                ? 'bg-amber-900/30 border-amber-800/50 text-amber-500'
-                                : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:border-slate-600'
+                            ? 'bg-amber-900/30 border-amber-800/50 text-amber-500'
+                            : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:border-slate-600'
                             }`}
                     >
                         <ScanLine size={14} className={isDetectingWalls ? "animate-pulse" : "text-blue-400"} />
@@ -501,8 +574,8 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
                     <button
                         onClick={() => setShowDebug(!showDebug)}
                         className={`w-full px-3 py-2 text-xs rounded-lg border flex items-center gap-2 justify-start transition-all ${showDebug
-                                ? 'bg-green-900/20 border-green-800 text-green-400'
-                                : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-300 hover:bg-slate-700'
+                            ? 'bg-green-900/20 border-green-800 text-green-400'
+                            : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-300 hover:bg-slate-700'
                             }`}
                     >
                         <Activity size={14} /> {showDebug ? 'Hide Monitor' : 'Show Monitor'}

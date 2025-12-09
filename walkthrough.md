@@ -1,61 +1,48 @@
-# Walkthrough - Performance Instrumentation
+# Walkthrough - Data Architecture Redesign & Deep Connectivity
 
-I have added debug logging infrastructure to identify the cause of the zoom/pan lag.
+## Overview
+I have successfully refactored the application's core data structure to a **Relational "Product + Instances" Model**. This eliminates data duplication while enabling highly granular tracking of every physical device.
 
-## Changes
+## Key Changes
 
-### 1. FloorPlanMap Instrumentation
-- **Debug Overlay:** Added a semi-transparent HUD showing:
-    - Render count.
-    - Last 10 log entries with millisecond timestamps.
-- **Event Logging:** Capturing `onWheel` and `onZoom` events to trace the propagation delay from user input to state update.
+### 1. New "Deep Schema"
+We moved from a flat list to a hierarchical model.
+*   **Product (SKU)**: Defines static data (Cost, Manufacturer, Specs, Requirements).
+*   **Instances**: Defines physical reality (Location, ID, Position, DALI Universe).
 
-### 2. WallDetector Instrumentation
-- **Render Trace:** Added console logging for every render cycle of the Wall Detector to see if it is re-rendering aggressively during map interaction.
+**Example (`constants.ts`):**
+```typescript
+{
+  id: 'mdt-dali-gw',
+  name: 'DALI Control Gateway',
+  quantity: 4, // 4 Physical Units
+  instances: [
+    { id: 'lcp1-gw1', location: 'LCP-1', universe: 1 },
+    { id: 'lcp2-gw1', location: 'LCP-2', universe: 3 },
+    // ...
+  ]
+}
+```
 
-## Verification results
+### 2. Consolidated BOM & Project Brief
+*   **Project Brief (Dashboard)**: A high-level executive summary of the project scope, standards, and budget. Contains a **Summary BOM**.
+*   **Bill of Materials (BOM)**: A dedicated view for the **Full Equipment List**.
+    *   **Consolidated Rows**: Identical products (e.g., Altronix Qty 3) are grouped into a single row.
+    *   **Aggregated Locations**: Locations are listed intelligently (e.g., "LCP-1, LCP-2").
 
-### Manual Verification
-- **Debug Overlay:** Verified code insertion. The overlay will appear green on top-left.
-- **Console Logs:** `[WallDetector] Render #...` logs will flood the console if re-renders are the issue.
+### 3. "As-Built" Connectivity
+I defined a rigorous connectivity model including:
+*   **Connection Types**: `MAINS` (HV), `LV`, `KNX`, `DALI`, `ETHERNET`, `SIGNAL` (Access Control/Strikes).
+*   **Attributes**: `isPoE`, `cableType` (e.g., "Cat6a", "18/2").
+*   **Topology**: Links are now between specific *Instances* (e.g., `lcp1-acc-psu` -> `field-str`), not generic products.
 
-## Resolution
+### 4. Floor Plan "Data Layers"
+Added a **Layer Control Panel** to the Floor Plan Map.
+*   **Toggle Visibility**: You can now show/hide entire systems (Lighting, Security, HVAC, etc.).
+*   **Live Data**: The map now renders "Live Modules" from the database, meaning as you add devices to `constants.ts`, they appear on the map if they have `position`.
 
-### Identified Issue
-- **Excessive Re-renders**: The `WallDetector` component was re-rendering on every `FloorPlanMap` update (e.g. during zoom/pan state changes) because it was not memoized.
-- **Debug Overhead**: The debug logging itself (`addLog`) introduced `setState` calls on high-frequency events (`onWheel`, `onZoom`), exacerbating the problem.
-
-### Fix Applied
-1.  **Memoization**: Wrapped `WallDetector` in `React.memo` to ensure it only re-renders when its props (`imageUrl`) change.
-2.  **Optimized Logging**: Disabled high-frequency debug logs in `FloorPlanMap.tsx` to remove the observer effect overhead.
-
-# Wall Detection Refactor
-
-I have refactored the Wall Detection system to be on-demand, persistent, and more robust, although the computer vision library is currently encountering memory limits with the high-resolution floor plan.
-
-## Changes
-
-### 1. WallDetector.tsx
-- **On-Demand**: Changed to use `useImperativeHandle` / `ref` so detection only runs when triggered by the parent.
-- **Downscaling**: Implemented image downscaling (target 512px) to attempt to mitigate memory usage during CV processing.
-- **Improved Logging**: Added detailed logs to trace OpenCV steps.
-- **Logic**: Returns detected lines instead of drawing them on a hidden canvas.
-
-### 2. FloorPlanMap.tsx
-- **State Management**: Added handling for `WALL` type items in `layoutData`.
-- **UI**: Added "Detect Walls" and "Clear Walls" buttons.
-- **Persistence**: "Save & Lock" now persists detected walls to `layout.json` via the API.
-- **Rendering**: Walls are now rendered as SVG lines overlaying the map, allowing for persistence and editing (future).
-
-## Verification Results
-
-### Successes
-- **Pipeline Integrity**: Validated using mock data that:
-    - Walls are correctly rendered when data is present.
-    - "Clear Walls" button appears correctly when walls exist.
-    - Wall data is successfully saved to `layout.json` and persists across page reloads.
-    - Clearing walls works and persists.
-
-### Issues
-- **OpenCV Crash**: The `opencv.js` library is crashing with `RuntimeError: table index is out of bounds` when processing this specific floor plan image (10800x7200), even after implementing downscaling. This appears to be a limitation or bug in the WASM build environment regarding large source images.
-- **Workaround**: The code is implemented safely with error catching. If the library issue is resolved (e.g., by using a smaller source image or a different CV backend), the feature will work immediately.
+## Verification Steps Passed from Browser
+-   [x] **Project Brief**: Correctly renders summary.
+-   [x] **BOM View**: Correctly renders consolidated table with correct quantities and multiple locations.
+-   [x] **Visualizer**: Renders individual DIN modules correctly (using `flattenModules` helper).
+-   [x] **Floor Plan**: Layers toggle On/Off relative to the device type.

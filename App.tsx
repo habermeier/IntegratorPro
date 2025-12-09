@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { ViewMode, HardwareModule, Connection } from './types';
 import { INITIAL_MODULES, MOCK_CONNECTIONS } from './constants';
+import { flattenModules } from './utils/moduleHelpers'; // Import Helper
+
 import ProjectBOM from './components/ProjectBOM';
 import Visualizer from './components/Visualizer';
 import WiringDiagram from './components/WiringDiagram';
@@ -13,16 +15,24 @@ import MobileBlocker from './components/MobileBlocker';
 // Icons
 import { LayoutDashboard, Activity, Cpu, BrainCircuit, Map, FileText, Hammer } from 'lucide-react';
 
+import { useDeepLink } from './hooks/useDeepLink';
+
 const App = () => {
   console.log('IntegratorPro: App component rendering');
-  const [view, setView] = useState<ViewMode | 'COVER_SHEET'>('COVER_SHEET'); // Start on Cover Sheet
-  const [modules, setModules] = useState<HardwareModule[]>(INITIAL_MODULES);
-  const [connections, setConnections] = useState<Connection[]>(MOCK_CONNECTIONS);
-  const [highlightedModuleId, setHighlightedModuleId] = useState<string | null>(null);
+  const { view, setView, highlightedId } = useDeepLink();
 
+  // Raw Products (Grouped)
+  const [products, setProducts] = useState<HardwareModule[]>(INITIAL_MODULES);
+
+  // Flattened Instances (for Visualizer/FloorPlan)
+  // We use useMemo to avoid re-flattening on every render unless products change
+  const flatModules = React.useMemo(() => flattenModules(products), [products]);
+
+  const [connections, setConnections] = useState<Connection[]>(MOCK_CONNECTIONS);
+
+  // Update handler to use hook's setView (which updates URL)
   const handleLocateModule = (moduleId: string) => {
-    setHighlightedModuleId(moduleId);
-    setView('VISUALIZER');
+    setView('VISUALIZER', moduleId);
   };
 
   const NavItem = ({ mode, icon: Icon, label }: { mode: ViewMode | 'COVER_SHEET'; icon: any; label: string }) => (
@@ -40,10 +50,10 @@ const App = () => {
 
   return (
     <>
-      <div className="block md:hidden">
+      {/* <div className="block md:hidden">
         <MobileBlocker />
-      </div>
-      <div className="hidden md:flex h-screen bg-slate-950 text-slate-200 overflow-hidden font-sans">
+      </div> */}
+      <div className="flex h-screen bg-slate-950 text-slate-200 overflow-hidden font-sans">
 
         {/* Sidebar */}
         <div className="w-64 flex flex-col border-r border-slate-800 bg-slate-950 z-20">
@@ -52,7 +62,7 @@ const App = () => {
               <Activity className="text-blue-500 mr-2" />
               Integrator<span className="text-blue-500">Pro</span>
             </h1>
-            <p className="text-xs text-slate-500 mt-1">System Planning Suite v1.14</p>
+            <p className="text-xs text-slate-500 mt-1">System Planning Suite v1.15</p>
           </div>
 
           <nav className="flex-1 px-4 space-y-2">
@@ -60,13 +70,8 @@ const App = () => {
             <NavItem mode="COVER_SHEET" icon={FileText} label="Project Brief" />
             <NavItem mode="VISUALIZER" icon={Cpu} label="Rack & DIN Layout" />
             <NavItem mode="FLOORPLAN" icon={Map} label="Floor Plan Map" />
-            <NavItem mode="DASHBOARD" icon={LayoutDashboard} label="Bill of Materials" />
+            <NavItem mode="BOM" icon={FileText} label="Bill of Materials" /> {/* Added BOM Nav Item */}
             <NavItem mode="ROUGH_IN" icon={Hammer} label="Rough-in Guide" />
-
-            {/* HIDDEN FOR NOW
-          <NavItem mode="TOPOLOGY" icon={Activity} label="Wiring Topology" />
-          <NavItem mode="ADVISOR" icon={BrainCircuit} label="AI Validator" />
-          */}
           </nav>
 
           <div className="p-4 border-t border-slate-800">
@@ -82,32 +87,42 @@ const App = () => {
           {/* Top Header */}
           <header className="h-16 border-b border-slate-800 bg-slate-950/50 backdrop-blur flex items-center justify-between px-8 z-10">
             <h2 className="text-lg font-semibold text-white capitalize">
-              {view === 'DASHBOARD' ? 'Bill of Materials' : view === 'COVER_SHEET' ? 'Project Brief' : view.toLowerCase().replace('_', ' ')}
+              {view === 'DASHBOARD' ? 'Dashboard' : view === 'COVER_SHEET' ? 'Project Brief' : view === 'BOM' ? 'Bill of Materials' : view.toLowerCase().replace('_', ' ')}
             </h2>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-slate-400">Total BOM:</span>
               <span className="text-lg font-bold text-emerald-400">
-                ${modules.reduce((acc, m) => acc + (m.cost * m.quantity), 0).toLocaleString()}
+                ${products.reduce((acc, m) => acc + (m.cost * m.quantity), 0).toLocaleString()}
               </span>
             </div>
           </header>
 
           {/* Dynamic Viewport */}
-          {/* Dynamic Viewport */}
           <main className="flex-1 flex flex-col min-w-0 bg-slate-950 text-slate-200 overflow-hidden relative">
             {(view === 'FLOORPLAN' || view === 'VISUALIZER' || view === 'TOPOLOGY') ? (
               <div className="absolute inset-0 z-10">
-                {view === 'VISUALIZER' && <Visualizer modules={modules} highlightedModuleId={highlightedModuleId} />}
-                {view === 'TOPOLOGY' && <WiringDiagram modules={modules} connections={connections} />}
-                {view === 'FLOORPLAN' && <FloorPlanMap modules={modules} setModules={setModules} onLocate={handleLocateModule} />}
+                {/* Pass FLAT MODULES (Instances) to Visualizers for physical accuracy */}
+                {view === 'VISUALIZER' && <Visualizer modules={flatModules} highlightedModuleId={highlightedId} />}
+                {view === 'TOPOLOGY' && <WiringDiagram modules={flatModules} connections={connections} />}
+                {view === 'FLOORPLAN' && <FloorPlanMap modules={flatModules} setModules={setProducts} onLocate={handleLocateModule} highlightedModuleId={highlightedId} />}
               </div>
             ) : (
               <div className="flex-1 overflow-auto p-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
                 <div className="max-w-7xl mx-auto">
-                  {view === 'COVER_SHEET' && <CoverSheet modules={modules} onNavigate={setView} />}
-                  {view === 'ROUGH_IN' && <RoughInGuide modules={modules} onNavigate={setView} />}
-                  {view === 'DASHBOARD' && <ProjectBOM modules={modules} />}
-                  {view === 'ADVISOR' && <GeminiAdvisor modules={modules} connections={connections} />}
+                  {/* DASHBOARD / COVER_SHEET = Project Brief */}
+                  {(view === 'DASHBOARD' || view === 'COVER_SHEET') && <CoverSheet modules={products} highlightedModuleId={highlightedId} onNavigate={setView} />}
+
+                  {/* BOM = Full Bill of Materials */}
+                  {view === 'BOM' && <div className="space-y-4">
+                    <h2 className="text-2xl font-bold text-white mb-6">Bill of Materials</h2>
+                    <ProjectBOM modules={products} highlightedModuleId={highlightedId} />
+                  </div>}
+
+                  {/* ROUGH IN = Rough In Guide */}
+                  {view === 'ROUGH_IN' && <RoughInGuide modules={flatModules} highlightedModuleId={highlightedId} onNavigate={setView} />}
+
+                  {/* ADVISOR = Gemini */}
+                  {view === 'ADVISOR' && <GeminiAdvisor modules={flatModules} connections={connections} />}
                 </div>
               </div>
             )}

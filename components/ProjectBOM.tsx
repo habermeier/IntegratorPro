@@ -6,6 +6,8 @@ import { FileText, ArrowUp, ArrowDown, X, ExternalLink, Activity, DollarSign, Za
 interface ProjectBOMProps {
     modules: HardwareModule[];
     summaryOnly?: boolean;
+    highlightedModuleId?: string | null;
+    linkPrefix?: string;
 }
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#64748b'];
@@ -32,8 +34,18 @@ interface SortConfig {
     direction: SortDirection;
 }
 
-const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false }) => {
+const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, highlightedModuleId, linkPrefix = 'dashboard' }) => {
     const [sortConfig, setSortConfig] = useState<SortConfig[]>([]);
+
+    // Auto-scroll Effect
+    React.useEffect(() => {
+        if (highlightedModuleId) {
+            const el = document.getElementById(`row-${highlightedModuleId}`);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    }, [highlightedModuleId, modules]);
 
     // Derived metrics
     const totalCost = modules.reduce((acc, m) => acc + (m.cost * m.quantity), 0);
@@ -191,7 +203,15 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false })
                                 </thead>
                                 <tbody className="divide-y divide-slate-800/50">
                                     {sortedModules.map(m => (
-                                        <tr key={m.id} className="hover:bg-slate-800/50 transition-colors group">
+                                        <tr
+                                            key={m.id}
+                                            id={`row-${m.id}`}
+                                            onClick={() => window.location.hash = `#${linkPrefix}/${m.id}`}
+                                            className={`transition-colors group cursor-pointer ${highlightedModuleId === m.id
+                                                ? 'bg-blue-900/40 border-l-4 border-l-blue-500'
+                                                : 'hover:bg-slate-800/50'
+                                                }`}
+                                        >
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center space-x-3">
                                                     <div className={`w-1 h-8 rounded-full flex-shrink-0 ${m.type === 'POWER' ? 'bg-amber-500' :
@@ -223,10 +243,13 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false })
                                             </td>
                                             <td className="px-4 py-3">
                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border whitespace-nowrap
-                                        ${m.location?.startsWith('LCP') ? 'bg-indigo-900/30 text-indigo-400 border-indigo-700/50' :
-                                                        m.location === 'MDF' ? 'bg-blue-900/30 text-blue-400 border-blue-700/50' :
-                                                            'bg-slate-800 text-slate-400 border-slate-700'}`}>
-                                                    {m.location}
+                                                    ${(m.instances?.length ?? 0) > 1 ? 'bg-slate-700 text-slate-300 border-slate-600' :
+                                                        (m.location?.startsWith('LCP') ? 'bg-indigo-900/30 text-indigo-400 border-indigo-700/50' :
+                                                            m.location === 'MDF' ? 'bg-blue-900/30 text-blue-400 border-blue-700/50' :
+                                                                'bg-slate-800 text-slate-400 border-slate-700')}`}>
+                                                    {m.instances && m.instances.length > 0
+                                                        ? [...new Set(m.instances.map(i => i.location))].join(', ')
+                                                        : m.location}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3">

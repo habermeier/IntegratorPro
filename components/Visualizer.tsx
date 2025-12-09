@@ -38,6 +38,40 @@ const Visualizer: React.FC<VisualizerProps> = ({ modules, highlightedModuleId })
     }
   }, [highlightedModuleId]);
 
+  // Intersection Observer to update URL on scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && entry.target.id) {
+          // If the section dominates the view (threshold 0.5), update hash
+          // Map the element ID (e.g. section-LCP-1) to the hash (e.g. LCP-1)
+          const location = entry.target.id.replace('section-', '');
+
+          // Only update if we are not currently efficiently deep-linked to a specific module
+          // (This is a heuristic: if hash contains slash, maybe don't overwrite with general section?)
+          // Actually, user wants URL to reflect section.
+          // We use replaceState to perform silent update without reload logic triggering hook loops hopefully?
+          // But my hook listens to hashchange.
+          // If I use history.replaceState(..., '#LCP-1'), hashchange DOES NOT fire in some browsers, but usually it does not?
+          // Actually hashchange fires.
+          // We want update.
+          // But we don't want to lose focus if user is looking at a module.
+
+          // Let's just update if meaningful change.
+          if (window.location.hash !== `#${location}`) {
+            window.history.replaceState(null, '', `#visualizer/${location}`);
+          }
+        }
+      });
+    }, { threshold: 0.5 }); // 50% visible
+
+    const sections = document.querySelectorAll('.cabinet-obs');
+    sections.forEach(s => observer.observe(s));
+
+    return () => sections.forEach(s => observer.unobserve(s));
+  }, [cabinets]); // Re-run if cabinets change
+
+
   // --- BEST PRACTICE LOGIC ---
   const getCabinetModulesWithSpacers = (location: string) => {
     const items: HardwareModule[] = [];
@@ -130,10 +164,14 @@ const Visualizer: React.FC<VisualizerProps> = ({ modules, highlightedModuleId })
                   ref={(el) => { moduleRefs.current[mod.id] = el; }}
                   className="relative flex flex-col group pl-[1px]" // 1px gap between modules
                   style={{ width: `${mod.size * 18}px` }} // 1 TE = 18mm standard
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.location.hash = `#visualizer/${mod.id}`;
+                  }}
                 >
                   <div className={`
-                  h-[88px] w-full rounded-[2px] border shadow-sm flex flex-col items-center relative overflow-hidden transition-all
-                  ${isHighlighted ? 'ring-4 ring-blue-500 z-30 scale-105 shadow-blue-500/50' : 'hover:z-20 hover:scale-105 hover:shadow-2xl'}
+                  h-[88px] w-full rounded-[2px] border shadow-sm flex flex-col items-center relative overflow-hidden transition-all cursor-pointer
+                  ${isHighlighted ? 'ring-4 ring-blue-500 z-30 scale-110 shadow-blue-500/80' : 'hover:z-20 hover:scale-105 hover:shadow-2xl'}
                   ${mod.type === 'POWER' ? 'bg-slate-200 border-slate-400' :
                       mod.type === 'CONTROLLER' ? 'bg-emerald-50 border-emerald-300' :
                         mod.type === 'LIGHTING' ? 'bg-violet-50 border-violet-300' :
@@ -305,7 +343,7 @@ const Visualizer: React.FC<VisualizerProps> = ({ modules, highlightedModuleId })
       : location === 'LCP-1' ? '24" W x 24" H' : location === 'LCP-2' ? '14.5" W x 21" H' : '';
 
     return (
-      <div key={location} className="w-full flex flex-col mb-16 border-b border-slate-800/50 pb-12 last:border-0">
+      <div key={location} id={`section-${location}`} className="cabinet-obs w-full flex flex-col mb-16 border-b border-slate-800/50 pb-12 last:border-0">
         {/* HEADER */}
         <div className="flex items-end gap-4 mb-6">
           <h3 id={`header-${location}`} className="text-3xl font-bold text-white flex items-center">

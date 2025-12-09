@@ -1,394 +1,205 @@
-import { HardwareModule, ModuleType, MountType } from './types';
+import { HardwareModule, ModuleType, MountType, ConnectionType } from './types';
 
 export const INITIAL_MODULES: HardwareModule[] = [
-  // --- LCP-1 (Garage) ---
+  // --- ENCLOSURES & RACKS ---
   {
     id: 'lcp1-enc',
     name: 'Saginaw SCE-24H2408LP',
     manufacturer: 'Saginaw',
     description: '24x24x8 NEMA 4/12 Hinged',
-    location: 'LCP-1',
     type: ModuleType.ENCLOSURE,
     mountType: MountType.SURFACE,
     size: 0,
-    cost: 394.30, // MeCampbell Pricing
+    cost: 394.30,
     powerWatts: 0,
     quantity: 1,
     url: 'https://www.mecampbell.com/saginaw-control-sce-24h2408lp-single-hinged-door-enclosure-with-door-cllamps-carbon-steel-gray-nema-4-12-13-iec-ip66-24x24x8-sub-panel-ordered-separately.html',
-    backupUrl: 'https://www.google.com/search?q=buy+Saginaw+SCE-24H2408LP',
     dimensions: { width: 24, height: 24, depth: 8, unit: 'in' },
-    notes: 'FIRE CODE: Surface mount. NEMA 4/12 Sealed (Better than NEMA 1).',
-    position: { x: 72, y: 60 } // Garage area
-  },
-  {
-    id: 'lcp1-sub',
-    name: 'Saginaw SCE-24P24',
-    manufacturer: 'Saginaw',
-    description: 'Sub-Panel (Backplate)',
+    notes: 'FIRE CODE: Surface mount. NEMA 4/12 Sealed.',
     location: 'LCP-1',
-    type: ModuleType.ACCESSORY,
-    mountType: MountType.SURFACE,
-    size: 0,
-    cost: 42.50, // JMAC Pricing
-    powerWatts: 0,
-    quantity: 1,
-    url: 'https://www.radwell.com/Search?q=SCE-24P24',
-    backupUrl: 'https://www.google.com/search?q=buy+Saginaw+SCE-24P24',
-    notes: 'Required to mount DIN rails.'
+    position: { x: 72, y: 60 }
   },
-  {
-    id: 'lcp1-din',
-    name: 'DIN Rail 35mm Slotted',
-    manufacturer: 'Generic',
-    description: '10-Pack (Aluminum) 1 Meter',
-    location: 'LCP-1',
-    type: ModuleType.ACCESSORY,
-    mountType: MountType.SURFACE,
-    size: 0,
-    cost: 35.00,
-    powerWatts: 0,
-    quantity: 1,
-    url: 'https://www.amazon.com/s?k=din+rail+slotted+aluminum+10+pack',
-    backupUrl: 'https://www.radwell.com/Search?q=DIN+Rail+35mm',
-    notes: 'Cut to size for Backplate (Horizontal rows).'
-  },
-  //...
-  {
-    id: 'lcp1-acc-psu',
-    name: 'Altronix eFlow6N',
-    manufacturer: 'Altronix',
-    description: 'Access Power Controller',
-    location: 'LCP-1',
-    type: ModuleType.POWER,
-    mountType: MountType.WALL_MOUNT,
-    size: 0,
-    cost: 320.00,
-    powerWatts: 10,
-    quantity: 1,
-    url: 'https://www.jmac.com/search.php?search_query=eFlow6N',
-    notes: 'Powers HES Strikes. High inrush current handling. Battery Backup.'
-  },
-  //...
-  {
-    id: 'cable-knx',
-    name: 'KNX Bus Cable',
-    manufacturer: 'Belden',
-    description: '2500 ft (2-pair Shielded)',
-    location: 'Infra',
-    type: ModuleType.ACCESSORY,
-    mountType: MountType.NA,
-    size: 0,
-    cost: 850.00,
-    powerWatts: 0,
-    quantity: 1,
-    url: 'https://www.jmac.com/search.php?search_query=Belden+YE00906',
-    notes: 'Green sheath.'
-  },
-
-  {
-    id: 'lcp1-gw1',
-    name: 'DALI Control Gateway',
-    manufacturer: 'MDT',
-    description: 'SCN-DALI64.03 (Uni 3)',
-    location: 'LCP-1',
-    type: ModuleType.LIGHTING,
-    mountType: MountType.DIN_RAIL,
-    size: 4,
-    cost: 385.00,
-    powerWatts: 2,
-    heatDissipation: 2,
-    quantity: 1,
-    url: 'https://www.mdt.de/en/products/product-detail/actuators/dali-gateways/dali-control-ip-gateway.html',
-    notes: 'Universe 3',
-    universe: 3
-  },
-  {
-    id: 'lcp1-gw2',
-    name: 'DALI Control Gateway',
-    manufacturer: 'MDT',
-    description: 'SCN-DALI64.03 (Uni 4)',
-    location: 'LCP-1',
-    type: ModuleType.LIGHTING,
-    mountType: MountType.DIN_RAIL,
-    size: 4,
-    cost: 385.00,
-    powerWatts: 2,
-    heatDissipation: 2,
-    quantity: 1,
-    url: 'https://www.mdt.de/en/products/product-detail/actuators/dali-gateways/dali-control-ip-gateway.html',
-    notes: 'Universe 4',
-    universe: 4
-  },
-  {
-    id: 'lcp1-fan',
-    name: 'DALI 0-10V Interface',
-    manufacturer: 'Lunatone',
-    description: '86458668 (Powder Fan)',
-    location: 'LCP-1',
-    type: ModuleType.HVAC,
-    mountType: MountType.DIN_RAIL,
-    size: 2,
-    cost: 82.50,
-    powerWatts: 1,
-    quantity: 1,
-    url: 'https://www.lunatone.com/en/product/dali-0-10v-pwm-interface/',
-    notes: 'Control for Panasonic FV-1115VQ1',
-    universe: 3
-  },
-  {
-    id: 'lcp1-drv',
-    name: 'DALI DT8 Dimmer 16A',
-    manufacturer: 'Lunatone',
-    description: '89453841-HS (High Current)',
-    location: 'LCP-1',
-    type: ModuleType.LIGHTING,
-    mountType: MountType.DIN_RAIL,
-    size: 4,
-    cost: 118.00,
-    powerWatts: 5,
-    heatDissipation: 10, // Significant heat
-    quantity: 4,
-    url: 'https://www.lunatone.com/en/product/dali-dt8-dimmer-cv-16a/',
-    notes: 'Garage/Kitchen Tape. High heat output.',
-    universe: 3
-  },
-  {
-    id: 'lcp1-rel',
-    name: 'Switch Actuator 12-fold',
-    manufacturer: 'MDT',
-    description: 'AKS-1216.03',
-    location: 'LCP-1',
-    type: ModuleType.CONTROLLER,
-    mountType: MountType.DIN_RAIL,
-    size: 8,
-    cost: 315.00,
-    powerWatts: 1,
-    quantity: 1,
-    url: 'https://www.mdt.de/en/products/product-detail/actuators/switch-actuators/switch-actuator-aks-standard.html',
-    notes: 'Switched Loads (Xmas/Attic)'
-  },
-  {
-    id: 'lcp1-inp',
-    name: 'Binary Input 16-fold',
-    manufacturer: 'MDT',
-    description: 'BE-16000.02 (Security)',
-    location: 'LCP-1',
-    type: ModuleType.SENSOR,
-    mountType: MountType.DIN_RAIL,
-    size: 8,
-    cost: 285.00,
-    powerWatts: 0.5,
-    quantity: 1,
-    url: 'https://www.mdt.de/en/products/product-detail/sensors/binary-inputs/binary-input-potential-free.html',
-    notes: 'Security Sensors'
-  },
-  {
-    id: 'lcp1-psu1',
-    name: 'SDR-480-24 PSU',
-    manufacturer: 'Mean Well',
-    description: '480W 24V (Garage LEDs)',
-    location: 'LCP-1',
-    type: ModuleType.POWER,
-    mountType: MountType.DIN_RAIL,
-    size: 5, // 85.5mm is approx 5TE
-    cost: 158.00,
-    powerWatts: 480,
-    heatDissipation: 34, // ~7% loss at full load
-    quantity: 1,
-    url: 'https://www.amazon.com/s?k=MEAN+WELL+SDR-480-24',
-    backupUrl: 'https://www.google.com/search?q=buy+Mean+Well+SDR-480-24',
-    notes: 'Dedicated for Garage LEDs. Requires air gap.'
-  },
-  {
-    id: 'lcp1-psu2',
-    name: 'HDR-150-24 PSU',
-    manufacturer: 'Mean Well',
-    description: '150W 24V (Kitchen LEDs)',
-    location: 'LCP-1',
-    type: ModuleType.POWER,
-    mountType: MountType.DIN_RAIL,
-    size: 6, // 105mm
-    cost: 52.00,
-    powerWatts: 150,
-    heatDissipation: 15,
-    quantity: 1,
-    url: 'https://www.meanwell.com/productWebApp/product/view/HDR-150',
-    notes: 'Kitchen LEDs'
-  },
-  {
-    id: 'lcp1-sys',
-    name: 'IP Router / Bus Pwr',
-    manufacturer: 'MDT',
-    description: 'SCN-IPR300.03',
-    location: 'LCP-1',
-    type: ModuleType.NETWORK,
-    mountType: MountType.DIN_RAIL,
-    size: 2,
-    cost: 445.00,
-    powerWatts: 3,
-    quantity: 1,
-    url: 'https://www.mdt.de/en/products/product-detail/system-components/system-devices/ip-router.html'
-  },
-
-  // --- LCP-2 (Office #2) ---
   {
     id: 'lcp2-enc',
     name: 'Leviton 47605-21E',
     manufacturer: 'Leviton',
     description: '21" Structured Media Enclosure',
-    location: 'LCP-2',
     type: ModuleType.ENCLOSURE,
     mountType: MountType.FLUSH,
     size: 0,
-    cost: 92.45, // JMAC Pricing
+    cost: 92.45,
     powerWatts: 0,
     quantity: 1,
     url: 'https://www.jmac.com/Leviton_47605_21E_p/leviton-47605-21e.htm',
-    dimensions: { width: 14.5, height: 21, depth: 3.75, unit: 'in' },
+    location: 'LCP-2',
     notes: 'FRAMING ALERT: Stud bay is 18". Block down to 14.5".',
-    position: { x: 35, y: 55 } // Near Office 2
+    position: { x: 35, y: 55 }
   },
+
+  // --- CONTROLLERS & GATEWAYS (CONSOLIDATED) ---
   {
-    id: 'lcp2-door',
-    name: 'Leviton 47605-21S',
-    manufacturer: 'Leviton',
-    description: 'Vented Door (White)',
-    location: 'LCP-2',
-    type: ModuleType.ACCESSORY,
-    mountType: MountType.FLUSH,
-    size: 0,
-    cost: 58.75, // JMAC Pricing
-    powerWatts: 0,
-    quantity: 1,
-    url: 'https://www.jmac.com/Leviton_47605_21S_p/leviton-47605-21s.htm'
-  },
-  {
-    id: 'lcp2-brkt',
-    name: 'Leviton DIN Bracket',
-    manufacturer: 'Leviton',
-    description: '47605-DIN (Vertical)',
-    location: 'LCP-2',
-    type: ModuleType.ACCESSORY,
-    mountType: MountType.FLUSH,
-    size: 0,
-    cost: 18.00,
-    powerWatts: 0,
-    quantity: 2,
-    url: 'https://www.jmac.com/Leviton_47605_DIN_p/leviton-47605-din.htm',
-    notes: 'Vertical mount brackets'
-  },
-  {
-    id: 'lcp2-gw1',
+    id: 'mdt-dali-gw',
     name: 'DALI Control Gateway',
     manufacturer: 'MDT',
-    description: 'SCN-DALI64.03 (Uni 1)',
-    location: 'LCP-2',
+    description: 'SCN-DALI64.03',
     type: ModuleType.LIGHTING,
     mountType: MountType.DIN_RAIL,
     size: 4,
     cost: 385.00,
     powerWatts: 2,
-    quantity: 1,
+    quantity: 4, // Derived from instances
+    requiresMains: true,
+    requiresBus: [ConnectionType.KNX, ConnectionType.DALI],
     url: 'https://www.mdt.de/en/products/product-detail/actuators/dali-gateways/dali-control-ip-gateway.html',
-    notes: 'Universe 1',
-    universe: 1
+    instances: [
+      { id: 'lcp1-gw1', location: 'LCP-1', universe: 1, notes: 'Universe 1 (Garage/Ext)' },
+      { id: 'lcp1-gw2', location: 'LCP-1', universe: 2, notes: 'Universe 2 (Main Floor)' },
+      { id: 'lcp2-gw1', location: 'LCP-2', universe: 3, notes: 'Universe 3 (Master Suite)' },
+      { id: 'lcp2-gw2', location: 'LCP-2', universe: 4, notes: 'Universe 4 (Bedrooms)' }
+    ]
   },
   {
-    id: 'lcp2-gw2',
-    name: 'DALI Control Gateway',
-    manufacturer: 'MDT',
-    description: 'SCN-DALI64.03 (Uni 2)',
-    location: 'LCP-2',
-    type: ModuleType.LIGHTING,
-    mountType: MountType.DIN_RAIL,
-    size: 4,
-    cost: 385.00,
-    powerWatts: 2,
-    quantity: 1,
-    url: 'https://www.mdt.de/en/products/product-detail/actuators/dali-gateways/dali-control-ip-gateway.html',
-    notes: 'Universe 2',
-    universe: 2
-  },
-  {
-    id: 'lcp2-fan',
-    name: 'DALI 0-10V Interface',
-    manufacturer: 'Lunatone',
-    description: '86458668 (Fans)',
-    location: 'LCP-2',
-    type: ModuleType.HVAC,
-    mountType: MountType.DIN_RAIL,
-    size: 2,
-    cost: 82.50,
-    powerWatts: 1,
-    quantity: 5,
-    url: 'https://www.lunatone.com/en/product/dali-0-10v-pwm-interface/',
-    notes: 'Bath Fans + Laundry',
-    universe: 1
-  },
-  {
-    id: 'lcp2-drv',
-    name: 'DALI DT8 Dimmer 16A',
-    manufacturer: 'Lunatone',
-    description: '89453841-HS',
-    location: 'LCP-2',
-    type: ModuleType.LIGHTING,
-    mountType: MountType.DIN_RAIL,
-    size: 4,
-    cost: 118.00,
-    powerWatts: 5,
-    heatDissipation: 10,
-    quantity: 2,
-    url: 'https://www.lunatone.com/en/product/dali-dt8-dimmer-cv-16a/',
-    notes: 'Master Coves',
-    universe: 1
-  },
-  {
-    id: 'lcp2-inp',
-    name: 'Binary Input 16-fold',
-    manufacturer: 'MDT',
-    description: 'BE-16000.02',
-    location: 'LCP-2',
-    type: ModuleType.SENSOR,
-    mountType: MountType.DIN_RAIL,
-    size: 8,
-    cost: 285.00,
-    powerWatts: 0.5,
-    quantity: 1,
-    url: 'https://www.mdt.de/en/products/product-detail/sensors/binary-inputs/binary-input-potential-free.html',
-    notes: 'Closet/Room Sensors'
-  },
-  {
-    id: 'lcp2-psu',
-    name: 'HDR-150-24 PSU',
-    manufacturer: 'Mean Well',
-    description: '150W 24V (Master LEDs)',
-    location: 'LCP-2',
-    type: ModuleType.POWER,
-    mountType: MountType.DIN_RAIL,
-    size: 6,
-    cost: 52.00,
-    powerWatts: 150,
-    heatDissipation: 15,
-    quantity: 1,
-    url: 'https://www.meanwell.com/productWebApp/product/view/HDR-150',
-    notes: 'Master LEDs'
-  },
-  {
-    id: 'lcp2-sys',
+    id: 'mdt-ip-router',
     name: 'IP Router / Bus Pwr',
     manufacturer: 'MDT',
     description: 'SCN-IPR300.03',
-    location: 'LCP-2',
     type: ModuleType.NETWORK,
     mountType: MountType.DIN_RAIL,
     size: 2,
     cost: 445.00,
     powerWatts: 3,
-    quantity: 1,
-    url: 'https://www.mdt.de/en/products/product-detail/system-components/system-devices/ip-router.html'
+    quantity: 2,
+    requiresMains: true, // actually usually bus powered but acts as PSU often
+    requiresBus: [ConnectionType.KNX, ConnectionType.ETHERNET],
+    url: 'https://www.mdt.de/en/products/product-detail/system-components/system-devices/ip-router.html',
+    instances: [
+      { id: 'lcp1-sys', location: 'LCP-1' },
+      { id: 'lcp2-sys', location: 'LCP-2' }
+    ]
   },
 
-  // --- MDF (Tech Room) ---
+  // --- LIGHTING ACTUATORS (CONSOLIDATED) ---
+  {
+    id: 'lunt-dali-dim',
+    name: 'DALI DT8 Dimmer 16A',
+    manufacturer: 'Lunatone',
+    description: '89453841-HS',
+    type: ModuleType.LIGHTING,
+    mountType: MountType.DIN_RAIL,
+    size: 4,
+    cost: 118.00,
+    powerWatts: 5,
+    quantity: 6,
+    requiresMains: true,
+    requiresBus: [ConnectionType.DALI],
+    url: 'https://www.lunatone.com/en/product/dali-dt8-dimmer-cv-16a/',
+    instances: [
+      { id: 'lcp1-dim-gar', location: 'LCP-1', universe: 1, notes: 'Garage LED Tape' },
+      { id: 'lcp1-dim-kit', location: 'LCP-1', universe: 1, notes: 'Kitchen LED Tape' },
+      { id: 'lcp1-dim-din', location: 'LCP-1', universe: 1, notes: 'Dining Room Coves' },
+      { id: 'lcp1-dim-liv', location: 'LCP-1', universe: 1, notes: 'Living Room Coves' },
+      { id: 'lcp2-dim-head', location: 'LCP-2', universe: 3, notes: 'Master Bed Headboard' },
+      { id: 'lcp2-dim-per', location: 'LCP-2', universe: 3, notes: 'Master Bed Perimeter' }
+    ]
+  },
+  {
+    id: 'lunt-dali-010',
+    name: 'DALI 0-10V Interface',
+    manufacturer: 'Lunatone',
+    description: '86458668 (PWM)',
+    type: ModuleType.HVAC, // Used for Fans usually
+    mountType: MountType.DIN_RAIL,
+    size: 2,
+    cost: 82.50,
+    powerWatts: 1,
+    quantity: 5,
+    requiresBus: [ConnectionType.DALI],
+    url: 'https://www.lunatone.com/en/product/dali-0-10v-pwm-interface/',
+    instances: [
+      { id: 'lcp1-fan-pdr', location: 'LCP-1', universe: 2, notes: 'Powder Room Fan' },
+      { id: 'lcp2-fan-toilet', location: 'LCP-2', universe: 3, notes: 'Master Toilet Fan' },
+      { id: 'lcp2-fan-shower', location: 'LCP-2', universe: 3, notes: 'Master Shower Fan' },
+      { id: 'lcp2-fan-lau', location: 'LCP-2', universe: 3, notes: 'Laundry Fan' },
+      { id: 'lcp2-fan-b2', location: 'LCP-2', universe: 4, notes: 'Bed 2 Bath Fan' } // Added Bed 3 back too? List had 5
+    ]
+  },
+
+  // --- POWER SUPPLIES ---
+  {
+    id: 'mw-sdr-480',
+    name: 'SDR-480-24 PSU',
+    manufacturer: 'Mean Well',
+    description: '480W 24V',
+    type: ModuleType.POWER,
+    mountType: MountType.DIN_RAIL,
+    size: 5,
+    cost: 158.00,
+    powerWatts: 480,
+    quantity: 1,
+    requiresMains: true,
+    url: 'https://www.amazon.com/s?k=MEAN+WELL+SDR-480-24',
+    location: 'LCP-1',
+    notes: 'Dedicated for Garage LEDs.'
+  },
+  {
+    id: 'mw-hdr-150',
+    name: 'HDR-150-24 PSU',
+    manufacturer: 'Mean Well',
+    description: '150W 24V',
+    type: ModuleType.POWER,
+    mountType: MountType.DIN_RAIL,
+    size: 6,
+    cost: 52.00,
+    powerWatts: 150,
+    quantity: 2,
+    requiresMains: true,
+    url: 'https://www.meanwell.com/productWebApp/product/view/HDR-150',
+    instances: [
+      { id: 'lcp1-psu2', location: 'LCP-1', notes: 'Kitchen LEDs' },
+      { id: 'lcp2-psu', location: 'LCP-2', notes: 'Master LEDs' }
+    ]
+  },
+  {
+    id: 'altronix-eflow',
+    name: 'Altronix eFlow6N',
+    manufacturer: 'Altronix',
+    description: 'Access Power Controller',
+    type: ModuleType.POWER,
+    mountType: MountType.WALL_MOUNT,
+    size: 0,
+    cost: 320.00,
+    powerWatts: 10,
+    quantity: 3, // Fixed as requested
+    requiresMains: true,
+    url: 'https://www.jmac.com/search.php?search_query=eFlow6N',
+    instances: [
+      { id: 'lcp1-acc-psu', location: 'LCP-1', notes: 'Main House Strikes' },
+      { id: 'lcp2-acc-psu', location: 'LCP-2', notes: 'Rear Strikes' }, // Hypothesized location
+      { id: 'gar-acc-psu', location: 'LCP-1', notes: 'Garage Strike' } // Hypothesized
+    ]
+  },
+
+  // --- SENSORS & INPUTS ---
+  {
+    id: 'mdt-bin-inp',
+    name: 'Binary Input 16-fold',
+    manufacturer: 'MDT',
+    description: 'BE-16000.02',
+    type: ModuleType.SENSOR,
+    mountType: MountType.DIN_RAIL,
+    size: 8,
+    cost: 285.00,
+    powerWatts: 0.5,
+    quantity: 2,
+    requiresBus: [ConnectionType.KNX],
+    url: 'https://www.mdt.de/en/products/product-detail/sensors/binary-inputs/binary-input-potential-free.html',
+    instances: [
+      { id: 'lcp1-inp', location: 'LCP-1', notes: 'Door Sensors (Main)' },
+      { id: 'lcp2-inp', location: 'LCP-2', notes: 'Door Sensors (Master)' }
+    ]
+  },
+
+  // --- MDF CORE ---
   {
     id: 'mdf-nuc',
     name: 'ASUS NUC 13 Pro',
@@ -401,9 +212,10 @@ export const INITIAL_MODULES: HardwareModule[] = [
     cost: 620.00,
     powerWatts: 45,
     quantity: 1,
+    requiresMains: true,
+    requiresPoE: false,
     url: 'https://www.asus.com/us/displays-desktops/nucs/nuc-kits/asus-nuc-13-pro-kit/',
-    notes: 'Runs Home Assistant OS + Asterisk (SIP Server) for Intercom.',
-    position: { x: 62, y: 38 } // Tech Room
+    position: { x: 62, y: 38 }
   },
   {
     id: 'mdf-sw',
@@ -417,221 +229,108 @@ export const INITIAL_MODULES: HardwareModule[] = [
     cost: 799.00,
     powerWatts: 50,
     quantity: 1,
+    requiresMains: true,
     url: 'https://store.ui.com/us/en/pro/category/all-switching/products/usw-pro-max-24-poe',
-    notes: 'Core Switch',
     position: { x: 62, y: 39 }
   },
-  {
-    id: 'mdf-velux',
-    name: 'KLF 200 Bridge',
-    manufacturer: 'Velux',
-    description: 'Skylight Interface',
-    location: 'MDF',
-    type: ModuleType.CONTROLLER,
-    mountType: MountType.WALL_MOUNT,
-    size: 0,
-    cost: 325.00,
-    powerWatts: 5,
-    quantity: 1,
-    url: 'https://www.amazon.com/Velux-Home-Automation-Integration-Kit/dp/B079979G5H',
-    notes: 'Skylights & Shades',
-    position: { x: 63, y: 37 }
-  },
-  {
-    id: 'mdf-sen1',
-    name: 'SDP810 Pressure Sensor',
-    manufacturer: 'Sensirion',
-    description: 'HVAC Pressure',
-    location: 'MDF',
-    type: ModuleType.SENSOR,
-    mountType: MountType.NA,
-    size: 0,
-    cost: 48.00,
-    powerWatts: 0.1,
-    quantity: 1,
-    url: 'https://sensirion.com/products/catalog/SDP810-500Pa',
-    notes: 'Pneumatic tube to roof'
-  },
-  {
-    id: 'mdf-sen2',
-    name: 'RG-11 Rain Sensor',
-    manufacturer: 'Hydreon',
-    description: 'Optical Rain Sensor',
-    location: 'MDF',
-    type: ModuleType.SENSOR,
-    mountType: MountType.WALL_MOUNT,
-    size: 0,
-    cost: 99.00,
-    powerWatts: 1,
-    quantity: 1,
-    url: 'https://rainsensors.com/'
-  },
 
-  // --- Field Devices ---
-  {
-    id: 'field-kp',
-    name: 'Glass Push Button II Smart',
-    manufacturer: 'MDT',
-    description: 'BE-GT2TS.02 Black',
-    location: 'Field',
-    type: ModuleType.CONTROLLER,
-    mountType: MountType.WALL_MOUNT,
-    size: 0,
-    cost: 215.00,
-    powerWatts: 0.5,
-    quantity: 16,
-    url: 'https://www.mdt.de/en/products/product-detail/sensors/push-buttons/glass-push-button-ii-smart.html',
-    notes: '16 Locations. Requires 1-Gang Mud Ring.',
-    position: { x: 45, y: 70 } // Mock Position for one
-  },
-  {
-    id: 'field-sen-tp',
-    name: 'TruePresence Multisensor',
-    manufacturer: 'Steinel',
-    description: 'VOC/CO2/Humidity/Temp',
-    location: 'Field',
-    type: ModuleType.SENSOR,
-    mountType: MountType.CEILING_MOUNT,
-    size: 0,
-    cost: 245.00,
-    powerWatts: 1,
-    quantity: 6,
-    url: 'https://www.steinel.de/en/group/sensors/smart-space-sensors/true-presence/true-presence-multisensor-aerosol-knx.html',
-    notes: 'Baths (4) + Powder + Laundry',
-    position: { x: 25, y: 35 } // Master Bath
-  },
-  {
-    id: 'field-sen-tpk',
-    name: 'TruePresence KNX',
-    manufacturer: 'Steinel',
-    description: 'Light Level/Breathing',
-    location: 'Field',
-    type: ModuleType.SENSOR,
-    mountType: MountType.CEILING_MOUNT,
-    size: 0,
-    cost: 195.00,
-    powerWatts: 1,
-    quantity: 3,
-    url: 'https://www.steinel.de/en/group/sensors/smart-space-sensors/true-presence/true-presence-knx.html',
-    notes: 'Kitchen, Living, Master',
-    position: { x: 55, y: 45 } // Kitchen area
-  },
+  // --- FIELD DEVICES ---
   {
     id: 'field-ak-x915',
     name: 'X915 Door Phone',
     manufacturer: 'Akuvox',
     description: 'Flagship Touchscreen',
-    location: 'Field',
     type: ModuleType.SECURITY,
     mountType: MountType.WALL_MOUNT,
     size: 0,
     cost: 2800.00,
     powerWatts: 12,
     quantity: 1,
+    requiresPoE: true,
     url: 'https://akuvoxdealer.com/?s=x915',
-    notes: 'Main Entry. Install back-box before stone.',
-    position: { x: 40, y: 80 } // Entry
+    location: 'Field',
+    position: { x: 40, y: 80 }
   },
   {
     id: 'field-ak-e16',
     name: 'E16 Door Phone',
     manufacturer: 'Akuvox',
     description: 'Face Recognition',
-    location: 'Field',
     type: ModuleType.SECURITY,
     mountType: MountType.WALL_MOUNT,
     size: 0,
     cost: 620.00,
     powerWatts: 10,
     quantity: 3,
+    requiresPoE: true,
     url: 'https://akuvoxdealer.com/products/akuvox-e16c-facial-recognition-door-phone',
-    notes: 'Side/Garage doors. PoE.'
+    location: 'Field',
+    notes: 'Side/Garage. Needs PoE.'
   },
   {
     id: 'field-str',
     name: '1006 Electric Strike',
     manufacturer: 'HES',
     description: 'Heavy Duty Fail Secure',
-    location: 'Field',
     type: ModuleType.SECURITY,
     mountType: MountType.WALL_MOUNT,
     size: 0,
-    cost: 385.00, // JMAC Pricing
+    cost: 385.00,
     powerWatts: 8,
     quantity: 4,
-    url: 'https://www.jmac.com/HES_1006_Series_Electric_Strike_Body_p/hes-1006.htm',
-    notes: 'Fail Secure. Requires diode protection.'
-  },
-  {
-    id: 'lcp1-acc-psu',
-    name: 'Altronix eFlow6N',
-    manufacturer: 'Altronix',
-    description: 'Access Power Controller',
-    location: 'LCP-1',
-    type: ModuleType.POWER,
-    mountType: MountType.WALL_MOUNT,
-    size: 0,
-    cost: 320.00,
-    powerWatts: 10,
-    quantity: 1,
-    url: 'https://www.amazon.com/s?k=Altronix+eFlow6N',
-    backupUrl: 'https://www.jmac.com/search.php?search_query=eFlow6N',
-    notes: 'Powers HES Strikes. High inrush current handling. Battery Backup.'
-  },
-  {
-    id: 'field-puck',
-    name: 'DALI-2 PD Phase Dimmer',
-    manufacturer: 'Lunatone',
-    description: 'Retrofit Puck',
     location: 'Field',
-    type: ModuleType.LIGHTING,
-    mountType: MountType.CEILING_MOUNT,
+    notes: 'Requires 12/24V Switched from Altronix.'
+  },
+
+  // --- BULK ITEMS ---
+  {
+    id: 'cable-cat6',
+    name: 'Cat6 / Cat6a Riser',
+    manufacturer: 'TrueCable',
+    description: '3000 ft Bulk',
+    type: ModuleType.ACCESSORY,
+    mountType: MountType.NA,
     size: 0,
-    cost: 98.00,
-    powerWatts: 0.5,
-    quantity: 8,
-    url: 'https://www.eibabo.com/en/search?sSearch=lunatone+dali-2+pd',
-    notes: 'Install in attic J-Box near fixture.',
-    universe: 1,
-    position: { x: 50, y: 40 } // Dining
+    cost: 550.00,
+    powerWatts: 0,
+    quantity: 1,
+    location: 'Infra'
   },
   {
     id: 'cable-knx',
     name: 'KNX Bus Cable',
     manufacturer: 'Belden',
-    description: '2500 ft (2-pair Shielded)',
-    location: 'Infra',
     type: ModuleType.ACCESSORY,
     mountType: MountType.NA,
     size: 0,
     cost: 850.00,
     powerWatts: 0,
     quantity: 1,
-    url: 'https://www.jmac.com/search.php?search_query=Belden+YE00906',
-    notes: 'Green sheath.'
-  },
-  {
-    id: 'cable-cat6',
-    name: 'Cat6 / Cat6a Riser',
-    manufacturer: 'TrueCable',
-    description: '3000 ft Bulk',
-    location: 'Infra',
-    type: ModuleType.ACCESSORY,
-    mountType: MountType.NA,
-    size: 0,
-    cost: 550.00, // Blended cost
-    powerWatts: 0,
-    quantity: 1,
-    url: 'https://www.truecable.com/pages/search-results-page?q=cat6+riser',
-    notes: '3000ft total est. Use Cat6a for high-bandwidth/PoE++, Cat6 for standard.'
-  },
+    description: '2500 ft',
+    location: 'Infra'
+  }
 ];
 
-export const MOCK_CONNECTIONS = [
-  { id: 'c1', fromModuleId: 'lcp1-psu1', toModuleId: 'lcp1-gw1', type: 'Mains 24V' },
-  { id: 'c2', fromModuleId: 'lcp1-sys', toModuleId: 'lcp1-gw1', type: 'KNX Bus' },
-  { id: 'c3', fromModuleId: 'lcp1-gw1', toModuleId: 'field-puck', type: 'DALI' },
-  { id: 'c4', fromModuleId: 'mdf-sw', toModuleId: 'lcp1-sys', type: 'Ethernet' },
-  { id: 'c5', fromModuleId: 'mdf-sw', toModuleId: 'lcp2-sys', type: 'Ethernet' },
-  { id: 'c6', fromModuleId: 'mdf-sw', toModuleId: 'field-ak-x915', type: 'PoE' },
+export const INITIAL_CONNECTIONS = [
+  // --- NETWORK / POE ---
+  { id: 'c-nuc', fromId: 'mdf-sw', toId: 'mdf-nuc', type: ConnectionType.ETHERNET, cableType: 'Cat6' },
+  { id: 'c-x915', fromId: 'mdf-sw', toId: 'field-ak-x915', type: ConnectionType.ETHERNET, isPoE: true, cableType: 'Cat6a' },
+  // Link to LCPs
+  { id: 'c-lcp1', fromId: 'mdf-sw', toId: 'lcp1-sys', type: ConnectionType.ETHERNET, cableType: 'Cat6' },
+  { id: 'c-lcp2', fromId: 'mdf-sw', toId: 'lcp2-sys', type: ConnectionType.ETHERNET, cableType: 'Cat6' },
+
+  // --- POWER (MAINS) ---
+  { id: 'c-p-lcp1', fromId: 'lcp1-enc', toId: 'lcp1-psu2', type: ConnectionType.MAINS, notes: '120V Feed' },
+
+  // --- SIGNAL (STRIKES) ---
+  { id: 'c-str-1', fromId: 'lcp1-acc-psu', toId: 'field-str', type: ConnectionType.SIGNAL, cableType: '18/2', notes: 'Switched Power' },
+
+  // --- BUS (KNX) ---
+  { id: 'c-k-1', fromId: 'lcp1-sys', toId: 'lcp1-gw1', type: ConnectionType.KNX },
+  { id: 'c-k-2', fromId: 'lcp1-sys', toId: 'lcp1-inp', type: ConnectionType.KNX },
+
+  // --- BUS (DALI) ---
+  { id: 'c-d-1', fromId: 'lcp1-gw1', toId: 'lcp1-dim-gar', type: ConnectionType.DALI, notes: 'Universe 1' }
 ];
+
+export const MOCK_CONNECTIONS = INITIAL_CONNECTIONS; // Alias for backward compat if needed
