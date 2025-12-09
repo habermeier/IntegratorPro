@@ -71,6 +71,7 @@ export interface HardwareModule {
 
   // Systems Membership (Tagging)
   systemIds?: string[]; // e.g. ['lighting', 'hvac']
+  genericRole?: string; // e.g. 'DALI Gateway' (Classification)
 
   // Legacy support / Flat overrides
   location?: string;

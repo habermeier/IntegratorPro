@@ -4,6 +4,8 @@ import { INITIAL_MODULES, MOCK_CONNECTIONS } from './constants';
 import { flattenModules } from './utils/moduleHelpers'; // Import Helper
 
 import ProjectBOM from './components/ProjectBOM';
+import SystemsOverview from './components/SystemsOverview';
+
 import Visualizer from './components/Visualizer';
 import WiringDiagram from './components/WiringDiagram';
 import GeminiAdvisor from './components/GeminiAdvisor';
@@ -68,6 +70,7 @@ const App = () => {
           <nav className="flex-1 px-4 space-y-2">
             {/* REORDERED & RENAMED NAV */}
             <NavItem mode="COVER_SHEET" icon={FileText} label="Project Brief" />
+            <NavItem mode="SYSTEMS" icon={LayoutDashboard} label="Systems Overview" />
             <NavItem mode="VISUALIZER" icon={Cpu} label="Rack & DIN Layout" />
             <NavItem mode="FLOORPLAN" icon={Map} label="Floor Plan Map" />
             <NavItem mode="BOM" icon={FileText} label="Bill of Materials" /> {/* Added BOM Nav Item */}
@@ -87,7 +90,7 @@ const App = () => {
           {/* Top Header */}
           <header className="h-16 border-b border-slate-800 bg-slate-950/50 backdrop-blur flex items-center justify-between px-8 z-10">
             <h2 className="text-lg font-semibold text-white capitalize">
-              {view === 'DASHBOARD' ? 'Dashboard' : view === 'COVER_SHEET' ? 'Project Brief' : view === 'BOM' ? 'Bill of Materials' : view.toLowerCase().replace('_', ' ')}
+              {view === 'DASHBOARD' ? 'Dashboard' : view === 'COVER_SHEET' ? 'Project Brief' : view === 'BOM' ? 'Bill of Materials' : view === 'SYSTEMS' ? 'Systems Overview' : view.toLowerCase().replace('_', ' ')}
             </h2>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-slate-400">Total BOM:</span>
@@ -111,6 +114,9 @@ const App = () => {
                 <div className="max-w-7xl mx-auto">
                   {/* DASHBOARD / COVER_SHEET = Project Brief */}
                   {(view === 'DASHBOARD' || view === 'COVER_SHEET') && <CoverSheet modules={products} highlightedModuleId={highlightedId} onNavigate={setView} />}
+
+                  {/* SYSTEMS OVERVIEW */}
+                  {view === 'SYSTEMS' && <SystemsOverview modules={products} highlightedId={highlightedId} onNavigate={setView} />}
 
                   {/* BOM = Full Bill of Materials */}
                   {view === 'BOM' && <div className="space-y-4">

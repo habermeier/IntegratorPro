@@ -5,7 +5,7 @@ export const INITIAL_SYSTEMS: SystemDefinition[] = [
         id: 'lighting',
         title: 'Lighting & Control',
         description: 'Comprehensive, sensor-driven lighting control system using DALI and KNX protocols for human-centric illumination.',
-        technicalDetails: 'Utilizes MDT KNX Glass Touch Smart switches and Lunatone DALI-2 drivers. Logic is handled centrally via the LogicMachine, prioritizing motion/presence sensors over physical switches to reduce wall clutter.'
+        technicalDetails: 'Features a distributed control logic using KNX Smart Switches for user interfaces and DALI-2 Gateways for precise fixture management. Logic prioritizes motion and presence sensors to minimize wall clutter, while centralized LED Drivers ensure consistent dimming performance.'
     },
     {
         id: 'heating',
@@ -17,19 +17,19 @@ export const INITIAL_SYSTEMS: SystemDefinition[] = [
         id: 'access',
         title: 'Door Access',
         description: 'Secure, keyless entry management for all perimeter doors.',
-        technicalDetails: 'Features Akuvox IP Door Phones (X915, E16) with facial recognition and NFC. Integrated with HES electric strikes and magnetic locks, powered by Altronix, and bridged to KNX/SIP for touch panel answering.'
+        technicalDetails: 'Utilizes IP Video Intercoms with facial recognition and NFC capabilities. Integrated with 12/24V Electric Strikes and Magnetic Locks, powered by an Access Control Power Controller, and bridged to the automation bus for SIP communication.'
     },
     {
         id: 'security',
         title: 'Security Cameras',
         description: 'High-definition video surveillance for perimeter and common area monitoring.',
-        technicalDetails: 'UniFi Protect PoE cameras recording locally to the Dream Machine Pro / NVR. Integrating AI detections for "Person" and "Vehicle" events into the home automation bus.'
+        technicalDetails: 'A network of 4K PoE IP Cameras recording locally to a secure NVR. Integrates AI-driven event detection (Person/Vehicle) into the home automation bus for automation triggers.'
     },
     {
         id: 'outdoor',
         title: 'Outdoor Lighting',
         description: 'Landscape and facade lighting for aesthetics and security.',
-        technicalDetails: 'Zoned low-voltage landscape lighting transformers controlled via KNX relays. Facade lighting dimmable via DALI. Automated based on astronomical clock and security events.'
+        technicalDetails: 'Zoned low-voltage landscape lighting transformers controlled via KNX relays. Facade lighting dimmable via DALI drivers. Automated based on astronomical clock and security events.'
     },
     {
         id: 'irrigation',
@@ -41,6 +41,6 @@ export const INITIAL_SYSTEMS: SystemDefinition[] = [
         id: 'hvac',
         title: 'HVAC & Environmental',
         description: 'Holistic climate control including ventilation, skylights, and passive cooling.',
-        technicalDetails: 'Integration of Velux skylights (KLF 200), Whole House Fan, and HVAC thermostat. Uses distributed environmental sensors (VOC, CO2, Humidity) to automate air exchange.'
+        technicalDetails: 'Integration of motorized Skylights, Whole House Fans, and Thermostats. Uses distributed environmental sensors (VOC, CO2, Humidity) to automate air exchange and passive cooling strategies.'
     }
 ];

@@ -19,6 +19,7 @@ export const useDeepLink = () => {
                 const v = viewName.toLowerCase();
 
                 if (v === 'dashboard') targetView = 'COVER_SHEET'; // Dashboard = Project Brief
+                else if (v === 'systems') targetView = 'SYSTEMS';
                 else if (v === 'bom') targetView = 'BOM';
                 else if (v === 'visualizer' || v === 'rack') targetView = 'VISUALIZER';
                 else if (v === 'floorplan' || v === 'map') targetView = 'FLOORPLAN';

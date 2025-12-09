@@ -51,6 +51,8 @@ export const INITIAL_MODULES: HardwareModule[] = [
     requiresMains: true,
     requiresBus: [ConnectionType.KNX, ConnectionType.DALI],
     url: 'https://www.mdt.de/en/products/product-detail/actuators/dali-gateways/dali-control-ip-gateway.html',
+    systemIds: ['lighting'],
+    genericRole: 'DALI Gateway',
     instances: [
       { id: 'lcp1-gw1', location: 'LCP-1', universe: 1, notes: 'Universe 1 (Garage/Ext)' },
       { id: 'lcp1-gw2', location: 'LCP-1', universe: 2, notes: 'Universe 2 (Main Floor)' },
@@ -72,6 +74,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     requiresMains: true, // actually usually bus powered but acts as PSU often
     requiresBus: [ConnectionType.KNX, ConnectionType.ETHERNET],
     url: 'https://www.mdt.de/en/products/product-detail/system-components/system-devices/ip-router.html',
+    genericRole: 'KNX IP Router',
     instances: [
       { id: 'lcp1-sys', location: 'LCP-1' },
       { id: 'lcp2-sys', location: 'LCP-2' }
@@ -92,7 +95,9 @@ export const INITIAL_MODULES: HardwareModule[] = [
     quantity: 6,
     requiresMains: true,
     requiresBus: [ConnectionType.DALI],
+    systemIds: ['lighting', 'outdoor'],
     url: 'https://www.lunatone.com/en/product/dali-dt8-dimmer-cv-16a/',
+    genericRole: 'LED Driver (CV)',
     instances: [
       { id: 'lcp1-dim-gar', location: 'LCP-1', universe: 1, notes: 'Garage LED Tape' },
       { id: 'lcp1-dim-kit', location: 'LCP-1', universe: 1, notes: 'Kitchen LED Tape' },
@@ -114,6 +119,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     powerWatts: 1,
     quantity: 5,
     requiresBus: [ConnectionType.DALI],
+    systemIds: ['hvac'],
     url: 'https://www.lunatone.com/en/product/dali-0-10v-pwm-interface/',
     instances: [
       { id: 'lcp1-fan-pdr', location: 'LCP-1', universe: 2, notes: 'Powder Room Fan' },
@@ -171,6 +177,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     powerWatts: 10,
     quantity: 3, // Fixed as requested
     requiresMains: true,
+    systemIds: ['access'],
     url: 'https://www.jmac.com/search.php?search_query=eFlow6N',
     instances: [
       { id: 'lcp1-acc-psu', location: 'LCP-1', notes: 'Main House Strikes' },
@@ -214,6 +221,8 @@ export const INITIAL_MODULES: HardwareModule[] = [
     quantity: 1,
     requiresMains: true,
     requiresPoE: false,
+    systemIds: ['lighting', 'access', 'security', 'hvac', 'irrigation', 'outdoor'],
+    genericRole: 'Automation Server',
     url: 'https://www.asus.com/us/displays-desktops/nucs/nuc-kits/asus-nuc-13-pro-kit/',
     position: { x: 62, y: 38 }
   },
@@ -230,6 +239,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     powerWatts: 50,
     quantity: 1,
     requiresMains: true,
+    genericRole: 'PoE Switch',
     url: 'https://store.ui.com/us/en/pro/category/all-switching/products/usw-pro-max-24-poe',
     position: { x: 62, y: 39 }
   },
@@ -247,6 +257,8 @@ export const INITIAL_MODULES: HardwareModule[] = [
     powerWatts: 12,
     quantity: 1,
     requiresPoE: true,
+    systemIds: ['access'],
+    genericRole: 'Video Intercom',
     url: 'https://akuvoxdealer.com/?s=x915',
     location: 'Field',
     position: { x: 40, y: 80 }
@@ -278,8 +290,39 @@ export const INITIAL_MODULES: HardwareModule[] = [
     cost: 385.00,
     powerWatts: 8,
     quantity: 4,
-    location: 'Field',
     notes: 'Requires 12/24V Switched from Altronix.'
+  },
+  {
+    id: 'cam-g5-pro',
+    name: 'UniFi G5 Pro',
+    manufacturer: 'Ubiquiti',
+    description: '4K PoE Camera',
+    type: ModuleType.SECURITY,
+    mountType: MountType.CEILING_MOUNT,
+    size: 0,
+    cost: 379.00,
+    powerWatts: 10,
+    quantity: 6,
+    requiresPoE: true,
+    systemIds: ['security'],
+    genericRole: 'IP Camera',
+    url: 'https://store.ui.com/us/en/pro/category/all-cameras-nvrs/products/uvc-g5-pro',
+    location: 'Field'
+  },
+  {
+    id: 'velux-klf',
+    name: 'Velux KLF 200',
+    manufacturer: 'Velux',
+    description: 'Skylight Gateway (KNX Integ)',
+    type: ModuleType.HVAC,
+    mountType: MountType.WALL_MOUNT,
+    size: 0,
+    cost: 350.00,
+    powerWatts: 5,
+    quantity: 1,
+    requiresMains: true,
+    systemIds: ['hvac'],
+    location: 'MDF'
   },
 
   // --- BULK ITEMS ---

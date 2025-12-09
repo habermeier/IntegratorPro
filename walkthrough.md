@@ -41,8 +41,19 @@ Added a **Layer Control Panel** to the Floor Plan Map.
 *   **Toggle Visibility**: You can now show/hide entire systems (Lighting, Security, HVAC, etc.).
 *   **Live Data**: The map now renders "Live Modules" from the database, meaning as you add devices to `constants.ts`, they appear on the map if they have `position`.
 
+### 5. Systems Overview (Data-Driven)
+Implemented a thematic view driven by a separate data configuration.
+*   **Data Driven**: Systems are defined in `systems.ts`, making it easy to add/remove sections without coding UI loops.
+*   **Deep Linking**: Supports linking directly to specific systems (e.g., `/#systems/access`) which auto-expands the accordion.
+*   **Tagged Filtering**: Products are tagged with `systemIds` to appear in multiple relevant sections.
+*   **Generic Classification**: Added `genericRole` to schema (e.g. "DALI Gateway", "IP Camera") to decouple BOM descriptions from specific Manufacturer Part Numbers.
+
 ## Verification Steps Passed from Browser
 -   [x] **Project Brief**: Correctly renders summary.
 -   [x] **BOM View**: Correctly renders consolidated table with correct quantities and multiple locations.
+-   [x] **Systems Overview**: Verified sections expand correctly via deep link (`/#systems/lighting`) and contain the correct filtered Mini-BOM.
+    ![Deep Link Verification](/home/quagoo/.gemini/antigravity/brain/b821606d-4c82-4da7-99eb-1ee645b6d384/deep_link_heating_1765257661877.png)
+    -   [x] Verified Narratives are generic/topology focused.
+    -   [x] Verified BOM displays Generic Roles (e.g. "IP Camera").
 -   [x] **Visualizer**: Renders individual DIN modules correctly (using `flattenModules` helper).
 -   [x] **Floor Plan**: Layers toggle On/Off relative to the device type.

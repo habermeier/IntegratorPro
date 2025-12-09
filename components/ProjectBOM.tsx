@@ -85,8 +85,8 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                     valA = a.cost * a.quantity;
                     valB = b.cost * b.quantity;
                 } else if (sort.key === 'category') {
-                    valA = a.type;
-                    valB = b.type;
+                    valA = a.genericRole || a.type;
+                    valB = b.genericRole || b.type;
                 }
 
                 if (typeof valA === 'string' && typeof valB === 'string') {
@@ -238,7 +238,7 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                                             </td>
                                             <td className="px-4 py-3">
                                                 <span className="text-[10px] font-semibold text-slate-300 bg-slate-800 px-2 py-1 rounded border border-slate-700 whitespace-nowrap">
-                                                    {getCategoryLabel(m.type)}
+                                                    {m.genericRole || getCategoryLabel(m.type)}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3">
