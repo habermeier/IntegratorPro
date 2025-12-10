@@ -1,49 +1,55 @@
-# Implementation Plan - Systems Overview
+# Implementation Plan - Motorized Shading System
 
 ## Goal
-Create a "Systems Overview" view that presents the project organized by functional subsystems rather than just hardware types. This view will serve as a rich, narrative-driven interface for understanding the *intent* and *implementation* of each system, supported by relevant BOM data.
+Implement a new "Motorized Shading" system section and add a specific "Technical Cable Schedule" to the Rough-in Guide for electrician reference, ensuring 16/4 home runs are specified.
 
 ## User Review Required
-> [!IMPORTANT]
-> **Data Tagging**: To accurately filter the BOM for specific subsystems (e.g., separating "Security Cameras" from "Door Access" when both are `SECURITY` type), I may need to add a `subsystem` or `tags` field to `HardwareModule` in `types.ts`, or rely on string matching in `constants.ts`.
-> **Proposed Approach**: I will add a simple `systemId` or `tags` array to `HardwareModule` to allow explicit mapping.
+> [!NOTE]
+> I am adding `MDT Shutter Actuator` to the BOM as a "Pre-spec" item (optional/future) to ensure DIN space is accounted for, but the primary focus is the **cable**.
 
 ## Proposed Changes
 
-### 1. Data Schema (`types.ts`)
--   Update `HardwareModule` to include optional `systemIds: string[]` to allow a product to belong to multiple systems (e.g., a Switch might be in 'Lighting' and 'HVAC').
--   Alternatively, define a `SystemDefinition` interface.
+### 1. Schema Updates (`types.ts`)
+-   Add `SHADING` to `ModuleType` enum.
 
-### 2. System Definitions (`systems.ts`)
--   Create new file `constants/systems.ts` (or similar).
--   Define the 7 requested systems with:
-    -   `id` (for deep linking) e.g., `lighting`, `heating`, `access`.
-    -   `title`
-    -   `goal` (Narrative text)
-    -   `technical` (Narrative text)
-    -   `filter`: Logic to select modules (or list of IDs).
+### 2. System Definition (`systems.ts`)
+-   Add "Motorized Shading" system.
+-   **Goal**: "Automated daylight management and privacy."
+-   **Technical**: "Star-wired 24V DC motors controlled via DIN-rail KNX actuators."
 
-### 3. New Component (`components/SystemsOverview.tsx`)
--   **Structure**: A list of expandable Accordions (Details/Summary).
--   **Content**: Render Goal, Tech, and `<MiniBOM />`.
--   **Deep Linking**:
-    -   `useEffect` to auto-expand the section matching the URL hash (e.g., `#systems/lighting`).
-    -   Support linking to specific items *within* the Mini BOM.
+### 3. Data Entry (`constants.ts`)
+-   **Add Cable**: `16/4 Stranded (Low Voltage)` (Bulk, 3000ft).
+    -   Tag as `SHADING` system.
+-   **Add Actuator**: `MDT Shutter Actuator 8-fold` (JAL-0810.02).
+    -   Qty: 2 (Covers up to 16 motors).
+    -   Tag as `SHADING` system.
 
-### 4. App Navigation (`App.tsx`)
--   Add "Systems Overview" to Sidebar.
--   Add `SYSTEMS` ViewMode.
+### 4. Window Treatment Schedule (Estimated)
+Based on floor plan review:
+-   **Living Room**: 4 Windows
+-   **Dining Room**: 2 Windows
+-   **Master Bedroom**: 3 Windows
+-   **Office**: 2 Windows
+-   **Kitchen**: 1 Window
+-   **Bed 2**: 1 Window
+-   **Bed 3**: 1 Window
+*Total: 14 Locations*
+
+### 5. UI Updates (`components/RoughInGuide.tsx`)
+-   Add a new section specifically for "Motorized Window Treatment Schedule".
+-   **Content**:
+    -   **Topology**: Star wiring (Home Run) from every individual window header directly to the central Lighting Control Panel (LCP). No daisy-chaining.
+    -   **Voltage Standard**: Low Voltage (24V DC) to support quiet KNX motors (MDT/Theben/SMI).
+    -   **Cable Spec**: 16 AWG, 4-Conductor Stranded (16/4). (4-wire is required to support future SMI digital motors or standard 2-wire polarity reversal).
+    -   **Termination**: Leave a 12-inch service loop in the window header (taped) and a 3-foot tail at the panel.
+    -   **Labeling**: Both ends must be uniquely labeled (e.g., 'SHADE-Pantry-01').
 
 ## Verification Plan
-### Manual Verification
--   [ ] Click "Systems Overview".
--   [ ] Expand "Lighting & Control".
-    -   Verify narrative text.
-    -   Verify Mini BOM shows DALI Gateways, Keypads, etc.
--   [ ] Expand "Door Access".
-    -   Verify Doorbird/Akuvox and Strikes are listed.
-    -   Verify Cameras are *not* listed (if separated).
--   [ ] Deep Link Test: Navigate to `#systems/heating`. Confirm correct accordion opens.
 
-### Automated Test (Browser)
--   Use browser tool to navigate and verify text content and BOM filtering.
+### Manual Verification
+-   [ ] **Systems Overview**: Verify "Motorized Shading" appears with the correct narrative and equipment list.
+-   [ ] **Rough-in Guide**: Verify the "Technical Cable Schedule" text is visible and formatted correctly.
+-   [ ] **BOM**: Verify 16/4 Cable is listed under Shading/Accessory.
+
+### Automated Verification
+-   Use browser tool to navigate to `/#rough-in` and check for the existence of the specific text string "Leave a 12-inch service loop".

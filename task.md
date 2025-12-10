@@ -1,22 +1,15 @@
-# Task: Implement Systems Overview
+# Task: Add Motorized Shading System
 
 ## Goal
-Create a "Systems Overview" view that presents the project organized by functional subsystems (Lighting, HVAC, Access, etc.).
+Add a new "Window Treatments" system focusing on pre-wiring requirements (16/4 Home Run) and optional DIN rail allocation.
 
 ## Checklist
-- [x] **Data Schema & Definitions**
-    - [x] Update `types.ts`: Add `systemIds` to `HardwareModule`.
-    - [x] Create `constants/systems.ts`: Define the 7 systems (Goal, Technical, Filter).
-    - [x] Update `constants.ts`: Tag existing hardware modules with appropriate `systemIds`.
-- [x] **UI Components**
-    - [x] Create `components/SystemsOverview.tsx`: Implement the accordion list view.
-        - [x] Render system goals and technical details.
-        - [x] Integrate `MiniBOM` or list relevant hardware.
-        - [x] Implement auto-expansion based on URL hash (deep linking).
-    - [x] Update `App.tsx`:
-        - [x] Add "Systems Overview" to the sidebar navigation.
-        - [x] Add routing logic for the new view mode.
-- [x] **Verification**
-    - [x] Manual Check: Verify Accordions expand, text is correct.
-    - [x] Manual Check: Verify Deep Linking (`#systems/lighting`).
-    - [x] Automated: Run browser test to verify navigation and content.
+- [ ] **Data Schema & Content**
+    - [ ] Update `types.ts`: Add `SHADING` to `ModuleType` (if not present).
+    - [ ] Update `systems.ts`: Add "Motorized Shading" system definition.
+    - [ ] Update `constants.ts`: Add `16/4 Cable` (Bulk) and `MDT Shutter Actuator` (Pre-spec).
+- [ ] **UI Updates**
+    - [ ] Update `RoughInGuide.tsx`: Add the specific "Technical Cable Schedule" text provided by the user.
+- [ ] **Verification**
+    - [ ] Verify "Motorized Shading" appears in Systems Overview.
+    - [ ] Verify "Rough-in Guide" shows the electrician instructions.

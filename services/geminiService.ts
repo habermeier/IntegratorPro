@@ -115,10 +115,12 @@ export const extractMapSymbols = async (base64Image: string): Promise<any[]> => 
     2.  **Switches**: The symbol '$' or '$LV' or just '$'. Type: "SWITCH".
     3.  **Fans**: Fan blade symbol. Type: "FAN".
     4.  **Sensors**: Triangles or motion cones. Type: "SENSOR".
+    4.  **Sensors**: Triangles or motion cones. Type: "SENSOR".
     5.  **Exterior Sensors**: Sensors outside the walls. Type: "EXTERIOR".
+    6.  **Windows**: Openings in the walls, often marked with lines. Type: "WINDOW".
 
     Return a JSON array of objects. Each object must have:
-    -   type: One of ["LIGHT", "SWITCH", "FAN", "SENSOR", "EXTERIOR"]
+    -   type: One of ["LIGHT", "SWITCH", "FAN", "SENSOR", "EXTERIOR", "WINDOW"]
     -   x: The X coordinate as a percentage (0-100) from the left.
     -   y: The Y coordinate as a percentage (0-100) from the top.
     
@@ -153,7 +155,7 @@ export const extractMapSymbols = async (base64Image: string): Promise<any[]> => 
           items: {
             type: Type.OBJECT,
             properties: {
-              type: { type: Type.STRING, enum: ['LIGHT', 'SWITCH', 'FAN', 'SENSOR', 'EXTERIOR'] },
+              type: { type: Type.STRING, enum: ['LIGHT', 'SWITCH', 'FAN', 'SENSOR', 'EXTERIOR', 'WINDOW'] },
               x: { type: Type.NUMBER },
               y: { type: Type.NUMBER },
             },

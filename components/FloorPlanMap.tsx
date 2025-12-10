@@ -200,8 +200,8 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
         if (isScanning) return;
         setIsScanning(true);
         try {
-            // Fetch the electrical image as a blob/base64
-            const response = await fetch(ELECTRICAL_IMAGE);
+            // Fetch the current map image
+            const response = await fetch(currentMapImage);
             const blob = await response.blob();
             const reader = new FileReader();
             reader.onloadend = async () => {
@@ -209,6 +209,7 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
                 console.log("FloorPlanMap: Extracting Symbols...");
                 const symbols = await extractMapSymbols(base64data);
                 console.log("FloorPlanMap: Detected Symbols", symbols);
+                addLog('AI Symbols', symbols);
                 setAiSymbols(symbols);
                 setIsScanning(false);
             };
