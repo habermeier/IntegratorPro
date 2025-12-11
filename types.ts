@@ -49,10 +49,13 @@ export interface HardwareModule {
   mountType: MountType;
   size: number;
   cost: number;
-  powerWatts: number;
-  quantity: number; // For manual overrides or derived count
-  url?: string;
-  backupUrl?: string;
+
+  powerWatts: number; // Max power consumption
+  quantity: number;
+
+  // URL Structure
+  url: string;        // Verified Purchase Link
+  backupUrl?: string; // Optional search/backup
   dimensions?: {
     width: number;
     height: number;

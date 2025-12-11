@@ -1,27 +1,65 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { ViewMode } from '../types';
 
 export type AppViewMode = ViewMode | 'COVER_SHEET';
 
-interface ViewConfig {
-    mode: AppViewMode;
+interface ConfigItem {
     prefix: string;
     aliases: string[];
 }
 
 // Configuration Map
-const VIEW_CONFIG: ViewConfig[] = [
-    { mode: 'COVER_SHEET', prefix: 'project-brief', aliases: ['brief', 'cover', 'dashboard'] },
-    { mode: 'DASHBOARD', prefix: 'dashboard', aliases: [] },
-    { mode: 'SYSTEMS', prefix: 'systems', aliases: [] },
-    { mode: 'BOM', prefix: 'bom', aliases: [] },
-    { mode: 'VISUALIZER', prefix: 'visualizer', aliases: ['rack'] },
-    { mode: 'FLOORPLAN', prefix: 'floorplan', aliases: ['map'] },
-    { mode: 'ROUGH_IN', prefix: 'rough-in', aliases: ['guide'] },
-    // Ensure all ViewModes are handled if they need deep linking
-    { mode: 'TOPOLOGY', prefix: 'topology', aliases: [] },
-    { mode: 'ADVISOR', prefix: 'advisor', aliases: [] },
-];
+// using Record ensures we MUST define every single AppViewMode.
+const VIEW_CONFIG: Record<AppViewMode, ConfigItem> = {
+    // Consolidated Dashboard/Brief View
+    COVER_SHEET: { prefix: 'project-brief', aliases: ['brief', 'cover', 'dashboard'] },
+    SYSTEMS: { prefix: 'systems', aliases: [] },
+    BOM: { prefix: 'bom', aliases: [] },
+    VISUALIZER: { prefix: 'visualizer', aliases: ['rack'] },
+    FLOORPLAN: { prefix: 'floorplan', aliases: ['map'] },
+    ROUGH_IN: { prefix: 'rough-in', aliases: ['guide'] },
+    TOPOLOGY: { prefix: 'topology', aliases: [] },
+    ADVISOR: { prefix: 'advisor', aliases: [] },
+    // Logical mapping for DASHBOARD to prevent TS errors if it exists in ViewMode
+    // We treat it as a distinct entry but it effectively maps to a unique prefix
+    // to avoid collision with COVER_SHEET's 'dashboard' alias.
+    DASHBOARD: { prefix: 'dashboard-view', aliases: [] }
+};
+
+// Runtime Validation for Robustness
+(() => {
+    const prefixes = new Set<string>();
+    const aliases = new Map<string, string>();
+    const errors: string[] = [];
+
+    (Object.keys(VIEW_CONFIG) as AppViewMode[]).forEach(key => {
+        const config = VIEW_CONFIG[key];
+
+        // Check Prefix
+        if (prefixes.has(config.prefix)) {
+            errors.push(`Duplicate prefix '${config.prefix}' in ${key}`);
+        }
+        prefixes.add(config.prefix);
+
+        // Check Aliases
+        config.aliases.forEach(alias => {
+            if (prefixes.has(alias)) {
+                errors.push(`Alias '${alias}' in ${key} conflicts with a prefix.`);
+            }
+            if (aliases.has(alias)) {
+                errors.push(`Duplicate alias '${alias}' in ${key} and ${aliases.get(alias)}`);
+            }
+            aliases.set(alias, key);
+        });
+    });
+
+    if (errors.length > 0) {
+        console.error("FATAL: Navigation Configuration Errors:", errors);
+        if (process.env.NODE_ENV !== 'production') {
+            throw new Error(`Navigation Config Integrity Check Failed:\n${errors.join('\n')}`);
+        }
+    }
+})();
 
 export const useDeepLink = () => {
     const [view, setView] = useState<AppViewMode>('COVER_SHEET');
@@ -30,15 +68,14 @@ export const useDeepLink = () => {
     // Derived lookup helpers
     const getModeFromUrlPart = (part: string): AppViewMode | null => {
         const normalized = part.toLowerCase();
-        const config = VIEW_CONFIG.find(c =>
-            c.prefix === normalized || c.aliases.includes(normalized)
+        const entry = Object.entries(VIEW_CONFIG).find(([_, config]) =>
+            config.prefix === normalized || config.aliases.includes(normalized)
         );
-        return config ? config.mode : null;
+        return entry ? (entry[0] as AppViewMode) : null;
     };
 
     const getPrefixFromMode = (mode: AppViewMode): string | null => {
-        const config = VIEW_CONFIG.find(c => c.mode === mode);
-        return config ? config.prefix : null;
+        return VIEW_CONFIG[mode]?.prefix || null;
     };
 
     useEffect(() => {
@@ -58,26 +95,13 @@ export const useDeepLink = () => {
 
             if (detectedMode) {
                 setView(detectedMode);
-                // If there's a second part, it's an ID. 
-                // Exception: Dashboard aliases mapping to CoverSheet clearing ID is legacy behavior 
-                // but standardizing to "ID is second part" is cleaner.
-                // Replicating specific legacy behavior:
-                // "Check if it matches a section header like #lcp-1" logic from original
-                // was only checked if parts.length === 1 AND arg was NOT a view mode.
-
                 setHighlightedId(secondPart);
             } else {
-                // Scenario 2: No view mode found in first part.
-                // Could be a direct ID (legacy behavior) or a specific known section ID.
-
-                // Legacy special IDs that force Visualizer
+                // Scenario 2: Legacy / Fallback
                 if (['lcp-1', 'lcp-2', 'mdf'].includes(firstPart.toLowerCase())) {
                     setView('VISUALIZER');
                     setHighlightedId(firstPart);
                 } else {
-                    // Fallback: Assume it's a module ID for the Visualizer
-                    // Only if single part? Original said "Assume module ID" at end of single part check.
-                    // If it was valid view it would have been caught above.
                     setView('VISUALIZER');
                     setHighlightedId(firstPart);
                 }

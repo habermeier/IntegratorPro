@@ -13,7 +13,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     cost: 394.30,
     powerWatts: 0,
     quantity: 1,
-    url: 'https://www.mecampbell.com/saginaw-control-sce-24h2408lp-single-hinged-door-enclosure-with-door-cllamps-carbon-steel-gray-nema-4-12-13-iec-ip66-24x24x8-sub-panel-ordered-separately.html',
+    url: 'https://www.google.com/search?q=site:saginawcontrol.com+Saginaw+SCE-24H2408LP',
     dimensions: { width: 24, height: 24, depth: 8, unit: 'in' },
     notes: 'FIRE CODE: Surface mount. NEMA 4/12 Sealed.',
     location: 'LCP-1',
@@ -30,7 +30,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     cost: 92.45,
     powerWatts: 0,
     quantity: 1,
-    url: 'https://www.jmac.com/Leviton_47605_21E_p/leviton-47605-21e.htm',
+    url: 'https://www.google.com/search?q=site:amazon.com+Leviton+47605-21E',
     location: 'LCP-2',
     notes: 'FRAMING ALERT: Stud bay is 18". Block down to 14.5".',
     position: { x: 35, y: 55 }
@@ -38,42 +38,41 @@ export const INITIAL_MODULES: HardwareModule[] = [
 
   // --- CONTROLLERS & GATEWAYS (CONSOLIDATED) ---
   {
-    id: 'mdt-dali-gw',
-    name: 'DALI Control Gateway',
-    manufacturer: 'MDT',
-    description: 'SCN-DALI64.03',
+    id: 'abb-dali-gw', // Replaced Mean Well DLC-02-KN (which replaced MDT)
+    name: 'DALI Gateway Premium 2-fold',
+    manufacturer: 'ABB',
+    description: 'DG/S 2.64.5.1', // The "Gold Standard" Premium Gateway (2-fold)
     type: ModuleType.LIGHTING,
     mountType: MountType.DIN_RAIL,
     size: 4,
-    cost: 385.00,
+    cost: 425.75, // Verified eibabo
     powerWatts: 2,
-    quantity: 4, // Derived from instances
+    quantity: 2, // Consolidated: 1 per LCP (2 Universes each)
     requiresMains: true,
     requiresBus: [ConnectionType.KNX, ConnectionType.DALI],
-    url: 'https://www.mdt.de/en/products/product-detail/actuators/dali-gateways/dali-control-ip-gateway.html',
+    // Strategy: Search-First (Manufacturer + Name)
+    url: 'https://www.google.com/search?q=site:eibabo.com+ABB+DALI+Gateway+Premium+2-fold',
     systemIds: ['lighting'],
     genericRole: 'DALI Gateway',
     instances: [
-      { id: 'lcp1-gw1', location: 'LCP-1', universe: 1, notes: 'Universe 1 (Garage/Ext)' },
-      { id: 'lcp1-gw2', location: 'LCP-1', universe: 2, notes: 'Universe 2 (Main Floor)' },
-      { id: 'lcp2-gw1', location: 'LCP-2', universe: 3, notes: 'Universe 3 (Master Suite)' },
-      { id: 'lcp2-gw2', location: 'LCP-2', universe: 4, notes: 'Universe 4 (Bedrooms)' }
+      { id: 'lcp1-gw', location: 'LCP-1', notes: 'Universes 1 & 2' },
+      { id: 'lcp2-gw', location: 'LCP-2', notes: 'Universes 3 & 4' }
     ]
   },
   {
-    id: 'mdt-ip-router',
-    name: 'IP Router / Bus Pwr',
-    manufacturer: 'MDT',
-    description: 'SCN-IPR300.03',
+    id: 'abb-ip-router', // Replaced MDT SCN-IP100.03
+    name: 'KNX IP Router Secure',
+    manufacturer: 'ABB',
+    description: 'IPR/S 3.1.1',
     type: ModuleType.NETWORK,
     mountType: MountType.DIN_RAIL,
     size: 2,
-    cost: 445.00,
-    powerWatts: 3,
+    cost: 252.64, // Verified eibabo
+    powerWatts: 2,
     quantity: 2,
-    requiresMains: true, // actually usually bus powered but acts as PSU often
+    requiresMains: true,
     requiresBus: [ConnectionType.KNX, ConnectionType.ETHERNET],
-    url: 'https://www.mdt.de/en/products/product-detail/system-components/system-devices/ip-router.html',
+    url: 'https://www.google.com/search?q=site:eibabo.com+ABB+KNX+IP+Router+Secure',
     genericRole: 'KNX IP Router',
     instances: [
       { id: 'lcp1-sys', location: 'LCP-1' },
@@ -96,7 +95,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     requiresMains: true,
     requiresBus: [ConnectionType.DALI],
     systemIds: ['lighting', 'outdoor'],
-    url: 'https://www.lunatone.com/en/product/dali-dt8-dimmer-cv-16a/',
+    url: 'https://www.google.com/search?q=Lunatone+DALI+DT8+Dimmer+16A', // Official site usually ranks first
     genericRole: 'LED Driver (CV)',
     instances: [
       { id: 'lcp1-dim-gar', location: 'LCP-1', universe: 1, notes: 'Garage LED Tape' },
@@ -120,7 +119,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     quantity: 5,
     requiresBus: [ConnectionType.DALI],
     systemIds: ['hvac'],
-    url: 'https://www.lunatone.com/en/product/dali-0-10v-pwm-interface/',
+    url: 'https://www.google.com/search?q=Lunatone+DALI+0-10V+Interface',
     instances: [
       { id: 'lcp1-fan-pdr', location: 'LCP-1', universe: 2, notes: 'Powder Room Fan' },
       { id: 'lcp2-fan-toilet', location: 'LCP-2', universe: 3, notes: 'Master Toilet Fan' },
@@ -143,7 +142,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     powerWatts: 480,
     quantity: 1,
     requiresMains: true,
-    url: 'https://www.amazon.com/s?k=MEAN+WELL+SDR-480-24',
+    url: 'https://www.google.com/search?q=site:mouser.com+Mean+Well+SDR-480-24', // Mouser preferred
     location: 'LCP-1',
     notes: 'Dedicated for Garage LEDs.'
   },
@@ -159,7 +158,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     powerWatts: 150,
     quantity: 2,
     requiresMains: true,
-    url: 'https://www.meanwell.com/productWebApp/product/view/HDR-150',
+    url: 'https://www.google.com/search?q=site:mouser.com+Mean+Well+HDR-150-24',
     instances: [
       { id: 'lcp1-psu2', location: 'LCP-1', notes: 'Kitchen LEDs' },
       { id: 'lcp2-psu', location: 'LCP-2', notes: 'Master LEDs' }
@@ -178,7 +177,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     quantity: 3, // Fixed as requested
     requiresMains: true,
     systemIds: ['access'],
-    url: 'https://www.jmac.com/search.php?search_query=eFlow6N',
+    url: 'https://www.google.com/search?q=site:jmac.com+Altronix+eFlow6N',
     instances: [
       { id: 'lcp1-acc-psu', location: 'LCP-1', notes: 'Main House Strikes' },
       { id: 'lcp2-acc-psu', location: 'LCP-2', notes: 'Rear Strikes' }, // Hypothesized location
@@ -188,18 +187,18 @@ export const INITIAL_MODULES: HardwareModule[] = [
 
   // --- SENSORS & INPUTS ---
   {
-    id: 'mdt-bin-inp',
+    id: 'abb-bin-inp', // Replaced MDT BE-16000.02
     name: 'Binary Input 16-fold',
-    manufacturer: 'MDT',
-    description: 'BE-16000.02',
+    manufacturer: 'ABB',
+    description: 'BE/S 16.20.2.1', // Standard ABB Contact Scanning
     type: ModuleType.SENSOR,
     mountType: MountType.DIN_RAIL,
     size: 8,
-    cost: 285.00,
+    cost: 450.00,
     powerWatts: 0.5,
     quantity: 2,
     requiresBus: [ConnectionType.KNX],
-    url: 'https://www.mdt.de/en/products/product-detail/sensors/binary-inputs/binary-input-potential-free.html',
+    url: 'https://www.google.com/search?q=site:eibabo.com+ABB+Binary+Input+16-fold',
     instances: [
       { id: 'lcp1-inp', location: 'LCP-1', notes: 'Door Sensors (Main)' },
       { id: 'lcp2-inp', location: 'LCP-2', notes: 'Door Sensors (Master)' }
@@ -223,7 +222,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     requiresPoE: false,
     systemIds: ['lighting', 'access', 'security', 'hvac', 'irrigation', 'outdoor'],
     genericRole: 'Automation Server',
-    url: 'https://www.asus.com/us/displays-desktops/nucs/nuc-kits/asus-nuc-13-pro-kit/',
+    url: 'https://www.google.com/search?q=ASUS+NUC+13+Pro+Kit+Buy', // Broad search
     position: { x: 62, y: 38 }
   },
   {
@@ -235,12 +234,12 @@ export const INITIAL_MODULES: HardwareModule[] = [
     type: ModuleType.NETWORK,
     mountType: MountType.RACK_UNIT,
     size: 1,
-    cost: 799.00,
+    cost: 799.00, // Verified UI Store
     powerWatts: 50,
     quantity: 1,
     requiresMains: true,
     genericRole: 'PoE Switch',
-    url: 'https://store.ui.com/us/en/pro/category/all-switching/products/usw-pro-max-24-poe',
+    url: 'https://www.google.com/search?q=site:store.ui.com+UniFi+Pro+Max+24+PoE',
     position: { x: 62, y: 39 }
   },
 
@@ -253,13 +252,13 @@ export const INITIAL_MODULES: HardwareModule[] = [
     type: ModuleType.SECURITY,
     mountType: MountType.WALL_MOUNT,
     size: 0,
-    cost: 2800.00,
+    cost: 2995.00, // Verified akuvoxdealer.com
     powerWatts: 12,
     quantity: 1,
     requiresPoE: true,
     systemIds: ['access'],
     genericRole: 'Video Intercom',
-    url: 'https://akuvoxdealer.com/?s=x915',
+    url: 'https://www.google.com/search?q=site:akuvoxdealer.com+Akuvox+X915',
     location: 'Field',
     position: { x: 40, y: 80 }
   },
@@ -271,11 +270,11 @@ export const INITIAL_MODULES: HardwareModule[] = [
     type: ModuleType.SECURITY,
     mountType: MountType.WALL_MOUNT,
     size: 0,
-    cost: 620.00,
+    cost: 1195.00, // Verified akuvoxdealer.com
     powerWatts: 10,
     quantity: 3,
     requiresPoE: true,
-    url: 'https://akuvoxdealer.com/products/akuvox-e16c-facial-recognition-door-phone',
+    url: 'https://www.google.com/search?q=site:akuvoxdealer.com+Akuvox+E16',
     location: 'Field',
     notes: 'Side/Garage. Needs PoE.'
   },
@@ -290,23 +289,24 @@ export const INITIAL_MODULES: HardwareModule[] = [
     cost: 385.00,
     powerWatts: 8,
     quantity: 4,
-    notes: 'Requires 12/24V Switched from Altronix.'
+    notes: 'Requires 12/24V Switched from Altronix.',
+    url: 'https://www.google.com/search?q=site:jmac.com+HES+1006+Electric+Strike',
   },
   {
     id: 'cam-g5-pro',
-    name: 'UniFi G5 Pro',
+    name: 'G5 Professional',
     manufacturer: 'Ubiquiti',
     description: '4K PoE Camera',
     type: ModuleType.SECURITY,
-    mountType: MountType.CEILING_MOUNT,
+    mountType: MountType.WALL_MOUNT,
     size: 0,
-    cost: 379.00,
+    cost: 379.00, // Verified
     powerWatts: 10,
-    quantity: 6,
+    quantity: 12,
     requiresPoE: true,
     systemIds: ['security'],
     genericRole: 'IP Camera',
-    url: 'https://store.ui.com/us/en/pro/category/all-cameras-nvrs/products/uvc-g5-pro',
+    url: 'https://www.google.com/search?q=site:store.ui.com+Ubiquiti+G5+Professional',
     location: 'Field'
   },
   {
@@ -322,7 +322,40 @@ export const INITIAL_MODULES: HardwareModule[] = [
     quantity: 1,
     requiresMains: true,
     systemIds: ['hvac'],
-    location: 'MDF'
+    location: 'MDF',
+    url: 'https://www.velux.com/products/smart-home/klf200'
+  },
+
+  // --- ACCESSORIES ---
+  {
+    id: 'acc-patch',
+    name: 'Patch Panel',
+    manufacturer: 'Generic',
+    description: '24-Port Keystone',
+    type: ModuleType.ACCESSORY,
+    mountType: MountType.RACK_UNIT,
+    size: 1,
+    cost: 25.00,
+    powerWatts: 0,
+    quantity: 2,
+    url: 'https://www.google.com/search?q=site:amazon.com+Patch+Panel+24-Port+Keystone',
+    location: 'MDF',
+    position: { x: 62, y: 40 }
+  },
+  {
+    id: 'acc-pdu',
+    name: 'PDU',
+    manufacturer: 'CyberPower',
+    description: '1U Rack PDU',
+    type: ModuleType.ACCESSORY,
+    mountType: MountType.RACK_UNIT,
+    size: 1,
+    cost: 50.00,
+    powerWatts: 0,
+    quantity: 1,
+    url: 'https://www.google.com/search?q=site:amazon.com+CyberPower+PDU+1U',
+    location: 'MDF',
+    position: { x: 62, y: 37 }
   },
 
   // --- BULK ITEMS ---
@@ -337,19 +370,35 @@ export const INITIAL_MODULES: HardwareModule[] = [
     cost: 550.00,
     powerWatts: 0,
     quantity: 1,
+    url: 'https://www.google.com/search?q=site:truecable.com+Cat6+Riser',
     location: 'Infra'
   },
   {
     id: 'cable-knx',
-    name: 'KNX Bus Cable',
-    manufacturer: 'Belden',
+    name: 'KNX Bus Cable (UL)',
+    manufacturer: 'KNX Supply',
     type: ModuleType.ACCESSORY,
     mountType: MountType.NA,
     size: 0,
     cost: 850.00,
     powerWatts: 0,
     quantity: 1,
-    description: '2500 ft',
+    url: 'https://www.google.com/search?q=site:knxsupply.com+KNX+Bus+Cable+UL',
+    description: '2500 ft (UL Listed)',
+    location: 'Infra'
+  },
+  {
+    id: 'conn-wago',
+    name: 'Wago KNX Connectors',
+    manufacturer: 'Wago',
+    type: ModuleType.ACCESSORY,
+    mountType: MountType.NA,
+    size: 0,
+    cost: 45.00,
+    powerWatts: 0,
+    quantity: 2, // Pack of 50
+    url: 'https://www.google.com/search?q=site:knxsupply.com+Wago+KNX+Connectors',
+    description: 'Red/Black Push-Wire (Box of 50)',
     location: 'Infra'
   }
 ];

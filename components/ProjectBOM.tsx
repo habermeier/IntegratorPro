@@ -175,6 +175,7 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                 </div>
             </div>
 
+            {/* Equipment List Table */}
             <div className={`grid grid-cols-1 ${!summaryOnly ? 'xl:grid-cols-3' : ''} gap-6`}>
                 {!summaryOnly && (
                     <div className="xl:col-span-2 bg-slate-900 rounded-xl border border-slate-800 flex flex-col shadow-lg">
@@ -197,8 +198,9 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                                         <SortableHeader label="Category" sortKey="category" />
                                         <SortableHeader label="Location" sortKey="location" />
                                         <th className="px-4 py-3 cursor-default">Notes</th>
+                                        <SortableHeader label="Unit Cost" sortKey="cost" align="right" />
                                         <SortableHeader label="Qty" sortKey="quantity" align="right" />
-                                        <SortableHeader label="Total Cost" sortKey="totalCost" align="right" />
+                                        <SortableHeader label="Total" sortKey="totalCost" align="right" />
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-800/50">
@@ -212,45 +214,33 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                                                 : 'hover:bg-slate-800/50'
                                                 }`}
                                         >
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center space-x-3">
-                                                    <div className={`w-1 h-8 rounded-full flex-shrink-0 ${m.type === 'POWER' ? 'bg-amber-500' :
-                                                        m.type === 'LIGHTING' ? 'bg-purple-500' :
-                                                            m.type === 'CONTROLLER' ? 'bg-emerald-500' : 'bg-slate-600'
-                                                        }`}></div>
-                                                    <div>
-                                                        <div className="font-medium text-white flex items-center gap-2">
-                                                            {m.name}
-                                                            {m.url && (
-                                                                <a href={m.url} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-400" title="Primary Vendor">
-                                                                    <ExternalLink className="w-3 h-3" />
-                                                                </a>
-                                                            )}
-                                                            {m.backupUrl && (
-                                                                <a href={m.backupUrl} target="_blank" rel="noreferrer" className="text-slate-500 hover:text-slate-400" title="Backup Search">
-                                                                    <Search className="w-3 h-3" />
-                                                                </a>
-                                                            )}
-                                                        </div>
-                                                        <div className="text-xs text-slate-500">{m.manufacturer} • {m.description}</div>
+                                            <td className="p-3 pl-4">
+                                                <div className="flex flex-col">
+                                                    <div className="font-medium text-white flex items-center gap-2">
+                                                        {m.name}
+                                                        {m.url && (
+                                                            <a href={m.url} target="_blank" rel="noreferrer" className="text-emerald-500 hover:text-emerald-400" onClick={(e) => e.stopPropagation()} title="Find Product">
+                                                                <Search className="w-3 h-3" />
+                                                            </a>
+                                                        )}
+                                                        {m.backupUrl && (
+                                                            <a href={m.backupUrl} target="_blank" rel="noreferrer" className="text-slate-500 hover:text-slate-400" onClick={(e) => e.stopPropagation()} title="Backup Search">
+                                                                <Search className="w-3 h-3" />
+                                                            </a>
+                                                        )}
                                                     </div>
+                                                    <div className="text-xs text-slate-500">{m.manufacturer} {m.description}</div>
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-3">
+                                            <td className="p-3 text-sm text-slate-400">
                                                 <span className="text-[10px] font-semibold text-slate-300 bg-slate-800 px-2 py-1 rounded border border-slate-700 whitespace-nowrap">
                                                     {m.genericRole || getCategoryLabel(m.type)}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-3">
-                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border whitespace-nowrap
-                                                    ${(m.instances?.length ?? 0) > 1 ? 'bg-slate-700 text-slate-300 border-slate-600' :
-                                                        (m.location?.startsWith('LCP') ? 'bg-indigo-900/30 text-indigo-400 border-indigo-700/50' :
-                                                            m.location === 'MDF' ? 'bg-blue-900/30 text-blue-400 border-blue-700/50' :
-                                                                'bg-slate-800 text-slate-400 border-slate-700')}`}>
-                                                    {m.instances && m.instances.length > 0
-                                                        ? [...new Set(m.instances.map(i => i.location))].join(', ')
-                                                        : m.location}
-                                                </span>
+                                            <td className="p-3 text-sm text-slate-400">
+                                                {m.instances && m.instances.length > 0
+                                                    ? [...new Set(m.instances.map(i => i.location))].join(', ')
+                                                    : m.location}
                                             </td>
                                             <td className="px-4 py-3">
                                                 {m.notes && (
@@ -259,6 +249,9 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                                                         <span className="truncate hover:whitespace-normal hover:absolute hover:bg-slate-800 hover:z-50 hover:p-2 hover:rounded hover:shadow-lg hover:max-w-xs">{m.notes}</span>
                                                     </div>
                                                 )}
+                                            </td>
+                                            <td className="px-4 py-3 text-right font-mono text-slate-400">
+                                                ${m.cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </td>
                                             <td className="px-4 py-3 text-right font-mono text-white">
                                                 {m.quantity}
@@ -273,7 +266,6 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                         </div>
                     </div>
                 )}
-
                 {/* Charts */}
                 <div className={`flex ${summaryOnly ? 'flex-row' : 'flex-col'} gap-6 ${summaryOnly ? 'w-full' : ''}`}>
                     <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-lg flex-1 min-h-[200px]">
@@ -323,8 +315,8 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                         </ResponsiveContainer>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 
