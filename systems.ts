@@ -40,7 +40,7 @@ export const INITIAL_SYSTEMS: SystemDefinition[] = [
     {
         id: 'hvac',
         title: 'HVAC & Environmental',
-        description: 'Holistic climate control including ventilation, skylights, and passive cooling.',
-        technicalDetails: 'Integration of motorized Skylights, Whole House Fans, and Thermostats. Uses distributed environmental sensors (VOC, CO2, Humidity) to automate air exchange and passive cooling strategies.'
+        description: 'Holistic climate and motor control including ventilation, skylights, and passive cooling.',
+        technicalDetails: 'Integration of motorized Skylights, EC Exhaust Fans (0-10V), and Thermostats. Uses distributed environmental sensors (VOC, CO2, Humidity) and Presence detection to automate air exchange, exhaust, and passive cooling strategies.'
     }
 ];

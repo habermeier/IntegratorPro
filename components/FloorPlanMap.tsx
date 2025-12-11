@@ -115,6 +115,16 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
     };
 
     const [activeLayer, setActiveLayer] = useState<'STRUCTURAL' | 'ELECTRICAL'>('STRUCTURAL');
+
+    // Deep Link to Layer
+    useEffect(() => {
+        if (highlightedModuleId === 'electric') {
+            setActiveLayer('ELECTRICAL');
+        } else if (highlightedModuleId === 'clean') {
+            setActiveLayer('STRUCTURAL');
+        }
+    }, [highlightedModuleId]);
+
     const currentMapImage = activeLayer === 'STRUCTURAL' ? STRUCTURAL_IMAGE : ELECTRICAL_IMAGE;
     const [fitToScreen, setFitToScreen] = useState<() => void>(() => () => { });
     const contentRef = useRef<HTMLDivElement>(null);

@@ -147,6 +147,54 @@ export const INITIAL_MODULES: HardwareModule[] = [
     notes: 'Dedicated for Garage LEDs.'
   },
   {
+    id: 'light-fix-dali',
+    name: 'HE Williams 2DS Square',
+    manufacturer: 'HE Williams',
+    description: '2" Tunable White Fixed Trimless Downlight (DALI-2)',
+    type: ModuleType.LIGHTING,
+    mountType: MountType.CEILING_MOUNT,
+    size: 0,
+    cost: 200.00,
+    powerWatts: 15, // Est for 2" High Output
+    quantity: 43,
+    requiresBus: [ConnectionType.DALI],
+    url: 'https://www.google.com/search?q=site:hewilliams.com+2DS+Tunable+White+Square+Trimless',
+    systemIds: ['lighting'],
+    genericRole: 'Fixed Downlight',
+    instances: [
+      { id: 'dl-hall', location: 'Hallways', notes: 'Ambient (Qty 3)' },
+      { id: 'dl-closet', location: 'Closets/Pantry', notes: 'High CRI (Qty 4)' },
+      { id: 'dl-laundry', location: 'Laundry', notes: 'Task (Qty 2)' },
+      { id: 'dl-guest', location: 'Guest Bath', notes: 'General (Qty 3)' },
+      { id: 'dl-foyer', location: 'Foyer', notes: 'Welcome (Qty 2)' },
+      { id: 'dl-fam', location: 'Family Room', notes: 'General (Qty 6)' },
+      { id: 'dl-ext', location: 'Exterior', notes: 'Soffit (Qty 10)' }
+    ]
+  },
+  {
+    id: 'light-adj-dali',
+    name: 'HE Williams 2AS Adjustable',
+    manufacturer: 'HE Williams',
+    description: '2" Tunable White Adjustable Trimless (DALI-2)',
+    type: ModuleType.LIGHTING,
+    mountType: MountType.CEILING_MOUNT,
+    size: 0,
+    cost: 250.00,
+    powerWatts: 15,
+    quantity: 29,
+    requiresBus: [ConnectionType.DALI],
+    url: 'https://www.google.com/search?q=site:hewilliams.com+2AS+Tunable+White+Adjustable',
+    systemIds: ['lighting'],
+    genericRole: 'Accent Downlight',
+    instances: [
+      { id: 'adj-master', location: 'Master Bed/Bath', notes: 'Task/Art (Qty 8)' },
+      { id: 'adj-office', location: 'Offices', notes: 'Video/Work (Qty 8)' },
+      { id: 'adj-bed2', location: 'Bed 2', notes: 'General (Qty 4)' },
+      { id: 'adj-dining', location: 'Dining', notes: 'Table Accent (Qty 4)' },
+      { id: 'adj-liv', location: 'Living', notes: 'Art/Wall (Qty 5)' }
+    ]
+  },
+  {
     id: 'mw-hdr-150',
     name: 'HDR-150-24 PSU',
     manufacturer: 'Mean Well',
