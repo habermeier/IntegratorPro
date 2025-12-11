@@ -133,6 +133,7 @@ const SystemsOverview: React.FC<SystemsOverviewProps> = ({ modules, highlightedI
                                                 modules={systemModules}
                                                 highlightedModuleId={highlightedId}
                                                 summaryOnly={false}
+                                                linkPrefix="systems"
                                             />
                                             {/* Note: ProjectBOM renders a full layout usually. 
                                                  We might want a 'minimal' table mode. 

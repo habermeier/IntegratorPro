@@ -121,7 +121,7 @@ const App = () => {
                   {/* BOM = Full Bill of Materials */}
                   {view === 'BOM' && <div className="space-y-4">
                     <h2 className="text-2xl font-bold text-white mb-6">Bill of Materials</h2>
-                    <ProjectBOM modules={products} highlightedModuleId={highlightedId} />
+                    <ProjectBOM modules={products} highlightedModuleId={highlightedId} linkPrefix="bom" />
                   </div>}
 
                   {/* ROUGH IN = Rough In Guide */}
