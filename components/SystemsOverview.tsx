@@ -50,8 +50,8 @@ const SystemsOverview: React.FC<SystemsOverviewProps> = ({ modules, highlightedI
     };
 
     return (
-        <div className="h-full overflow-y-auto p-8 bg-slate-950 text-slate-300 font-sans max-w-6xl mx-auto scrollbar-thin">
-            <h1 className="text-4xl font-bold text-white mb-8 border-b border-slate-800 pb-4">
+        <div className="h-full overflow-y-auto p-4 md:p-8 bg-slate-950 text-slate-300 font-sans max-w-6xl mx-auto scrollbar-thin">
+            <h1 className="text-2xl md:text-4xl font-bold text-white mb-8 border-b border-slate-800 pb-4">
                 Systems Overview
             </h1>
 

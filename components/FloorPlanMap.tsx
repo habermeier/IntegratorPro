@@ -3,7 +3,7 @@ import STRUCTURAL_IMAGE from '../images/floor-plan-clean.jpg';
 import ELECTRICAL_IMAGE from '../images/electric-plan-plain-full-clean-2025-11-22.jpg';
 import { HardwareModule, ModuleType } from '../types';
 import { TransformWrapper, TransformComponent, useControls } from "react-zoom-pan-pinch";
-import { MousePointer2, Move, Activity, Layers, Wand2, ScanLine, Trash2, Lock, Unlock } from 'lucide-react';
+import { MousePointer2, Move, Activity, Layers, Wand2, ScanLine, Trash2, Lock, Unlock, Settings } from 'lucide-react';
 
 // ... (existing imports)
 
@@ -134,6 +134,12 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
     const wallDetectorRef = useRef<WallDetectorHandle>(null);
     const [isDetectingWalls, setIsDetectingWalls] = useState(false);
     const [showDebug, setShowDebug] = useState(false);
+    const [isControlsOpen, setIsControlsOpen] = useState(false);
+
+    // Auto-open controls on desktop
+    useEffect(() => {
+        if (window.innerWidth >= 768) setIsControlsOpen(true);
+    }, []);
 
     // --- DEBUGGING INSTRUMENTATION ---
     // --- DEBUGGING INSTRUMENTATION ---
@@ -472,126 +478,137 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
             </div>
 
             {/* Controls Panel */}
-            <div className="absolute top-4 right-4 flex flex-col gap-3 bg-slate-900/95 p-3 rounded-xl border border-slate-700 shadow-2xl backdrop-blur-sm w-48 z-50">
+            <div className="absolute top-4 right-4 z-50 flex flex-col items-end gap-2">
+                <button
+                    onClick={() => setIsControlsOpen(!isControlsOpen)}
+                    className="p-2 bg-slate-900/90 rounded-lg border border-slate-700 shadow-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-all backdrop-blur-sm"
+                >
+                    <Settings size={20} className={isControlsOpen ? 'rotate-90 transition-transform duration-300' : 'transition-transform duration-300'} />
+                </button>
 
-                {/* Section: Layers */}
-                <div className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Layers</span>
-                    <div className="flex bg-slate-800/50 rounded-lg p-1 border border-slate-700/50">
-                        <button
-                            onClick={() => setActiveLayer('STRUCTURAL')}
-                            className={`flex-1 px-2 py-1.5 text-xs rounded-md transition-all ${activeLayer === 'STRUCTURAL' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
-                        >
-                            Clean
-                        </button>
-                        <button
-                            onClick={() => setActiveLayer('ELECTRICAL')}
-                            className={`flex-1 px-2 py-1.5 text-xs rounded-md transition-all ${activeLayer === 'ELECTRICAL' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
-                        >
-                            Elec
-                        </button>
-                    </div>
-                </div>
+                {isControlsOpen && (
+                    <div className="bg-slate-900/95 p-3 rounded-xl border border-slate-700 shadow-2xl backdrop-blur-sm w-48 animate-in fade-in slide-in-from-top-4 duration-200">
 
-                <div className="h-px bg-slate-800 w-full" />
+                        {/* Section: Layers */}
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Layers</span>
+                            <div className="flex bg-slate-800/50 rounded-lg p-1 border border-slate-700/50">
+                                <button
+                                    onClick={() => setActiveLayer('STRUCTURAL')}
+                                    className={`flex-1 px-2 py-1.5 text-xs rounded-md transition-all ${activeLayer === 'STRUCTURAL' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
+                                >
+                                    Clean
+                                </button>
+                                <button
+                                    onClick={() => setActiveLayer('ELECTRICAL')}
+                                    className={`flex-1 px-2 py-1.5 text-xs rounded-md transition-all ${activeLayer === 'ELECTRICAL' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
+                                >
+                                    Elec
+                                </button>
+                            </div>
+                        </div>
 
-                {/* Section: Data Layers */}
-                <div className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Data Overlay</span>
-                    <div className="grid grid-cols-2 gap-1">
-                        {Object.keys(visibleLayers).map(type => (
+                        <div className="h-px bg-slate-800 w-full" />
+
+                        {/* Section: Data Layers */}
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Data Overlay</span>
+                            <div className="grid grid-cols-2 gap-1">
+                                {Object.keys(visibleLayers).map(type => (
+                                    <button
+                                        key={type}
+                                        onClick={() => toggleLayer(type)}
+                                        className={`px-2 py-1 text-[10px] rounded border transition-all flex items-center gap-1 ${visibleLayers[type]
+                                            ? 'bg-blue-600/20 border-blue-500/50 text-blue-300'
+                                            : 'bg-slate-800 border-slate-700 text-slate-500'}`}
+                                    >
+                                        <div className={`w-1.5 h-1.5 rounded-full ${visibleLayers[type] ? 'bg-blue-400 shadow-[0_0_5px_cyan]' : 'bg-slate-600'}`} />
+                                        {type.slice(0, 4)}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="h-px bg-slate-800 w-full" />
+
+                        {/* Section: Editor */}
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Editor</span>
+                            {isLocked ? (
+                                <button
+                                    onClick={() => setIsLocked(false)}
+                                    className="w-full px-3 py-2 text-xs rounded-lg border border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:border-slate-500 flex items-center justify-center gap-2 transition-all"
+                                >
+                                    <Unlock size={14} /> Unlock Layout
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={handleSaveLayout}
+                                    className="w-full px-3 py-2 text-xs rounded-lg border border-emerald-500 bg-emerald-600 text-white hover:bg-emerald-500 hover:border-emerald-400 flex items-center justify-center gap-2 font-bold shadow-lg animate-pulse transition-all"
+                                >
+                                    <Lock size={14} /> Save & Lock
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="h-px bg-slate-800 w-full" />
+
+                        {/* Section: AI Tools */}
+                        <div className="flex flex-col gap-2">
+                            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">AI Tools</span>
+
                             <button
-                                key={type}
-                                onClick={() => toggleLayer(type)}
-                                className={`px-2 py-1 text-[10px] rounded border transition-all flex items-center gap-1 ${visibleLayers[type]
-                                    ? 'bg-blue-600/20 border-blue-500/50 text-blue-300'
-                                    : 'bg-slate-800 border-slate-700 text-slate-500'}`}
+                                onClick={detectSymbols}
+                                disabled={isScanning || activeLayer !== 'STRUCTURAL'}
+                                className={`w-full px-3 py-2 text-xs rounded-lg border flex items-center gap-2 justify-start transition-all ${isScanning
+                                    ? 'bg-amber-900/30 border-amber-800/50 text-amber-500'
+                                    : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:border-slate-600'
+                                    }`}
                             >
-                                <div className={`w-1.5 h-1.5 rounded-full ${visibleLayers[type] ? 'bg-blue-400 shadow-[0_0_5px_cyan]' : 'bg-slate-600'}`} />
-                                {type.slice(0, 4)}
+                                <Wand2 size={14} className={isScanning ? "animate-spin" : "text-purple-400"} />
+                                {isScanning ? 'Analyzing...' : 'Scan Symbols'}
                             </button>
-                        ))}
+
+                            <button
+                                onClick={handleDetectWalls}
+                                disabled={isDetectingWalls || activeLayer !== 'STRUCTURAL'}
+                                className={`w-full px-3 py-2 text-xs rounded-lg border flex items-center gap-2 justify-start transition-all ${isDetectingWalls
+                                    ? 'bg-amber-900/30 border-amber-800/50 text-amber-500'
+                                    : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:border-slate-600'
+                                    }`}
+                            >
+                                <ScanLine size={14} className={isDetectingWalls ? "animate-pulse" : "text-blue-400"} />
+                                {isDetectingWalls ? 'Scanning Walls...' : 'Detect Walls'}
+                            </button>
+
+                            {layoutData.some(d => d.type === 'WALL') && (
+                                <button
+                                    onClick={handleClearWalls}
+                                    disabled={isDetectingWalls}
+                                    className="w-full px-3 py-2 text-xs rounded-lg border border-red-900/50 bg-red-950/30 text-red-400 hover:bg-red-900/40 hover:text-red-300 flex items-center gap-2 justify-start transition-all"
+                                >
+                                    <Trash2 size={14} /> Clear Walls
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="h-px bg-slate-800 w-full" />
+
+                        {/* Section: View */}
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Debug</span>
+                            <button
+                                onClick={() => setShowDebug(!showDebug)}
+                                className={`w-full px-3 py-2 text-xs rounded-lg border flex items-center gap-2 justify-start transition-all ${showDebug
+                                    ? 'bg-green-900/20 border-green-800 text-green-400'
+                                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-300 hover:bg-slate-700'
+                                    }`}
+                            >
+                                <Activity size={14} /> {showDebug ? 'Hide Monitor' : 'Show Monitor'}
+                            </button>
+                        </div>
                     </div>
-                </div>
-
-                <div className="h-px bg-slate-800 w-full" />
-
-                {/* Section: Editor */}
-                <div className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Editor</span>
-                    {isLocked ? (
-                        <button
-                            onClick={() => setIsLocked(false)}
-                            className="w-full px-3 py-2 text-xs rounded-lg border border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:border-slate-500 flex items-center justify-center gap-2 transition-all"
-                        >
-                            <Unlock size={14} /> Unlock Layout
-                        </button>
-                    ) : (
-                        <button
-                            onClick={handleSaveLayout}
-                            className="w-full px-3 py-2 text-xs rounded-lg border border-emerald-500 bg-emerald-600 text-white hover:bg-emerald-500 hover:border-emerald-400 flex items-center justify-center gap-2 font-bold shadow-lg animate-pulse transition-all"
-                        >
-                            <Lock size={14} /> Save & Lock
-                        </button>
-                    )}
-                </div>
-
-                <div className="h-px bg-slate-800 w-full" />
-
-                {/* Section: AI Tools */}
-                <div className="flex flex-col gap-2">
-                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">AI Tools</span>
-
-                    <button
-                        onClick={detectSymbols}
-                        disabled={isScanning || activeLayer !== 'STRUCTURAL'}
-                        className={`w-full px-3 py-2 text-xs rounded-lg border flex items-center gap-2 justify-start transition-all ${isScanning
-                            ? 'bg-amber-900/30 border-amber-800/50 text-amber-500'
-                            : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:border-slate-600'
-                            }`}
-                    >
-                        <Wand2 size={14} className={isScanning ? "animate-spin" : "text-purple-400"} />
-                        {isScanning ? 'Analyzing...' : 'Scan Symbols'}
-                    </button>
-
-                    <button
-                        onClick={handleDetectWalls}
-                        disabled={isDetectingWalls || activeLayer !== 'STRUCTURAL'}
-                        className={`w-full px-3 py-2 text-xs rounded-lg border flex items-center gap-2 justify-start transition-all ${isDetectingWalls
-                            ? 'bg-amber-900/30 border-amber-800/50 text-amber-500'
-                            : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:border-slate-600'
-                            }`}
-                    >
-                        <ScanLine size={14} className={isDetectingWalls ? "animate-pulse" : "text-blue-400"} />
-                        {isDetectingWalls ? 'Scanning Walls...' : 'Detect Walls'}
-                    </button>
-
-                    {layoutData.some(d => d.type === 'WALL') && (
-                        <button
-                            onClick={handleClearWalls}
-                            disabled={isDetectingWalls}
-                            className="w-full px-3 py-2 text-xs rounded-lg border border-red-900/50 bg-red-950/30 text-red-400 hover:bg-red-900/40 hover:text-red-300 flex items-center gap-2 justify-start transition-all"
-                        >
-                            <Trash2 size={14} /> Clear Walls
-                        </button>
-                    )}
-                </div>
-
-                <div className="h-px bg-slate-800 w-full" />
-
-                {/* Section: View */}
-                <div className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Debug</span>
-                    <button
-                        onClick={() => setShowDebug(!showDebug)}
-                        className={`w-full px-3 py-2 text-xs rounded-lg border flex items-center gap-2 justify-start transition-all ${showDebug
-                            ? 'bg-green-900/20 border-green-800 text-green-400'
-                            : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-300 hover:bg-slate-700'
-                            }`}
-                    >
-                        <Activity size={14} /> {showDebug ? 'Hide Monitor' : 'Show Monitor'}
-                    </button>
-                </div>
+                )}
             </div>
 
             {/* DEBUG OVERLAY */}

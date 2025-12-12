@@ -1,15 +1,38 @@
-# Task: Add Motorized Shading System
+# Task: Mobile Friendly Adaptation Strategy
 
-## Goal
-Add a new "Window Treatments" system focusing on pre-wiring requirements (16/4 Home Run) and optional DIN rail allocation.
-
-## Checklist
-- [ ] **Data Schema & Content**
-    - [ ] Update `types.ts`: Add `SHADING` to `ModuleType` (if not present).
-    - [ ] Update `systems.ts`: Add "Motorized Shading" system definition.
-    - [ ] Update `constants.ts`: Add `16/4 Cable` (Bulk) and `MDT Shutter Actuator` (Pre-spec).
-- [ ] **UI Updates**
-    - [ ] Update `RoughInGuide.tsx`: Add the specific "Technical Cable Schedule" text provided by the user.
-- [ ] **Verification**
-    - [ ] Verify "Motorized Shading" appears in Systems Overview.
-    - [ ] Verify "Rough-in Guide" shows the electrician instructions.
+## Status
+- [x] **Research & Analysis**
+    - [x] Analyze `Visualizer` complexity for mobile
+    - [x] Analyze `FloorPlanMap` complexity for mobile
+    - [x] Analyze `SystemsOverview` & `ProjectBOM` complexity for mobile
+    - [x] Identify Navigation patterns
+- [x] **Strategy formulation**
+    - [x] Draft Implementation Plan Options
+    - [x] Present Options to User
+- [x] **Implementation: Phase 1 (The Shell)**
+    - [x] Create `components/MobileNav.tsx`
+    - [x] Refactor `App.tsx` for Responsive Layout (flex-col)
+    - [x] Implement Mobile Header & Hamburger Menu
+    - [x] Verify Mobile Navigation (Build Check)
+- [x] **Implementation: Phase 2 (Content Reflow)**
+    - [x] Systems Overview Grid
+    - [x] BOM Table Overflow
+- [x] **Implementation: Phase 3 (Complex Views)**
+    - [x] Visualizer Mobile Mode (Stacking & Overflow)
+    - [x] Floor Plan Map Mobile UI (Collapsible Controls)
+- [x] **Implementation: Phase 4 (Refinement & Polish)**
+    - [x] Remove `MobileBlocker.tsx` (Obsolete)
+    - [x] `CoverSheet` Padding & Typography
+    - [x] `RoughInGuide` Padding & Typography
+    - [x] `GeminiAdvisor` Responsive Adjustments
+    - [x] `WiringDiagram` Container Sizing
+- [x] **Phase 5: Mobile Design Optimization (Audit Results)**
+    - [x] Start Dev Server
+    - [x] Audit "Project Brief" (DOM: Verified 16px Padding)
+    - [x] Audit "Systems Overview" (Code: Reduce `p-6` to `p-4`)
+    - [x] Audit "Visualizer" (Code: Verified Scroll + `p-4`)
+    - [x] Audit "Floor Plan" (Code: Verified Controls Toggle)
+- [/] **Phase 6: Execution of Validated Optimizations**
+    - [ ] `SystemsOverview.tsx`: Reduce System Card Padding (`p-6 -> p-4`)
+    - [ ] `ProjectBOM.tsx`: Reduce Table Cell Padding (`px-4 -> px-2`)
+    - [ ] `Visualizer.tsx`: Ensure `w-full` logic for all mobile containers

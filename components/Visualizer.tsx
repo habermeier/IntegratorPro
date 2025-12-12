@@ -7,11 +7,18 @@ interface VisualizerProps {
 }
 
 const Visualizer: React.FC<VisualizerProps> = ({ modules, highlightedModuleId }) => {
-  // Unique Locations
+  // Unique Locations that actually have Rack/DIN gear
   const cabinets = useMemo(() => {
-    const locs = Array.from(new Set(modules.map(m => m.location || 'Unassigned')))
-      .filter(l => l !== 'Field' && l !== 'Infra' && l !== 'Unassigned');
-    return locs.sort();
+    // Filter to find locations that have relevant mount types
+    const validLocations = new Set(
+      modules
+        .filter(m => m.mountType === MountType.DIN_RAIL || m.mountType === MountType.RACK_UNIT)
+        .map(m => m.location || 'Unassigned')
+    );
+
+    return Array.from(validLocations)
+      .filter(l => l !== 'Field' && l !== 'Infra' && l !== 'Unassigned')
+      .sort();
   }, [modules]);
 
   // Field Devices
@@ -98,7 +105,8 @@ const Visualizer: React.FC<VisualizerProps> = ({ modules, highlightedModuleId })
               cost: 0,
               powerWatts: 0,
               quantity: 1,
-              location: location
+              location: location,
+              url: ''
             });
           }
         }
@@ -359,49 +367,51 @@ const Visualizer: React.FC<VisualizerProps> = ({ modules, highlightedModuleId })
         <div className="flex flex-col xl:flex-row gap-8 items-start">
 
           {/* LEFT: VISUAL - ALLOW GROWTH */}
-          <div className="flex-none shadow-2xl rounded-sm" style={{ width: location === 'MDF' ? '100%' : ENCLOSURE_WIDTH_PX, maxWidth: location === 'MDF' ? '600px' : 'none' }}>
-            {location === 'MDF' ? (
-              // RACK VISUAL (Unchanged logic, just placeholder for diff context)
-              <div className="bg-slate-900 border-2 border-slate-700 rounded-lg p-4 relative min-h-[500px]">
-                {/* Rack Rails */}
-                <div className="absolute left-2 top-0 bottom-0 w-4 border-r border-slate-700 bg-slate-800 flex flex-col justify-around py-2">
-                  {Array.from({ length: 20 }).map((_, i) => <div key={i} className="w-1.5 h-1.5 bg-slate-900 rounded-full mx-auto"></div>)}
-                </div>
-                <div className="absolute right-2 top-0 bottom-0 w-4 border-l border-slate-700 bg-slate-800 flex flex-col justify-around py-2">
-                  {Array.from({ length: 20 }).map((_, i) => <div key={i} className="w-1.5 h-1.5 bg-slate-900 rounded-full mx-auto"></div>)}
-                </div>
-                <div className="mt-2 space-y-1 mx-6">
-                  {modules.filter(m => m.location === 'MDF' && m.mountType === MountType.RACK_UNIT).map((m, i) => (
-                    <div key={i} ref={(el) => { moduleRefs.current[m.id] = el; }}
-                      className={`h-12 bg-slate-800 border rounded flex items-center px-4 justify-between shadow-lg ${highlightedModuleId === m.id ? 'border-blue-500 ring-2 ring-blue-500/50' : 'border-slate-600'}`}>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded bg-slate-900 flex items-center justify-center text-[10px] text-slate-500 border border-slate-700">1U</div>
-                        <div>
-                          <div className="text-sm font-medium text-slate-300">{m.name}</div>
-                          <div className="text-[10px] text-slate-500 uppercase tracking-widest">{m.manufacturer}</div>
-                        </div>
-                      </div>
-                      <div className="text-emerald-500 text-xs">${m.cost}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              // DIN ENCLOSURE VISUAL
-              <div className="bg-slate-300 border-[12px] border-slate-400 rounded-sm p-0 relative">
-                <div className="bg-white/90 min-h-[500px] relative p-4 flex flex-col gap-1">
-                  <div className="absolute top-0 left-0 right-0 h-4 bg-yellow-400/20 flex justify-center items-center text-[9px] text-yellow-800 font-bold border-b border-yellow-400/30">
-                    DANGER: HIGH VOLTAGE
+          <div className="w-full overflow-x-auto pb-4">
+            <div className="flex-none shadow-2xl rounded-sm" style={{ width: location === 'MDF' ? '100%' : ENCLOSURE_WIDTH_PX, maxWidth: location === 'MDF' ? '600px' : 'none' }}>
+              {location === 'MDF' ? (
+                // RACK VISUAL (Unchanged logic, just placeholder for diff context)
+                <div className="bg-slate-900 border-2 border-slate-700 rounded-lg p-4 relative min-h-[500px]">
+                  {/* Rack Rails */}
+                  <div className="absolute left-2 top-0 bottom-0 w-4 border-r border-slate-700 bg-slate-800 flex flex-col justify-around py-2">
+                    {Array.from({ length: 20 }).map((_, i) => <div key={i} className="w-1.5 h-1.5 bg-slate-900 rounded-full mx-auto"></div>)}
                   </div>
-                  <div className="mt-6 flex flex-col gap-1">
-                    {rows.map((row, idx) => renderRail(row, idx, RAIL_WIDTH_TE))}
-                    {Array.from({ length: Math.max(0, NUM_RAILS - rows.length) }).map((_, i) => (
-                      <div key={`empty-${i}`} className="opacity-50 grayscale">{renderRail([], rows.length + i, RAIL_WIDTH_TE)}</div>
+                  <div className="absolute right-2 top-0 bottom-0 w-4 border-l border-slate-700 bg-slate-800 flex flex-col justify-around py-2">
+                    {Array.from({ length: 20 }).map((_, i) => <div key={i} className="w-1.5 h-1.5 bg-slate-900 rounded-full mx-auto"></div>)}
+                  </div>
+                  <div className="mt-2 space-y-1 mx-6">
+                    {modules.filter(m => m.location === 'MDF' && m.mountType === MountType.RACK_UNIT).map((m, i) => (
+                      <div key={i} ref={(el) => { moduleRefs.current[m.id] = el; }}
+                        className={`h-12 bg-slate-800 border rounded flex items-center px-4 justify-between shadow-lg ${highlightedModuleId === m.id ? 'border-blue-500 ring-2 ring-blue-500/50' : 'border-slate-600'}`}>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded bg-slate-900 flex items-center justify-center text-[10px] text-slate-500 border border-slate-700">1U</div>
+                          <div>
+                            <div className="text-sm font-medium text-slate-300">{m.name}</div>
+                            <div className="text-[10px] text-slate-500 uppercase tracking-widest">{m.manufacturer}</div>
+                          </div>
+                        </div>
+                        <div className="text-emerald-500 text-xs">${m.cost}</div>
+                      </div>
                     ))}
                   </div>
                 </div>
-              </div>
-            )}
+              ) : (
+                // DIN ENCLOSURE VISUAL
+                <div className="bg-slate-300 border-[12px] border-slate-400 rounded-sm p-0 relative">
+                  <div className="bg-white/90 min-h-[500px] relative p-4 flex flex-col gap-1">
+                    <div className="absolute top-0 left-0 right-0 h-4 bg-yellow-400/20 flex justify-center items-center text-[9px] text-yellow-800 font-bold border-b border-yellow-400/30">
+                      DANGER: HIGH VOLTAGE
+                    </div>
+                    <div className="mt-6 flex flex-col gap-1">
+                      {rows.map((row, idx) => renderRail(row, idx, RAIL_WIDTH_TE))}
+                      {Array.from({ length: Math.max(0, NUM_RAILS - rows.length) }).map((_, i) => (
+                        <div key={`empty-${i}`} className="opacity-50 grayscale">{renderRail([], rows.length + i, RAIL_WIDTH_TE)}</div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* RIGHT: SCHEDULE & NOTES - SHRINK SLIGHTLY */}
@@ -429,7 +439,7 @@ const Visualizer: React.FC<VisualizerProps> = ({ modules, highlightedModuleId })
   };
 
   return (
-    <div className="h-full overflow-y-auto p-12 bg-slate-950 scroll-smooth">
+    <div className="h-full overflow-y-auto p-4 md:p-12 bg-slate-950 scroll-smooth">
       <div className="max-w-7xl mx-auto">
 
         {/* Cabinets Stack */}

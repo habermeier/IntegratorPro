@@ -1,55 +1,73 @@
-# Implementation Plan - Motorized Shading System
+# Mobile Adaptation Strategy
 
 ## Goal
-Implement a new "Motorized Shading" system section and add a specific "Technical Cable Schedule" to the Rough-in Guide for electrician reference, ensuring 16/4 home runs are specified.
+Transform the desktop-centric `IntegratorPro` application into a responsive, mobile-friendly experience without compromising its powerful desktop features.
 
-## User Review Required
-> [!NOTE]
-> I am adding `MDT Shutter Actuator` to the BOM as a "Pre-spec" item (optional/future) to ensure DIN space is accounted for, but the primary focus is the **cable**.
+## Industry Best Practices Review
+How do professional React applications handle this?
+1.  **Responsive Design (CSS-First):** The "Gold Standard" is using CSS Media Queries (via Tailwind classes like `hidden md:flex`) to show/hide layout elements without mounting/unmounting heavy logic. This ensures performance and consistency.
+    *   *Our Plan:* We will use Tailwind breakpoints (`md:`, `lg:`) to reflow content.
+2.  **Navigation Patterns:**
+    *   **Desktop:** Permanent Sidebar (fast access, correlates to "Admin" dashboards).
+    *   **Mobile:** Off-canvas Drawer (hamburger menu). This is the standard pattern for complex apps (e.g., Gmail, Azure Portal, Linear) vs. "Bottom Tabs" which are for simple consumer apps (e.g., Instagram).
+    *   *Our Plan:* We will implement the **Off-canvas Drawer** to preserve our rich navigation structure.
+3.  **Adaptive Components:** For complex tools (like our Visualizer), standard "reflow" isn't enough. The best practice is "Adaptive Composition" — rendering a simplified or different component structure for mobile while sharing the same state.
 
-## Proposed Changes
+## Proposed Phased Approach
 
-### 1. Schema Updates (`types.ts`)
--   Add `SHADING` to `ModuleType` enum.
+### Phase 1: The Shell (Navigation & Layout)
+*Objective: Make the app usable on a phone immediately.*
+1.  **Responsive Layout Pattern**:
+    -   **Approach**: Use `flex-col` on mobile, `flex-row` on desktop.
+    -   **Why**: Standard "stacking" behavior.
+2.  **Mobile Navigation (Drawer)**:
+    -   **Approach**: Implement a `MobileNav` component using a "Portal" or relative overlay.
+    -   **Why**: Keeps the DOM clean and accessible.
+3.  **Viewport Configuration**:
+    -   Ensure `meta viewport` is set effectively (already done).
 
-### 2. System Definition (`systems.ts`)
--   Add "Motorized Shading" system.
--   **Goal**: "Automated daylight management and privacy."
--   **Technical**: "Star-wired 24V DC motors controlled via DIN-rail KNX actuators."
+### Phase 2: Content Reflow (CSS Retrofit)
+*Objective: Make scrollable content readable.*
+1.  **Grid Systems**:
+    -   use `grid-cols-1 md:grid-cols-2` for standard responsive scaling.
+2.  **overflow-x Handling**:
+    -   Wrap all Data Tables in overflow containers.
 
-### 3. Data Entry (`constants.ts`)
--   **Add Cable**: `16/4 Stranded (Low Voltage)` (Bulk, 3000ft).
-    -   Tag as `SHADING` system.
--   **Add Actuator**: `MDT Shutter Actuator 8-fold` (JAL-0810.02).
-    -   Qty: 2 (Covers up to 16 motors).
-    -   Tag as `SHADING` system.
+### Phase 3: Complex Views (Adaptive)
+*Objective: Optimize the specialized tools.*
+1.  **Visualizer**:
+    -   **Strategy**: Use CSS `transform: scale()` for a "Mini-Map" feel OR enable horizontal scrolling.
+    -   **Rationale**: Preserving the "to-scale" accuracy is crucial for this specific app, so we shouldn't just "stack" the DIN rails vertically (which would lose the visual context). We will use a "Pan & Zoom" approach similar to the Map.
 
-### 4. Window Treatment Schedule (Estimated)
-Based on floor plan review:
--   **Living Room**: 4 Windows
--   **Dining Room**: 2 Windows
--   **Master Bedroom**: 3 Windows
--   **Office**: 2 Windows
--   **Kitchen**: 1 Window
--   **Bed 2**: 1 Window
--   **Bed 3**: 1 Window
-*Total: 14 Locations*
+## Technical Implementation Plan
 
-### 5. UI Updates (`components/RoughInGuide.tsx`)
--   Add a new section specifically for "Motorized Window Treatment Schedule".
--   **Content**:
-    -   **Topology**: Star wiring (Home Run) from every individual window header directly to the central Lighting Control Panel (LCP). No daisy-chaining.
-    -   **Voltage Standard**: Low Voltage (24V DC) to support quiet KNX motors (MDT/Theben/SMI).
-    -   **Cable Spec**: 16 AWG, 4-Conductor Stranded (16/4). (4-wire is required to support future SMI digital motors or standard 2-wire polarity reversal).
-    -   **Termination**: Leave a 12-inch service loop in the window header (taped) and a 3-foot tail at the panel.
-    -   **Labeling**: Both ends must be uniquely labeled (e.g., 'SHADE-Pantry-01').
+### Components
 
-## Verification Plan
+#### [MODIFY] [App.tsx](file:///home/quagoo/IntegratorPro/src/App.tsx)
+-   **Layout**: `flex-col md:flex-row`.
+-   **State**: `mobileMenuOpen` (boolean).
+-   **Header**: New `<header className="md:hidden ...">` with Hamburger Icon.
 
-### Manual Verification
--   [ ] **Systems Overview**: Verify "Motorized Shading" appears with the correct narrative and equipment list.
--   [ ] **Rough-in Guide**: Verify the "Technical Cable Schedule" text is visible and formatted correctly.
--   [ ] **BOM**: Verify 16/4 Cable is listed under Shading/Accessory.
+#### [NEW] [components/MobileNav.tsx](file:///home/quagoo/IntegratorPro/src/components/MobileNav.tsx)
+-   A smooth slide-over menu handling the `NavItems`.
+-   Uses `fixed inset-0 z-50` overlay pattern.
 
-### Automated Verification
--   Use browser tool to navigate to `/#rough-in` and check for the existence of the specific text string "Leave a 12-inch service loop".
+## Verification
+-   **Browser Emulation**: Use Chrome DevTools Device Mode (iPhone 12 / Pixel 5).
+-   **Checklist**:
+    -   [ ] Menu opens/closes smoothly.
+    -   [ ] "Backdrop" click closes menu.
+    -   [ ] App uses 100% height (no double scrollbars).
+
+### Phase 5: Mobile Design Optimization (Audit Results)
+*Objective: Maximize information density on small screens.*
+1.  **Reduce Padding**:
+    -   `SystemsOverview`: Cards use `p-6` internal padding. Reduce to `p-4` or `p-3` on mobile.
+    -   `ProjectBOM`: Table cells use `px-4`. Reduce to `px-2` on mobile to prevent overflow.
+    -   `CoverSheet`: Ensure `p-4` is consistently applied.
+2.  **Typography**:
+    -   `text-4xl` headers -> `text-2xl` on mobile.
+    -   Table text: `text-sm` -> `text-xs` for dense rows.
+3.  **Layout**:
+    -   `gap-8` -> `gap-4` in grids.
+    -   Remove unnecessary borders on mobile where background contrast is sufficient.

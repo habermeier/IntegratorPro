@@ -23,8 +23,8 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate, highlighte
     }, [highlightedModuleId]);
 
     return (
-        <div className="p-8 bg-slate-950 text-slate-300 font-sans max-w-5xl mx-auto">
-            <h1 id="header-brief" className="text-4xl font-bold text-white mb-2">Project Brief</h1>
+        <div className="p-4 md:p-8 bg-slate-950 text-slate-300 font-sans max-w-5xl mx-auto">
+            <h1 id="header-brief" className="text-2xl md:text-4xl font-bold text-white mb-2">Project Brief</h1>
 
             <div className="flex gap-4 text-sm mb-8 text-slate-400">
                 <span><strong>Location:</strong> 270 Bolla Ave, Alamo, CA</span>

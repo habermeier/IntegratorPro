@@ -34,8 +34,8 @@ const RoughInGuide: React.FC<RoughInGuideProps> = ({ modules, onNavigate, highli
     });
 
     return (
-        <div className="space-y-6">
-            <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 shadow-lg">
+        <div className="space-y-4 md:space-y-6">
+            <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 md:p-6 shadow-lg">
                 <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                     <div>
                         <h2 className="text-xl font-bold text-white flex items-center">

@@ -121,14 +121,14 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
             qty: m.quantity
         }));
 
-    const SortableHeader = ({ label, sortKey, align = 'left' }: { label: string, sortKey: string, align?: string }) => {
+    const SortableHeader = ({ label, sortKey, align = 'left', className = '' }: { label: string, sortKey: string, align?: string, className?: string }) => {
         const sortIndex = sortConfig.findIndex(s => s.key === sortKey);
         const active = sortIndex > -1;
         const direction = active ? sortConfig[sortIndex].direction : null;
 
         return (
             <th
-                className={`px-4 py-3 cursor-pointer group hover:bg-slate-800 transition-colors select-none text-${align}`}
+                className={`px-4 py-3 cursor-pointer group hover:bg-slate-800 transition-colors select-none text-${align} ${className}`}
                 onClick={() => handleSort(sortKey)}
             >
                 <div className={`flex items-center gap-1 ${align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start'}`}>
@@ -195,10 +195,10 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                                 <thead className="bg-slate-950 text-xs uppercase font-bold text-slate-500">
                                     <tr>
                                         <SortableHeader label="Component" sortKey="name" />
-                                        <SortableHeader label="Category" sortKey="category" />
-                                        <SortableHeader label="Location" sortKey="location" />
-                                        <th className="px-4 py-3 cursor-default">Notes</th>
-                                        <SortableHeader label="Unit Cost" sortKey="cost" align="right" />
+                                        <SortableHeader label="Category" sortKey="category" className="hidden lg:table-cell" />
+                                        <SortableHeader label="Location" sortKey="location" className="hidden sm:table-cell" />
+                                        <th className="px-4 py-3 cursor-default hidden md:table-cell">Notes</th>
+                                        <SortableHeader label="Unit Cost" sortKey="cost" align="right" className="hidden sm:table-cell" />
                                         <SortableHeader label="Qty" sortKey="quantity" align="right" />
                                         <SortableHeader label="Total" sortKey="totalCost" align="right" />
                                     </tr>
@@ -232,17 +232,17 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                                                     <div className="text-xs text-slate-500">{m.manufacturer} {m.description}</div>
                                                 </div>
                                             </td>
-                                            <td className="p-3 text-sm text-slate-400">
+                                            <td className="p-3 text-sm text-slate-400 hidden lg:table-cell">
                                                 <span className="text-[10px] font-semibold text-slate-300 bg-slate-800 px-2 py-1 rounded border border-slate-700 whitespace-nowrap">
                                                     {m.genericRole || getCategoryLabel(m.type)}
                                                 </span>
                                             </td>
-                                            <td className="p-3 text-sm text-slate-400">
+                                            <td className="p-3 text-sm text-slate-400 hidden sm:table-cell">
                                                 {m.instances && m.instances.length > 0
                                                     ? [...new Set(m.instances.map(i => i.location))].join(', ')
                                                     : m.location}
                                             </td>
-                                            <td className="px-4 py-3">
+                                            <td className="px-4 py-3 hidden md:table-cell">
                                                 {m.notes && (
                                                     <div className="flex items-start text-xs text-amber-500/80 max-w-[180px]">
                                                         <FileText className="w-3 h-3 mr-1 mt-0.5 flex-shrink-0" />
@@ -250,7 +250,7 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                                                     </div>
                                                 )}
                                             </td>
-                                            <td className="px-4 py-3 text-right font-mono text-slate-400">
+                                            <td className="px-4 py-3 text-right font-mono text-slate-400 hidden sm:table-cell">
                                                 ${m.cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </td>
                                             <td className="px-4 py-3 text-right font-mono text-white">
@@ -267,7 +267,7 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                     </div>
                 )}
                 {/* Charts */}
-                <div className={`flex ${summaryOnly ? 'flex-row' : 'flex-col'} gap-6 ${summaryOnly ? 'w-full' : ''}`}>
+                <div className={`flex flex-col ${summaryOnly ? 'md:flex-row' : ''} gap-6 ${summaryOnly ? 'w-full' : ''}`}>
                     <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-lg flex-1 min-h-[200px]">
                         <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Budget Allocation</h3>
                         <ResponsiveContainer width="100%" height="100%">

@@ -1,59 +1,34 @@
-# Walkthrough - Data Architecture Redesign & Deep Connectivity
+# Walkthrough - Mobile Friendly Adaptation
 
-## Overview
-I have successfully refactored the application's core data structure to a **Relational "Product + Instances" Model**. This eliminates data duplication while enabling highly granular tracking of every physical device.
+I have successfully updated the application to be fully responsive and mobile-friendly.
 
-## Key Changes
+## Changes
 
-### 1. New "Deep Schema"
-We moved from a flat list to a hierarchical model.
-*   **Product (SKU)**: Defines static data (Cost, Manufacturer, Specs, Requirements).
-*   **Instances**: Defines physical reality (Location, ID, Position, DALI Universe).
+### 1. Navigation Shell (`App.tsx`, `MobileNav.tsx`)
+-   **Desktop**: Retained the fixed sidebar (`w-64`).
+-   **Mobile**: Implemented a slide-out "Drawer" navigation triggered by a new Hamburger menu in the header.
+-   **Layout**: Switched to `flex-col` on mobile to stack the header above the content.
 
-**Example (`constants.ts`):**
-```typescript
-{
-  id: 'mdt-dali-gw',
-  name: 'DALI Control Gateway',
-  quantity: 4, // 4 Physical Units
-  instances: [
-    { id: 'lcp1-gw1', location: 'LCP-1', universe: 1 },
-    { id: 'lcp2-gw1', location: 'LCP-2', universe: 3 },
-    // ...
-  ]
-}
-```
+### 2. Dashboard & Systems (`SystemsOverview.tsx`, `ProjectBOM.tsx`)
+-   **Responsive Grid**: `SystemsOverview` now adapts its grid columns based on screen width (`grid-cols-1 md:grid-cols-2`).
+-   **Adaptive Tables**: The Bill of Materials table now hides secondary columns (Category, Notes, Location) on small screens to prevent horizontal scrolling issues, while keeping the critical data (Item, Qty, Cost) visible.
+-   **Typography**: Adjusted header font sizes (`text-2xl` on mobile) to prevent wrapping.
 
-### 2. Consolidated BOM & Project Brief
-*   **Project Brief (Dashboard)**: A high-level executive summary of the project scope, standards, and budget. Contains a **Summary BOM**.
-*   **Bill of Materials (BOM)**: A dedicated view for the **Full Equipment List**.
-    *   **Consolidated Rows**: Identical products (e.g., Altronix Qty 3) are grouped into a single row.
-    *   **Aggregated Locations**: Locations are listed intelligently (e.g., "LCP-1, LCP-2").
+### 3. Complex Tools (`Visualizer.tsx`, `FloorPlanMap.tsx`)
+-   **Visualizer**: Wrapped the fixed-width cabinet visualizations in a scrollable container (`overflow-x-auto`). This preserves the "True Scale" accuracy while allowing users to pan across the cabinet on a phone.
+-   **Floor Plan Map**: Consolidated the bulky "Controls Panel" (Layers, Editor, AI Tools) into a collapsible menu triggered by a "Settings" icon. This maximizes the map viewing area on small screens.
 
-### 3. "As-Built" Connectivity
-I defined a rigorous connectivity model including:
-*   **Connection Types**: `MAINS` (HV), `LV`, `KNX`, `DALI`, `ETHERNET`, `SIGNAL` (Access Control/Strikes).
-*   **Attributes**: `isPoE`, `cableType` (e.g., "Cat6a", "18/2").
-*   **Topology**: Links are now between specific *Instances* (e.g., `lcp1-acc-psu` -> `field-str`), not generic products.
+### 4. Refinement & Polish (Phase 4)
+-   **Padding Optimization**: Reduced padding on `CoverSheet`, `RoughInGuide`, `GeminiAdvisor`, and `WiringDiagram` from `p-8` to `p-4` on mobile for better space utilization.
+-   **Cleanup**: Removed the now obsolete `MobileBlocker` component.
+-   **Bug Fix**: Corrected property names in `WiringDiagram` to resolve a type mismatch.
 
-### 4. Floor Plan "Data Layers"
-Added a **Layer Control Panel** to the Floor Plan Map.
-*   **Toggle Visibility**: You can now show/hide entire systems (Lighting, Security, HVAC, etc.).
-*   **Live Data**: The map now renders "Live Modules" from the database, meaning as you add devices to `constants.ts`, they appear on the map if they have `position`.
+## Verification Results
 
-### 5. Systems Overview (Data-Driven)
-Implemented a thematic view driven by a separate data configuration.
-*   **Data Driven**: Systems are defined in `systems.ts`, making it easy to add/remove sections without coding UI loops.
-*   **Deep Linking**: Supports linking directly to specific systems (e.g., `/#systems/access`) which auto-expands the accordion.
-*   **Tagged Filtering**: Products are tagged with `systemIds` to appear in multiple relevant sections.
-*   **Generic Classification**: Added `genericRole` to schema (e.g. "DALI Gateway", "IP Camera") to decouple BOM descriptions from specific Manufacturer Part Numbers.
+### Build Status
+> `vite build` passed successfully in 3.10s.
 
-## Verification Steps Passed from Browser
--   [x] **Project Brief**: Correctly renders summary.
--   [x] **BOM View**: Correctly renders consolidated table with correct quantities and multiple locations.
--   [x] **Systems Overview**: Verified sections expand correctly via deep link (`/#systems/lighting`) and contain the correct filtered Mini-BOM.
-    ![Deep Link Verification](/home/quagoo/.gemini/antigravity/brain/b821606d-4c82-4da7-99eb-1ee645b6d384/deep_link_heating_1765257661877.png)
-    -   [x] Verified Narratives are generic/topology focused.
-    -   [x] Verified BOM displays Generic Roles (e.g. "IP Camera").
--   [x] **Visualizer**: Renders individual DIN modules correctly (using `flattenModules` helper).
--   [x] **Floor Plan**: Layers toggle On/Off relative to the device type.
+### Browser Testing
+-   **Navigation**: Drawer opens/closes smoothly. Backdrop click works.
+-   **Tables**: BOM table scrolls horizontally if needed, avoiding page-breaking.
+-   **Map**: Controls are tucked away by default on mobile (auto-open on desktop).

@@ -12,16 +12,27 @@ import GeminiAdvisor from './components/GeminiAdvisor';
 import FloorPlanMap from './components/FloorPlanMap';
 import CoverSheet from './components/CoverSheet';
 import RoughInGuide from './components/RoughInGuide';
-import MobileBlocker from './components/MobileBlocker';
 
 // Icons
-import { LayoutDashboard, Activity, Cpu, BrainCircuit, Map, FileText, Hammer } from 'lucide-react';
+import { LayoutDashboard, Activity, Cpu, BrainCircuit, Map, FileText, Hammer, Menu } from 'lucide-react';
+
+import MobileNav from './components/MobileNav';
 
 import { useDeepLink } from './hooks/useDeepLink';
 
 const App = () => {
   console.log('IntegratorPro: App component rendering');
   const { view, setView, highlightedId } = useDeepLink();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const navItems: { mode: ViewMode | 'COVER_SHEET'; icon: any; label: string }[] = [
+    { mode: 'COVER_SHEET', icon: FileText, label: 'Project Brief' },
+    { mode: 'SYSTEMS', icon: LayoutDashboard, label: 'Systems Overview' },
+    { mode: 'VISUALIZER', icon: Cpu, label: 'Rack & DIN Layout' },
+    { mode: 'FLOORPLAN', icon: Map, label: 'Floor Plan Map' },
+    { mode: 'BOM', icon: FileText, label: 'Bill of Materials' },
+    { mode: 'ROUGH_IN', icon: Hammer, label: 'Rough-in Guide' },
+  ];
 
   // Raw Products (Grouped)
   const [products, setProducts] = useState<HardwareModule[]>(INITIAL_MODULES);
@@ -52,13 +63,24 @@ const App = () => {
 
   return (
     <>
-      {/* <div className="block md:hidden">
-        <MobileBlocker />
-      </div> */}
-      <div className="flex h-screen bg-slate-950 text-slate-200 overflow-hidden font-sans">
+      <div className="flex flex-col md:flex-row h-screen bg-slate-950 text-slate-200 overflow-hidden font-sans">
 
-        {/* Sidebar */}
-        <div className="w-64 flex flex-col border-r border-slate-800 bg-slate-950 z-20">
+        {/* Mobile Header */}
+        <div className="md:hidden h-16 bg-slate-950 border-b border-slate-800 flex items-center justify-between px-6 shrink-0 z-30">
+          <h1 className="text-xl font-bold tracking-tight text-white flex items-center">
+            <Activity className="text-blue-500 mr-2" size={20} />
+            Integrator<span className="text-blue-500">Pro</span>
+          </h1>
+          <button
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+          >
+            <Menu size={24} />
+          </button>
+        </div>
+
+        {/* Sidebar (Desktop) */}
+        <div className="hidden md:flex w-64 flex-col border-r border-slate-800 bg-slate-950 z-20">
           <div className="p-6">
             <h1 className="text-2xl font-bold tracking-tight text-white flex items-center">
               <Activity className="text-blue-500 mr-2" />
@@ -69,12 +91,10 @@ const App = () => {
 
           <nav className="flex-1 px-4 space-y-2">
             {/* REORDERED & RENAMED NAV */}
-            <NavItem mode="COVER_SHEET" icon={FileText} label="Project Brief" />
-            <NavItem mode="SYSTEMS" icon={LayoutDashboard} label="Systems Overview" />
-            <NavItem mode="VISUALIZER" icon={Cpu} label="Rack & DIN Layout" />
-            <NavItem mode="FLOORPLAN" icon={Map} label="Floor Plan Map" />
-            <NavItem mode="BOM" icon={FileText} label="Bill of Materials" /> {/* Added BOM Nav Item */}
-            <NavItem mode="ROUGH_IN" icon={Hammer} label="Rough-in Guide" />
+            {/* REORDERED & RENAMED NAV */}
+            {navItems.map((item) => (
+              <NavItem key={item.label} mode={item.mode} icon={item.icon} label={item.label} />
+            ))}
           </nav>
 
           <div className="p-4 border-t border-slate-800">
@@ -135,6 +155,14 @@ const App = () => {
           </main>
         </div>
       </div>
+
+      <MobileNav
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        currentView={view}
+        onNavigate={setView}
+        navItems={navItems}
+      />
     </>
   );
 };

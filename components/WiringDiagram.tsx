@@ -15,7 +15,7 @@ const WiringDiagram: React.FC<WiringDiagramProps> = ({ modules, connections }) =
 
     const width = svgRef.current.clientWidth;
     const height = 600; // Fixed height for now
-    
+
     // Clear previous
     d3.select(svgRef.current).selectAll("*").remove();
 
@@ -27,22 +27,22 @@ const WiringDiagram: React.FC<WiringDiagramProps> = ({ modules, connections }) =
     // Expand modules by quantity for unique nodes
     const nodes: any[] = [];
     modules.forEach(m => {
-        for(let i=0; i<m.quantity; i++) {
-            nodes.push({
-                id: `${m.id}-${i}`, // Matches visualizer ID scheme
-                group: m.type,
-                name: m.name,
-                radius: m.mountType === 'RU' ? 20 : 10
-            });
-        }
+      for (let i = 0; i < m.quantity; i++) {
+        nodes.push({
+          id: `${m.id}-${i}`, // Matches visualizer ID scheme
+          group: m.type,
+          name: m.name,
+          radius: m.mountType === 'RU' ? 20 : 10
+        });
+      }
     });
 
     // Simple auto-linking for mock visualization if no manual connections exist
     // In a real app, 'connections' prop would be robust. Here we might need to synthesize if empty.
     const links = connections.map(c => ({
-        source: `${c.fromModuleId}-0`, // Default to first instance for now
-        target: `${c.toModuleId}-0`,
-        type: c.type
+      source: `${c.fromId}-0`, // Default to first instance for now
+      target: `${c.toId}-0`,
+      type: c.type
     })).filter(l => nodes.find(n => n.id === l.source) && nodes.find(n => n.id === l.target));
 
 
@@ -69,12 +69,12 @@ const WiringDiagram: React.FC<WiringDiagramProps> = ({ modules, connections }) =
       .join("circle")
       .attr("r", (d: any) => d.radius)
       .attr("fill", (d: any) => {
-          switch(d.group) {
-              case 'NETWORK': return '#3b82f6';
-              case 'CONTROLLER': return '#10b981';
-              case 'POWER': return '#f59e0b';
-              default: return '#64748b';
-          }
+        switch (d.group) {
+          case 'NETWORK': return '#3b82f6';
+          case 'CONTROLLER': return '#10b981';
+          case 'POWER': return '#f59e0b';
+          default: return '#64748b';
+        }
       })
       .call(drag(simulation) as any);
 
@@ -100,7 +100,7 @@ const WiringDiagram: React.FC<WiringDiagramProps> = ({ modules, connections }) =
       node
         .attr("cx", (d: any) => d.x)
         .attr("cy", (d: any) => d.y);
-      
+
       text
         .attr("x", (d: any) => d.x + 12)
         .attr("y", (d: any) => d.y + 4);
@@ -136,21 +136,21 @@ const WiringDiagram: React.FC<WiringDiagramProps> = ({ modules, connections }) =
   }, [modules, connections]);
 
   return (
-    <div className="h-full flex flex-col p-6">
+    <div className="h-full flex flex-col p-4 md:p-6">
       <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-white">Wiring Topology</h3>
-          <div className="flex gap-4 text-sm text-slate-400">
-             <div className="flex items-center"><span className="w-3 h-3 rounded-full bg-blue-500 mr-2"></span>Network</div>
-             <div className="flex items-center"><span className="w-3 h-3 rounded-full bg-emerald-500 mr-2"></span>Controller</div>
-             <div className="flex items-center"><span className="w-3 h-3 rounded-full bg-amber-500 mr-2"></span>Power</div>
-          </div>
+        <h3 className="text-xl font-bold text-white">Wiring Topology</h3>
+        <div className="flex gap-4 text-sm text-slate-400">
+          <div className="flex items-center"><span className="w-3 h-3 rounded-full bg-blue-500 mr-2"></span>Network</div>
+          <div className="flex items-center"><span className="w-3 h-3 rounded-full bg-emerald-500 mr-2"></span>Controller</div>
+          <div className="flex items-center"><span className="w-3 h-3 rounded-full bg-amber-500 mr-2"></span>Power</div>
+        </div>
       </div>
       <div className="flex-1 bg-slate-900 border border-slate-700 rounded-lg overflow-hidden relative shadow-inner">
         <svg ref={svgRef} className="w-full h-full cursor-move"></svg>
         {modules.length === 0 && (
-             <div className="absolute inset-0 flex items-center justify-center text-slate-500">
-                 Add modules to see topology
-             </div>
+          <div className="absolute inset-0 flex items-center justify-center text-slate-500">
+            Add modules to see topology
+          </div>
         )}
       </div>
     </div>
