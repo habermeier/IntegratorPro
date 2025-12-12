@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { HardwareModule, SystemDefinition, ViewMode } from '../types';
 import { INITIAL_SYSTEMS } from '../systems';
 import ProjectBOM from './ProjectBOM';
-import { ChevronDown, ChevronRight, Share2, Info } from 'lucide-react';
+import { ChevronDown, ChevronRight, Share2, Info, AlertTriangle } from 'lucide-react';
 
 interface SystemsOverviewProps {
     modules: HardwareModule[];
@@ -50,12 +50,12 @@ const SystemsOverview: React.FC<SystemsOverviewProps> = ({ modules, highlightedI
     };
 
     return (
-        <div className="h-full overflow-y-auto p-2 md:p-8 bg-slate-950 text-slate-300 font-sans max-w-6xl mx-auto scrollbar-thin">
-            <h1 className="text-2xl md:text-4xl font-bold text-white mb-8 border-b border-slate-800 pb-4">
+        <div className="h-full overflow-y-auto p-0 md:p-8 bg-slate-950 text-slate-300 font-sans max-w-6xl mx-auto scrollbar-thin">
+            <h1 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-8 border-b border-slate-800 p-4 md:p-0 pb-4">
                 Systems Overview
             </h1>
 
-            <div className="space-y-6">
+            <div className="space-y-0 md:space-y-6">
                 {INITIAL_SYSTEMS.map(sys => {
                     const isExpanded = expandedSystemId === sys.id;
                     const systemModules = modules.filter(m => m.systemIds?.includes(sys.id));
@@ -78,14 +78,14 @@ const SystemsOverview: React.FC<SystemsOverviewProps> = ({ modules, highlightedI
                                 className="w-full text-left p-4 md:p-6 flex items-start justify-between group"
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className={`p-3 rounded-lg transition-colors ${isExpanded ? 'bg-indigo-500/20 text-indigo-400' : 'bg-slate-800 text-slate-500 group-hover:text-slate-400'}`}>
-                                        {isExpanded ? <ChevronDown size={24} /> : <ChevronRight size={24} />}
+                                    <div className={`p-2 md:p-3 rounded-lg transition-colors ${isExpanded ? 'bg-indigo-500/20 text-indigo-400' : 'bg-slate-800 text-slate-500 group-hover:text-slate-400'}`}>
+                                        {isExpanded ? <ChevronDown size={20} className="md:w-6 md:h-6" /> : <ChevronRight size={20} className="md:w-6 md:h-6" />}
                                     </div>
                                     <div>
-                                        <h2 className={`text-xl font-bold mb-1 transition-colors ${isExpanded ? 'text-white' : 'text-slate-300 group-hover:text-white'}`}>
+                                        <h2 className={`text-lg md:text-xl font-bold mb-0.5 md:mb-1 transition-colors ${isExpanded ? 'text-white' : 'text-slate-300 group-hover:text-white'}`}>
                                             {sys.title}
                                         </h2>
-                                        <p className="text-sm text-slate-400 line-clamp-1">
+                                        <p className="text-xs md:text-sm text-slate-400 line-clamp-1">
                                             {sys.description}
                                         </p>
                                     </div>
@@ -100,45 +100,53 @@ const SystemsOverview: React.FC<SystemsOverviewProps> = ({ modules, highlightedI
                             {isExpanded && (
                                 <div className="border-t border-slate-800/50 bg-slate-950/30">
                                     {/* Narrative Section */}
-                                    <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 mb-4">
+                                    <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 mb-0 md:mb-4">
                                         <div className="space-y-2">
-                                            <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+                                            <h3 className="text-xs md:text-sm font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-2">
                                                 <Info size={14} /> Goal
                                             </h3>
-                                            <p className="text-slate-300 leading-relaxed">
+                                            <p className="text-sm md:text-base text-slate-300 leading-relaxed">
                                                 {sys.description}
                                             </p>
                                         </div>
                                         <div className="space-y-2">
-                                            <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+                                            <h3 className="text-xs md:text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
                                                 <Info size={14} /> Implementation
                                             </h3>
-                                            <p className="text-slate-300 leading-relaxed">
+                                            <p className="text-sm md:text-base text-slate-300 leading-relaxed">
                                                 {sys.technicalDetails}
                                             </p>
                                         </div>
                                     </div>
 
+                                    {sys.warning && (
+                                        <div className="px-4 md:px-6 mb-4">
+                                            <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3 md:p-4 flex items-start gap-3">
+                                                <AlertTriangle size={20} className="text-red-500 flex-shrink-0 mt-0.5" />
+                                                <div>
+                                                    <h4 className="text-xs font-bold text-red-500 uppercase tracking-wider mb-1">Status Alert</h4>
+                                                    <p className="text-sm text-red-200">{sys.warning}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Mini BOM */}
-                                    <div className="px-6 pb-6">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">System Components</h3>
+                                    <div className="pb-4 md:px-6 md:pb-6">
+                                        <div className="flex items-center justify-between mb-2 md:mb-4 px-4 md:px-0">
+                                            <h3 className="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-wider">System Components</h3>
                                             <div className="text-xs font-mono text-slate-600">
                                                 Est. Budget: ${totalCost.toLocaleString()}
                                             </div>
                                         </div>
 
-                                        <div className="bg-transparent md:bg-slate-950 rounded-none md:rounded-lg border-0 md:border border-slate-800 overflow-hidden -mx-4 md:mx-0">
+                                        <div className="bg-transparent md:bg-slate-950 rounded-none md:rounded-lg border-0 md:border border-slate-800 overflow-hidden">
                                             <ProjectBOM
                                                 modules={systemModules}
                                                 highlightedModuleId={highlightedId}
                                                 summaryOnly={false}
                                                 linkPrefix="systems"
                                             />
-                                            {/* Note: ProjectBOM renders a full layout usually. 
-                                                 We might want a 'minimal' table mode. 
-                                                 But existing ProjectBOM is responsive. 
-                                                 We will use it as is for now. */}
                                         </div>
                                     </div>
                                 </div>

@@ -1,4 +1,4 @@
-import { HardwareModule, ModuleType, MountType, ConnectionType } from './types';
+import { HardwareModule, ModuleType, MountType, ConnectionType, Vendor } from './types';
 
 export const INITIAL_MODULES: HardwareModule[] = [
   // --- ENCLOSURES & RACKS ---
@@ -50,8 +50,9 @@ export const INITIAL_MODULES: HardwareModule[] = [
     quantity: 2, // Consolidated: 1 per LCP (2 Universes each)
     requiresMains: true,
     requiresBus: [ConnectionType.KNX, ConnectionType.DALI],
-    // Strategy: Compliance First
-    url: 'https://www.google.com/search?q=Siemens+N+141/03+KNX+DALI+Gateway+UL',
+    // Strategy: Industrial Automation Distributor
+    url: 'https://www.google.com/search?q=Siemens+5WG1141-1AB03+price',
+    backupUrl: 'https://mall.industry.siemens.com/mall/en/us/Catalog/Product/5WG1141-1AB03',
     systemIds: ['lighting'],
     genericRole: 'DALI Gateway',
     instances: [
@@ -95,7 +96,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     requiresMains: true,
     requiresBus: [ConnectionType.DALI],
     systemIds: ['lighting', 'outdoor'],
-    url: 'https://www.google.com/search?q=eldoLED+POWERdrive+1060+A+UL',
+    url: 'https://www.google.com/search?q=site:ballastshop.com+eldoLED+POWERdrive+1060/A',
     genericRole: 'LED Driver (CV)',
     instances: [
       { id: 'lcp1-dim-gar', location: 'LCP-1', universe: 1, notes: 'Garage LED Tape' },
@@ -119,7 +120,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     quantity: 5,
     requiresBus: [ConnectionType.DALI],
     systemIds: ['hvac'],
-    url: 'https://www.google.com/search?q=Lunatone+DALI+0-10V+Interface',
+    url: 'https://www.google.com/search?q=Lunatone+86458668+DALI+0-10V+Interface',
     instances: [
       { id: 'lcp1-fan-pdr', location: 'LCP-1', universe: 2, notes: 'Powder Room Fan' },
       { id: 'lcp2-fan-toilet', location: 'LCP-2', universe: 3, notes: 'Master Toilet Fan' },
@@ -160,7 +161,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     quantity: 1,
     requiresMains: false,
     requiresBus: [],
-    url: 'https://www.google.com/search?q=Phoenix+Contact+CBM+E4+24DC',
+    url: 'https://www.google.com/search?q=site:mouser.com+Phoenix+Contact+CBM+E4+24DC',
     location: 'LCP-1',
     notes: 'NEC 2023 Compliance. Splits 480W into 4x Class 2 Circuits.'
   },
@@ -245,8 +246,8 @@ export const INITIAL_MODULES: HardwareModule[] = [
     systemIds: ['access'],
     url: 'https://www.google.com/search?q=site:jmac.com+Altronix+eFlow6N',
     instances: [
-      { id: 'lcp1-acc-psu', location: 'LCP-1', notes: 'Main House Strikes' },
-      { id: 'lcp2-acc-psu', location: 'LCP-2', notes: 'Rear Strikes' }, // Hypothesized location
+      { id: 'lcp2-acc-main', location: 'LCP-2', notes: 'Main House Strikes (Secure)' },
+      { id: 'lcp2-acc-rear', location: 'LCP-2', notes: 'Rear Strikes' }, // Hypothesized location
       { id: 'gar-acc-psu', location: 'LCP-1', notes: 'Garage Strike' } // Hypothesized
     ]
   },
@@ -286,7 +287,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     quantity: 1,
     requiresMains: true,
     requiresPoE: false,
-    systemIds: ['lighting', 'access', 'security', 'hvac', 'irrigation', 'outdoor'],
+    systemIds: ['infra', 'network', 'lighting', 'access', 'security', 'hvac', 'irrigation', 'outdoor'],
     genericRole: 'Automation Server',
     url: 'https://www.google.com/search?q=ASUS+NUC+13+Pro+Kit+Buy', // Broad search
     position: { x: 62, y: 38 }
@@ -304,6 +305,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     powerWatts: 50,
     quantity: 1,
     requiresMains: true,
+    systemIds: ['infra', 'network'],
     genericRole: 'PoE Switch',
     url: 'https://www.google.com/search?q=site:store.ui.com+UniFi+Pro+Max+24+PoE',
     position: { x: 62, y: 39 }
@@ -392,6 +394,30 @@ export const INITIAL_MODULES: HardwareModule[] = [
     url: 'https://www.velux.com/products/smart-home/klf200'
   },
 
+  // --- UI / SWITCHES ---
+  {
+    id: 'mdt-glass-smart',
+    name: 'MDT Glass Tactile Smart',
+    manufacturer: 'MDT',
+    description: '6-Fold / Color Display',
+    type: ModuleType.UI,
+    mountType: MountType.WALL_MOUNT,
+    size: 0,
+    cost: 180.00,
+    powerWatts: 0.5,
+    quantity: 12,
+    requiresBus: [ConnectionType.KNX],
+    systemIds: ['lighting', 'hvac', 'audio'],
+    url: 'https://www.google.com/search?q=site:knxsupply.com+MDT+Glass+Tactile+Smart+II',
+    genericRole: 'Smart Switch',
+    notes: 'Primary User Interface. Temperature sensor built-in.',
+    instances: [
+      { id: 'sw-master', location: 'Master Bed', notes: 'Bedside' },
+      { id: 'sw-kit', location: 'Kitchen', notes: 'Entry' },
+      { id: 'sw-liv', location: 'Living', notes: 'Main' }
+    ]
+  },
+
   // --- ACCESSORIES ---
   {
     id: 'acc-patch',
@@ -404,6 +430,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     cost: 25.00,
     powerWatts: 0,
     quantity: 2,
+    systemIds: ['infra'],
     url: 'https://www.google.com/search?q=site:amazon.com+Patch+Panel+24-Port+Keystone',
     location: 'MDF',
     position: { x: 62, y: 40 }
@@ -419,12 +446,30 @@ export const INITIAL_MODULES: HardwareModule[] = [
     cost: 50.00,
     powerWatts: 0,
     quantity: 1,
+    systemIds: ['infra'],
     url: 'https://www.google.com/search?q=site:amazon.com+CyberPower+PDU+1U',
     location: 'MDF',
     position: { x: 62, y: 37 }
   },
 
   // --- BULK ITEMS ---
+  // --- POWER & CONTROL (HYBRID) ---
+  {
+    id: 'cable-romex-pcs',
+    name: 'Romex SIMpull PCS Duo',
+    manufacturer: 'Southwire',
+    type: ModuleType.ACCESSORY,
+    mountType: MountType.NA,
+    size: 0,
+    cost: 1450.00, // Est for 1000ft
+    powerWatts: 0,
+    quantity: 1, // 1000ft Spool
+    systemIds: ['infra', 'lighting'],
+    url: 'https://www.google.com/search?q=Southwire+67962802+Romex+PCS+Duo+12/2+16/2',
+    description: '12/2 Power + 16/2 Control (NM-B-PCS)',
+    notes: 'CORE STRATEGY: "Code Hack" for NEC. Bundles Class 1 (120V) + Class 2 (0-10V/DALI) in one cable. Saves dual pulls.',
+    location: 'Infra'
+  },
   {
     id: 'cable-cat6',
     name: 'Cat6 / Cat6a Riser',
@@ -436,21 +481,24 @@ export const INITIAL_MODULES: HardwareModule[] = [
     cost: 550.00,
     powerWatts: 0,
     quantity: 1,
+    systemIds: ['infra'],
     url: 'https://www.google.com/search?q=site:truecable.com+Cat6+Riser',
     location: 'Infra'
   },
   {
     id: 'cable-knx',
     name: 'KNX Bus Cable (UL)',
-    manufacturer: 'KNX Supply',
+    manufacturer: 'KNX Supply / Unitronic',
     type: ModuleType.ACCESSORY,
     mountType: MountType.NA,
     size: 0,
     cost: 850.00,
     powerWatts: 0,
     quantity: 1,
-    url: 'https://www.google.com/search?q=site:knxsupply.com+KNX+Bus+Cable+UL',
-    description: '2500 ft (UL Listed)',
+    systemIds: ['infra', 'lighting'],
+    url: 'https://knxsupply.com/product/knx-cable-ul-compliance-1000ft/',
+    description: '20 AWG 4-Conductor (2-Pair) Green (UL Listed)',
+    notes: 'Standard Green Jacket. Pairs: Red/Black (Bus) + Yellow/White (Aux Power/Data).',
     location: 'Infra'
   },
   {
@@ -488,7 +536,7 @@ export const INITIAL_CONNECTIONS = [
   { id: 'c-p-d2', fromId: 'phoenix-cbm', toId: 'siemens-dali-gw', type: ConnectionType.MAINS, notes: 'Aux Power' },
 
   // --- SIGNAL (STRIKES) ---
-  { id: 'c-str-1', fromId: 'lcp1-acc-psu', toId: 'field-str', type: ConnectionType.SIGNAL, cableType: '18/2', notes: 'Switched Power' },
+  { id: 'c-str-1', fromId: 'lcp2-acc-main', toId: 'field-str', type: ConnectionType.SIGNAL, cableType: '18/2', notes: 'Switched Power' },
 
   // --- BUS (KNX) ---
   { id: 'c-k-1', fromId: 'lcp1-sys', toId: 'lcp1-gw1', type: ConnectionType.KNX },
@@ -499,3 +547,60 @@ export const INITIAL_CONNECTIONS = [
 ];
 
 export const MOCK_CONNECTIONS = INITIAL_CONNECTIONS; // Alias for backward compat if needed
+
+export const PREFERRED_VENDORS: Vendor[] = [
+  {
+    id: 'mouser',
+    name: 'Mouser Electronics',
+    category: 'Industrial Power',
+    tier: 1,
+    description: 'Premier authorized distributor for UL 508A components. Fast US shipping.',
+    items: ['Mean Well SDR Series', 'Phoenix Contact CBM', 'Wago Terminals'],
+    url: 'https://www.mouser.com'
+  },
+  {
+    id: 'galco',
+    name: 'Galco Industrial',
+    category: 'Automation',
+    tier: 1,
+    description: 'Specialists in heavy industrial automation and Siemens authorized dealer.',
+    items: ['Siemens KNX/DALI Gateways', 'Legacy Industrial PLC'],
+    url: 'https://www.galco.com'
+  },
+  {
+    id: '1000bulbs',
+    name: '1000Bulbs / Polar-Ray',
+    category: 'Lighting',
+    tier: 2,
+    description: 'Deep inventory of architectural LED drivers and commercial fixtures.',
+    items: ['eldoLED POWERdrive', 'Lutron Ecosystem'],
+    url: 'https://www.1000bulbs.com'
+  },
+  {
+    id: 'jmac',
+    name: 'JMAC Supply',
+    category: 'Security & LV',
+    tier: 2,
+    description: 'Go-to for US security hardware, enclosures, and strikers.',
+    items: ['Saginaw Enclosures', 'HES Electric Strikes', 'Altronix Power'],
+    url: 'https://www.jmac.com'
+  },
+  {
+    id: 'knx-supply',
+    name: 'KNX Supply (USA)',
+    category: 'Specialty Controls',
+    tier: 3,
+    description: 'Miami-based importer for European KNX sensors.',
+    items: ['Steinel Connect Sensors', 'MDT Glass Tactile'],
+    url: 'https://www.knxsupply.com'
+  },
+  {
+    id: 'akuvox',
+    name: 'Akuvox Dealer',
+    category: 'Security',
+    tier: 3,
+    description: 'Authorized distributor for Video Intercoms & Licensing.',
+    items: ['X915 Door Phone', 'E16 Access Unit', 'SmartPlus App'],
+    url: 'https://akuvoxdealer.com'
+  }
+];

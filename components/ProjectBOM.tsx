@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { HardwareModule, ModuleType } from '../types';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
-import { FileText, ArrowUp, ArrowDown, X, ExternalLink, Activity, DollarSign, Zap, ShoppingCart, Thermometer, Search } from 'lucide-react';
+import { ShoppingCart, Zap, Thermometer, DollarSign, Activity, X, Search, FileText, ArrowUp, ArrowDown, ExternalLink, Info } from 'lucide-react';
 
 interface ProjectBOMProps {
     modules: HardwareModule[];
@@ -154,32 +154,33 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
     };
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-4 md:space-y-8">
             {/* KPI Summary */}
             {/* KPI Summary */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
-                <div className="bg-transparent md:bg-slate-900/50 p-2 md:p-4 rounded-lg border-0 md:border border-slate-800">
-                    <div className="text-slate-500 text-[10px] md:text-xs uppercase tracking-wider mb-1 flex items-center"><DollarSign size={12} className="mr-1" /> Est. Cost</div>
-                    <div className="text-xl md:text-2xl font-bold text-white">${Math.round(totalCost).toLocaleString()}</div>
+            {/* KPI Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-0 md:gap-4 divide-y divide-slate-800 md:divide-y-0">
+                <div className="bg-transparent md:bg-slate-900/50 p-4 rounded-none md:rounded-lg border-0 md:border border-slate-800 flex justify-between md:block items-center">
+                    <div className="text-slate-500 text-xs uppercase tracking-wider mb-0 md:mb-1 flex items-center"><DollarSign size={14} className="mr-2 md:mr-1" /> Est. Cost</div>
+                    <div className="text-lg md:text-2xl font-bold text-white">${Math.round(totalCost).toLocaleString()}</div>
                 </div>
-                <div className="bg-transparent md:bg-slate-900/50 p-2 md:p-4 rounded-lg border-0 md:border border-slate-800">
-                    <div className="text-slate-500 text-[10px] md:text-xs uppercase tracking-wider mb-1 flex items-center"><Zap size={12} className="mr-1" /> Max Power</div>
-                    <div className="text-xl md:text-2xl font-bold text-white">{totalPower} W</div>
+                <div className="bg-transparent md:bg-slate-900/50 p-4 rounded-none md:rounded-lg border-0 md:border border-slate-800 flex justify-between md:block items-center">
+                    <div className="text-slate-500 text-xs uppercase tracking-wider mb-0 md:mb-1 flex items-center"><Zap size={14} className="mr-2 md:mr-1" /> Max Power</div>
+                    <div className="text-lg md:text-2xl font-bold text-white">{totalPower} W</div>
                 </div>
-                <div className="bg-transparent md:bg-slate-900/50 p-2 md:p-4 rounded-lg border-0 md:border border-slate-800">
-                    <div className="text-slate-500 text-[10px] md:text-xs uppercase tracking-wider mb-1 flex items-center"><ShoppingCart size={12} className="mr-1" /> Items</div>
-                    <div className="text-xl md:text-2xl font-bold text-white">{totalItems}</div>
+                <div className="bg-transparent md:bg-slate-900/50 p-4 rounded-none md:rounded-lg border-0 md:border border-slate-800 flex justify-between md:block items-center">
+                    <div className="text-slate-500 text-xs uppercase tracking-wider mb-0 md:mb-1 flex items-center"><ShoppingCart size={14} className="mr-2 md:mr-1" /> Items</div>
+                    <div className="text-lg md:text-2xl font-bold text-white">{totalItems}</div>
                 </div>
-                <div className="bg-transparent md:bg-slate-900/50 p-2 md:p-4 rounded-lg border-0 md:border border-slate-800">
-                    <div className="text-slate-500 text-[10px] md:text-xs uppercase tracking-wider mb-1 flex items-center"><Thermometer size={12} className="mr-1" /> Heat</div>
-                    <div className="text-xl md:text-2xl font-bold text-white">{totalHeat.toFixed(0)} W</div>
+                <div className="bg-transparent md:bg-slate-900/50 p-4 rounded-none md:rounded-lg border-0 md:border border-slate-800 flex justify-between md:block items-center">
+                    <div className="text-slate-500 text-xs uppercase tracking-wider mb-0 md:mb-1 flex items-center"><Thermometer size={14} className="mr-2 md:mr-1" /> Heat</div>
+                    <div className="text-lg md:text-2xl font-bold text-white">{totalHeat.toFixed(0)} W</div>
                 </div>
             </div>
 
             {/* Equipment List Table */}
-            <div className={`grid grid-cols-1 ${!summaryOnly ? 'xl:grid-cols-3' : ''} gap-6`}>
+            <div className="flex flex-col gap-6">
                 {!summaryOnly && (
-                    <div className="xl:col-span-2 bg-transparent md:bg-slate-900 rounded-none md:rounded-xl border-0 md:border border-slate-800 flex flex-col shadow-none md:shadow-lg">
+                    <div className="bg-transparent md:bg-slate-900 rounded-none md:rounded-xl border-0 md:border border-slate-800 flex flex-col shadow-none md:shadow-lg">
                         <div className="hidden md:flex px-0 md:px-6 py-2 md:py-4 border-b-0 md:border-b border-slate-800 bg-transparent md:bg-slate-900/50 justify-between items-center mb-2 md:mb-0">
                             <h3 className="font-bold text-white flex items-center text-lg md:text-base">
                                 <Activity className="w-5 h-5 md:w-4 md:h-4 mr-2 text-blue-500" />
@@ -236,7 +237,7 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                             <table className="w-full text-left text-sm text-slate-400">
                                 <thead className="bg-slate-950 text-xs uppercase font-bold text-slate-500">
                                     <tr>
-                                        <SortableHeader label="Component" sortKey="name" />
+                                        <SortableHeader label="Component" sortKey="name" className="w-[40%]" />
                                         <SortableHeader label="Category" sortKey="category" className="hidden lg:table-cell" />
                                         <SortableHeader label="Location" sortKey="location" className="hidden sm:table-cell" />
                                         <th className="px-2 md:px-4 py-2 md:py-3 cursor-default hidden md:table-cell">Notes</th>
@@ -261,13 +262,13 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                                                     <div className="font-medium text-white flex items-center gap-2">
                                                         {m.name}
                                                         {m.url && (
-                                                            <a href={m.url} target="_blank" rel="noreferrer" className="text-emerald-500 hover:text-emerald-400" onClick={(e) => e.stopPropagation()} title="Find Product">
+                                                            <a href={m.url} target="_blank" rel="noreferrer" className="text-emerald-500 hover:text-emerald-400" onClick={(e) => e.stopPropagation()} title="Find Price">
                                                                 <Search className="w-3 h-3" />
                                                             </a>
                                                         )}
                                                         {m.backupUrl && (
-                                                            <a href={m.backupUrl} target="_blank" rel="noreferrer" className="text-slate-500 hover:text-slate-400" onClick={(e) => e.stopPropagation()} title="Backup Search">
-                                                                <Search className="w-3 h-3" />
+                                                            <a href={m.backupUrl} target="_blank" rel="noreferrer" className="text-slate-500 hover:text-slate-400" onClick={(e) => e.stopPropagation()} title="Product Info">
+                                                                <Info className="w-3 h-3" />
                                                             </a>
                                                         )}
                                                     </div>
@@ -309,39 +310,8 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                     </div>
                 )}
                 {/* Charts */}
-                <div className={`flex flex-col ${summaryOnly ? 'md:flex-row' : ''} gap-6 ${summaryOnly ? 'w-full' : ''}`}>
-                    <div className="bg-transparent md:bg-slate-900 p-0 md:p-4 rounded-none md:rounded-xl border-0 md:border border-slate-800 shadow-none md:shadow-lg flex-1 min-h-[200px]">
-                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Budget Allocation</h3>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={typeData}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={40}
-                                    outerRadius={60}
-                                    paddingAngle={4}
-                                    dataKey="value"
-                                    stroke="none"
-                                >
-                                    {typeData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', color: '#f8fafc', fontSize: '12px' }} itemStyle={{ color: '#fff' }} formatter={(value: number) => `$${Math.round(value).toLocaleString()}`} />
-                            </PieChart>
-                        </ResponsiveContainer>
-                        <div className="flex flex-wrap gap-2 mt-2 justify-center">
-                            {typeData.slice(0, 4).map((entry, index) => (
-                                <div key={entry.name} className="flex items-center space-x-1.5 bg-slate-950 px-2 py-1 rounded border border-slate-800">
-                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                                    <span className="text-[9px] text-slate-200 font-medium">{entry.name}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-lg flex-1 min-h-[200px] hidden md:block">
+                <div className="flex flex-col md:flex-row gap-6 w-full">
+                    <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-lg w-full md:flex-1 min-h-[200px] hidden md:block">
                         <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Top Drivers</h3>
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={costData} layout="vertical" margin={{ top: 0, right: 30, left: 0, bottom: 0 }}>
@@ -357,8 +327,41 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                         </ResponsiveContainer>
                     </div>
 
+                    <div className="bg-transparent md:bg-slate-900 p-0 md:p-4 rounded-none md:rounded-xl border-0 md:border border-slate-800 shadow-none md:shadow-lg w-full md:flex-1 min-h-[200px]">
+                        <h3 className="px-4 md:px-0 text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Budget Allocation</h3>
+                        <div className="h-[220px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={typeData}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={40}
+                                        outerRadius={60}
+                                        paddingAngle={4}
+                                        dataKey="value"
+                                        stroke="none"
+                                    >
+                                        {typeData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', color: '#f8fafc', fontSize: '12px' }} itemStyle={{ color: '#fff' }} formatter={(value: number) => `$${Math.round(value).toLocaleString()}`} />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                        <div className="flex flex-wrap gap-2 mt-2 justify-center">
+                            {typeData.slice(0, 4).map((entry, index) => (
+                                <div key={entry.name} className="flex items-center space-x-1.5 bg-slate-950 px-2 py-1 rounded border border-slate-800">
+                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                                    <span className="text-[9px] text-slate-200 font-medium">{entry.name}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Mobile Text Summary Only */}
-                    <div className="block md:hidden bg-transparent p-0 rounded-none border-0 mt-4">
+                    <div className="block md:hidden bg-transparent px-4 rounded-none border-0 mt-4 h-auto">
                         <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Top Cost Drivers</h3>
                         <div className="space-y-3">
                             {costData.slice(0, 3).map((item, i) => (

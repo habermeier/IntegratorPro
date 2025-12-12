@@ -1,14 +1,14 @@
 export enum ModuleType {
-  NETWORK = 'NETWORK',
-  POWER = 'POWER',
   CONTROLLER = 'CONTROLLER',
-  SECURITY = 'SECURITY',
-  AUDIO_VIDEO = 'AUDIO_VIDEO',
-  ACCESSORY = 'ACCESSORY',
   LIGHTING = 'LIGHTING',
-  SENSOR = 'SENSOR',
   HVAC = 'HVAC',
-  ENCLOSURE = 'ENCLOSURE'
+  SECURITY = 'SECURITY',
+  SENSOR = 'SENSOR',
+  NETWORK = 'NETWORK',
+  ACCESSORY = 'ACCESSORY',
+  ENCLOSURE = 'ENCLOSURE',
+  POWER = 'POWER',
+  UI = 'UI' // Added for Switches/Keypads
 }
 
 export enum MountType {
@@ -108,5 +108,16 @@ export interface SystemDefinition {
   title: string;      // e.g. 'Lighting & Control'
   description: string; // The "Goal"
   technicalDetails: string; // The "Implementation"
+  warning?: string;
   visuals?: string[]; // Optional URLs to diagrams/images
+}
+
+export interface Vendor {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  items: string[];
+  url?: string;
+  tier: 1 | 2 | 3; // 1 = Authorized/Prime, 2 = Specialty, 3 = Niche
 }

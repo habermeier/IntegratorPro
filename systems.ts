@@ -5,7 +5,8 @@ export const INITIAL_SYSTEMS: SystemDefinition[] = [
         id: 'lighting',
         title: 'Lighting & Control',
         description: 'Comprehensive, sensor-driven lighting control system using DALI and KNX protocols for human-centric illumination.',
-        technicalDetails: 'Features a distributed control logic using KNX Smart Switches for user interfaces and DALI-2 Gateways for precise fixture management. Logic prioritizes motion and presence sensors to minimize wall clutter, while centralized LED Drivers ensure consistent dimming performance. NEC 2023 Compliant via UL-Listed Gateway and Class 2 ECP power topology.'
+        technicalDetails: 'Features a distributed control logic using KNX Smart Switches for user interfaces and DALI-2 Gateways for precise fixture management. Logic prioritizes motion and presence sensors to minimize wall clutter, while centralized LED Drivers ensure consistent dimming performance. NEC 2023 Compliant via UL-Listed Gateway and Class 2 ECP power topology.',
+        warning: 'DRAFT: Final fixture count pending layout confirmation.'
     },
     {
         id: 'heating',
@@ -42,5 +43,11 @@ export const INITIAL_SYSTEMS: SystemDefinition[] = [
         title: 'HVAC & Environmental',
         description: 'Holistic climate and motor control including ventilation, skylights, and passive cooling.',
         technicalDetails: 'Integration of motorized Skylights, EC Exhaust Fans (0-10V), and Thermostats. Uses distributed environmental sensors (VOC, CO2, Humidity) and Presence detection to automate air exchange, exhaust, and passive cooling strategies.'
+    },
+    {
+        id: 'infra',
+        title: 'Infrastructure & Cabling',
+        description: 'Core structured cabling, racks, and power distribution.',
+        technicalDetails: 'includes the physical "nervous system" of the home: Southwire NEC-compliant cabling (Power+Control), KNX Bus cabling, and the Main Distribution Frame (MDF) rack components.'
     }
 ];

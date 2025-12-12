@@ -130,7 +130,7 @@ const App = () => {
                 {view === 'FLOORPLAN' && <FloorPlanMap modules={flatModules} setModules={setProducts} onLocate={handleLocateModule} highlightedModuleId={highlightedId} />}
               </div>
             ) : (
-              <div className="flex-1 overflow-auto p-2 md:p-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+              <div className="flex-1 overflow-auto p-0 md:p-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
                 <div className="max-w-7xl mx-auto">
                   {/* DASHBOARD / COVER_SHEET = Project Brief */}
                   {(view === 'DASHBOARD' || view === 'COVER_SHEET') && <CoverSheet modules={products} highlightedModuleId={highlightedId} onNavigate={setView} />}
