@@ -243,14 +243,73 @@ export const INITIAL_MODULES: HardwareModule[] = [
     size: 0,
     cost: 320.00,
     powerWatts: 10,
-    quantity: 3, // Fixed as requested
+    quantity: 1, // Centralized Power
     requiresMains: true,
-    systemIds: ['access'],
+    systemIds: ['access', 'security'],
     url: 'https://www.google.com/search?q=site:jmac.com+Altronix+eFlow6N',
+    linkStatus: 'PREFERRED',
+    notes: 'Central Security Power (LCP-2). Backup Battery Required.',
     instances: [
-      { id: 'lcp2-acc-main', location: 'LCP-2', notes: 'Main House Strikes (Secure)' },
-      { id: 'lcp2-acc-rear', location: 'LCP-2', notes: 'Rear Strikes' }, // Hypothesized location
-      { id: 'gar-acc-psu', location: 'LCP-1', notes: 'Garage Strike' } // Hypothesized
+      { id: 'psu-sec-main', location: 'LCP-2', notes: 'Powers All Strikes' }
+    ]
+  },
+  {
+    id: 'acc-batt-7ah',
+    name: '12V 7Ah SLA Battery',
+    manufacturer: 'Yuasa / Generic',
+    description: 'Backup Battery for Altronix',
+    type: ModuleType.ACCESSORY,
+    mountType: MountType.NA,
+    size: 0,
+    cost: 25.00,
+    powerWatts: 0,
+    quantity: 2, // 24V System requires 2x12V
+    systemIds: ['access', 'security'],
+    url: 'https://www.google.com/search?q=12V+7Ah+SLA+Battery',
+    linkStatus: 'MARKET',
+    location: 'LCP-2'
+  },
+  {
+    id: 'sec-intercom-main',
+    name: 'Akuvox X915S',
+    manufacturer: 'Akuvox',
+    description: '8" Touch Screen Entry',
+    type: ModuleType.SECURITY,
+    mountType: MountType.WALL_MOUNT,
+    size: 0,
+    cost: 2800.00,
+    powerWatts: 15,
+    quantity: 1,
+    requiresPoE: true,
+    systemIds: ['access', 'security'],
+    url: 'https://www.google.com/search?q=site:akuvox.com+X915S',
+    linkStatus: 'PREFERRED',
+    genericRole: 'Video Intercom (Main)',
+    instances: [
+      { id: 'int-front', location: 'Front Door', notes: 'Main Entry' }
+    ]
+  },
+  {
+    id: 'sec-intercom-sub',
+    name: 'Akuvox E16C',
+    manufacturer: 'Akuvox',
+    description: 'Face Recognition Entry (5")',
+    type: ModuleType.SECURITY,
+    mountType: MountType.WALL_MOUNT,
+    size: 0,
+    cost: 550.00, // Est Market Price
+    powerWatts: 15,
+    quantity: 3, // User requested 3 "other" units
+    requiresPoE: true,
+    systemIds: ['access', 'security'],
+    url: 'https://www.google.com/search?q=site:akuvox.com+E16C+Face+Recognition',
+    linkStatus: 'PREFERRED',
+    genericRole: 'Video Intercom (Sub)',
+    notes: 'Dual Camera (Starlight/IR) + 3D Face Recognition. Mid-tier option.',
+    instances: [
+      { id: 'int-gar', location: 'Garage', notes: 'Staff/Delivery Entry' },
+      { id: 'int-rear', location: 'Rear Door', notes: 'Patio Entry' },
+      { id: 'int-side', location: 'Side Gate', notes: 'Service Entry' }
     ]
   },
 
@@ -345,8 +404,81 @@ export const INITIAL_MODULES: HardwareModule[] = [
     quantity: 3,
     requiresPoE: true,
     url: 'https://www.google.com/search?q=site:akuvoxdealer.com+Akuvox+E16',
-    location: 'Field',
-    notes: 'Side/Garage. Needs PoE.'
+    linkStatus: 'PREFERRED',
+    genericRole: 'Video Intercom (Sub)',
+    notes: 'Dual Camera (Starlight/IR) + 3D Face Recognition. Flush mounted in Garage (Fire Rated) & Mandoor.',
+    instances: [
+      { id: 'int-gar', location: 'Garage', notes: 'Flush Mount + Fire Pad' },
+      { id: 'int-rear', location: 'Rear Door', notes: 'Flush Mount' },
+      { id: 'int-side', location: 'Side Gate', notes: 'Surface + Hood (No Wall Depth)' }
+    ]
+  },
+  {
+    id: 'acc-mount-x915',
+    name: 'X915 Flush Mount Kit',
+    manufacturer: 'Akuvox',
+    description: 'In-Wall Box + Rain Cover',
+    type: ModuleType.ACCESSORY,
+    mountType: MountType.NA,
+    size: 0,
+    cost: 150.00,
+    powerWatts: 0,
+    quantity: 1,
+    systemIds: ['access'],
+    url: 'https://www.google.com/search?q=site:akuvox.com+AK-X915S-RCFlush',
+    linkStatus: 'PREFERRED',
+    location: 'Front Door'
+  },
+  {
+    id: 'acc-mount-e16',
+    name: 'E16 Flush Mount Kit',
+    manufacturer: 'Akuvox',
+    description: 'In-Wall Backbox',
+    type: ModuleType.ACCESSORY,
+    mountType: MountType.NA,
+    size: 0,
+    cost: 80.00,
+    powerWatts: 0,
+    quantity: 2, // Garage + Rear
+    systemIds: ['access'],
+    url: 'https://www.google.com/search?q=site:akuvox.com+E16+Flush+Mount+Kit',
+    linkStatus: 'PREFERRED',
+    location: 'Field'
+  },
+  {
+    id: 'acc-fire-pad',
+    name: 'STI SpecSeal Putty Pad',
+    manufacturer: 'STI',
+    description: 'Fire Rated Box Pad',
+    type: ModuleType.ACCESSORY,
+    mountType: MountType.NA,
+    size: 0,
+    cost: 15.00,
+    powerWatts: 0,
+    quantity: 1,
+    systemIds: ['access'],
+    url: 'https://www.google.com/search?q=STI+SpecSeal+Putty+Pad+SSP4S',
+    linkStatus: 'MARKET',
+    notes: 'CRITICAL: Required for Garage flush mount to maintain firewall rating.',
+    location: 'Garage'
+  },
+  {
+    id: 'sec-sr01',
+    name: 'Akuvox SR01',
+    manufacturer: 'Akuvox',
+    description: 'Secure Relay Module',
+    type: ModuleType.SECURITY,
+    mountType: MountType.DIN_RAIL, // Can be DIN or Box
+    size: 2,
+    cost: 35.00,
+    powerWatts: 1,
+    quantity: 4, // 1 per Intercom (Main + 3 Subs)
+    requiresMains: false, // 12V DC
+    systemIds: ['access', 'security'],
+    url: 'https://www.google.com/search?q=site:akuvox.com+SR01+Security+Relay',
+    linkStatus: 'PREFERRED',
+    genericRole: 'Security Relay',
+    notes: 'CRITICAL: Prevents door hotwiring if intercom is removed. Installed inside secure perimeter (LCP-2/Safe Side).'
   },
   {
     id: 'field-str',
@@ -506,6 +638,23 @@ export const INITIAL_MODULES: HardwareModule[] = [
     location: 'Infra'
   },
   {
+    id: 'cable-sec-184',
+    name: '18/4 Shielded Security Wire',
+    manufacturer: 'Belden / Generic',
+    type: ModuleType.ACCESSORY,
+    mountType: MountType.NA,
+    size: 0,
+    cost: 180.00,
+    powerWatts: 0,
+    quantity: 1, // 500ft
+    systemIds: ['infra', 'access'],
+    url: 'https://www.google.com/search?q=18/4+Shielded+Security+Cable+Plenum',
+    linkStatus: 'MARKET',
+    description: '18 AWG 4-Conductor Shielded (Strikes/RS485)',
+    notes: 'For connecting Intercoms to SR01 (RS485) and SR01 to Strikes (Power).',
+    location: 'Infra'
+  },
+  {
     id: 'conn-wago',
     name: 'Wago KNX Connectors',
     manufacturer: 'Wago',
@@ -540,7 +689,7 @@ export const INITIAL_CONNECTIONS = [
   { id: 'c-p-d2', fromId: 'phoenix-cbm', toId: 'siemens-dali-gw', type: ConnectionType.MAINS, notes: 'Aux Power' },
 
   // --- SIGNAL (STRIKES) ---
-  { id: 'c-str-1', fromId: 'lcp2-acc-main', toId: 'field-str', type: ConnectionType.SIGNAL, cableType: '18/2', notes: 'Switched Power' },
+  { id: 'c-str-1', fromId: 'lcp2-acc-main', toId: 'field-str', type: ConnectionType.SIGNAL, cableType: '18/4 Shielded', notes: 'Secure Power via SR01' },
 
   // --- BUS (KNX) ---
   { id: 'c-k-1', fromId: 'lcp1-sys', toId: 'lcp1-gw1', type: ConnectionType.KNX },
