@@ -108,7 +108,7 @@ const App = () => {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden relative">
           {/* Top Header */}
-          <header className="h-16 border-b border-slate-800 bg-slate-950/50 backdrop-blur flex items-center justify-between px-8 z-10">
+          <header className="h-16 border-b border-slate-800 bg-slate-950/50 backdrop-blur flex items-center justify-between px-4 md:px-8 z-10">
             <h2 className="text-lg font-semibold text-white capitalize">
               {view === 'DASHBOARD' ? 'Dashboard' : view === 'COVER_SHEET' ? 'Project Brief' : view === 'BOM' ? 'Bill of Materials' : view === 'SYSTEMS' ? 'Systems Overview' : view.toLowerCase().replace('_', ' ')}
             </h2>
@@ -130,7 +130,7 @@ const App = () => {
                 {view === 'FLOORPLAN' && <FloorPlanMap modules={flatModules} setModules={setProducts} onLocate={handleLocateModule} highlightedModuleId={highlightedId} />}
               </div>
             ) : (
-              <div className="flex-1 overflow-auto p-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+              <div className="flex-1 overflow-auto p-2 md:p-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
                 <div className="max-w-7xl mx-auto">
                   {/* DASHBOARD / COVER_SHEET = Project Brief */}
                   {(view === 'DASHBOARD' || view === 'COVER_SHEET') && <CoverSheet modules={products} highlightedModuleId={highlightedId} onNavigate={setView} />}

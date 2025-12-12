@@ -38,20 +38,20 @@ export const INITIAL_MODULES: HardwareModule[] = [
 
   // --- CONTROLLERS & GATEWAYS (CONSOLIDATED) ---
   {
-    id: 'abb-dali-gw', // Replaced Mean Well DLC-02-KN (which replaced MDT)
-    name: 'DALI Gateway Premium 2-fold',
-    manufacturer: 'ABB',
-    description: 'DG/S 2.64.5.1', // The "Gold Standard" Premium Gateway (2-fold)
+    id: 'siemens-dali-gw', // Replaced ABB DG/S for UL Compliance
+    name: 'KNX/DALI Gateway Twin N 141/03',
+    manufacturer: 'Siemens',
+    description: 'N 141/03 (UL Listed)',
     type: ModuleType.LIGHTING,
     mountType: MountType.DIN_RAIL,
     size: 4,
-    cost: 425.75, // Verified eibabo
+    cost: 550.00,
     powerWatts: 2,
     quantity: 2, // Consolidated: 1 per LCP (2 Universes each)
     requiresMains: true,
     requiresBus: [ConnectionType.KNX, ConnectionType.DALI],
-    // Strategy: Search-First (Manufacturer + Name)
-    url: 'https://www.google.com/search?q=site:eibabo.com+ABB+DALI+Gateway+Premium+2-fold',
+    // Strategy: Compliance First
+    url: 'https://www.google.com/search?q=Siemens+N+141/03+KNX+DALI+Gateway+UL',
     systemIds: ['lighting'],
     genericRole: 'DALI Gateway',
     instances: [
@@ -82,20 +82,20 @@ export const INITIAL_MODULES: HardwareModule[] = [
 
   // --- LIGHTING ACTUATORS (CONSOLIDATED) ---
   {
-    id: 'lunt-dali-dim',
-    name: 'DALI DT8 Dimmer 16A',
-    manufacturer: 'Lunatone',
-    description: '89453841-HS',
+    id: 'eldo-dali-dim',
+    name: 'POWERdrive 1060/A',
+    manufacturer: 'eldoLED',
+    description: '100W DALI-2 Driver (UL Class 2)',
     type: ModuleType.LIGHTING,
     mountType: MountType.DIN_RAIL,
     size: 4,
-    cost: 118.00,
+    cost: 145.00,
     powerWatts: 5,
-    quantity: 6,
+    quantity: 12, // Increased quantity for split Class 2 loads
     requiresMains: true,
     requiresBus: [ConnectionType.DALI],
     systemIds: ['lighting', 'outdoor'],
-    url: 'https://www.google.com/search?q=Lunatone+DALI+DT8+Dimmer+16A', // Official site usually ranks first
+    url: 'https://www.google.com/search?q=eldoLED+POWERdrive+1060+A+UL',
     genericRole: 'LED Driver (CV)',
     instances: [
       { id: 'lcp1-dim-gar', location: 'LCP-1', universe: 1, notes: 'Garage LED Tape' },
@@ -130,11 +130,12 @@ export const INITIAL_MODULES: HardwareModule[] = [
   },
 
   // --- POWER SUPPLIES ---
+  // --- POWER SUPPLIES (THE GOLDEN ROUTE) ---
   {
     id: 'mw-sdr-480',
     name: 'SDR-480-24 PSU',
     manufacturer: 'Mean Well',
-    description: '480W 24V',
+    description: '480W 24V (UL 508 Listed)',
     type: ModuleType.POWER,
     mountType: MountType.DIN_RAIL,
     size: 5,
@@ -142,9 +143,26 @@ export const INITIAL_MODULES: HardwareModule[] = [
     powerWatts: 480,
     quantity: 1,
     requiresMains: true,
-    url: 'https://www.google.com/search?q=site:mouser.com+Mean+Well+SDR-480-24', // Mouser preferred
+    url: 'https://www.google.com/search?q=site:mouser.com+Mean+Well+SDR-480-24',
     location: 'LCP-1',
-    notes: 'Dedicated for Garage LEDs.'
+    notes: 'Main Plant Power. Output must go to ECP for Class 2.'
+  },
+  {
+    id: 'phoenix-cbm',
+    name: 'CBM E4 24DC',
+    manufacturer: 'Phoenix Contact',
+    description: 'Electronic Circuit Protector (Class 2 Outputs)',
+    type: ModuleType.POWER,
+    mountType: MountType.DIN_RAIL,
+    size: 2,
+    cost: 110.00,
+    powerWatts: 0,
+    quantity: 1,
+    requiresMains: false,
+    requiresBus: [],
+    url: 'https://www.google.com/search?q=Phoenix+Contact+CBM+E4+24DC',
+    location: 'LCP-1',
+    notes: 'NEC 2023 Compliance. Splits 480W into 4x Class 2 Circuits.'
   },
   {
     id: 'light-fix-dali',
@@ -460,7 +478,14 @@ export const INITIAL_CONNECTIONS = [
   { id: 'c-lcp2', fromId: 'mdf-sw', toId: 'lcp2-sys', type: ConnectionType.ETHERNET, cableType: 'Cat6' },
 
   // --- POWER (MAINS) ---
-  { id: 'c-p-lcp1', fromId: 'lcp1-enc', toId: 'lcp1-psu2', type: ConnectionType.MAINS, notes: '120V Feed' },
+  { id: 'c-p-lcp1', fromId: 'lcp1-enc', toId: 'mw-sdr-480', type: ConnectionType.MAINS, notes: '120V Feed to Main Plant' },
+
+  // --- POWER (DC CLASS 1 -> CLASS 2) ---
+  { id: 'c-p-ecp', fromId: 'mw-sdr-480', toId: 'phoenix-cbm', type: ConnectionType.MAINS, notes: '24V High Current (Class 1)' },
+
+  // --- POWER (CLASS 2 DISTRIBUTION) ---
+  { id: 'c-p-d1', fromId: 'phoenix-cbm', toId: 'eldo-dali-dim', type: ConnectionType.MAINS, notes: '96W Class 2 Branch 1' },
+  { id: 'c-p-d2', fromId: 'phoenix-cbm', toId: 'siemens-dali-gw', type: ConnectionType.MAINS, notes: 'Aux Power' },
 
   // --- SIGNAL (STRIKES) ---
   { id: 'c-str-1', fromId: 'lcp1-acc-psu', toId: 'field-str', type: ConnectionType.SIGNAL, cableType: '18/2', notes: 'Switched Power' },

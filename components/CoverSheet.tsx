@@ -23,7 +23,7 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate, highlighte
     }, [highlightedModuleId]);
 
     return (
-        <div className="p-4 md:p-8 bg-slate-950 text-slate-300 font-sans max-w-5xl mx-auto">
+        <div className="p-3 md:p-8 bg-slate-950 text-slate-300 font-sans max-w-5xl mx-auto">
             <h1 id="header-brief" className="text-2xl md:text-4xl font-bold text-white mb-2">Project Brief</h1>
 
             <div className="flex gap-4 text-sm mb-8 text-slate-400">
@@ -32,7 +32,7 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate, highlighte
                 <span><strong>Status:</strong> Down-to-studs Remodel / Framing Phase</span>
             </div>
 
-            <section id="section-objectives" className={`mb-12 transition-all duration-500 p-6 rounded-xl ${highlightedModuleId === 'section-objectives' ? 'bg-blue-900/40 border-2 border-blue-500/50 shadow-[0_0_30px_rgba(59,130,246,0.2)]' : 'border border-transparent'}`}>
+            <section id="section-objectives" className={`mb-12 transition-all duration-500 p-4 md:p-6 rounded-xl ${highlightedModuleId === 'section-objectives' ? 'bg-blue-900/40 border-2 border-blue-500/50 shadow-[0_0_30px_rgba(59,130,246,0.2)]' : 'border border-transparent'}`}>
                 <h2
                     onClick={() => window.location.hash = '#project-brief/section-objectives'}
                     className="text-2xl font-bold text-blue-400 mb-4 border-b border-blue-900/30 pb-2 cursor-pointer hover:text-blue-300 transition-colors"
@@ -58,9 +58,20 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate, highlighte
                         <p className="text-sm">Minimizes "wall acne" via high density of presence/lux/environmental sensors. Primary interaction: automatic or indirect.</p>
                     </div>
                 </div>
+
+                <div className="mt-6 bg-red-900/20 border border-red-900/40 p-4 rounded-lg">
+                    <h3 className="font-bold text-red-200 mb-2 flex items-center gap-2">
+                        <span>🛡️</span> NEC 2023 Compliance Strategy (Approved)
+                    </h3>
+                    <p className="text-sm text-slate-300 leading-relaxed">
+                        Adopts the <strong>"Golden Route"</strong> methodology for US Code Compliance (NEC 2023 / UL 508A).
+                        The architecture utilizes <strong>UL-Listed Siemens KNX Gateways</strong> and <strong>eldoLED Drivers</strong> to eliminate "Red Tag" risks at the source.
+                        Crucially, power distribution uses active <strong>Electronic Circuit Protectors (Phoenix Contact CBM)</strong> to strictly limit all field wiring to &lt;100W Class 2 standards foundation-wide, ensuring safety and legal installation without requiring custom industrial panels.
+                    </p>
+                </div>
             </section>
 
-            <section id="section-architecture" className={`mb-12 transition-all duration-500 p-6 rounded-xl ${highlightedModuleId === 'section-architecture' ? 'bg-emerald-900/40 border-2 border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.2)]' : 'border border-transparent'}`}>
+            <section id="section-architecture" className={`mb-12 transition-all duration-500 p-4 md:p-6 rounded-xl ${highlightedModuleId === 'section-architecture' ? 'bg-emerald-900/40 border-2 border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.2)]' : 'border border-transparent'}`}>
                 <h2
                     onClick={() => window.location.hash = '#project-brief/section-architecture'}
                     className="text-2xl font-bold text-emerald-400 mb-4 border-b border-emerald-900/30 pb-2 cursor-pointer hover:text-emerald-300 transition-colors"
@@ -87,7 +98,7 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate, highlighte
                 </div>
             </section>
 
-            <section id="section-standards" className={`mb-12 transition-all duration-500 p-6 rounded-xl ${highlightedModuleId === 'section-standards' ? 'bg-amber-900/40 border-2 border-amber-500/50 shadow-[0_0_30px_rgba(245,158,11,0.2)]' : 'border border-transparent'}`}>
+            <section id="section-standards" className={`mb-12 transition-all duration-500 p-4 md:p-6 rounded-xl ${highlightedModuleId === 'section-standards' ? 'bg-amber-900/40 border-2 border-amber-500/50 shadow-[0_0_30px_rgba(245,158,11,0.2)]' : 'border border-transparent'}`}>
                 <h2
                     onClick={() => window.location.hash = '#project-brief/section-standards'}
                     className="text-2xl font-bold text-amber-400 mb-4 border-b border-amber-900/30 pb-2 cursor-pointer hover:text-amber-300 transition-colors"
@@ -105,7 +116,7 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate, highlighte
                     </div>
                     <div className="bg-slate-900 p-3 rounded border border-slate-800">
                         <h4 className="font-bold text-slate-200">Sensors</h4>
-                        <p>Steinel TruePresence<br />Sensirion SDP810</p>
+                        <p>Steinel TruePresence<br />ABB Binary Inputs</p>
                     </div>
                 </div>
 
@@ -122,7 +133,7 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate, highlighte
                 </div>
             </section>
 
-            <section id="section-collaboration" className={`mb-12 transition-all duration-500 p-6 rounded-xl ${highlightedModuleId === 'section-collaboration' ? 'bg-purple-900/40 border-2 border-purple-500/50 shadow-[0_0_30px_rgba(139,92,246,0.2)]' : 'border border-transparent'}`}>
+            <section id="section-collaboration" className={`mb-12 transition-all duration-500 p-4 md:p-6 rounded-xl ${highlightedModuleId === 'section-collaboration' ? 'bg-purple-900/40 border-2 border-purple-500/50 shadow-[0_0_30px_rgba(139,92,246,0.2)]' : 'border border-transparent'}`}>
                 <h2
                     onClick={() => window.location.hash = '#project-brief/section-collaboration'}
                     className="text-2xl font-bold text-purple-400 mb-4 border-b border-purple-900/30 pb-2 cursor-pointer hover:text-purple-300 transition-colors"
@@ -177,7 +188,7 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate, highlighte
                 </div>
             </section>
 
-            <section id="section-sourcing" className={`mb-12 transition-all duration-500 p-6 rounded-xl ${highlightedModuleId === 'section-sourcing' ? 'bg-blue-900/40 border-2 border-blue-500/50 shadow-[0_0_30px_rgba(59,130,246,0.2)]' : 'border border-transparent'}`}>
+            <section id="section-sourcing" className={`mb-12 transition-all duration-500 p-4 md:p-6 rounded-xl ${highlightedModuleId === 'section-sourcing' ? 'bg-blue-900/40 border-2 border-blue-500/50 shadow-[0_0_30px_rgba(59,130,246,0.2)]' : 'border border-transparent'}`}>
                 <h2
                     onClick={() => window.location.hash = '#project-brief/section-sourcing'}
                     className="text-2xl font-bold text-blue-400 mb-4 border-b border-blue-900/30 pb-2 cursor-pointer hover:text-blue-300 transition-colors"
@@ -230,7 +241,7 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate, highlighte
                 </div>
             </section>
 
-            <section id="section-ownership" className={`mb-12 transition-all duration-500 p-6 rounded-xl ${highlightedModuleId === 'section-ownership' ? 'bg-slate-800/60 border-2 border-slate-500/50 shadow-[0_0_30px_rgba(148,163,184,0.2)]' : 'border border-transparent'}`}>
+            <section id="section-ownership" className={`mb-12 transition-all duration-500 p-4 md:p-6 rounded-xl ${highlightedModuleId === 'section-ownership' ? 'bg-slate-800/60 border-2 border-slate-500/50 shadow-[0_0_30px_rgba(148,163,184,0.2)]' : 'border border-transparent'}`}>
                 <h2
                     onClick={() => window.location.hash = '#project-brief/section-ownership'}
                     className="text-2xl font-bold text-slate-200 mb-4 border-b border-slate-700 pb-2 cursor-pointer hover:text-white transition-colors"

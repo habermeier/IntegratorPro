@@ -5,7 +5,7 @@ export const INITIAL_SYSTEMS: SystemDefinition[] = [
         id: 'lighting',
         title: 'Lighting & Control',
         description: 'Comprehensive, sensor-driven lighting control system using DALI and KNX protocols for human-centric illumination.',
-        technicalDetails: 'Features a distributed control logic using KNX Smart Switches for user interfaces and DALI-2 Gateways for precise fixture management. Logic prioritizes motion and presence sensors to minimize wall clutter, while centralized LED Drivers ensure consistent dimming performance.'
+        technicalDetails: 'Features a distributed control logic using KNX Smart Switches for user interfaces and DALI-2 Gateways for precise fixture management. Logic prioritizes motion and presence sensors to minimize wall clutter, while centralized LED Drivers ensure consistent dimming performance. NEC 2023 Compliant via UL-Listed Gateway and Class 2 ECP power topology.'
     },
     {
         id: 'heating',

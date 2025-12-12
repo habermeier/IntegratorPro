@@ -128,7 +128,7 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
 
         return (
             <th
-                className={`px-4 py-3 cursor-pointer group hover:bg-slate-800 transition-colors select-none text-${align} ${className}`}
+                className={`px-2 md:px-4 py-2 md:py-3 cursor-pointer group hover:bg-slate-800 transition-colors select-none text-${align} ${className}`}
                 onClick={() => handleSort(sortKey)}
             >
                 <div className={`flex items-center gap-1 ${align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start'}`}>
@@ -156,32 +156,33 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
     return (
         <div className="space-y-8">
             {/* KPI Summary */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-800">
-                    <div className="text-slate-500 text-xs uppercase tracking-wider mb-1 flex items-center"><DollarSign size={12} className="mr-1" /> Est. Cost</div>
-                    <div className="text-2xl font-bold text-white">${Math.round(totalCost).toLocaleString()}</div>
+            {/* KPI Summary */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+                <div className="bg-transparent md:bg-slate-900/50 p-2 md:p-4 rounded-lg border-0 md:border border-slate-800">
+                    <div className="text-slate-500 text-[10px] md:text-xs uppercase tracking-wider mb-1 flex items-center"><DollarSign size={12} className="mr-1" /> Est. Cost</div>
+                    <div className="text-xl md:text-2xl font-bold text-white">${Math.round(totalCost).toLocaleString()}</div>
                 </div>
-                <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-800">
-                    <div className="text-slate-500 text-xs uppercase tracking-wider mb-1 flex items-center"><Zap size={12} className="mr-1" /> Max Power</div>
-                    <div className="text-2xl font-bold text-white">{totalPower} W</div>
+                <div className="bg-transparent md:bg-slate-900/50 p-2 md:p-4 rounded-lg border-0 md:border border-slate-800">
+                    <div className="text-slate-500 text-[10px] md:text-xs uppercase tracking-wider mb-1 flex items-center"><Zap size={12} className="mr-1" /> Max Power</div>
+                    <div className="text-xl md:text-2xl font-bold text-white">{totalPower} W</div>
                 </div>
-                <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-800">
-                    <div className="text-slate-500 text-xs uppercase tracking-wider mb-1 flex items-center"><ShoppingCart size={12} className="mr-1" /> Total Items</div>
-                    <div className="text-2xl font-bold text-white">{totalItems}</div>
+                <div className="bg-transparent md:bg-slate-900/50 p-2 md:p-4 rounded-lg border-0 md:border border-slate-800">
+                    <div className="text-slate-500 text-[10px] md:text-xs uppercase tracking-wider mb-1 flex items-center"><ShoppingCart size={12} className="mr-1" /> Items</div>
+                    <div className="text-xl md:text-2xl font-bold text-white">{totalItems}</div>
                 </div>
-                <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-800">
-                    <div className="text-slate-500 text-xs uppercase tracking-wider mb-1 flex items-center"><Thermometer size={12} className="mr-1" /> Heat Load</div>
-                    <div className="text-2xl font-bold text-white">{totalHeat.toFixed(0)} W</div>
+                <div className="bg-transparent md:bg-slate-900/50 p-2 md:p-4 rounded-lg border-0 md:border border-slate-800">
+                    <div className="text-slate-500 text-[10px] md:text-xs uppercase tracking-wider mb-1 flex items-center"><Thermometer size={12} className="mr-1" /> Heat</div>
+                    <div className="text-xl md:text-2xl font-bold text-white">{totalHeat.toFixed(0)} W</div>
                 </div>
             </div>
 
             {/* Equipment List Table */}
             <div className={`grid grid-cols-1 ${!summaryOnly ? 'xl:grid-cols-3' : ''} gap-6`}>
                 {!summaryOnly && (
-                    <div className="xl:col-span-2 bg-slate-900 rounded-xl border border-slate-800 flex flex-col shadow-lg">
-                        <div className="px-6 py-4 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center">
-                            <h3 className="font-bold text-white flex items-center">
-                                <Activity className="w-4 h-4 mr-2 text-blue-500" />
+                    <div className="xl:col-span-2 bg-transparent md:bg-slate-900 rounded-none md:rounded-xl border-0 md:border border-slate-800 flex flex-col shadow-none md:shadow-lg">
+                        <div className="hidden md:flex px-0 md:px-6 py-2 md:py-4 border-b-0 md:border-b border-slate-800 bg-transparent md:bg-slate-900/50 justify-between items-center mb-2 md:mb-0">
+                            <h3 className="font-bold text-white flex items-center text-lg md:text-base">
+                                <Activity className="w-5 h-5 md:w-4 md:h-4 mr-2 text-blue-500" />
                                 Equipment List
                             </h3>
                             {sortConfig.length > 0 && (
@@ -190,14 +191,55 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                                 </button>
                             )}
                         </div>
-                        <div className="overflow-x-auto">
+
+                        {/* Mobile List View */}
+                        <div className="block md:hidden space-y-3">
+                            {sortedModules.map(m => (
+                                <div
+                                    key={m.id}
+                                    id={`row-${m.id}`}
+                                    onClick={() => window.location.hash = `#${linkPrefix}/${m.id}`}
+                                    className={`py-4 border-b border-slate-800/30 px-4 ${highlightedModuleId === m.id ? 'bg-blue-900/20' : ''}`}
+                                >
+                                    <div className="flex justify-between items-start mb-1">
+                                        <div className="font-medium text-white text-sm pr-2">{m.name}</div>
+                                        <div className="font-mono text-emerald-400 text-sm whitespace-nowrap">
+                                            ${Math.round(m.cost * m.quantity).toLocaleString()}
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-between items-center text-xs text-slate-500">
+                                        <div className="flex items-center gap-2">
+                                            <span>{m.manufacturer}</span>
+                                            {m.instances && m.instances.length > 0 && (
+                                                <span className="bg-slate-800 px-1.5 rounded text-[10px] text-slate-400">
+                                                    {m.instances.length} locs
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className="bg-slate-800/50 px-2 py-0.5 rounded text-slate-400">
+                                                Qty: {m.quantity}
+                                            </span>
+                                            {m.url && (
+                                                <a href={m.url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+                                                    <ExternalLink size={12} className="text-slate-600" />
+                                                </a>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Desktop Table View */}
+                        <div className="overflow-x-auto hidden md:block">
                             <table className="w-full text-left text-sm text-slate-400">
                                 <thead className="bg-slate-950 text-xs uppercase font-bold text-slate-500">
                                     <tr>
                                         <SortableHeader label="Component" sortKey="name" />
                                         <SortableHeader label="Category" sortKey="category" className="hidden lg:table-cell" />
                                         <SortableHeader label="Location" sortKey="location" className="hidden sm:table-cell" />
-                                        <th className="px-4 py-3 cursor-default hidden md:table-cell">Notes</th>
+                                        <th className="px-2 md:px-4 py-2 md:py-3 cursor-default hidden md:table-cell">Notes</th>
                                         <SortableHeader label="Unit Cost" sortKey="cost" align="right" className="hidden sm:table-cell" />
                                         <SortableHeader label="Qty" sortKey="quantity" align="right" />
                                         <SortableHeader label="Total" sortKey="totalCost" align="right" />
@@ -242,7 +284,7 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                                                     ? [...new Set(m.instances.map(i => i.location))].join(', ')
                                                     : m.location}
                                             </td>
-                                            <td className="px-4 py-3 hidden md:table-cell">
+                                            <td className="px-2 md:px-4 py-2 md:py-3 hidden md:table-cell">
                                                 {m.notes && (
                                                     <div className="flex items-start text-xs text-amber-500/80 max-w-[180px]">
                                                         <FileText className="w-3 h-3 mr-1 mt-0.5 flex-shrink-0" />
@@ -250,13 +292,13 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                                                     </div>
                                                 )}
                                             </td>
-                                            <td className="px-4 py-3 text-right font-mono text-slate-400 hidden sm:table-cell">
+                                            <td className="px-2 md:px-4 py-2 md:py-3 text-right font-mono text-slate-400 hidden sm:table-cell">
                                                 ${m.cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </td>
-                                            <td className="px-4 py-3 text-right font-mono text-white">
+                                            <td className="px-2 md:px-4 py-2 md:py-3 text-right font-mono text-white">
                                                 {m.quantity}
                                             </td>
-                                            <td className="px-4 py-3 text-right font-mono text-emerald-400">
+                                            <td className="px-2 md:px-4 py-2 md:py-3 text-right font-mono text-emerald-400">
                                                 ${Math.round(m.cost * m.quantity).toLocaleString()}
                                             </td>
                                         </tr>
@@ -268,7 +310,7 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                 )}
                 {/* Charts */}
                 <div className={`flex flex-col ${summaryOnly ? 'md:flex-row' : ''} gap-6 ${summaryOnly ? 'w-full' : ''}`}>
-                    <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-lg flex-1 min-h-[200px]">
+                    <div className="bg-transparent md:bg-slate-900 p-0 md:p-4 rounded-none md:rounded-xl border-0 md:border border-slate-800 shadow-none md:shadow-lg flex-1 min-h-[200px]">
                         <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Budget Allocation</h3>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -299,7 +341,7 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                         </div>
                     </div>
 
-                    <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-lg flex-1 min-h-[200px]">
+                    <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-lg flex-1 min-h-[200px] hidden md:block">
                         <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Top Drivers</h3>
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={costData} layout="vertical" margin={{ top: 0, right: 30, left: 0, bottom: 0 }}>
@@ -313,6 +355,19 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>
+                    </div>
+
+                    {/* Mobile Text Summary Only */}
+                    <div className="block md:hidden bg-transparent p-0 rounded-none border-0 mt-4">
+                        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Top Cost Drivers</h3>
+                        <div className="space-y-3">
+                            {costData.slice(0, 3).map((item, i) => (
+                                <div key={item.name} className="flex justify-between items-center text-sm border-b border-slate-800/30 pb-2">
+                                    <span className="text-slate-300 truncate pr-2 w-2/3">{i + 1}. {item.name}</span>
+                                    <span className="font-mono text-slate-400">${Math.round(item.value).toLocaleString()}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div >

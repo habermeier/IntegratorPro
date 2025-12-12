@@ -50,7 +50,7 @@ const SystemsOverview: React.FC<SystemsOverviewProps> = ({ modules, highlightedI
     };
 
     return (
-        <div className="h-full overflow-y-auto p-4 md:p-8 bg-slate-950 text-slate-300 font-sans max-w-6xl mx-auto scrollbar-thin">
+        <div className="h-full overflow-y-auto p-2 md:p-8 bg-slate-950 text-slate-300 font-sans max-w-6xl mx-auto scrollbar-thin">
             <h1 className="text-2xl md:text-4xl font-bold text-white mb-8 border-b border-slate-800 pb-4">
                 Systems Overview
             </h1>
@@ -65,17 +65,17 @@ const SystemsOverview: React.FC<SystemsOverviewProps> = ({ modules, highlightedI
                         <div
                             key={sys.id}
                             id={`sys-${sys.id}`}
-                            className={`rounded-xl border transition-all duration-300 overflow-hidden 
+                            className={`rounded-none md:rounded-xl border-b md:border transition-all duration-300 overflow-hidden 
                                 ${isExpanded
-                                    ? 'bg-slate-900 border-indigo-500/50 shadow-[0_0_20px_rgba(99,102,241,0.15)]'
-                                    : 'bg-slate-900/40 border-slate-800 hover:border-slate-700'
+                                    ? 'bg-slate-900 border-indigo-500/50 shadow-none md:shadow-[0_0_20px_rgba(99,102,241,0.15)]'
+                                    : 'bg-transparent md:bg-slate-900/40 border-slate-800 hover:border-slate-700'
                                 }`
                             }
                         >
                             {/* Header */}
                             <button
                                 onClick={() => toggleSystem(sys.id)}
-                                className="w-full text-left p-6 flex items-start justify-between group"
+                                className="w-full text-left p-4 md:p-6 flex items-start justify-between group"
                             >
                                 <div className="flex items-center gap-4">
                                     <div className={`p-3 rounded-lg transition-colors ${isExpanded ? 'bg-indigo-500/20 text-indigo-400' : 'bg-slate-800 text-slate-500 group-hover:text-slate-400'}`}>
@@ -128,7 +128,7 @@ const SystemsOverview: React.FC<SystemsOverviewProps> = ({ modules, highlightedI
                                             </div>
                                         </div>
 
-                                        <div className="bg-slate-950 rounded-lg border border-slate-800 overflow-hidden">
+                                        <div className="bg-transparent md:bg-slate-950 rounded-none md:rounded-lg border-0 md:border border-slate-800 overflow-hidden -mx-4 md:mx-0">
                                             <ProjectBOM
                                                 modules={systemModules}
                                                 highlightedModuleId={highlightedId}
