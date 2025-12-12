@@ -121,16 +121,17 @@ const App = () => {
           </header>
 
           {/* Dynamic Viewport */}
-          <main className="flex-1 flex flex-col min-w-0 bg-slate-950 text-slate-200 overflow-hidden relative">
+          {/* Dynamic Viewport */}
+          <main className="flex-1 flex flex-col min-w-0 min-h-0 bg-slate-950 text-slate-200 overflow-hidden relative">
             {(view === 'FLOORPLAN' || view === 'VISUALIZER' || view === 'TOPOLOGY') ? (
-              <div className="absolute inset-0 z-10">
+              <div className="absolute inset-0 z-10 w-full h-full">
                 {/* Pass FLAT MODULES (Instances) to Visualizers for physical accuracy */}
                 {view === 'VISUALIZER' && <Visualizer modules={flatModules} highlightedModuleId={highlightedId} />}
                 {view === 'TOPOLOGY' && <WiringDiagram modules={flatModules} connections={connections} />}
                 {view === 'FLOORPLAN' && <FloorPlanMap modules={flatModules} setModules={setProducts} onLocate={handleLocateModule} highlightedModuleId={highlightedId} />}
               </div>
             ) : (
-              <div className="flex-1 overflow-auto p-0 md:p-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+              <div className="flex-1 overflow-y-auto p-0 md:p-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent min-h-0 w-full">
                 <div className="max-w-7xl mx-auto">
                   {/* DASHBOARD / COVER_SHEET = Project Brief */}
                   {(view === 'DASHBOARD' || view === 'COVER_SHEET') && <CoverSheet modules={products} highlightedModuleId={highlightedId} onNavigate={setView} />}

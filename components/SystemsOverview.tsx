@@ -14,42 +14,8 @@ const SystemsOverview: React.FC<SystemsOverviewProps> = ({ modules, highlightedI
     // Track expanded sections. specific systemId or empty.
     const [expandedSystemId, setExpandedSystemId] = useState<string | null>(null);
 
-    // Deep Link Logic
-    useEffect(() => {
-        // If no ID is highlighted, collapse all (supports "Back" button)
-        if (!highlightedId) {
-            setExpandedSystemId(null);
-            return;
-        }
-
-        // 1. Check if highlightedId is a System ID directly
-        const matchedSystem = INITIAL_SYSTEMS.find(s => s.id === highlightedId);
-        if (matchedSystem) {
-            setExpandedSystemId(matchedSystem.id);
-            // Scroll to system header
-            setTimeout(() => {
-                document.getElementById(`sys-${matchedSystem.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
-            return;
-        }
-
-        // 2. Check if highlightedId is a Product ID, and find its System
-        const processedProduct = modules.find(m => m.id === highlightedId);
-        if (processedProduct?.systemIds) {
-            const sysId = processedProduct.systemIds[0]; // Pick first for now
-            if (sysId) {
-                setExpandedSystemId(sysId);
-            }
-        }
-
-    }, [highlightedId, modules]);
-
     const toggleSystem = (id: string) => {
-        const nextId = expandedSystemId === id ? null : id;
-        onNavigate('SYSTEMS', nextId || undefined);
-        // Note: setExpandedSystemId is handled by the useEffect above reacting to the URL change.
-        // However, for immediate responsiveness we can set it locally too, but trusting the loop avoids race conditions.
-        // We'll let the loop handle it to ensure Single Source of Truth (URL).
+        setExpandedSystemId(prev => prev === id ? null : id);
     };
 
     return (
