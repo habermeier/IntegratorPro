@@ -16,7 +16,11 @@ const SystemsOverview: React.FC<SystemsOverviewProps> = ({ modules, highlightedI
 
     // Deep Link Logic
     useEffect(() => {
-        if (!highlightedId) return;
+        // If no ID is highlighted, collapse all (supports "Back" button)
+        if (!highlightedId) {
+            setExpandedSystemId(null);
+            return;
+        }
 
         // 1. Check if highlightedId is a System ID directly
         const matchedSystem = INITIAL_SYSTEMS.find(s => s.id === highlightedId);
@@ -30,23 +34,22 @@ const SystemsOverview: React.FC<SystemsOverviewProps> = ({ modules, highlightedI
         }
 
         // 2. Check if highlightedId is a Product ID, and find its System
-        const processedProduct = modules.find(m => m.id === highlightedId); // Or flattened? No, modules passed here are usually products.
-        // Wait, ProjectBOM works on Products.
-        // We need to find which system contains this product.
-        // Product might belong to multiple. Open the FIRST one found?
+        const processedProduct = modules.find(m => m.id === highlightedId);
         if (processedProduct?.systemIds) {
             const sysId = processedProduct.systemIds[0]; // Pick first for now
             if (sysId) {
                 setExpandedSystemId(sysId);
-                // Scroll logic handled by ProjectBOM if rendered?
-                // We'll trust ProjectBOM to highlighted row if we pass highlightedId.
             }
         }
 
     }, [highlightedId, modules]);
 
     const toggleSystem = (id: string) => {
-        setExpandedSystemId(prev => prev === id ? null : id);
+        const nextId = expandedSystemId === id ? null : id;
+        onNavigate('SYSTEMS', nextId || undefined);
+        // Note: setExpandedSystemId is handled by the useEffect above reacting to the URL change.
+        // However, for immediate responsiveness we can set it locally too, but trusting the loop avoids race conditions.
+        // We'll let the loop handle it to ensure Single Source of Truth (URL).
     };
 
     return (
