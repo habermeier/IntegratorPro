@@ -63,7 +63,7 @@ const App = () => {
 
   return (
     <>
-      <div className="flex flex-col md:flex-row h-screen bg-slate-950 text-slate-200 overflow-hidden font-sans">
+      <div className="flex flex-col md:flex-row h-screen md:h-screen bg-slate-950 text-slate-200 overflow-hidden font-sans fixed inset-0">
 
         {/* Mobile Header */}
         <div className="md:hidden h-16 bg-slate-950 border-b border-slate-800 flex items-center justify-between px-6 shrink-0 z-30">
