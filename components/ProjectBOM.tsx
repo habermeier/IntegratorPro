@@ -23,7 +23,7 @@ const getCategoryLabel = (type: ModuleType) => {
         case ModuleType.HVAC: return 'HVAC';
         case ModuleType.ENCLOSURE: return 'Enclosure';
         case ModuleType.ACCESSORY: return 'Accessory';
-        case ModuleType.AUDIO_VIDEO: return 'Audio/Video';
+        case ModuleType.UI: return 'Interface';
         default: return type;
     }
 };
@@ -194,7 +194,7 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                         </div>
 
                         {/* Mobile List View */}
-                        <div className="block md:hidden space-y-3">
+                        <div className="block md:hidden space-y-4">
                             {sortedModules.map(m => (
                                 <div
                                     key={m.id}
@@ -202,28 +202,34 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                                     onClick={() => window.location.hash = `#${linkPrefix}/${m.id}`}
                                     className={`py-4 border-b border-slate-800/30 px-4 ${highlightedModuleId === m.id ? 'bg-blue-900/20' : ''}`}
                                 >
-                                    <div className="flex justify-between items-start mb-1">
-                                        <div className="font-medium text-white text-sm pr-2">{m.name}</div>
-                                        <div className="font-mono text-emerald-400 text-sm whitespace-nowrap">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div className="font-medium text-white text-base pr-2">{m.name}</div>
+                                        <div className="font-mono text-emerald-400 text-lg whitespace-nowrap">
                                             ${Math.round(m.cost * m.quantity).toLocaleString()}
                                         </div>
                                     </div>
-                                    <div className="flex justify-between items-center text-xs text-slate-500">
+                                    <div className="flex justify-between items-center text-sm text-slate-400">
                                         <div className="flex items-center gap-2">
-                                            <span>{m.manufacturer}</span>
+                                            <span className="text-slate-500">{m.manufacturer}</span>
                                             {m.instances && m.instances.length > 0 && (
-                                                <span className="bg-slate-800 px-1.5 rounded text-[10px] text-slate-400">
+                                                <span className="bg-slate-800 px-2 py-0.5 rounded text-xs text-slate-400">
                                                     {m.instances.length} locs
                                                 </span>
                                             )}
                                         </div>
-                                        <div className="flex items-center gap-3">
-                                            <span className="bg-slate-800/50 px-2 py-0.5 rounded text-slate-400">
+                                        <div className="flex items-center gap-1 -mr-2">
+                                            <span className="bg-slate-800/50 px-2 py-1 rounded text-slate-400 text-xs mr-2">
                                                 Qty: {m.quantity}
                                             </span>
                                             {m.url && (
-                                                <a href={m.url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
-                                                    <ExternalLink size={12} className="text-slate-600" />
+                                                <a
+                                                    href={m.url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className={`p-3 rounded-full ${m.linkStatus === 'PREFERRED' ? 'bg-emerald-900/20 text-emerald-400' : 'bg-amber-900/10 text-amber-500'}`}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <Search className="w-5 h-5" />
                                                 </a>
                                             )}
                                         </div>
@@ -262,8 +268,15 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                                                     <div className="font-medium text-white flex items-center gap-2">
                                                         {m.name}
                                                         {m.url && (
-                                                            <a href={m.url} target="_blank" rel="noreferrer" className="text-emerald-500 hover:text-emerald-400" onClick={(e) => e.stopPropagation()} title="Find Price">
-                                                                <Search className="w-3 h-3" />
+                                                            <a
+                                                                href={m.url}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className={`p-1 ${m.linkStatus === 'PREFERRED' ? 'text-emerald-500 hover:text-emerald-400' : 'text-amber-500 hover:text-amber-400'}`}
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                title={m.linkStatus === 'PREFERRED' ? "Verified Distributor" : "Market Search"}
+                                                            >
+                                                                <Search className="w-4 h-4" />
                                                             </a>
                                                         )}
                                                         {m.backupUrl && (

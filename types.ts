@@ -56,6 +56,7 @@ export interface HardwareModule {
   // URL Structure
   url: string;        // Verified Purchase Link
   backupUrl?: string; // Optional search/backup
+  linkStatus?: 'PREFERRED' | 'MARKET'; // PREFERRED = Verified Vendor (Green), MARKET = General Search (Amber)
   dimensions?: {
     width: number;
     height: number;

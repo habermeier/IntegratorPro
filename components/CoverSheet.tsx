@@ -227,17 +227,17 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate, highlighte
                     5. Sourcing Strategy
                 </h2>
                 <div className="px-4 md:px-0 bg-transparent md:bg-slate-900/50 p-0 md:p-4 rounded-none md:rounded-xl border-0 md:border border-slate-700">
-                    <p className="mb-4 text-sm text-slate-400 hidden md:block">
+                    <p className="mb-4 text-base md:text-sm text-slate-400 hidden md:block">
                         To streamline procurement, equipment has been consolidated to reputable vendors, prioritizing those with strong US presence and UL-compliance documentation.
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 md:gap-4 border-t border-slate-800 md:border-0 divide-y divide-slate-800 md:divide-y-0 text-slate-400">
                         {PREFERRED_VENDORS.map((vendor) => (
-                            <div key={vendor.id} className="bg-transparent md:bg-slate-950 p-3 md:p-3 rounded-none md:rounded border-0 md:border border-slate-800 md:border-slate-800 flex flex-col h-full -mx-3 md:mx-0">
-                                <div className="flex items-center justify-between mb-1">
-                                    <h4 className="font-bold text-white text-xs md:text-sm truncate pr-1">{vendor.name}</h4>
-                                    {vendor.tier === 1 && <span className="text-[9px] bg-emerald-900/30 text-emerald-400 px-1 py-0.5 rounded uppercase tracking-wider font-bold shrink-0">Prime</span>}
+                            <div key={vendor.id} className="bg-transparent md:bg-slate-950 p-4 md:p-3 rounded-none md:rounded border-0 md:border border-slate-800 md:border-slate-800 flex flex-col h-full -mx-4 px-4 md:mx-0">
+                                <div className="flex items-center justify-between mb-2 md:mb-1">
+                                    <h4 className="font-bold text-white text-base md:text-sm truncate pr-1">{vendor.name}</h4>
+                                    {vendor.tier === 1 && <span className="text-[10px] bg-emerald-900/30 text-emerald-400 px-1 py-0.5 rounded uppercase tracking-wider font-bold shrink-0">Prime</span>}
                                 </div>
-                                <p className="text-[10px] md:text-xs text-slate-500 mb-1 leading-tight line-clamp-2 md:line-clamp-none min-h-[0]">{vendor.description}</p>
+                                <p className="text-sm md:text-xs text-slate-500 mb-2 md:mb-1 leading-tight line-clamp-2 md:line-clamp-none min-h-[0]">{vendor.description}</p>
                                 <ul className="hidden md:block text-[10px] md:text-xs text-slate-400 list-disc pl-3 mb-2 flex-1 leading-tight">
                                     {vendor.items.slice(0, 2).map((item, idx) => (
                                         <li key={idx} className="truncate">{item}</li>
@@ -248,7 +248,7 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate, highlighte
                                         href={vendor.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-[10px] md:text-xs text-blue-400 hover:text-blue-300 hover:underline mt-auto pt-1 md:border-t border-slate-800/50 block w-full text-left md:text-right"
+                                        className="text-sm md:text-xs text-blue-400 hover:text-blue-300 hover:underline mt-auto pt-2 md:pt-1 md:border-t border-slate-800/50 block w-full text-left md:text-right"
                                     >
                                         Link &rarr;
                                     </a>

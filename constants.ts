@@ -51,9 +51,10 @@ export const INITIAL_MODULES: HardwareModule[] = [
     requiresMains: true,
     requiresBus: [ConnectionType.KNX, ConnectionType.DALI],
     // Strategy: Industrial Automation Distributor
-    url: 'https://www.google.com/search?q=Siemens+5WG1141-1AB03+price',
-    backupUrl: 'https://mall.industry.siemens.com/mall/en/us/Catalog/Product/5WG1141-1AB03',
     systemIds: ['lighting'],
+    url: 'https://www.google.com/search?q=site:eibabo.com+Siemens+5WG1+141-1AB03+N+141/03',
+    linkStatus: 'PREFERRED',
+    backupUrl: 'https://mall.industry.siemens.com/mall/en/us/Catalog/Product/5WG1141-1AB03',
     genericRole: 'DALI Gateway',
     instances: [
       { id: 'lcp1-gw', location: 'LCP-1', notes: 'Universes 1 & 2' },
@@ -97,6 +98,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     requiresBus: [ConnectionType.DALI],
     systemIds: ['lighting', 'outdoor'],
     url: 'https://www.google.com/search?q=site:ballastshop.com+eldoLED+POWERdrive+1060/A',
+    linkStatus: 'PREFERRED',
     genericRole: 'LED Driver (CV)',
     instances: [
       { id: 'lcp1-dim-gar', location: 'LCP-1', universe: 1, notes: 'Garage LED Tape' },
@@ -466,6 +468,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     quantity: 1, // 1000ft Spool
     systemIds: ['infra', 'lighting'],
     url: 'https://www.google.com/search?q=Southwire+67962802+Romex+PCS+Duo+12/2+16/2',
+    linkStatus: 'PREFERRED',
     description: '12/2 Power + 16/2 Control (NM-B-PCS)',
     notes: 'CORE STRATEGY: "Code Hack" for NEC. Bundles Class 1 (120V) + Class 2 (0-10V/DALI) in one cable. Saves dual pulls.',
     location: 'Infra'
@@ -497,6 +500,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     quantity: 1,
     systemIds: ['infra', 'lighting'],
     url: 'https://knxsupply.com/product/knx-cable-ul-compliance-1000ft/',
+    linkStatus: 'PREFERRED',
     description: '20 AWG 4-Conductor (2-Pair) Green (UL Listed)',
     notes: 'Standard Green Jacket. Pairs: Red/Black (Bus) + Yellow/White (Aux Power/Data).',
     location: 'Infra'
