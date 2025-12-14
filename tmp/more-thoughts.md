@@ -1,1 +1,0 @@
-- LCP's have 'binary inputs', let's make sure these show 'door sensors for lighting' vs. 'security'.  We're using these to replace closet lights.

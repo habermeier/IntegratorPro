@@ -123,6 +123,7 @@ __pycache__/
 # Project specific
 layout.local.json
 scale.local.json
+cableRuns.local.json
 bom.snapshot.json
 client_debug.log
 .DS_Store
