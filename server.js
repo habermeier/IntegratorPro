@@ -13,6 +13,8 @@ const app = express();
 const PORT = 3001;
 const DATA_FILE = path.join(__dirname, 'layout.json');
 const OVERRIDE_FILE = path.join(__dirname, 'layout.local.json');
+const SCALE_FILE = path.join(__dirname, 'scale.json');
+const SCALE_OVERRIDE_FILE = path.join(__dirname, 'scale.local.json');
 
 // AI Agent Detection Patterns
 // These agents need pre-rendered HTML because they can't reliably execute JavaScript
@@ -86,6 +88,40 @@ app.post('/api/layout', (req, res) => {
     } catch (err) {
         console.error('Error writing layout data:', err);
         res.status(500).json({ error: 'Failed to save layout data' });
+    }
+});
+
+// GET scale factor - Prefer Override
+app.get('/api/scale', (req, res) => {
+    try {
+        const targetFile = fs.existsSync(SCALE_OVERRIDE_FILE) ? SCALE_OVERRIDE_FILE : SCALE_FILE;
+        if (fs.existsSync(targetFile)) {
+            console.log(`Loading scale from: ${path.basename(targetFile)}`);
+            const data = fs.readFileSync(targetFile, 'utf8');
+            res.json(JSON.parse(data));
+        } else {
+            res.json({ scaleFactor: null });
+        }
+    } catch (err) {
+        console.error('Error reading scale data:', err);
+        res.status(500).json({ error: 'Failed to read scale data' });
+    }
+});
+
+// POST scale factor - Always Write to Override
+app.post('/api/scale', (req, res) => {
+    try {
+        const { scaleFactor } = req.body;
+        if (typeof scaleFactor !== 'number' || scaleFactor <= 0) {
+            return res.status(400).json({ error: 'Invalid scale factor' });
+        }
+        // Always write to the override file to prevent changing committed default
+        fs.writeFileSync(SCALE_OVERRIDE_FILE, JSON.stringify({ scaleFactor }, null, 2));
+        console.log('Scale factor saved to scale.local.json:', scaleFactor);
+        res.json({ success: true, scaleFactor, savedTo: 'local' });
+    } catch (err) {
+        console.error('Error writing scale data:', err);
+        res.status(500).json({ error: 'Failed to save scale data' });
     }
 });
 

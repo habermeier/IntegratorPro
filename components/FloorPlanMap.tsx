@@ -7,7 +7,7 @@ import { TransformWrapper, TransformComponent, useControls } from "react-zoom-pa
 import { MousePointer2, Move, Activity, Layers, Wand2, ScanLine, Trash2, Lock, Unlock, Settings, Eye, EyeOff, Zap } from 'lucide-react';
 import { extractMapSymbols } from '../services/geminiService';
 import { MapSymbols } from './MapSymbols';
-import { parseDistanceInput, formatDistance } from '../utils/measurementUtils';
+import { parseDistanceInput, formatDistance, CM_PER_INCH } from '../utils/measurementUtils';
 
 const USE_BASELINE_VIEW = true; // Temporary: isolates minimal pan/zoom for performance baseline.
 
@@ -870,6 +870,30 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     // Start at scale 1 - CSS object-fit will handle initial sizing
     const [transform, setTransform] = useState({ scale: 1, x: 0, y: 0 });
 
+    // Layer state
+    const [layers, setLayers] = useState({
+        base: { visible: true, opacity: 100 },
+        electrical: { visible: false, opacity: 70 },
+        annotations: { visible: true },
+    });
+    const [activeLayer, setActiveLayer] = useState<'base' | 'electrical' | 'annotations'>('annotations');
+
+    // HUD message state
+    const [hudMessage, setHudMessage] = useState<string | null>('Pan: Click + Drag  •  Zoom: Mouse Wheel');
+    const hudTimeoutRef = useRef<number | null>(null);
+
+    // Tool state
+    type Tool = 'select' | 'scale';
+    const [activeTool, setActiveTool] = useState<Tool>('select');
+
+    // Scale tool state
+    const [scalePoints, setScalePoints] = useState<{ x: number, y: number }[]>([]);
+    const [scaleFactor, setScaleFactor] = useState<number | null>(null); // pixels per inch
+    const [mousePos, setMousePos] = useState<{ x: number, y: number } | null>(null);
+    const [isSpacePressed, setIsSpacePressed] = useState(false);
+    const [distanceInput, setDistanceInput] = useState('');
+    const [editingPointIndex, setEditingPointIndex] = useState<number | null>(null);
+
     // Wheel zoom batching
     const wheelDeltaRef = useRef(0);
     const wheelRafRef = useRef<number | null>(null);
@@ -891,10 +915,148 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
         };
     };
 
+    // Helper to show HUD messages (with optional auto-dismiss)
+    const showHudMessage = (message: string, duration?: number) => {
+        setHudMessage(message);
+        if (hudTimeoutRef.current) clearTimeout(hudTimeoutRef.current);
+        if (duration) {
+            hudTimeoutRef.current = window.setTimeout(() => {
+                setHudMessage(null);
+                hudTimeoutRef.current = null;
+            }, duration);
+        }
+    };
+
+    // Calculate scale factor from distance input
+    const handleSetScale = () => {
+        if (scalePoints.length !== 2) return;
+
+        // Parse the distance input (returns meters)
+        const meters = parseDistanceInput(distanceInput);
+        if (!meters || meters <= 0) {
+            showHudMessage('Please enter a valid distance (e.g., 10\' 6", 3.5m, 350cm)', 3000);
+            return;
+        }
+
+        // Convert meters to inches
+        const totalInches = meters / (CM_PER_INCH / 100);
+
+        // Calculate pixel distance between points
+        const dx = scalePoints[1].x - scalePoints[0].x;
+        const dy = scalePoints[1].y - scalePoints[0].y;
+        const pixelDistance = Math.sqrt(dx * dx + dy * dy);
+
+        // Calculate pixels per inch
+        const ppi = pixelDistance / totalInches;
+        setScaleFactor(ppi);
+
+        // Save to server immediately
+        fetch('/api/scale', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scaleFactor: ppi }),
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Scale factor saved to server:', ppi);
+                }
+            })
+            .catch(err => {
+                console.error('Failed to save scale factor:', err);
+                showHudMessage('Warning: Scale not saved to server', 3000);
+            });
+
+        // Reset and show success
+        setScalePoints([]);
+        setDistanceInput('');
+        setActiveTool('select');
+        showHudMessage(`Scale set: "${distanceInput}" = ${pixelDistance.toFixed(0)}px`, 5000);
+    };
+
+    // Keyboard event handlers for Space and ESC keys
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Don't capture space if user is typing in an input field
+            const isTyping = (e.target as HTMLElement)?.tagName === 'INPUT';
+
+            if (e.code === 'Space' && activeTool === 'scale' && !isTyping) {
+                e.preventDefault();
+                setIsSpacePressed(true);
+            }
+            if (e.code === 'Escape') {
+                e.preventDefault();
+
+                // Progressive undo in scale mode
+                if (activeTool === 'scale') {
+                    // If editing a point, cancel editing
+                    if (editingPointIndex !== null) {
+                        setEditingPointIndex(null);
+                        return;
+                    }
+
+                    // If distance input visible, clear it and remove last point
+                    if (scalePoints.length === 2 && distanceInput) {
+                        setDistanceInput('');
+                        return;
+                    }
+
+                    // Remove last point
+                    if (scalePoints.length > 0) {
+                        setScalePoints(prev => prev.slice(0, -1));
+                        if (scalePoints.length === 2) {
+                            showHudMessage('Click second point  •  Hold Space to pan');
+                        } else if (scalePoints.length === 1) {
+                            showHudMessage('Click first point  •  Hold Space to pan');
+                        }
+                        return;
+                    }
+
+                    // No points, exit to select mode
+                    setActiveTool('select');
+                    setMousePos(null);
+                    showHudMessage('Pan: Click + Drag  •  Zoom: Mouse Wheel');
+                } else {
+                    // Other tools: just exit to select
+                    setActiveTool('select');
+                    showHudMessage('Pan: Click + Drag  •  Zoom: Mouse Wheel');
+                }
+            }
+        };
+        const handleKeyUp = (e: KeyboardEvent) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                setIsSpacePressed(false);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+        };
+    }, [activeTool]);
+
+    // Load saved scale factor from server on mount
+    useEffect(() => {
+        fetch('/api/scale')
+            .then(res => res.json())
+            .then(data => {
+                if (data.scaleFactor && data.scaleFactor > 0) {
+                    setScaleFactor(data.scaleFactor);
+                    console.log('Loaded scale factor from server:', data.scaleFactor);
+                }
+            })
+            .catch(err => {
+                console.error('Failed to load scale factor:', err);
+            });
+    }, []);
+
     // Cleanup on unmount
     useEffect(() => {
         return () => {
             if (wheelRafRef.current) cancelAnimationFrame(wheelRafRef.current);
+            if (hudTimeoutRef.current) clearTimeout(hudTimeoutRef.current);
         };
     }, []);
 
@@ -936,10 +1098,123 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
         }
     };
 
-    // Pan handlers
+    // Convert screen coordinates to image coordinates
+    const screenToImageCoords = (screenX: number, screenY: number): { x: number, y: number } => {
+        if (!containerRef.current || !imgRef.current) return { x: 0, y: 0 };
+
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const imgRect = imgRef.current.getBoundingClientRect();
+
+        // Screen coords relative to image
+        const relX = screenX - imgRect.left;
+        const relY = screenY - imgRect.top;
+
+        // Convert to image pixel coordinates (accounting for scale)
+        const imgX = (relX / imgRect.width) * imgRef.current.naturalWidth;
+        const imgY = (relY / imgRect.height) * imgRef.current.naturalHeight;
+
+        return { x: imgX, y: imgY };
+    };
+
+    // Convert image coordinates to SVG coordinates (percentage of image size)
+    const imageToSvgCoords = (imgX: number, imgY: number): { x: string, y: string } => {
+        if (!imgRef.current) return { x: '0%', y: '0%' };
+        const x = (imgX / imgRef.current.naturalWidth) * 100;
+        const y = (imgY / imgRef.current.naturalHeight) * 100;
+        return { x: `${x}%`, y: `${y}%` };
+    };
+
+    // Convert container-relative mouse position to natural image pixel coordinates
+    const containerPosToImageCoords = (containerX: number, containerY: number): { x: number, y: number } => {
+        if (!containerRef.current || !imgRef.current) return { x: 0, y: 0 };
+
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const imgRect = imgRef.current.getBoundingClientRect();
+        const naturalWidth = imgRef.current.naturalWidth;
+        const naturalHeight = imgRef.current.naturalHeight;
+
+        // Convert to viewport coordinates
+        const viewportX = containerX + containerRect.left;
+        const viewportY = containerY + containerRect.top;
+
+        // Get cursor position relative to img element (includes letterboxing)
+        const elemRelX = viewportX - imgRect.left;
+        const elemRelY = viewportY - imgRect.top;
+
+        // Calculate object-fit: contain letterboxing
+        const imgAspect = naturalWidth / naturalHeight;
+        const elemAspect = imgRect.width / imgRect.height;
+
+        let displayedWidth, displayedHeight, offsetX, offsetY;
+        if (imgAspect > elemAspect) {
+            displayedWidth = imgRect.width;
+            displayedHeight = imgRect.width / imgAspect;
+            offsetX = 0;
+            offsetY = (imgRect.height - displayedHeight) / 2;
+        } else {
+            displayedHeight = imgRect.height;
+            displayedWidth = imgRect.height * imgAspect;
+            offsetX = (imgRect.width - displayedWidth) / 2;
+            offsetY = 0;
+        }
+
+        // Get cursor position relative to actual image (no letterboxing)
+        const imgRelX = elemRelX - offsetX;
+        const imgRelY = elemRelY - offsetY;
+
+        // Convert to natural image pixel coordinates
+        const imgX = (imgRelX / displayedWidth) * naturalWidth;
+        const imgY = (imgRelY / displayedHeight) * naturalHeight;
+
+        return { x: imgX, y: imgY };
+    };
+
+    // Pan and interaction handlers
     const handlePointerDown = (e: React.PointerEvent) => {
         if (e.button !== 0) return; // Only left click
         e.preventDefault();
+
+        if (activeTool === 'scale' && !isSpacePressed) {
+            if (containerRef.current) {
+                const rect = containerRef.current.getBoundingClientRect();
+                const containerX = e.clientX - rect.left;
+                const containerY = e.clientY - rect.top;
+                const clickCoords = containerPosToImageCoords(containerX, containerY);
+
+                // Check if clicking near an existing point (for editing)
+                if (scalePoints.length === 2) {
+                    const CLICK_THRESHOLD = 50; // pixels in image space
+                    for (let i = 0; i < scalePoints.length; i++) {
+                        const dx = clickCoords.x - scalePoints[i].x;
+                        const dy = clickCoords.y - scalePoints[i].y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (distance < CLICK_THRESHOLD) {
+                            // Start editing this point
+                            setEditingPointIndex(i);
+                            return;
+                        }
+                    }
+                    // Clicked away from points, do nothing
+                    return;
+                }
+
+                // Place new point (if less than 2 points)
+                if (scalePoints.length < 2) {
+                    setScalePoints(prev => [...prev, clickCoords]);
+
+                    if (scalePoints.length === 0) {
+                        showHudMessage('Click second point  •  Hold Space to pan');
+                    } else if (scalePoints.length === 1) {
+                        showHudMessage('Enter distance in input below');
+                    }
+                    return;
+                }
+            }
+            return;
+        }
+
+        // Pan mode (either select tool, or scale tool with Space pressed)
         panStartRef.current = {
             x: e.clientX,
             y: e.clientY,
@@ -951,6 +1226,27 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     };
 
     const handlePointerMove = (e: React.PointerEvent) => {
+        // Always track mouse position for scale tool preview
+        if (activeTool === 'scale') {
+            if (containerRef.current) {
+                const rect = containerRef.current.getBoundingClientRect();
+                const relX = e.clientX - rect.left;
+                const relY = e.clientY - rect.top;
+                setMousePos({ x: relX, y: relY });
+
+                // If editing a point, update its position
+                if (editingPointIndex !== null) {
+                    const newCoords = containerPosToImageCoords(relX, relY);
+                    setScalePoints(prev => {
+                        const updated = [...prev];
+                        updated[editingPointIndex] = newCoords;
+                        return updated;
+                    });
+                }
+            }
+        }
+
+        // Handle panning if active
         if (!panStartRef.current) return;
         e.preventDefault();
 
@@ -965,16 +1261,259 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     };
 
     const handlePointerUp = (e: React.PointerEvent) => {
+        // Finish editing point if active
+        if (editingPointIndex !== null) {
+            setEditingPointIndex(null);
+        }
+
         panStartRef.current = null;
         setIsPanning(false);
         (e.target as HTMLElement).releasePointerCapture(e.pointerId);
     };
 
     return (
-        <div className="h-full flex overflow-hidden bg-slate-950">
+        <div className="h-full flex overflow-hidden bg-slate-950 relative">
+            {/* Tool Palette - Left Side (Desktop Only) */}
+            <div className="hidden md:flex flex-col gap-2 absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-slate-900/90 backdrop-blur-sm rounded-lg p-3 border border-slate-700">
+                <div className="text-slate-400 text-xs mb-1">Tools</div>
+
+                {/* Select Tool */}
+                <button
+                    onClick={() => {
+                        setActiveTool('select');
+                        setScalePoints([]);
+                        setDistanceInput('');
+                        setEditingPointIndex(null);
+                        showHudMessage('Pan: Click + Drag  •  Zoom: Mouse Wheel');
+                    }}
+                    className={`px-3 py-2 rounded text-sm transition-colors ${
+                        activeTool === 'select'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    }`}
+                >
+                    Select
+                </button>
+
+                {/* Scale Tool */}
+                <button
+                    onClick={() => {
+                        setActiveTool('scale');
+                        setScalePoints([]);
+                        setDistanceInput('');
+                        setEditingPointIndex(null);
+                        showHudMessage('Click first point  •  Hold Space to pan');
+                    }}
+                    className={`px-3 py-2 rounded text-sm transition-colors ${
+                        activeTool === 'scale'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    }`}
+                >
+                    Scale
+                </button>
+            </div>
+
+            {/* Layer Control - Right Side (All Devices) */}
+            <div className="absolute right-4 top-4 z-30 bg-slate-900/90 backdrop-blur-sm rounded-lg border border-slate-700 w-56">
+                <div className="p-3 border-b border-slate-700 text-slate-200 text-sm font-medium">
+                    Layers
+                </div>
+                <div className="p-3 space-y-2">
+                    {/* Base Floor Plan */}
+                    <div
+                        className={`flex items-center gap-2 text-xs p-1.5 rounded cursor-pointer ${activeLayer === 'base' ? 'bg-slate-800' : 'hover:bg-slate-800/50'}`}
+                        onClick={() => setActiveLayer('base')}
+                    >
+                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activeLayer === 'base' ? 'bg-blue-500' : 'bg-slate-600'}`} />
+                        <input
+                            type="checkbox"
+                            checked={layers.base.visible}
+                            onChange={(e) => {
+                                e.stopPropagation();
+                                setLayers(prev => ({ ...prev, base: { ...prev.base, visible: e.target.checked } }));
+                            }}
+                            className="rounded flex-shrink-0"
+                        />
+                        <span className="text-slate-300 flex-shrink-0 w-16">Base</span>
+                        <div className="flex items-center gap-1 flex-1 min-w-0">
+                            <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={layers.base.opacity}
+                                onChange={(e) => {
+                                    e.stopPropagation();
+                                    setLayers(prev => ({ ...prev, base: { ...prev.base, opacity: Number(e.target.value) } }));
+                                }}
+                                className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                            />
+                            <span className="text-slate-500 text-[10px] flex-shrink-0 w-7 text-right">{layers.base.opacity}%</span>
+                        </div>
+                    </div>
+
+                    {/* Electrical Overlay */}
+                    <div
+                        className={`flex items-center gap-2 text-xs p-1.5 rounded cursor-pointer ${activeLayer === 'electrical' ? 'bg-slate-800' : 'hover:bg-slate-800/50'}`}
+                        onClick={() => setActiveLayer('electrical')}
+                    >
+                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activeLayer === 'electrical' ? 'bg-blue-500' : 'bg-slate-600'}`} />
+                        <input
+                            type="checkbox"
+                            checked={layers.electrical.visible}
+                            onChange={(e) => {
+                                e.stopPropagation();
+                                setLayers(prev => ({ ...prev, electrical: { ...prev.electrical, visible: e.target.checked } }));
+                            }}
+                            className="rounded flex-shrink-0"
+                        />
+                        <span className="text-slate-300 flex-shrink-0 w-16">Electrical</span>
+                        <div className="flex items-center gap-1 flex-1 min-w-0">
+                            <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={layers.electrical.opacity}
+                                onChange={(e) => {
+                                    e.stopPropagation();
+                                    setLayers(prev => ({ ...prev, electrical: { ...prev.electrical, opacity: Number(e.target.value) } }));
+                                }}
+                                className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                            />
+                            <span className="text-slate-500 text-[10px] flex-shrink-0 w-7 text-right">{layers.electrical.opacity}%</span>
+                        </div>
+                    </div>
+
+                    {/* Annotations */}
+                    <div
+                        className={`flex items-center gap-2 text-xs p-1.5 rounded cursor-pointer ${activeLayer === 'annotations' ? 'bg-slate-800' : 'hover:bg-slate-800/50'}`}
+                        onClick={() => setActiveLayer('annotations')}
+                    >
+                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activeLayer === 'annotations' ? 'bg-blue-500' : 'bg-slate-600'}`} />
+                        <input
+                            type="checkbox"
+                            checked={layers.annotations.visible}
+                            onChange={(e) => {
+                                e.stopPropagation();
+                                setLayers(prev => ({ ...prev, annotations: { ...prev.annotations, visible: e.target.checked } }));
+                            }}
+                            className="rounded flex-shrink-0"
+                        />
+                        <span className="text-slate-300 w-16">Annotations</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* HUD - Top Center (Context-Aware) */}
+            {hudMessage && (
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-slate-900/90 backdrop-blur-sm rounded-lg px-4 py-2 border border-slate-700 shadow-lg">
+                    <div className="flex items-center gap-3">
+                        <div className="text-slate-200 text-sm">
+                            {hudMessage}
+                        </div>
+                        <button
+                            onClick={() => setHudMessage(null)}
+                            className="text-slate-500 hover:text-slate-300 transition-colors"
+                            aria-label="Dismiss message"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Magnified Cursor Preview (Scale Tool) */}
+            {activeTool === 'scale' && mousePos && scalePoints.length < 2 && (
+                <div
+                    className="absolute z-50 pointer-events-none"
+                    style={{
+                        left: mousePos.x - 37.5,
+                        top: mousePos.y - 37.5,
+                        width: 75,
+                        height: 75,
+                    }}
+                >
+                    {/* Preview container with border */}
+                    <div className={`w-full h-full border-2 ${isSpacePressed ? 'border-orange-500' : 'border-red-500'} rounded overflow-hidden bg-black relative shadow-lg`}>
+                        {/* Magnified image view */}
+                        {imgRef.current && containerRef.current && (
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    inset: 0,
+                                    backgroundImage: `url(${CLEAN_IMAGE})`,
+                                    backgroundSize: `${imgRef.current.naturalWidth * 2}px ${imgRef.current.naturalHeight * 2}px`,
+                                    backgroundPosition: (() => {
+                                        const coords = containerPosToImageCoords(mousePos.x, mousePos.y);
+                                        // Calculate background position to center this point in 75px preview at 2x zoom
+                                        const bgX = coords.x * 2 - 37.5;
+                                        const bgY = coords.y * 2 - 37.5;
+                                        return `${-bgX}px ${-bgY}px`;
+                                    })(),
+                                }}
+                            />
+                        )}
+                        {/* Red center dot */}
+                        <div
+                            className="absolute w-2 h-2 bg-red-500 rounded-full"
+                            style={{
+                                left: '50%',
+                                top: '50%',
+                                transform: 'translate(-50%, -50%)',
+                            }}
+                        />
+                        {/* Pan mode indicator */}
+                        {isSpacePressed && (
+                            <div className="absolute bottom-1 right-1 text-orange-500 text-[10px] font-bold">
+                                [PAN]
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Context Input - Bottom Center (When Needed) */}
+            {scalePoints.length === 2 && (
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 backdrop-blur-sm rounded-lg p-4 border border-slate-700 shadow-lg">
+                    <div className="flex flex-col gap-3">
+                        <div className="text-slate-200 text-sm font-medium">Enter Distance</div>
+                        <div className="flex gap-2 items-center">
+                            <input
+                                type="text"
+                                placeholder="e.g., 10' 6&quot;, 3.5m, 350cm"
+                                value={distanceInput}
+                                onChange={(e) => setDistanceInput(e.target.value)}
+                                className="w-64 px-3 py-1.5 bg-slate-800 border border-slate-600 rounded text-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                                autoFocus
+                                onKeyDown={(e) => e.key === 'Enter' && handleSetScale()}
+                            />
+                            <button
+                                onClick={handleSetScale}
+                                className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors"
+                            >
+                                Set Scale
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setScalePoints([]);
+                                    setDistanceInput('');
+                                    setEditingPointIndex(null);
+                                }}
+                                className="px-4 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-sm transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Main Floor Plan View */}
             <div
                 ref={containerRef}
-                className={`flex-1 relative overflow-hidden bg-black ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
+                className={`flex-1 relative overflow-hidden bg-black ${
+                    activeTool === 'scale' && scalePoints.length < 2 ? 'cursor-none' : (isPanning ? 'cursor-grabbing' : 'cursor-grab')
+                }`}
                 onWheel={handleWheel}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
@@ -990,23 +1529,195 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                         transformOrigin: 'center center',
                         willChange: 'transform',
                         transition: isPanning ? 'none' : 'transform 0.15s ease-out',
+                        position: 'relative',
                     }}
                 >
-                    <img
-                        ref={imgRef}
-                        src={CLEAN_IMAGE}
-                        alt="Floor Plan (Clean)"
-                        draggable={false}
-                        className="block pointer-events-none select-none"
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'contain',
-                        }}
-                        onLoad={handleImageLoad}
-                    />
+                    {/* Base Floor Plan Layer */}
+                    {layers.base.visible && (
+                        <img
+                            ref={imgRef}
+                            src={CLEAN_IMAGE}
+                            alt="Floor Plan (Clean)"
+                            draggable={false}
+                            className="block pointer-events-none select-none absolute inset-0"
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'contain',
+                                opacity: layers.base.opacity / 100,
+                            }}
+                            onLoad={handleImageLoad}
+                        />
+                    )}
+
+                    {/* Electrical Overlay Layer */}
+                    {layers.electrical.visible && (
+                        <img
+                            src={ELECTRICAL_IMAGE}
+                            alt="Electrical Plan"
+                            draggable={false}
+                            className="block pointer-events-none select-none absolute inset-0"
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'contain',
+                                opacity: layers.electrical.opacity / 100,
+                            }}
+                        />
+                    )}
+
+                    {/* Scale Tool Overlay */}
+                    {activeTool === 'scale' && scalePoints.length > 0 && imgRef.current && (
+                        <svg
+                            className="absolute inset-0 pointer-events-none"
+                            viewBox={`0 0 ${imgRef.current.naturalWidth} ${imgRef.current.naturalHeight}`}
+                            preserveAspectRatio="xMidYMid meet"
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                            }}
+                        >
+                            <defs>
+                                <filter id="line-shadow" x="-50%" y="-50%" width="200%" height="200%">
+                                    <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="black" floodOpacity="0.8"/>
+                                </filter>
+                            </defs>
+
+                            {/* Draw line from first point to mouse (if placing second point) */}
+                            {scalePoints.length === 1 && mousePos && (
+                                (() => {
+                                    const pt2 = containerPosToImageCoords(mousePos.x, mousePos.y);
+                                    return (
+                                        <line
+                                            x1={scalePoints[0].x}
+                                            y1={scalePoints[0].y}
+                                            x2={pt2.x}
+                                            y2={pt2.y}
+                                            stroke="#ef4444"
+                                            strokeWidth="2"
+                                            filter="url(#line-shadow)"
+                                        />
+                                    );
+                                })()
+                            )}
+
+                            {/* Draw line between two points (if both placed) */}
+                            {scalePoints.length === 2 && (
+                                <line
+                                    x1={scalePoints[0].x}
+                                    y1={scalePoints[0].y}
+                                    x2={scalePoints[1].x}
+                                    y2={scalePoints[1].y}
+                                    stroke="#ef4444"
+                                    strokeWidth="2"
+                                    filter="url(#line-shadow)"
+                                />
+                            )}
+
+                            {/* Draw placed points */}
+                            {scalePoints.map((pt, idx) => (
+                                <circle
+                                    key={idx}
+                                    cx={pt.x}
+                                    cy={pt.y}
+                                    r={editingPointIndex === idx ? "6" : "4"}
+                                    fill={editingPointIndex === idx ? "#fbbf24" : "#ef4444"}
+                                    stroke="white"
+                                    strokeWidth="2"
+                                    filter="url(#line-shadow)"
+                                />
+                            ))}
+                        </svg>
+                    )}
                 </div>
             </div>
+
+            {/* Scale Warning or Scale Bars - Lower Right Corner */}
+            {!scaleFactor ? (
+                <div className="absolute bottom-4 right-4 z-30">
+                    <div className="bg-orange-900/90 backdrop-blur-sm rounded-lg px-3 py-2 border border-orange-600 shadow-lg">
+                        <div className="flex items-center gap-2">
+                            <span className="text-orange-200 text-xs">No scale set</span>
+                            <button
+                                onClick={() => {
+                                    setActiveTool('scale');
+                                    setScalePoints([]);
+                                    setDistanceInput('');
+                                    setEditingPointIndex(null);
+                                    showHudMessage('Click first point  •  Hold Space to pan');
+                                }}
+                                className="px-2 py-0.5 bg-orange-600 hover:bg-orange-500 text-white text-xs rounded transition-colors"
+                            >
+                                [set now]
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <div className="absolute bottom-4 right-4 z-30 pointer-events-none">
+                    {(() => {
+                        // Target bar length in screen pixels (accounting for current zoom)
+                        const targetScreenPx = 120;
+                        const actualImagePx = targetScreenPx / transform.scale;
+
+                        // Convert to inches
+                        const inches = actualImagePx / scaleFactor;
+
+                        // Convert to feet and decimal inches
+                        const feet = Math.floor(inches / 12);
+                        const remainingInches = inches % 12;
+
+                        // Format label
+                        const label = feet > 0
+                            ? `${feet}' ${remainingInches.toFixed(1)}"`
+                            : `${remainingInches.toFixed(1)}"`;
+
+                        const barLength = targetScreenPx;
+
+                        return (
+                            <>
+                                {/* Horizontal Scale Bar (X) */}
+                                <div className="flex flex-col items-start gap-1 mb-3">
+                                    <div className="relative" style={{ width: barLength, height: 20 }}>
+                                        <svg width={barLength} height="20" className="overflow-visible">
+                                            {/* Main bar */}
+                                            <line x1="0" y1="10" x2={barLength} y2="10" stroke="white" strokeWidth="2" />
+                                            {/* Left tick */}
+                                            <line x1="0" y1="5" x2="0" y2="15" stroke="white" strokeWidth="2" />
+                                            {/* Right tick */}
+                                            <line x1={barLength} y1="5" x2={barLength} y2="15" stroke="white" strokeWidth="2" />
+                                            {/* Middle tick */}
+                                            <line x1={barLength / 2} y1="7" x2={barLength / 2} y2="13" stroke="white" strokeWidth="1.5" />
+                                        </svg>
+                                    </div>
+                                    <div className="text-white text-xs font-medium bg-slate-900/80 px-2 py-0.5 rounded backdrop-blur-sm">
+                                        {label}
+                                    </div>
+                                </div>
+
+                                {/* Vertical Scale Bar (Y) */}
+                                <div className="flex items-end gap-1">
+                                    <div className="relative" style={{ width: 20, height: barLength }}>
+                                        <svg width="20" height={barLength} className="overflow-visible">
+                                            {/* Main bar */}
+                                            <line x1="10" y1="0" x2="10" y2={barLength} stroke="white" strokeWidth="2" />
+                                            {/* Top tick */}
+                                            <line x1="5" y1="0" x2="15" y2="0" stroke="white" strokeWidth="2" />
+                                            {/* Bottom tick */}
+                                            <line x1="5" y1={barLength} x2="15" y2={barLength} stroke="white" strokeWidth="2" />
+                                            {/* Middle tick */}
+                                            <line x1="7" y1={barLength / 2} x2="13" y2={barLength / 2} stroke="white" strokeWidth="1.5" />
+                                        </svg>
+                                    </div>
+                                    <div className="text-white text-xs font-medium bg-slate-900/80 px-2 py-0.5 rounded backdrop-blur-sm">
+                                        {label}
+                                    </div>
+                                </div>
+                            </>
+                        );
+                    })()}
+                </div>
+            )}
         </div>
     );
 };
