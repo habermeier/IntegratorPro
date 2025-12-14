@@ -20,7 +20,9 @@ app.use(bodyParser.json());
 // Ensure 'dist' exists (run 'npm run build' first)
 const distPath = path.join(__dirname, 'dist');
 if (fs.existsSync(distPath)) {
-    app.use(express.static(distPath));
+    // Disable 'index' so that the root "/" falls through to our custom route defined below
+    // This ensures specific logic (like Bot Detection) runs before serving index.html
+    app.use(express.static(distPath, { index: false }));
 }
 
 // Initialize layout.json if not exists
