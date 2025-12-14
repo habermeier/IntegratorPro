@@ -179,7 +179,9 @@ export const INITIAL_MODULES: HardwareModule[] = [
     powerWatts: 15, // Est for 2" High Output
     quantity: 43,
     requiresBus: [ConnectionType.DALI],
+    specUrl: 'https://hew.com/specifications/2DS_tunable-white.pdf',
     url: 'https://www.google.com/search?q=site:hewilliams.com+2DS+Tunable+White+Square+Trimless',
+    linkStatus: 'PREFERRED',
     systemIds: ['lighting'],
     genericRole: 'Fixed Downlight',
     instances: [
@@ -204,7 +206,9 @@ export const INITIAL_MODULES: HardwareModule[] = [
     powerWatts: 15,
     quantity: 29,
     requiresBus: [ConnectionType.DALI],
+    specUrl: 'https://hew.com/specifications/2AS_tunable-white.pdf',
     url: 'https://www.google.com/search?q=site:hewilliams.com+2AS+Tunable+White+Adjustable',
+    linkStatus: 'PREFERRED',
     systemIds: ['lighting'],
     genericRole: 'Accent Downlight',
     instances: [
@@ -214,6 +218,25 @@ export const INITIAL_MODULES: HardwareModule[] = [
       { id: 'adj-dining', location: 'Dining', notes: 'Table Accent (Qty 4)' },
       { id: 'adj-liv', location: 'Living', notes: 'Art/Wall (Qty 5)' }
     ]
+  },
+  {
+    id: 'light-adj-dali-4',
+    name: 'HE Williams 4DS Adjustable (Alt)',
+    manufacturer: 'HE Williams',
+    description: '4.5" Tunable White Adjustable (Alternative Option)',
+    type: ModuleType.LIGHTING,
+    mountType: MountType.CEILING_MOUNT,
+    size: 0,
+    cost: 280.00, // Estimated slightly higher
+    powerWatts: 20, // Higher output
+    quantity: 0, // Option only
+    requiresBus: [ConnectionType.DALI],
+    specUrl: 'https://hew.com/specifications/4DS_tunable-white.pdf',
+    url: 'https://www.google.com/search?q=site:hewilliams.com+4DS+Tunable+White+Adjustable',
+    linkStatus: 'PREFERRED',
+    systemIds: ['lighting'],
+    genericRole: 'Accent Downlight (Large)',
+    notes: 'ALTERNATIVE: 4.5" Aperture for less busy ceiling. Higher lumens allows fewer fixtures.'
   },
   {
     id: 'mw-hdr-150',

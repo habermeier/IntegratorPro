@@ -57,6 +57,7 @@ export interface HardwareModule {
   url: string;        // Verified Purchase Link
   backupUrl?: string; // Optional search/backup
   linkStatus?: 'PREFERRED' | 'MARKET'; // PREFERRED = Verified Vendor (Green), MARKET = General Search (Amber)
+  specUrl?: string; // Direct PDF Spec Sheet (Primary)
   dimensions?: {
     width: number;
     height: number;

@@ -221,6 +221,18 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                                             <span className="bg-slate-800/50 px-2 py-1 rounded text-slate-400 text-xs mr-2">
                                                 Qty: {m.quantity}
                                             </span>
+                                            {m.specUrl && (
+                                                <a
+                                                    href={m.specUrl}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="p-3 rounded-full bg-blue-900/20 text-blue-400 hover:bg-blue-900/40 hover:text-blue-300"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    title="Spec Sheet (PDF)"
+                                                >
+                                                    <FileText className="w-5 h-5" />
+                                                </a>
+                                            )}
                                             {m.url && (
                                                 <a
                                                     href={m.url}
@@ -267,6 +279,18 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                                                 <div className="flex flex-col">
                                                     <div className="font-medium text-white flex items-center gap-2">
                                                         {m.name}
+                                                        {m.specUrl && (
+                                                            <a
+                                                                href={m.specUrl}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="p-1 text-blue-400 hover:text-blue-300"
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                title="Spec Sheet (PDF)"
+                                                            >
+                                                                <FileText className="w-4 h-4" />
+                                                            </a>
+                                                        )}
                                                         {m.url && (
                                                             <a
                                                                 href={m.url}

@@ -11,6 +11,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = 3001;
 const DATA_FILE = path.join(__dirname, 'layout.json');
+const OVERRIDE_FILE = path.join(__dirname, 'layout.local.json');
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -27,26 +28,29 @@ if (!fs.existsSync(DATA_FILE)) {
     fs.writeFileSync(DATA_FILE, JSON.stringify([], null, 2));
 }
 
-// GET layout
+// GET layout - Prefer Override
 app.get('/api/layout', (req, res) => {
     try {
-        const data = fs.readFileSync(DATA_FILE, 'utf8');
+        const targetFile = fs.existsSync(OVERRIDE_FILE) ? OVERRIDE_FILE : DATA_FILE;
+        console.log(`Loading layout from: ${path.basename(targetFile)}`);
+        const data = fs.readFileSync(targetFile, 'utf8');
         res.json(JSON.parse(data));
     } catch (err) {
-        console.error('Error reading layout.json:', err);
+        console.error('Error reading layout data:', err);
         res.status(500).json({ error: 'Failed to read layout data' });
     }
 });
 
-// POST layout
+// POST layout - Always Write to Override
 app.post('/api/layout', (req, res) => {
     try {
         const newState = req.body;
-        fs.writeFileSync(DATA_FILE, JSON.stringify(newState, null, 2));
-        console.log('Layout saved successfully');
-        res.json({ success: true });
+        // Always write to the override file to prevent changing committed Base
+        fs.writeFileSync(OVERRIDE_FILE, JSON.stringify(newState, null, 2));
+        console.log('Layout saved successfully to layout.local.json');
+        res.json({ success: true, savedTo: 'local' });
     } catch (err) {
-        console.error('Error writing layout.json:', err);
+        console.error('Error writing layout data:', err);
         res.status(500).json({ error: 'Failed to save layout data' });
     }
 });
