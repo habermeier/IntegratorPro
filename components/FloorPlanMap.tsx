@@ -1,12 +1,20 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import STRUCTURAL_IMAGE from '../images/floor-plan-clean.jpg';
 import ELECTRICAL_IMAGE from '../images/electric-plan-plain-full-clean-2025-12-12.jpg';
+// Clean plan removed per user request - we focus on Overlay only.
 import { HardwareModule, ModuleType } from '../types';
 import { TransformWrapper, TransformComponent, useControls } from "react-zoom-pan-pinch";
-import { MousePointer2, Move, Activity, Layers, Wand2, ScanLine, Trash2, Lock, Unlock, Settings, Eye, EyeOff } from 'lucide-react';
+import { MousePointer2, Move, Activity, Layers, Wand2, ScanLine, Trash2, Lock, Unlock, Settings, Eye, EyeOff, Zap } from 'lucide-react';
 import { extractMapSymbols } from '../services/geminiService';
 import { MapSymbols } from './MapSymbols';
 import { parseDistanceInput, formatDistance } from '../utils/measurementUtils';
+
+// @ts-ignore
+import vectorData from '../src/data/electric-plan-vectors.json';
+
+interface WallVector {
+    x: number;
+    y: number;
+}
 
 interface FloorPlanMapProps {
     modules: HardwareModule[];
@@ -70,11 +78,8 @@ const MapController = ({ activeLayer, setFitFn }: { activeLayer: string, setFitF
 const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLocate, highlightedModuleId }) => {
     // --- LAYERS STATE ---
     const [layerState, setLayerState] = useState({
-        showSource: true,  // Electric Plan (Photo)
-        showVector: false, // Clean Plan (CAD)
-        vectorOpacity: 0.5,
-        showCables: true,
-        showAiSymbols: true
+        showBasePlan: true, // The electrical image
+        showAiSymbols: false, // The vector overlay
     });
 
     // Default: Show common layers
@@ -94,9 +99,6 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
     const toggleDataLayer = (type: string) => {
         setVisibleLayers(prev => ({ ...prev, [type]: !prev[type] }));
     };
-
-    const currentMapImage = ELECTRICAL_IMAGE;
-    const vectorMapImage = STRUCTURAL_IMAGE;
 
     const [fitToScreen, setFitToScreen] = useState<() => void>(() => () => { });
     const contentRef = useRef<HTMLDivElement>(null);
@@ -149,6 +151,7 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
     useEffect(() => {
         setPoints([]);
         setToolMode('NONE');
+        setShowInputModal(false); // Ensure modal is closed on init
     }, []);
 
     // Track Shift Key for Routing Toggle
@@ -161,10 +164,11 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
                 if (toolMode !== 'NONE') {
                     setToolMode('NONE');
                     setPoints([]);
+                    // rubber band cleanup
                     if (rubberBandLineRef.current) rubberBandLineRef.current.style.display = 'none';
                     if (rubberBandHaloRef.current) rubberBandHaloRef.current.style.display = 'none';
 
-                    setShowInputModal(false);
+                    setShowInputModal(false); // HIDE MODAL
                     setHudMessage("Cancelled");
                     setTimeout(() => setHudMessage("Ready"), 2000);
                 } else if (selectedCableId) {
@@ -283,7 +287,8 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
             } else if (!pixelsPerMeter) {
                 setHudMessage("Error: Scale not set. Calibrate first.");
             }
-            setPoints([]);
+            // Do NOT clear points here, let user see the line.
+            // User can click "Measure" again to reset.
         }
 
         if (toolMode === 'CABLE') {
@@ -453,48 +458,52 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
     const [isScanning, setIsScanning] = useState(false);
 
     // --- AI STATE ---
-
     const [vectorLines, setVectorLines] = useState<number[][][]>([]); // Array of lines, each line is array of [x,y]
 
-    const runVectorization = async (imageType: 'ELECTRIC' | 'CLEAN') => {
+    // --- Static AI Vectorization (Pre-computed) ---
+    const loadStaticVectors = async () => {
         if (isScanning) return;
         setIsScanning(true);
-        try {
-            console.log(`FloorPlanMap: Requesting Vectorization for ${imageType}...`);
-            const res = await fetch('/api/vectorize', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ imageType })
-            });
+        // Simulate a brief delay for UX (so they see the "Analyzing" state momentarily)
+        setTimeout(() => {
+            try {
+                console.log("Loading static vector data via import...", vectorData);
+                // Handle Vite/Webpack interop (module.default)
+                const rawData = (vectorData as any).default || vectorData;
 
-            if (!res.ok) throw new Error("Server failed to vectorize");
+                if (!rawData || !rawData.walls) {
+                    console.error("Vector data is missing 'walls' property:", rawData);
+                    alert("Error: AI Data file is corrupt or empty.");
+                    return;
+                }
 
-            const data = await res.json();
-            // data.walls is [[x,y], [x,y]...] list of lists? 
-            // processor.py returns "walls": [ [[x,y], [x,y]...], ... ] (list of polylines)
+                const { walls, detected_symbols } = rawData;
+                const symbols = detected_symbols || [];
+                console.log(`Loaded ${walls.length} walls and ${symbols?.length} symbols.`);
 
-            if (data.walls) {
-                console.log(`Received ${data.walls.length} vector segments`);
-                setVectorLines(prev => [...prev, ...data.walls]);
-            }
-            if (data.detected_symbols) {
-                console.log(`Received ${data.detected_symbols.length} symbols`);
-                const key = Date.now();
-                const newSymbols = data.detected_symbols.map((s: any, idx: number) => ({
-                    id: `ai-${key}-${idx}`,
-                    type: s.type || 'GENERIC', // Ensure 'LIGHT' maps to MapSymbols keys if possible
-                    x: s.x,
-                    y: s.y,
-                    rotation: 0,
-                    notes: s.notes || 'AI Detected'
+                // Map walls
+                const mappedWalls = walls.map((w: number[][]) => w.map((p: number[]) => [p[0], p[1]]));
+
+                // Map symbols
+                const mappedSymbols = (symbols || []).map((s: number[], idx: number) => ({
+                    id: `ai - static - ${Date.now()} -${idx} `,
+                    type: 'LIGHT', // Default to light, adjust if symbol types are in data
+                    x: s[0],
+                    y: s[1],
+                    rotation: s[2] || 0,
+                    notes: 'AI Detected'
                 }));
-                setAiSymbols(prev => [...prev, ...newSymbols]);
+
+                setVectorLines(mappedWalls);
+                setAiSymbols(mappedSymbols);
+                setLayerState(prev => ({ ...prev, showAiSymbols: true })); // Auto-show
+            } catch (err) {
+                console.error("Failed to load static vectors:", err);
+                alert("Failed to load AI overlay data.");
+            } finally {
+                setIsScanning(false);
             }
-            setIsScanning(false);
-        } catch (error) {
-            console.error("Failed to vectorize plan", error);
-            setIsScanning(false);
-        }
+        }, 800); // 800ms fake delay for "feeling"
     };
 
     const handleSaveLayout = async () => {
@@ -558,10 +567,15 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
                     {({ zoomIn, zoomOut, resetTransform, centerView }) => (
                         <React.Fragment>
                             <MapController activeLayer="ELECTRICAL" setFitFn={setFitToScreen} />
-                            <TransformComponent wrapperClass="!w-full !h-full" contentClass="relative">
+                            <TransformComponent wrapperClass="w-full h-full" contentClass="w-full h-full">
                                 <div
                                     ref={contentRef}
-                                    className={`relative inline-block shadow-2xl bg-slate-900 border border-slate-800 ${toolMode !== 'NONE' ? 'cursor-crosshair' : ''}`}
+                                    className={`relative shadow - 2xl bg - slate - 900 border border - slate - 800 ${toolMode !== 'NONE' ? 'cursor-crosshair' : ''} `}
+                                    style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        // Ensure the container has dimensions so the image can fill it
+                                    }}
                                     onPointerDown={(e) => { dragStartRef.current = { x: e.clientX, y: e.clientY }; }}
                                     onClick={(e) => {
                                         if (dragStartRef.current) {
@@ -574,42 +588,23 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
                                     }}
                                     onPointerMove={handlePointerMove}
                                 >
-                                    {/* LAYER 1: SOURCE (Base) */}
+                                    {/* BASE LAYER: Always Electric Plan (Relative to define container size) */}
                                     <img
-                                        src={`${currentMapImage}?v=3`}
+                                        src={ELECTRICAL_IMAGE}
                                         draggable={false}
-                                        alt="Electric Plan"
-                                        className="pointer-events-none select-none block max-w-none relative"
-                                        style={{
-                                            zIndex: 1,
-                                            opacity: layerState.showSource ? 1 : 0,
-                                            transition: 'opacity 0.3s ease-in-out'
-                                        }}
-                                        onLoad={() => fitToScreen()}
-                                    />
-                                    {/* LAYER 2: VECTOR (Overlay) */}
-                                    <img
-                                        src={`${vectorMapImage}?v=3`}
-                                        draggable={false}
-                                        alt="Clean Plan"
-                                        className="pointer-events-none select-none block max-w-none absolute top-0 left-0 w-full h-full"
-                                        style={{
-                                            zIndex: 2,
-                                            opacity: layerState.showVector ? layerState.vectorOpacity : 0,
-                                            transition: 'opacity 0.3s ease-in-out',
-                                            pointerEvents: 'none'
+                                        alt="Electric Floor Plan"
+                                        className="block w-full h-auto object-contain pointer-events-none select-none max-w-none"
+                                        style={{ opacity: layerState.showBasePlan ? 1.0 : 0.0, transition: 'opacity 0.2s' }}
+                                        onLoad={() => {
+                                            console.log("Image Loaded, fitting screen...");
+                                            fitToScreen();
                                         }}
                                     />
 
                                     {/* AI VECTOR OVERLAY (Generated Walls) */}
+                                    {/* AI VECTOR OVERLAY (Optimized Single Path) */}
                                     {layerState.showAiSymbols && vectorLines.length > 0 && (
-                                        <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ zIndex: 25 }}>
-                                            {vectorLines.map((line, i) => {
-                                                if (line.length < 2) return null;
-                                                const pathData = line.map((pt, idx) => `${idx === 0 ? 'M' : 'L'} ${pt[0]} ${pt[1]}`).join(' ');
-                                                return <path key={i} d={pathData} stroke="#ff00ff" strokeWidth="0.2" fill="none" opacity="0.8" vectorEffect="non-scaling-stroke" />;
-                                            })}
-                                        </svg>
+                                        <MemoizedVectorOverlay lines={vectorLines} />
                                     )}
 
                                     {/* Symbols Overlay on Top */}
@@ -628,8 +623,8 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
                                                 className={!isLocked ? "cursor-move hover:scale-110" : "cursor-pointer hover:bg-white/10 rounded pointer-events-auto"}
                                                 style={{
                                                     position: 'absolute',
-                                                    left: `${s.x}%`, top: `${s.y}%`,
-                                                    transform: `translate(-50%, -50%) rotate(${s.rotation || 0}deg)`,
+                                                    left: `${s.x}% `, top: `${s.y}% `,
+                                                    transform: `translate(-50 %, -50 %) rotate(${s.rotation || 0}deg)`,
                                                     width: size, height: s.type === 'ENCLOSURE' ? '60px' : size,
                                                     zIndex: 30, touchAction: 'none'
                                                 }}
@@ -646,8 +641,8 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
                                     <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 100 }}>
                                         {toolMode !== 'NONE' && points.map((p, i) => (
                                             <g key={i}>
-                                                <circle cx={`${p.x}%`} cy={`${p.y}%`} r="6" fill="black" opacity="0.5" />
-                                                <circle cx={`${p.x}%`} cy={`${p.y}%`} r="4" fill={toolMode === 'CALIBRATE' ? "#facc15" : "#22d3ee"} stroke="white" strokeWidth="1.5" />
+                                                <circle cx={`${p.x}% `} cy={`${p.y}% `} r="6" fill="black" opacity="0.5" />
+                                                <circle cx={`${p.x}% `} cy={`${p.y}% `} r="4" fill={toolMode === 'CALIBRATE' ? "#facc15" : "#22d3ee"} stroke="white" strokeWidth="1.5" />
                                             </g>
                                         ))}
                                         <polyline ref={rubberBandHaloRef} style={{ display: 'none' }} fill="none" stroke="black" strokeWidth="6" strokeOpacity="0.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -658,9 +653,9 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
                                             if (i === 0) return null;
                                             const p1 = points[i - 1]; const p2 = points[i];
                                             return (
-                                                <g key={`pl-${i}`}>
-                                                    <line x1={`${p1.x}%`} y1={`${p1.y}%`} x2={`${p2.x}%`} y2={`${p2.y}%`} stroke="black" strokeWidth="6" strokeOpacity="0.8" strokeLinecap="round" />
-                                                    <line x1={`${p1.x}%`} y1={`${p1.y}%`} x2={`${p2.x}%`} y2={`${p2.y}%`} stroke={toolMode === 'CALIBRATE' ? "#facc15" : "#22d3ee"} strokeWidth="3" strokeLinecap="round" />
+                                                <g key={`pl - ${i} `}>
+                                                    <line x1={`${p1.x}% `} y1={`${p1.y}% `} x2={`${p2.x}% `} y2={`${p2.y}% `} stroke="black" strokeWidth="6" strokeOpacity="0.8" strokeLinecap="round" />
+                                                    <line x1={`${p1.x}% `} y1={`${p1.y}% `} x2={`${p2.x}% `} y2={`${p2.y}% `} stroke={toolMode === 'CALIBRATE' ? "#facc15" : "#22d3ee"} strokeWidth="3" strokeLinecap="round" />
                                                 </g>
                                             );
                                         })}
@@ -673,7 +668,7 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
                                                     {run.points.map((pt: any, idx: number) => {
                                                         if (idx === 0) return null;
                                                         const prev = run.points[idx - 1];
-                                                        return <line key={idx} x1={`${prev.x}%`} y1={`${prev.y}%`} x2={`${pt.x}%`} y2={`${pt.y}%`} stroke={isSelected ? "white" : run.color} strokeWidth={isSelected ? "6" : "4"} strokeLinecap="round" />
+                                                        return <line key={idx} x1={`${prev.x}% `} y1={`${prev.y}% `} x2={`${pt.x}% `} y2={`${pt.y}% `} stroke={isSelected ? "white" : run.color} strokeWidth={isSelected ? "6" : "4"} strokeLinecap="round" />
                                                     })}
                                                 </g>
                                             )
@@ -716,46 +711,45 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
                                         {/* SCENE LAYERS */}
                                         <div>
                                             <div className="text-[10px] uppercase font-bold text-slate-500 mb-1">Scene Layers</div>
-                                            <button onClick={() => toggleLayer('showSource')} className="w-full flex items-center justify-between text-xs p-1.5 rounded hover:bg-slate-800 text-slate-300">
-                                                <span>Base Plan (Electric)</span>
-                                                {layerState.showSource ? <Eye size={14} className="text-blue-400" /> : <EyeOff size={14} />}
-                                            </button>
-                                            <button onClick={() => toggleLayer('showVector')} className="w-full flex items-center justify-between text-xs p-1.5 rounded hover:bg-slate-800 text-slate-300">
-                                                <span>Vector Layer (Clean)</span>
-                                                {layerState.showVector ? <Eye size={14} className="text-blue-400" /> : <EyeOff size={14} />}
-                                            </button>
-                                            {layerState.showVector && (
-                                                <div className="px-2 pt-1 pb-1">
-                                                    <input
-                                                        type="range" min="0" max="1" step="0.1"
-                                                        value={layerState.vectorOpacity}
-                                                        onChange={(e) => setLayerState(prev => ({ ...prev, vectorOpacity: parseFloat(e.target.value) }))}
-                                                        className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer"
-                                                    />
-                                                </div>
-                                            )}
-                                        </div>
 
-                                        <div className="h-px bg-slate-800" />
+                                            <button onClick={() => toggleLayer('showBasePlan')} className="w-full flex items-center justify-between text-xs p-1.5 rounded hover:bg-slate-800 text-slate-300">
+                                                <span>Base Plan (Electric)</span>
+                                                {layerState.showBasePlan ? <Eye size={14} className="text-blue-400" /> : <EyeOff size={14} />}
+                                            </button>
+
+                                            <button onClick={() => toggleLayer('showAiSymbols')} className="w-full flex items-center justify-between text-xs p-1.5 rounded hover:bg-slate-800 text-slate-300">
+                                                <span>AI Data Overlay</span>
+                                                {layerState.showAiSymbols ? <Eye size={14} className="text-purple-400" /> : <EyeOff size={14} />}
+                                            </button>
+                                        </div>
 
                                         {/* DRAWING TOOLS */}
                                         <div>
                                             <div className="text-[10px] uppercase font-bold text-slate-500 mb-1">Config & Tools</div>
                                             <div className="grid grid-cols-2 gap-1 mb-1">
                                                 <button
-                                                    onClick={() => { setToolMode(m => m === 'CALIBRATE' ? 'NONE' : 'CALIBRATE'); setPoints([]); }}
-                                                    className={`p-2 rounded text-xs flex items-center justify-center gap-1 ${toolMode === 'CALIBRATE' ? 'bg-yellow-600 text-black font-bold' : 'bg-slate-800 text-slate-300'}`}
+                                                    onClick={() => {
+                                                        const newMode = toolMode === 'CALIBRATE' ? 'NONE' : 'CALIBRATE';
+                                                        setToolMode(newMode);
+                                                        setPoints([]);
+                                                        if (newMode === 'NONE') setShowInputModal(false);
+                                                    }}
+                                                    className={`p - 2 rounded text - xs flex items - center justify - center gap - 1 ${toolMode === 'CALIBRATE' ? 'bg-yellow-600 text-black font-bold' : 'bg-slate-800 text-slate-300'} `}
                                                 >
                                                     <ScanLine size={12} /> Scale
                                                 </button>
                                                 <button
-                                                    onClick={() => { setToolMode(m => m === 'MEASURE' ? 'NONE' : 'MEASURE'); setPoints([]); }}
-                                                    className={`p-2 rounded text-xs flex items-center justify-center gap-1 ${toolMode === 'MEASURE' ? 'bg-cyan-600 text-black font-bold' : 'bg-slate-800 text-slate-300'}`}
+                                                    onClick={() => {
+                                                        setToolMode(m => m === 'MEASURE' ? 'NONE' : 'MEASURE');
+                                                        setPoints([]);
+                                                        setShowInputModal(false); // Safety clear
+                                                    }}
+                                                    className={`p - 2 rounded text - xs flex items - center justify - center gap - 1 ${toolMode === 'MEASURE' ? 'bg-cyan-600 text-black font-bold' : 'bg-slate-800 text-slate-300'} `}
                                                 >
                                                     <Wand2 size={12} /> Measure
                                                 </button>
                                             </div>
-                                            <button onClick={() => setToolMode('CABLE')} className="w-full p-2 bg-slate-800 text-slate-300 rounded text-xs hover:bg-slate-700">New Cable Run</button>
+                                            <button onClick={() => { setToolMode('CABLE'); setShowInputModal(false); }} className="w-full p-2 bg-slate-800 text-slate-300 rounded text-xs hover:bg-slate-700">New Cable Run</button>
 
                                             {/* AI VECTORIZATION TOOLS */}
                                             <div className="mt-2 pt-2 border-t border-slate-800">
@@ -767,20 +761,14 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
                                                 </div>
                                                 <div className="flex flex-col gap-1">
                                                     <button
-                                                        onClick={() => runVectorization('ELECTRIC')}
-                                                        disabled={isScanning}
-                                                        className="w-full p-1.5 bg-slate-800 text-slate-400 text-[10px] rounded hover:bg-slate-700 hover:text-purple-300 flex items-center gap-2"
+                                                        onClick={loadStaticVectors}
+                                                        disabled={isScanning || vectorLines.length > 0}
+                                                        className={`w - full p - 1.5 text - [10px] rounded flex items - center gap - 2 justify - center
+                                                            ${vectorLines.length > 0 ? 'bg-green-700 text-white cursor-default' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-purple-300 cursor-pointer'}
+                                                            ${isScanning ? 'opacity-70 cursor-not-allowed' : ''} `}
                                                     >
-                                                        <Activity size={10} className={isScanning ? "animate-spin" : ""} />
-                                                        Vectorize Electric
-                                                    </button>
-                                                    <button
-                                                        onClick={() => runVectorization('CLEAN')}
-                                                        disabled={isScanning}
-                                                        className="w-full p-1.5 bg-slate-800 text-slate-400 text-[10px] rounded hover:bg-slate-700 hover:text-purple-300 flex items-center gap-2"
-                                                    >
-                                                        <Activity size={10} className={isScanning ? "animate-spin" : ""} />
-                                                        Vectorize Clean
+                                                        <Zap size={10} className={isScanning ? "animate-spin" : ""} />
+                                                        {isScanning ? 'Loading...' : vectorLines.length > 0 ? 'AI Overlay Active (v2)' : 'Load AI Overlay (v2)'}
                                                     </button>
                                                 </div>
 
@@ -790,8 +778,9 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
                                                         <button
                                                             onClick={() => {
                                                                 const newItems = aiSymbols.map(s => ({
-                                                                    id: `imported-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-                                                                    type: 'LIGHT', // Default to generic LIGHT for now
+                                                                    id: `imported - ${Date.now()} -${Math.random().toString(36).substr(2, 5)} `,
+                                                                    catalogId: 'generic-light', // Map to BOM
+                                                                    type: 'LIGHT',
                                                                     name: 'AI Detected Light',
                                                                     x: s.x,
                                                                     y: s.y,
@@ -829,5 +818,19 @@ const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLoca
         </div>
     );
 };
+const MemoizedVectorOverlay = React.memo(({ lines }: { lines: number[][][] }) => {
+    const d = useMemo(() => {
+        return lines.map(line => {
+            if (line.length < 2) return '';
+            return line.map((pt, idx) => `${idx === 0 ? 'M' : 'L'} ${pt[0]} ${pt[1]} `).join(' ');
+        }).join(' ');
+    }, [lines]);
+
+    return (
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ zIndex: 25 }}>
+            <path d={d} stroke="#ef4444" strokeWidth="1.5" fill="none" opacity="0.8" vectorEffect="non-scaling-stroke" />
+        </svg>
+    );
+});
 
 export default FloorPlanMap;

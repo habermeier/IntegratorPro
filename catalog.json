@@ -1,5 +1,31 @@
 [
     {
+        "id": "generic-light",
+        "name": "Generic Light Fixture",
+        "manufacturer": "Generic",
+        "description": "AI Detected Light Point",
+        "type": "LIGHTING",
+        "mountType": "CEILING",
+        "size": 0,
+        "cost": 50.00,
+        "quantity": 0,
+        "url": "",
+        "instances": []
+    },
+    {
+        "id": "generic-switch",
+        "name": "Generic Switch",
+        "manufacturer": "Generic",
+        "description": "AI Detected Switch",
+        "type": "UI",
+        "mountType": "WALL",
+        "size": 0,
+        "cost": 35.00,
+        "quantity": 0,
+        "url": "",
+        "instances": []
+    },
+    {
         "id": "lcp1-enc",
         "name": "Saginaw SCE-24H2408LP",
         "manufacturer": "Saginaw",

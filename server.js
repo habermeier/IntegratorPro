@@ -151,6 +151,9 @@ function calculateBom() {
         // Check if item.id exists in catalog (direct match)
         if (catalogMap.has(item.id)) {
             usage.set(item.id, (usage.get(item.id) || 0) + 1);
+        } else if (item.catalogId && catalogMap.has(item.catalogId)) {
+            // Dynamic Instance Mapping (e.g. AI Imported Items)
+            usage.set(item.catalogId, (usage.get(item.catalogId) || 0) + 1);
         } else {
             // Handle Instances (e.g. "lcp1-gw" is an instance of "siemens-dali-gw")
             // We need to look up which catalog item owns this instance.
@@ -161,8 +164,6 @@ function calculateBom() {
                     usage.set(catId, (usage.get(catId) || 0) + 1);
                     break;
                 }
-                // Handle Array-defined instances in catalog that aren't broken out in layout?
-                // Current Layout structure is flat list of items on map.
             }
         }
     });
