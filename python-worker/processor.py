@@ -98,18 +98,41 @@ def process_image(image_path):
         # Simplify geometry
         simplified_pts = simplify_coordinates(pts, tolerance=2.0)
         
-        # Round to 1 decimal place to save JSON space/cleanliness
-        clean_pts = [[round(p[0], 1), round(p[1], 1)] for p in simplified_pts]
+        # Normalize to percentages (0-100)
+        clean_pts = [[round((p[0] / width) * 100.0, 3), round((p[1] / height) * 100.0, 3)] for p in simplified_pts]
         
         if len(clean_pts) > 1:
             vectors.append(clean_pts)
 
     log(f"extracted {len(vectors)} wall vectors after simplification")
 
-    # 5. SYMBOL DETECTION (Placeholder)
-    # In a real pipeline, we would run a template matching or CNN here.
-    # We will return an empty list or a placeholder if requested.
+    # 5. SYMBOL DETECTION
     detected_symbols = []
+    
+    # Detect Circular Symbols (e.g. Recessed Lights)
+    # Use HoughCircles on the gray image
+    # Parameters might need tuning: dp=1, minDist=20, param1=50, param2=30, minRadius=5, maxRadius=30
+    log("Running Circular Symbol Detection...")
+    circles = cv2.HoughCircles(img, cv2.HOUGH_GRADIENT, dp=1, minDist=20,
+                               param1=50, param2=25, minRadius=5, maxRadius=40)
+    
+    if circles is not None:
+        circles = np.uint16(np.around(circles))
+        for i in circles[0, :]:
+            # i = [x, y, radius]
+            # Convert to percentage relative to width/height
+            x_pct = (float(i[0]) / width) * 100.0
+            y_pct = (float(i[1]) / height) * 100.0
+            
+            detected_symbols.append({
+                "type": "LIGHT",
+                "x": round(x_pct, 2),
+                "y": round(y_pct, 2),
+                "radius": int(i[2]),
+                "notes": f"Detected Light (r={i[2]})"
+            })
+            
+    log(f"Detected {len(detected_symbols)} potential symbols")
 
     # 6. OUTPUT JSON STRUCTURE
     output_data = {

@@ -4,6 +4,7 @@ import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { exec } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -71,6 +72,44 @@ app.post('/api/debug-log', (req, res) => {
         console.error('Error writing to debug log:', err);
         res.json({ success: false });
     }
+});
+
+// --- VECTORIZATION BRIDGE ---
+
+
+const IMAGE_MAP = {
+    'ELECTRIC': path.join(__dirname, 'images', 'electric-plan-plain-full-clean-2025-12-12.jpg'),
+    'CLEAN': path.join(__dirname, 'images', 'floor-plan-clean.jpg')
+};
+
+app.post('/api/vectorize', (req, res) => {
+    const { imageType } = req.body;
+    const imagePath = IMAGE_MAP[imageType];
+
+    if (!imagePath || !fs.existsSync(imagePath)) {
+        console.error(`Vectorization failed: Image not found ${imagePath}`);
+        return res.status(404).json({ error: 'Image file not found on server' });
+    }
+
+    const scriptPath = path.join(__dirname, 'python-worker', 'processor.py');
+    const command = `python3 "${scriptPath}" --input "${imagePath}"`;
+
+    console.log(`Running Vectorization: ${command}`);
+
+    exec(command, { maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Vectorization Exec Error: ${error.message}`);
+            return res.status(500).json({ error: 'Failed to execute vectorizer', details: stderr });
+        }
+        try {
+            // Python script prints JSON to stdout
+            const result = JSON.parse(stdout);
+            res.json(result);
+        } catch (parseError) {
+            console.error(`Vectorization Parse Error: ${parseError.message}`, stdout);
+            res.status(500).json({ error: 'Invalid output from vectorizer', output: stdout });
+        }
+    });
 });
 
 // --- DATA LOADING & BOM CALCULATION ---

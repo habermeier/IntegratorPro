@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import { BrowserRouter } from 'react-router-dom';
 
 console.log('IntegratorPro: Starting index.tsx');
 
@@ -32,9 +33,13 @@ try {
   const root = ReactDOM.createRoot(rootElement);
   console.log('IntegratorPro: React root created');
 
+
+
   root.render(
     <React.StrictMode>
-      <App />
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     </React.StrictMode>
   );
   console.log('IntegratorPro: Render called');
