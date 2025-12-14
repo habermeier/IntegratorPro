@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { HardwareModule, ModuleType } from '../types';
+import React, { useState, useMemo, useEffect } from 'react';
+import { HardwareModule, ModuleType, MountType } from '../types';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
 import { ShoppingCart, Zap, Thermometer, DollarSign, Activity, X, Search, FileText, ArrowUp, ArrowDown, ExternalLink, Info } from 'lucide-react';
 
@@ -34,24 +34,84 @@ interface SortConfig {
     direction: SortDirection;
 }
 
+
+
+// Fixed Pricing for Cables (Virtual Items)
+const CABLE_PRICING: Record<string, number> = {
+    'KNX': 1.50,
+    'DALI': 2.00,
+    'FIBER': 3.00,
+    'GENERIC': 1.00
+};
+
 const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, highlightedModuleId, linkPrefix = 'dashboard' }) => {
     const [sortConfig, setSortConfig] = useState<SortConfig[]>([]);
 
-    // Auto-scroll Effect
-    React.useEffect(() => {
+    // --- INTEGRATION: Fetch Cable Data from Layout ---
+    const [layoutData, setLayoutData] = useState<any[]>([]);
+
+    useEffect(() => {
+        fetch('/api/layout')
+            .then(res => res.json())
+            .then(data => {
+                setLayoutData(data || []);
+            })
+            .catch(err => console.error("BOM: Failed to load layout", err));
+    }, []);
+
+    const virtualCableModules = useMemo(() => {
+        const cables = layoutData.filter(d => d.type === 'CABLE_RUN');
+        if (cables.length === 0) return [];
+
+        const totals: Record<string, number> = {};
+        cables.forEach(c => {
+            const type = c.cableType || 'GENERIC';
+            const len = c.lengthMeters || 0;
+            totals[type] = (totals[type] || 0) + len;
+        });
+
+        // Convert to Virtual Modules
+        return Object.entries(totals).map(([type, meters]) => {
+            // Apply 15% wastage
+            const billableMeters = Math.ceil(meters * 1.15);
+            return {
+                id: `virtual-cable-${type}`,
+                name: `${type} Cable`,
+                manufacturer: 'Generic',
+                description: `Bulk Cable run (${meters.toFixed(1)}m + 15%)`,
+                type: ModuleType.ACCESSORY,
+                mountType: MountType.NA,
+                size: 0,
+                cost: CABLE_PRICING[type] || 1.00,
+                powerWatts: 0,
+                quantity: billableMeters,
+                url: '',
+                linkStatus: 'MARKET',
+                genericRole: 'Cabling'
+            } as HardwareModule;
+        });
+
+    }, [layoutData]);
+
+    const allModules = useMemo(() => [...modules, ...virtualCableModules], [modules, virtualCableModules]);
+
+    // Use allModules instead of modules for the rest of the file
+    const effectiveModules = allModules;
+
+    useEffect(() => {
         if (highlightedModuleId) {
             const el = document.getElementById(`row-${highlightedModuleId}`);
             if (el) {
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
-    }, [highlightedModuleId, modules]);
+    }, [highlightedModuleId, effectiveModules]);
 
     // Derived metrics
-    const totalCost = modules.reduce((acc, m) => acc + (m.cost * m.quantity), 0);
-    const totalPower = modules.reduce((acc, m) => acc + (m.powerWatts * m.quantity), 0);
-    const totalItems = modules.reduce((acc, m) => acc + m.quantity, 0);
-    const totalHeat = modules.reduce((acc, m) => acc + ((m.heatDissipation || m.powerWatts * 0.1) * m.quantity), 0);
+    const totalCost = effectiveModules.reduce((acc, m) => acc + (m.cost * m.quantity), 0);
+    const totalPower = effectiveModules.reduce((acc, m) => acc + (m.powerWatts * m.quantity), 0);
+    const totalItems = effectiveModules.reduce((acc, m) => acc + m.quantity, 0);
+    const totalHeat = effectiveModules.reduce((acc, m) => acc + ((m.heatDissipation || m.powerWatts * 0.1) * m.quantity), 0);
 
     // Sorting Logic
     const handleSort = (key: string) => {
@@ -75,8 +135,8 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
     const clearSort = () => setSortConfig([]);
 
     const sortedModules = useMemo(() => {
-        if (sortConfig.length === 0) return modules;
-        return [...modules].sort((a, b) => {
+        if (sortConfig.length === 0) return effectiveModules;
+        return [...effectiveModules].sort((a, b) => {
             for (const sort of sortConfig) {
                 let valA: any = a[sort.key as keyof HardwareModule];
                 let valB: any = b[sort.key as keyof HardwareModule];
@@ -102,17 +162,44 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
             }
             return 0;
         });
-    }, [modules, sortConfig]);
+    }, [effectiveModules, sortConfig]);
 
     // Chart Data
     const typeData = Object.values(ModuleType).map(type => {
-        const value = modules
+        const value = effectiveModules
             .filter(m => m.type === type)
             .reduce((acc, m) => acc + (m.cost * m.quantity), 0);
         return { name: getCategoryLabel(type), value, type };
     }).filter(d => d.value > 0);
 
-    const costData = [...modules]
+    // --- SYNC TO SERVER FOR GEMINI/STATIC VIEW ---
+    useEffect(() => {
+        const payload = {
+            totalCost,
+            totalPower,
+            items: sortedModules.map(m => ({
+                name: m.name,
+                quantity: m.quantity,
+                cost: m.cost,
+                total: m.cost * m.quantity,
+                description: m.description,
+                manufacturer: m.manufacturer
+            }))
+        };
+
+        // Debounce slightly to avoid spamming on mount
+        const timer = setTimeout(() => {
+            fetch('/api/snapshot-bom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).catch(e => console.error("Failed to sync BOM snapshot", e));
+        }, 1000);
+
+        return () => clearTimeout(timer);
+    }, [totalCost, totalPower, sortedModules]);
+
+    const costData = [...effectiveModules]
         .sort((a, b) => (b.cost * b.quantity) - (a.cost * a.quantity))
         .slice(0, 8)
         .map(m => ({

@@ -71,8 +71,102 @@ app.post('/api/debug-log', (req, res) => {
     }
 });
 
+// --- BOM SNAPSHOT FOR AI / NO-JS TOOLS ---
+const SNAPSHOT_FILE = path.join(__dirname, 'bom.snapshot.json');
+
+// 1. Receive calculated BOM from Client
+app.post('/api/snapshot-bom', (req, res) => {
+    try {
+        const bomData = req.body; // Expects { calculatedCost: 123, items: [...] }
+        fs.writeFileSync(SNAPSHOT_FILE, JSON.stringify(bomData, null, 2));
+        console.log('BOM Snapshot updated');
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Snapshot failed', err);
+        res.status(500).json({ error: 'Failed to save snapshot' });
+    }
+});
+
+// 2. Helper to Generate HTML (Shared)
+const generateBomHtml = () => {
+    if (!fs.existsSync(SNAPSHOT_FILE)) {
+        return '<html><body><h1>No Snapshot Available</h1><p>Please open the Dashboard in a browser first to generate the data.</p></body></html>';
+    }
+    const data = JSON.parse(fs.readFileSync(SNAPSHOT_FILE, 'utf8'));
+
+    // Generate Simple Table
+    const rows = data.items.map(item => `
+        <tr style="border-bottom: 1px solid #333;">
+            <td style="padding: 8px;">${item.name}</td>
+            <td style="padding: 8px;">${item.quantity}</td>
+            <td style="padding: 8px;">$${Number(item.total).toLocaleString()}</td>
+            <td style="padding: 8px; font-size: 0.8em; color: #888;">${item.description}</td>
+        </tr>
+    `).join('');
+
+    return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Project BOM (Static)</title>
+            <meta name="description" content="Static Bill of Materials View for Project IntegratorPro">
+            <style>
+                body { font-family: monospace; background: #0f172a; color: #e2e8f0; padding: 20px; }
+                table { width: 100%; border-collapse: collapse; text-align: left; }
+                th { border-bottom: 2px solid #64748b; padding: 10px; }
+                .summary { margin-bottom: 20px; padding: 10px; border: 1px solid #334155; }
+            </style>
+        </head>
+        <body>
+            <h1>Project IntegratorPro BOM</h1>
+            <div class="summary">
+                <strong>Total Cost:</strong> $${Number(data.totalCost).toLocaleString()} <br/>
+                <strong>Total Power:</strong> ${data.totalPower} W <br/>
+                <strong>Last Updated:</strong> ${new Date().toISOString()}
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Qty</th>
+                        <th>Total Cost</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows}
+                </tbody>
+            </table>
+        </body>
+        </html>
+    `;
+};
+
+// 3. Serve Static HTML (Explicit)
+app.get('/bom-view', (req, res) => {
+    try {
+        res.send(generateBomHtml());
+    } catch (err) {
+        res.status(500).send('Error rendering BOM view');
+    }
+});
+
 // All other GET requests not handled before will return our React app
 app.get(/.*/, (req, res) => {
+    const ua = req.headers['user-agent'] || '';
+    const isBot = /googlebot|crawler|spider|robot|crawling|curl|wget|python|gemini|vertex/i.test(ua);
+
+    if (isBot) {
+        console.log(`Bot Detected (${ua}). Serving Static BOM.`);
+        try {
+            res.send(generateBomHtml());
+            return;
+        } catch (e) {
+            console.error("Failed to serve static BOM to bot", e);
+            // Fallback to app
+        }
+    }
+
     if (fs.existsSync(path.join(distPath, 'index.html'))) {
         res.sendFile(path.join(distPath, 'index.html'));
     } else {
