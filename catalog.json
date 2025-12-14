@@ -1,0 +1,964 @@
+[
+    {
+        "id": "lcp1-enc",
+        "name": "Saginaw SCE-24H2408LP",
+        "manufacturer": "Saginaw",
+        "description": "24x24x8 NEMA 4/12 Hinged",
+        "type": "ENCLOSURE",
+        "mountType": "SURFACE",
+        "size": 0,
+        "cost": 394.30,
+        "powerWatts": 0,
+        "quantity": 1,
+        "url": "https://www.google.com/search?q=site:saginawcontrol.com+Saginaw+SCE-24H2408LP",
+        "dimensions": {
+            "width": 24,
+            "height": 24,
+            "depth": 8,
+            "unit": "in"
+        },
+        "notes": "FIRE CODE: Surface mount. NEMA 4/12 Sealed.",
+        "location": "LCP-1",
+        "position": {
+            "x": 72,
+            "y": 60
+        }
+    },
+    {
+        "id": "lcp2-enc",
+        "name": "Leviton 47605-21E",
+        "manufacturer": "Leviton",
+        "description": "21\" Structured Media Enclosure",
+        "type": "ENCLOSURE",
+        "mountType": "FLUSH",
+        "size": 0,
+        "cost": 92.45,
+        "powerWatts": 0,
+        "quantity": 1,
+        "url": "https://www.google.com/search?q=site:amazon.com+Leviton+47605-21E",
+        "location": "LCP-2",
+        "notes": "FRAMING ALERT: Stud bay is 18\". Block down to 14.5\".",
+        "position": {
+            "x": 35,
+            "y": 55
+        }
+    },
+    {
+        "id": "siemens-dali-gw",
+        "name": "KNX/DALI Gateway Twin N 141/03",
+        "manufacturer": "Siemens",
+        "description": "N 141/03 (UL Listed)",
+        "type": "LIGHTING",
+        "mountType": "DIN_RAIL",
+        "size": 4,
+        "cost": 550.00,
+        "powerWatts": 2,
+        "quantity": 2,
+        "requiresMains": true,
+        "requiresBus": [
+            "KNX",
+            "DALI"
+        ],
+        "systemIds": [
+            "lighting"
+        ],
+        "url": "https://www.google.com/search?q=site:eibabo.com+Siemens+5WG1+141-1AB03+N+141/03",
+        "linkStatus": "PREFERRED",
+        "backupUrl": "https://mall.industry.siemens.com/mall/en/us/Catalog/Product/5WG1141-1AB03",
+        "genericRole": "DALI Gateway",
+        "instances": [
+            {
+                "id": "lcp1-gw",
+                "location": "LCP-1",
+                "notes": "Universes 1 & 2"
+            },
+            {
+                "id": "lcp2-gw",
+                "location": "LCP-2",
+                "notes": "Universes 3 & 4"
+            }
+        ]
+    },
+    {
+        "id": "abb-ip-router",
+        "name": "KNX IP Router Secure",
+        "manufacturer": "ABB",
+        "description": "IPR/S 3.1.1",
+        "type": "NETWORK",
+        "mountType": "DIN_RAIL",
+        "size": 2,
+        "cost": 252.64,
+        "powerWatts": 2,
+        "quantity": 2,
+        "requiresMains": true,
+        "requiresBus": [
+            "KNX",
+            "ETHERNET"
+        ],
+        "url": "https://www.google.com/search?q=site:eibabo.com+ABB+KNX+IP+Router+Secure",
+        "genericRole": "KNX IP Router",
+        "instances": [
+            {
+                "id": "lcp1-sys",
+                "location": "LCP-1"
+            },
+            {
+                "id": "lcp2-sys",
+                "location": "LCP-2"
+            }
+        ]
+    },
+    {
+        "id": "eldo-dali-dim",
+        "name": "POWERdrive 1060/A",
+        "manufacturer": "eldoLED",
+        "description": "100W DALI-2 Driver (UL Class 2)",
+        "type": "LIGHTING",
+        "mountType": "DIN_RAIL",
+        "size": 4,
+        "cost": 145.00,
+        "powerWatts": 5,
+        "quantity": 12,
+        "requiresMains": true,
+        "requiresBus": [
+            "DALI"
+        ],
+        "systemIds": [
+            "lighting",
+            "outdoor"
+        ],
+        "url": "https://www.google.com/search?q=site:ballastshop.com+eldoLED+POWERdrive+1060/A",
+        "linkStatus": "PREFERRED",
+        "genericRole": "LED Driver (CV)",
+        "instances": [
+            {
+                "id": "lcp1-dim-gar",
+                "location": "LCP-1",
+                "universe": 1,
+                "notes": "Garage LED Tape"
+            },
+            {
+                "id": "lcp1-dim-kit",
+                "location": "LCP-1",
+                "universe": 1,
+                "notes": "Kitchen LED Tape"
+            },
+            {
+                "id": "lcp1-dim-din",
+                "location": "LCP-1",
+                "universe": 1,
+                "notes": "Dining Room Coves"
+            },
+            {
+                "id": "lcp1-dim-liv",
+                "location": "LCP-1",
+                "universe": 1,
+                "notes": "Living Room Coves"
+            },
+            {
+                "id": "lcp2-dim-head",
+                "location": "LCP-2",
+                "universe": 3,
+                "notes": "Master Bed Headboard"
+            },
+            {
+                "id": "lcp2-dim-per",
+                "location": "LCP-2",
+                "universe": 3,
+                "notes": "Master Bed Perimeter"
+            }
+        ]
+    },
+    {
+        "id": "lunt-dali-010",
+        "name": "DALI 0-10V Interface",
+        "manufacturer": "Lunatone",
+        "description": "86458668 (PWM)",
+        "type": "HVAC",
+        "mountType": "DIN_RAIL",
+        "size": 2,
+        "cost": 82.50,
+        "powerWatts": 1,
+        "quantity": 5,
+        "requiresBus": [
+            "DALI"
+        ],
+        "systemIds": [
+            "hvac"
+        ],
+        "url": "https://www.google.com/search?q=Lunatone+86458668+DALI+0-10V+Interface",
+        "instances": [
+            {
+                "id": "lcp1-fan-pdr",
+                "location": "LCP-1",
+                "universe": 2,
+                "notes": "Powder Room Fan"
+            },
+            {
+                "id": "lcp2-fan-toilet",
+                "location": "LCP-2",
+                "universe": 3,
+                "notes": "Master Toilet Fan"
+            },
+            {
+                "id": "lcp2-fan-shower",
+                "location": "LCP-2",
+                "universe": 3,
+                "notes": "Master Shower Fan"
+            },
+            {
+                "id": "lcp2-fan-lau",
+                "location": "LCP-2",
+                "universe": 3,
+                "notes": "Laundry Fan"
+            },
+            {
+                "id": "lcp2-fan-b2",
+                "location": "LCP-2",
+                "universe": 4,
+                "notes": "Bed 2 Bath Fan"
+            }
+        ]
+    },
+    {
+        "id": "mw-sdr-480",
+        "name": "SDR-480-24 PSU",
+        "manufacturer": "Mean Well",
+        "description": "480W 24V (UL 508 Listed)",
+        "type": "POWER",
+        "mountType": "DIN_RAIL",
+        "size": 5,
+        "cost": 158.00,
+        "powerWatts": 480,
+        "quantity": 1,
+        "requiresMains": true,
+        "url": "https://www.google.com/search?q=site:mouser.com+Mean+Well+SDR-480-24",
+        "location": "LCP-1",
+        "notes": "Main Plant Power. Output must go to ECP for Class 2."
+    },
+    {
+        "id": "phoenix-cbm",
+        "name": "CBM E4 24DC",
+        "manufacturer": "Phoenix Contact",
+        "description": "Electronic Circuit Protector (Class 2 Outputs)",
+        "type": "POWER",
+        "mountType": "DIN_RAIL",
+        "size": 2,
+        "cost": 110.00,
+        "powerWatts": 0,
+        "quantity": 1,
+        "requiresMains": false,
+        "requiresBus": [],
+        "url": "https://www.google.com/search?q=site:mouser.com+Phoenix+Contact+CBM+E4+24DC",
+        "location": "LCP-1",
+        "notes": "NEC 2023 Compliance. Splits 480W into 4x Class 2 Circuits."
+    },
+    {
+        "id": "light-fix-dali",
+        "name": "HE Williams 2DS Square",
+        "manufacturer": "HE Williams",
+        "description": "2\" Tunable White Fixed Trimless Downlight (DALI-2)",
+        "type": "LIGHTING",
+        "mountType": "CEILING_MOUNT",
+        "size": 0,
+        "cost": 200.00,
+        "powerWatts": 15,
+        "quantity": 43,
+        "requiresBus": [
+            "DALI"
+        ],
+        "specUrl": "https://hew.com/specifications/2DS_tunable-white.pdf",
+        "url": "https://www.google.com/search?q=site:hewilliams.com+2DS+Tunable+White+Square+Trimless",
+        "linkStatus": "PREFERRED",
+        "systemIds": [
+            "lighting"
+        ],
+        "genericRole": "Fixed Downlight",
+        "instances": [
+            {
+                "id": "dl-hall",
+                "location": "Hallways",
+                "notes": "Ambient (Qty 3)"
+            },
+            {
+                "id": "dl-closet",
+                "location": "Closets/Pantry",
+                "notes": "High CRI (Qty 4)"
+            },
+            {
+                "id": "dl-laundry",
+                "location": "Laundry",
+                "notes": "Task (Qty 2)"
+            },
+            {
+                "id": "dl-guest",
+                "location": "Guest Bath",
+                "notes": "General (Qty 3)"
+            },
+            {
+                "id": "dl-foyer",
+                "location": "Foyer",
+                "notes": "Welcome (Qty 2)"
+            },
+            {
+                "id": "dl-fam",
+                "location": "Family Room",
+                "notes": "General (Qty 6)"
+            },
+            {
+                "id": "dl-ext",
+                "location": "Exterior",
+                "notes": "Soffit (Qty 10)"
+            }
+        ]
+    },
+    {
+        "id": "light-adj-dali",
+        "name": "HE Williams 2AS Adjustable",
+        "manufacturer": "HE Williams",
+        "description": "2\" Tunable White Adjustable Trimless (DALI-2)",
+        "type": "LIGHTING",
+        "mountType": "CEILING_MOUNT",
+        "size": 0,
+        "cost": 250.00,
+        "powerWatts": 15,
+        "quantity": 29,
+        "requiresBus": [
+            "DALI"
+        ],
+        "specUrl": "https://hew.com/specifications/2AS_tunable-white.pdf",
+        "url": "https://www.google.com/search?q=site:hewilliams.com+2AS+Tunable+White+Adjustable",
+        "linkStatus": "PREFERRED",
+        "systemIds": [
+            "lighting"
+        ],
+        "genericRole": "Accent Downlight",
+        "instances": [
+            {
+                "id": "adj-master",
+                "location": "Master Bed/Bath",
+                "notes": "Task/Art (Qty 8)"
+            },
+            {
+                "id": "adj-office",
+                "location": "Offices",
+                "notes": "Video/Work (Qty 8)"
+            },
+            {
+                "id": "adj-bed2",
+                "location": "Bed 2",
+                "notes": "General (Qty 4)"
+            },
+            {
+                "id": "adj-dining",
+                "location": "Dining",
+                "notes": "Table Accent (Qty 4)"
+            },
+            {
+                "id": "adj-liv",
+                "location": "Living",
+                "notes": "Art/Wall (Qty 5)"
+            }
+        ]
+    },
+    {
+        "id": "light-adj-dali-4",
+        "name": "HE Williams 4DS Adjustable (Alt)",
+        "manufacturer": "HE Williams",
+        "description": "4.5\" Tunable White Adjustable (Alternative Option)",
+        "type": "LIGHTING",
+        "mountType": "CEILING_MOUNT",
+        "size": 0,
+        "cost": 280.00,
+        "powerWatts": 20,
+        "quantity": 0,
+        "requiresBus": [
+            "DALI"
+        ],
+        "specUrl": "https://hew.com/specifications/4DS_tunable-white.pdf",
+        "url": "https://www.google.com/search?q=site:hewilliams.com+4DS+Tunable+White+Adjustable",
+        "linkStatus": "PREFERRED",
+        "systemIds": [
+            "lighting"
+        ],
+        "genericRole": "Accent Downlight (Large)",
+        "notes": "ALTERNATIVE: 4.5\" Aperture for less busy ceiling. Higher lumens allows fewer fixtures."
+    },
+    {
+        "id": "mw-hdr-150",
+        "name": "HDR-150-24 PSU",
+        "manufacturer": "Mean Well",
+        "description": "150W 24V",
+        "type": "POWER",
+        "mountType": "DIN_RAIL",
+        "size": 6,
+        "cost": 52.00,
+        "powerWatts": 150,
+        "quantity": 2,
+        "requiresMains": true,
+        "url": "https://www.google.com/search?q=site:mouser.com+Mean+Well+HDR-150-24",
+        "instances": [
+            {
+                "id": "lcp1-psu2",
+                "location": "LCP-1",
+                "notes": "Kitchen LEDs"
+            },
+            {
+                "id": "lcp2-psu",
+                "location": "LCP-2",
+                "notes": "Master LEDs"
+            }
+        ]
+    },
+    {
+        "id": "altronix-eflow",
+        "name": "Altronix eFlow6N",
+        "manufacturer": "Altronix",
+        "description": "Access Power Controller",
+        "type": "POWER",
+        "mountType": "WALL_MOUNT",
+        "size": 0,
+        "cost": 320.00,
+        "powerWatts": 10,
+        "quantity": 1,
+        "requiresMains": true,
+        "systemIds": [
+            "access",
+            "security"
+        ],
+        "url": "https://www.google.com/search?q=site:jmac.com+Altronix+eFlow6N",
+        "linkStatus": "PREFERRED",
+        "notes": "Central Security Power (LCP-2). Backup Battery Required.",
+        "instances": [
+            {
+                "id": "psu-sec-main",
+                "location": "LCP-2",
+                "notes": "Powers All Strikes"
+            }
+        ]
+    },
+    {
+        "id": "acc-batt-7ah",
+        "name": "12V 7Ah SLA Battery",
+        "manufacturer": "Yuasa / Generic",
+        "description": "Backup Battery for Altronix",
+        "type": "ACCESSORY",
+        "mountType": "NA",
+        "size": 0,
+        "cost": 25.00,
+        "powerWatts": 0,
+        "quantity": 2,
+        "systemIds": [
+            "access",
+            "security"
+        ],
+        "url": "https://www.google.com/search?q=12V+7Ah+SLA+Battery",
+        "linkStatus": "MARKET",
+        "location": "LCP-2"
+    },
+    {
+        "id": "sec-intercom-main",
+        "name": "Akuvox X915S",
+        "manufacturer": "Akuvox",
+        "description": "8\" Touch Screen Entry",
+        "type": "SECURITY",
+        "mountType": "WALL_MOUNT",
+        "size": 0,
+        "cost": 2800.00,
+        "powerWatts": 15,
+        "quantity": 1,
+        "requiresPoE": true,
+        "systemIds": [
+            "access",
+            "security"
+        ],
+        "url": "https://www.google.com/search?q=site:akuvox.com+X915S",
+        "linkStatus": "PREFERRED",
+        "genericRole": "Video Intercom (Main)",
+        "instances": [
+            {
+                "id": "int-front",
+                "location": "Front Door",
+                "notes": "Main Entry"
+            }
+        ]
+    },
+    {
+        "id": "sec-intercom-sub",
+        "name": "Akuvox E16C",
+        "manufacturer": "Akuvox",
+        "description": "Face Recognition Entry (5\")",
+        "type": "SECURITY",
+        "mountType": "WALL_MOUNT",
+        "size": 0,
+        "cost": 550.00,
+        "powerWatts": 15,
+        "quantity": 3,
+        "requiresPoE": true,
+        "systemIds": [
+            "access",
+            "security"
+        ],
+        "url": "https://www.google.com/search?q=site:akuvox.com+E16C+Face+Recognition",
+        "linkStatus": "PREFERRED",
+        "genericRole": "Video Intercom (Sub)",
+        "notes": "Dual Camera (Starlight/IR) + 3D Face Recognition. Mid-tier option.",
+        "instances": [
+            {
+                "id": "int-gar",
+                "location": "Garage",
+                "notes": "Staff/Delivery Entry"
+            },
+            {
+                "id": "int-rear",
+                "location": "Rear Door",
+                "notes": "Patio Entry"
+            },
+            {
+                "id": "int-side",
+                "location": "Side Gate",
+                "notes": "Service Entry"
+            }
+        ]
+    },
+    {
+        "id": "abb-bin-inp",
+        "name": "Binary Input 16-fold",
+        "manufacturer": "ABB",
+        "description": "BE/S 16.20.2.1",
+        "type": "SENSOR",
+        "mountType": "DIN_RAIL",
+        "size": 8,
+        "cost": 450.00,
+        "powerWatts": 0.5,
+        "quantity": 2,
+        "requiresBus": [
+            "KNX"
+        ],
+        "url": "https://www.google.com/search?q=site:eibabo.com+ABB+Binary+Input+16-fold",
+        "instances": [
+            {
+                "id": "lcp1-inp",
+                "location": "LCP-1",
+                "notes": "Door Sensors (Main)"
+            },
+            {
+                "id": "lcp2-inp",
+                "location": "LCP-2",
+                "notes": "Door Sensors (Master)"
+            }
+        ]
+    },
+    {
+        "id": "mdf-nuc",
+        "name": "ASUS NUC 13 Pro",
+        "manufacturer": "ASUS",
+        "description": "Home Assistant Server",
+        "location": "MDF",
+        "type": "CONTROLLER",
+        "mountType": "RACK_UNIT",
+        "size": 1,
+        "cost": 620.00,
+        "powerWatts": 45,
+        "quantity": 1,
+        "requiresMains": true,
+        "requiresPoE": false,
+        "systemIds": [
+            "infra",
+            "network",
+            "lighting",
+            "access",
+            "security",
+            "hvac",
+            "irrigation",
+            "outdoor"
+        ],
+        "genericRole": "Automation Server",
+        "url": "https://www.google.com/search?q=ASUS+NUC+13+Pro+Kit+Buy",
+        "position": {
+            "x": 62,
+            "y": 38
+        }
+    },
+    {
+        "id": "mdf-sw",
+        "name": "UniFi Pro Max 24 PoE",
+        "manufacturer": "Ubiquiti",
+        "description": "Core Switch",
+        "location": "MDF",
+        "type": "NETWORK",
+        "mountType": "RACK_UNIT",
+        "size": 1,
+        "cost": 799.00,
+        "powerWatts": 50,
+        "quantity": 1,
+        "requiresMains": true,
+        "systemIds": [
+            "infra",
+            "network"
+        ],
+        "genericRole": "PoE Switch",
+        "url": "https://www.google.com/search?q=site:store.ui.com+UniFi+Pro+Max+24+PoE",
+        "position": {
+            "x": 62,
+            "y": 39
+        }
+    },
+    {
+        "id": "field-ak-x915",
+        "name": "X915 Door Phone",
+        "manufacturer": "Akuvox",
+        "description": "Flagship Touchscreen",
+        "type": "SECURITY",
+        "mountType": "WALL_MOUNT",
+        "size": 0,
+        "cost": 2995.00,
+        "powerWatts": 12,
+        "quantity": 1,
+        "requiresPoE": true,
+        "systemIds": [
+            "access"
+        ],
+        "genericRole": "Video Intercom",
+        "url": "https://www.google.com/search?q=site:akuvoxdealer.com+Akuvox+X915",
+        "location": "Field",
+        "position": {
+            "x": 40,
+            "y": 80
+        }
+    },
+    {
+        "id": "field-ak-e16",
+        "name": "E16 Door Phone",
+        "manufacturer": "Akuvox",
+        "description": "Face Recognition",
+        "type": "SECURITY",
+        "mountType": "WALL_MOUNT",
+        "size": 0,
+        "cost": 1195.00,
+        "powerWatts": 10,
+        "quantity": 3,
+        "requiresPoE": true,
+        "url": "https://www.google.com/search?q=site:akuvoxdealer.com+Akuvox+E16",
+        "linkStatus": "PREFERRED",
+        "genericRole": "Video Intercom (Sub)",
+        "notes": "Dual Camera (Starlight/IR) + 3D Face Recognition. Flush mounted in Garage (Fire Rated) & Mandoor.",
+        "instances": [
+            {
+                "id": "int-gar",
+                "location": "Garage",
+                "notes": "Flush Mount + Fire Pad"
+            },
+            {
+                "id": "int-rear",
+                "location": "Rear Door",
+                "notes": "Flush Mount"
+            },
+            {
+                "id": "int-side",
+                "location": "Side Gate",
+                "notes": "Surface + Hood (No Wall Depth)"
+            }
+        ]
+    },
+    {
+        "id": "acc-mount-x915",
+        "name": "X915 Flush Mount Kit",
+        "manufacturer": "Akuvox",
+        "description": "In-Wall Box + Rain Cover",
+        "type": "ACCESSORY",
+        "mountType": "NA",
+        "size": 0,
+        "cost": 150.00,
+        "powerWatts": 0,
+        "quantity": 1,
+        "systemIds": [
+            "access"
+        ],
+        "url": "https://www.google.com/search?q=site:akuvox.com+AK-X915S-RCFlush",
+        "linkStatus": "PREFERRED",
+        "location": "Front Door"
+    },
+    {
+        "id": "acc-mount-e16",
+        "name": "E16 Flush Mount Kit",
+        "manufacturer": "Akuvox",
+        "description": "In-Wall Backbox",
+        "type": "ACCESSORY",
+        "mountType": "NA",
+        "size": 0,
+        "cost": 80.00,
+        "powerWatts": 0,
+        "quantity": 2,
+        "systemIds": [
+            "access"
+        ],
+        "url": "https://www.google.com/search?q=site:akuvox.com+E16+Flush+Mount+Kit",
+        "linkStatus": "PREFERRED",
+        "location": "Field"
+    },
+    {
+        "id": "acc-fire-pad",
+        "name": "STI SpecSeal Putty Pad",
+        "manufacturer": "STI",
+        "description": "Fire Rated Box Pad",
+        "type": "ACCESSORY",
+        "mountType": "NA",
+        "size": 0,
+        "cost": 15.00,
+        "powerWatts": 0,
+        "quantity": 1,
+        "systemIds": [
+            "access"
+        ],
+        "url": "https://www.google.com/search?q=STI+SpecSeal+Putty+Pad+SSP4S",
+        "linkStatus": "MARKET",
+        "notes": "CRITICAL: Required for Garage flush mount to maintain firewall rating.",
+        "location": "Garage"
+    },
+    {
+        "id": "sec-sr01",
+        "name": "Akuvox SR01",
+        "manufacturer": "Akuvox",
+        "description": "Secure Relay Module",
+        "type": "SECURITY",
+        "mountType": "DIN_RAIL",
+        "size": 2,
+        "cost": 35.00,
+        "powerWatts": 1,
+        "quantity": 4,
+        "requiresMains": false,
+        "systemIds": [
+            "access",
+            "security"
+        ],
+        "url": "https://www.google.com/search?q=site:akuvox.com+SR01+Security+Relay",
+        "linkStatus": "PREFERRED",
+        "genericRole": "Security Relay",
+        "notes": "CRITICAL: Prevents door hotwiring if intercom is removed. Installed inside secure perimeter (LCP-2/Safe Side)."
+    },
+    {
+        "id": "field-str",
+        "name": "1006 Electric Strike",
+        "manufacturer": "HES",
+        "description": "Heavy Duty Fail Secure",
+        "type": "SECURITY",
+        "mountType": "WALL_MOUNT",
+        "size": 0,
+        "cost": 385.00,
+        "powerWatts": 8,
+        "quantity": 4,
+        "notes": "Requires 12/24V Switched from Altronix.",
+        "url": "https://www.google.com/search?q=site:jmac.com+HES+1006+Electric+Strike"
+    },
+    {
+        "id": "cam-g5-pro",
+        "name": "G5 Professional",
+        "manufacturer": "Ubiquiti",
+        "description": "4K PoE Camera",
+        "type": "SECURITY",
+        "mountType": "WALL_MOUNT",
+        "size": 0,
+        "cost": 379.00,
+        "powerWatts": 10,
+        "quantity": 12,
+        "requiresPoE": true,
+        "systemIds": [
+            "security"
+        ],
+        "genericRole": "IP Camera",
+        "url": "https://www.google.com/search?q=site:store.ui.com+Ubiquiti+G5+Professional",
+        "location": "Field"
+    },
+    {
+        "id": "velux-klf",
+        "name": "Velux KLF 200",
+        "manufacturer": "Velux",
+        "description": "Skylight Gateway (KNX Integ)",
+        "type": "HVAC",
+        "mountType": "WALL_MOUNT",
+        "size": 0,
+        "cost": 350.00,
+        "powerWatts": 5,
+        "quantity": 1,
+        "requiresMains": true,
+        "systemIds": [
+            "hvac"
+        ],
+        "location": "MDF",
+        "url": "https://www.velux.com/products/smart-home/klf200"
+    },
+    {
+        "id": "mdt-glass-smart",
+        "name": "MDT Glass Tactile Smart",
+        "manufacturer": "MDT",
+        "description": "6-Fold / Color Display",
+        "type": "UI",
+        "mountType": "WALL_MOUNT",
+        "size": 0,
+        "cost": 180.00,
+        "powerWatts": 0.5,
+        "quantity": 12,
+        "requiresBus": [
+            "KNX"
+        ],
+        "systemIds": [
+            "lighting",
+            "hvac",
+            "audio"
+        ],
+        "url": "https://www.google.com/search?q=site:knxsupply.com+MDT+Glass+Tactile+Smart+II",
+        "genericRole": "Smart Switch",
+        "notes": "Primary User Interface. Temperature sensor built-in.",
+        "instances": [
+            {
+                "id": "sw-master",
+                "location": "Master Bed",
+                "notes": "Bedside"
+            },
+            {
+                "id": "sw-kit",
+                "location": "Kitchen",
+                "notes": "Entry"
+            },
+            {
+                "id": "sw-liv",
+                "location": "Living",
+                "notes": "Main"
+            }
+        ]
+    },
+    {
+        "id": "acc-patch",
+        "name": "Patch Panel",
+        "manufacturer": "Generic",
+        "description": "24-Port Keystone",
+        "type": "ACCESSORY",
+        "mountType": "RACK_UNIT",
+        "size": 1,
+        "cost": 25.00,
+        "powerWatts": 0,
+        "quantity": 2,
+        "systemIds": [
+            "infra"
+        ],
+        "url": "https://www.google.com/search?q=site:amazon.com+Patch+Panel+24-Port+Keystone",
+        "location": "MDF",
+        "position": {
+            "x": 62,
+            "y": 40
+        }
+    },
+    {
+        "id": "acc-pdu",
+        "name": "PDU",
+        "manufacturer": "CyberPower",
+        "description": "1U Rack PDU",
+        "type": "ACCESSORY",
+        "mountType": "RACK_UNIT",
+        "size": 1,
+        "cost": 50.00,
+        "powerWatts": 0,
+        "quantity": 1,
+        "systemIds": [
+            "infra"
+        ],
+        "url": "https://www.google.com/search?q=site:amazon.com+CyberPower+PDU+1U",
+        "location": "MDF",
+        "position": {
+            "x": 62,
+            "y": 37
+        }
+    },
+    {
+        "id": "cable-romex-pcs",
+        "name": "Romex SIMpull PCS Duo",
+        "manufacturer": "Southwire",
+        "type": "ACCESSORY",
+        "mountType": "NA",
+        "size": 0,
+        "cost": 1450.00,
+        "powerWatts": 0,
+        "quantity": 1,
+        "systemIds": [
+            "infra",
+            "lighting"
+        ],
+        "url": "https://www.google.com/search?q=Southwire+67962802+Romex+PCS+Duo+12/2+16/2",
+        "linkStatus": "PREFERRED",
+        "description": "12/2 Power + 16/2 Control (NM-B-PCS)",
+        "notes": "CORE STRATEGY: \"Code Hack\" for NEC. Bundles Class 1 (120V) + Class 2 (0-10V/DALI) in one cable. Saves dual pulls.",
+        "location": "Infra"
+    },
+    {
+        "id": "cable-cat6",
+        "name": "Cat6 / Cat6a Riser",
+        "manufacturer": "TrueCable",
+        "description": "3000 ft Bulk",
+        "type": "ACCESSORY",
+        "mountType": "NA",
+        "size": 0,
+        "cost": 550.00,
+        "powerWatts": 0,
+        "quantity": 1,
+        "systemIds": [
+            "infra"
+        ],
+        "url": "https://www.google.com/search?q=site:truecable.com+Cat6+Riser",
+        "location": "Infra"
+    },
+    {
+        "id": "cable-knx",
+        "name": "KNX Bus Cable (UL)",
+        "manufacturer": "KNX Supply / Unitronic",
+        "type": "ACCESSORY",
+        "mountType": "NA",
+        "size": 0,
+        "cost": 850.00,
+        "powerWatts": 0,
+        "quantity": 1,
+        "systemIds": [
+            "infra",
+            "lighting"
+        ],
+        "url": "https://knxsupply.com/product/knx-cable-ul-compliance-1000ft/",
+        "linkStatus": "PREFERRED",
+        "description": "20 AWG 4-Conductor (2-Pair) Green (UL Listed)",
+        "notes": "Standard Green Jacket. Pairs: Red/Black (Bus) + Yellow/White (Aux Power/Data).",
+        "location": "Infra"
+    },
+    {
+        "id": "cable-sec-184",
+        "name": "18/4 Shielded Security Wire",
+        "manufacturer": "Belden / Generic",
+        "type": "ACCESSORY",
+        "mountType": "NA",
+        "size": 0,
+        "cost": 180.00,
+        "powerWatts": 0,
+        "quantity": 1,
+        "systemIds": [
+            "infra",
+            "access"
+        ],
+        "url": "https://www.google.com/search?q=18/4+Shielded+Security+Cable+Plenum",
+        "linkStatus": "MARKET",
+        "description": "18 AWG 4-Conductor Shielded (Strikes/RS485)",
+        "notes": "For connecting Intercoms to SR01 (RS485) and SR01 to Strikes (Power).",
+        "location": "Infra"
+    },
+    {
+        "id": "conn-wago",
+        "name": "Wago KNX Connectors",
+        "manufacturer": "Wago",
+        "type": "ACCESSORY",
+        "mountType": "NA",
+        "size": 0,
+        "cost": 45.00,
+        "powerWatts": 0,
+        "quantity": 2,
+        "url": "https://www.google.com/search?q=site:knxsupply.com+Wago+KNX+Connectors",
+        "description": "Red/Black Push-Wire (Box of 50)",
+        "location": "Infra"
+    }
+]

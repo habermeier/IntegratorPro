@@ -73,36 +73,92 @@ app.post('/api/debug-log', (req, res) => {
     }
 });
 
-// --- BOM SNAPSHOT FOR AI / NO-JS TOOLS ---
-const SNAPSHOT_FILE = path.join(__dirname, 'bom.snapshot.json');
+// --- DATA LOADING & BOM CALCULATION ---
+const catalogPath = path.join(__dirname, 'catalog.json');
+const layoutPath = path.join(__dirname, 'layout.json');
+const layoutLocalPath = path.join(__dirname, 'layout.local.json');
 
-// 1. Receive calculated BOM from Client
-app.post('/api/snapshot-bom', (req, res) => {
-    try {
-        const bomData = req.body; // Expects { calculatedCost: 123, items: [...] }
-        fs.writeFileSync(SNAPSHOT_FILE, JSON.stringify(bomData, null, 2));
-        console.log('BOM Snapshot updated');
-        res.json({ success: true });
-    } catch (err) {
-        console.error('Snapshot failed', err);
-        res.status(500).json({ error: 'Failed to save snapshot' });
+function getCombinedLayout() {
+    let layout = [];
+    if (fs.existsSync(layoutPath)) {
+        layout = JSON.parse(fs.readFileSync(layoutPath, 'utf8'));
     }
-});
-
-// 2. Helper to Generate HTML (Shared)
-const generateBomHtml = () => {
-    if (!fs.existsSync(SNAPSHOT_FILE)) {
-        return '<html><body><h1>No Snapshot Available</h1><p>Please open the Dashboard in a browser first to generate the data.</p></body></html>';
+    if (fs.existsSync(layoutLocalPath)) {
+        // Simple override strategy: local takes precedence if we were merging, 
+        // but typically local *is* the full state. Use local if exists.
+        layout = JSON.parse(fs.readFileSync(layoutLocalPath, 'utf8'));
     }
-    const data = JSON.parse(fs.readFileSync(SNAPSHOT_FILE, 'utf8'));
+    return layout;
+}
 
-    // Generate Simple Table
-    const rows = data.items.map(item => `
+function getCatalog() {
+    if (fs.existsSync(catalogPath)) {
+        return JSON.parse(fs.readFileSync(catalogPath, 'utf8'));
+    }
+    return [];
+}
+
+function calculateBom() {
+    const layout = getCombinedLayout();
+    const catalog = getCatalog();
+    const catalogMap = new Map(catalog.map(i => [i.id, i]));
+
+    // 1. Map Layout Items to Catalog
+    // Consolidate by catalog ID
+    const usage = new Map(); // id -> count
+
+    layout.forEach(item => {
+        // Skip non-module items (cables, walls, etc need special handling or ignored for now if not in catalog)
+        // Check if item.id exists in catalog (direct match)
+        if (catalogMap.has(item.id)) {
+            usage.set(item.id, (usage.get(item.id) || 0) + 1);
+        } else {
+            // Handle Instances (e.g. "lcp1-gw" is an instance of "siemens-dali-gw")
+            // We need to look up which catalog item owns this instance.
+            // This is expensive to scan every time. 
+            // Faster: Check if item matches a defined instance in the catalog
+            for (const [catId, catItem] of catalogMap.entries()) {
+                if (catItem.instances && catItem.instances.find(inst => inst.id === item.id)) {
+                    usage.set(catId, (usage.get(catId) || 0) + 1);
+                    break;
+                }
+                // Handle Array-defined instances in catalog that aren't broken out in layout?
+                // Current Layout structure is flat list of items on map.
+            }
+        }
+    });
+
+    // 2. Add "Base Quantity" from Catalog (stuff not on map but in list)
+    // This logic mimics ProjectBOM.tsx: "quantity" in catalog is the baseline.
+    // However, if we are "live", we might want map counts.
+    // For now, let's stick to the "Catalog Quantity" + "Map Deltas" or just Catalog Quantity?
+    // The simplified BOM view usually just dumps the Catalog Quantity. 
+    // Let's use the Catalog Quantity as the source of truth for the BOM list,
+    // assuming the user keeps constants.ts updated.
+
+    // BETTER: Just list everything in the catalog with > 0 quantity.
+
+    const bomItems = catalog.filter(item => item.quantity > 0).map(item => ({
+        name: item.name,
+        qty: item.quantity,
+        cost: item.cost,
+        desc: item.description,
+        total: item.quantity * item.cost
+    }));
+
+    return bomItems;
+}
+
+function generateDynamicBomHtml() {
+    const items = calculateBom();
+    const totalCost = items.reduce((sum, i) => sum + i.total, 0);
+
+    const rows = items.map(item => `
         <tr style="border-bottom: 1px solid #333;">
             <td style="padding: 8px;">${item.name}</td>
-            <td style="padding: 8px;">${item.quantity}</td>
-            <td style="padding: 8px;">$${Number(item.total).toLocaleString()}</td>
-            <td style="padding: 8px; font-size: 0.8em; color: #888;">${item.description}</td>
+            <td style="padding: 8px;">${item.qty}</td>
+            <td style="padding: 8px;">$${item.total.toLocaleString()}</td>
+            <td style="padding: 8px; font-size: 0.8em; color: #888;">${item.desc}</td>
         </tr>
     `).join('');
 
@@ -110,65 +166,65 @@ const generateBomHtml = () => {
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Project BOM (Static)</title>
-            <meta name="description" content="Static Bill of Materials View for Project IntegratorPro">
+            <title>Project BOM (Automated)</title>
+            <meta name="description" content="Generated Project Bill of Materials">
             <style>
-                body { font-family: monospace; background: #0f172a; color: #e2e8f0; padding: 20px; }
-                table { width: 100%; border-collapse: collapse; text-align: left; }
-                th { border-bottom: 2px solid #64748b; padding: 10px; }
-                .summary { margin-bottom: 20px; padding: 10px; border: 1px solid #334155; }
+                body { background: #111; color: #eee; font-family: sans-serif; padding: 2em; }
+                table { width: 100%; border-collapse: collapse; }
+                th { text-align: left; border-bottom: 2px solid #555; padding: 10px; }
             </style>
         </head>
         <body>
-            <h1>Project IntegratorPro BOM</h1>
-            <div class="summary">
-                <strong>Total Cost:</strong> $${Number(data.totalCost).toLocaleString()} <br/>
-                <strong>Total Power:</strong> ${data.totalPower} W <br/>
-                <strong>Last Updated:</strong> ${new Date().toISOString()}
-            </div>
+            <h1>Project Bill of Materials</h1>
+            <h2>Total Estimated Cost: $${totalCost.toLocaleString()}</h2>
             <table>
                 <thead>
-                    <tr>
-                        <th>Item</th>
-                        <th>Qty</th>
-                        <th>Total Cost</th>
-                        <th>Description</th>
-                    </tr>
+                    <tr><th>Item</th><th>Qty</th><th>Total Cost</th><th>Description</th></tr>
                 </thead>
                 <tbody>
                     ${rows}
                 </tbody>
             </table>
+            <p style="margin-top: 2em; color: #666; font-size: 0.8em;">Generated by IntegratorPro Server &bull; ${new Date().toISOString()}</p>
         </body>
         </html>
     `;
-};
+}
 
-// 3. Serve Static HTML (Explicit)
-app.get('/bom-view', (req, res) => {
-    try {
-        res.send(generateBomHtml());
-    } catch (err) {
-        res.status(500).send('Error rendering BOM view');
+// --- GLOBAL BOT DETECTION MIDDLEWARE ---
+// This runs for ALL routes except /api (which we want to pass through likely? 
+// Actually bots might crawl /api too, but usually we want to intercept visual navigation).
+// We'll place it before the API routes just to be safe, OR wrap standard routes.
+// The user wants "ALL URL's".
+
+app.use((req, res, next) => {
+    // Skip API calls from bot detection (bots shouldn't be posting to api anyway, 
+    // and if they get data from api that's fine, but we care about HTML views)
+    if (req.path.startsWith('/api/') || req.path.includes('.')) {
+        // Files (css, js) and API -> Skip
+        return next();
+    }
+
+    const ua = req.headers['user-agent'] || '';
+    const isBot = /googlebot|crawler|spider|robot|crawling|curl|wget|python|gemini|vertex|facebookexternalhit/i.test(ua);
+
+    if (isBot) {
+        console.log(`Bot Detected (${ua}). Serving Dynamic BOM.`);
+        try {
+            const html = generateDynamicBomHtml();
+            res.send(html);
+        } catch (err) {
+            console.error("Error generating BOM for bot:", err);
+            res.status(500).send("Server Error Generating View");
+        }
+    } else {
+        // Humans -> React App
+        next();
     }
 });
 
 // All other GET requests not handled before will return our React app
 app.get(/.*/, (req, res) => {
-    const ua = req.headers['user-agent'] || '';
-    const isBot = /googlebot|crawler|spider|robot|crawling|curl|wget|python|gemini|vertex/i.test(ua);
-
-    if (isBot) {
-        console.log(`Bot Detected (${ua}). Serving Static BOM.`);
-        try {
-            res.send(generateBomHtml());
-            return;
-        } catch (e) {
-            console.error("Failed to serve static BOM to bot", e);
-            // Fallback to app
-        }
-    }
-
     if (fs.existsSync(path.join(distPath, 'index.html'))) {
         res.sendFile(path.join(distPath, 'index.html'));
     } else {
