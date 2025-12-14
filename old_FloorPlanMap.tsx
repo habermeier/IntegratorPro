@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import CLEAN_IMAGE from '../images/floor-plan-clean.jpg';
 import ELECTRICAL_IMAGE from '../images/electric-plan-plain-full-clean-2025-12-12.jpg';
-// Clean plan is primary background; electrical is overlay candidate.
+// Clean plan removed per user request - we focus on Overlay only.
 import { HardwareModule, ModuleType } from '../types';
 import { TransformWrapper, TransformComponent, useControls } from "react-zoom-pan-pinch";
 import { MousePointer2, Move, Activity, Layers, Wand2, ScanLine, Trash2, Lock, Unlock, Settings, Eye, EyeOff, Zap } from 'lucide-react';
@@ -9,11 +8,8 @@ import { extractMapSymbols } from '../services/geminiService';
 import { MapSymbols } from './MapSymbols';
 import { parseDistanceInput, formatDistance } from '../utils/measurementUtils';
 
-const USE_BASELINE_VIEW = true; // Temporary: isolates minimal pan/zoom for performance baseline.
-
 // @ts-ignore
-// Data loaded via runtime fetch
-// import vectorData from '../src/data/electric-plan-vectors.json';
+import vectorData from '../src/data/electric-plan-vectors.json';
 
 interface WallVector {
     x: number;
@@ -79,7 +75,7 @@ const MapController = ({ activeLayer, setFitFn }: { activeLayer: string, setFitF
     return null;
 };
 
-const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLocate, highlightedModuleId }) => {
+const FloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLocate, highlightedModuleId }) => {
     // --- LAYERS STATE ---
     const [layerState, setLayerState] = useState({
         showBasePlan: true, // The electrical image
@@ -106,7 +102,6 @@ const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, 
 
     const [fitToScreen, setFitToScreen] = useState<() => void>(() => () => { });
     const contentRef = useRef<HTMLDivElement>(null);
-    const [vectorLines, setVectorLines] = useState<number[][][]>([]);
     const [layoutData, setLayoutData] = useState<any[]>([]);
     const [aiSymbols, setAiSymbols] = useState<any[]>([]);
     const [showDebug, setShowDebug] = useState(false);
@@ -413,21 +408,36 @@ const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, 
         if (window.innerWidth >= 768) setIsControlsOpen(true);
     }, []);
 
-    // Combine Symbols
-    const liveSymbols = useMemo(() => (
-        modules
-            .filter(m => m.position && visibleLayers[m.type as string])
-            .map(m => ({
-                id: m.id,
-                type: m.type,
-                x: m.position!.x,
-                y: m.position!.y,
-                rotation: 0,
-                notes: m.notes
-            }))
-    ), [modules, visibleLayers]);
+    // --- DEBUGGING ---
+    const logBuffer = useRef<any[]>([]);
+    const [debugLog, setDebugLog] = useState<string[]>([]);
 
-    const allSymbols = useMemo(() => [...layoutData, ...aiSymbols, ...liveSymbols], [layoutData, aiSymbols, liveSymbols]);
+    const addLog = (msg: string, data?: any) => {
+        const timestamp = performance.now();
+        const entry = { timestamp, msg, data };
+        logBuffer.current.push(entry);
+        if (logBuffer.current.length % 5 === 0) {
+            setDebugLog(prev => [`[${timestamp.toFixed(0)}] ${msg}`, ...prev].slice(0, 10));
+        }
+    };
+
+    const renderCount = useRef(0);
+    renderCount.current++;
+    addLog('Render', { count: renderCount.current });
+
+    // Combine Symbols
+    const liveSymbols = modules
+        .filter(m => m.position && visibleLayers[m.type as string])
+        .map(m => ({
+            id: m.id,
+            type: m.type,
+            x: m.position!.x,
+            y: m.position!.y,
+            rotation: 0,
+            notes: m.notes
+        }));
+
+    const allSymbols = [...layoutData, ...aiSymbols, ...liveSymbols];
 
     useEffect(() => {
         fetch('/api/layout')
@@ -436,6 +446,7 @@ const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, 
                 const cleanData = data.filter((d: any) =>
                     d.type !== 'WALL' && d.type !== 'ENCLOSURE' && !d.id?.startsWith('LCP')
                 );
+                addLog('Loaded Layout', { count: cleanData.length });
                 setLayoutData(cleanData);
                 const cal = data.find((d: any) => d.type === 'CALIBRATION');
                 if (cal) setPixelsPerMeter(cal.pxPerMeter);
@@ -447,70 +458,52 @@ const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, 
     const [isScanning, setIsScanning] = useState(false);
 
     // --- AI STATE ---
-
+    const [vectorLines, setVectorLines] = useState<number[][][]>([]); // Array of lines, each line is array of [x,y]
 
     // --- Static AI Vectorization (Pre-computed) ---
-    // --- Static AI Vectorization (Pre-computed) ---
-    const loadStaticVectors = async (source: 'main' | 'debug' = 'main') => {
+    const loadStaticVectors = async () => {
         if (isScanning) return;
         setIsScanning(true);
-        try {
-            const path = source === 'debug' ? '/debug-vectors.json' : '/electric-plan-vectors.json';
-            const response = await fetch(path);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        // Simulate a brief delay for UX (so they see the "Analyzing" state momentarily)
+        setTimeout(() => {
+            try {
+                console.log("Loading static vector data via import...", vectorData);
+                // Handle Vite/Webpack interop (module.default)
+                const rawData = (vectorData as any).default || vectorData;
 
-            const rawData = await response.json();
-            const wallCount = rawData?.walls?.length ?? 0;
-            console.info(`Loaded vector file ${path} with ${wallCount} walls.`);
+                if (!rawData || !rawData.walls) {
+                    console.error("Vector data is missing 'walls' property:", rawData);
+                    alert("Error: AI Data file is corrupt or empty.");
+                    return;
+                }
 
-            if (!rawData || !rawData.walls) {
-                console.error("Vector data is missing 'walls' property:", rawData);
-                alert("Error: AI Data file is corrupt or empty.");
-                return;
+                const { walls, detected_symbols } = rawData;
+                const symbols = detected_symbols || [];
+                console.log(`Loaded ${walls.length} walls and ${symbols?.length} symbols.`);
+
+                // Map walls
+                const mappedWalls = walls.map((w: number[][]) => w.map((p: number[]) => [p[0], p[1]]));
+
+                // Map symbols
+                const mappedSymbols = (symbols || []).map((s: number[], idx: number) => ({
+                    id: `ai - static - ${Date.now()} -${idx} `,
+                    type: 'LIGHT', // Default to light, adjust if symbol types are in data
+                    x: s[0],
+                    y: s[1],
+                    rotation: s[2] || 0,
+                    notes: 'AI Detected'
+                }));
+
+                setVectorLines(mappedWalls);
+                setAiSymbols(mappedSymbols);
+                setLayerState(prev => ({ ...prev, showAiSymbols: true })); // Auto-show
+            } catch (err) {
+                console.error("Failed to load static vectors:", err);
+                alert("Failed to load AI overlay data.");
+            } finally {
+                setIsScanning(false);
             }
-
-            const { walls, detected_symbols } = rawData;
-            const symbols = detected_symbols || [];
-
-            // Map walls
-            const mappedWalls = walls.map((w: number[][]) => w.map((p: number[]) => [p[0], p[1]]));
-            // Map symbols
-            const mappedSymbols = (symbols || []).map((s: number[], idx: number) => ({
-                id: `ai-static-${Date.now()}-${idx}`,
-                type: 'LIGHT', // Default to light, adjust if symbol types are in data
-                x: s[0],
-                y: s[1],
-                rotation: s[2] || 0,
-                notes: 'AI Detected'
-            }));
-            setVectorLines(mappedWalls);
-            setAiSymbols(mappedSymbols || []);
-            setLayerState(prev => ({ ...prev, showAiSymbols: true }));
-        } catch (err) {
-            console.error("Failed to load static vectors:", err);
-            alert(`Failed to load AI overlay data: ${err}`);
-        } finally {
-            setIsScanning(false);
-        }
-    };
-
-    // Auto-load main vector file on mount so users don't need to click anything.
-    useEffect(() => {
-        if (vectorLines.length === 0 && !isScanning) {
-            loadStaticVectors('main');
-        }
-    }, [vectorLines.length, isScanning]);
-
-    const toggleTestVector = () => {
-        // Adds a 10% red box in the center 45-55%
-        const box = [[45, 45], [55, 45], [55, 55], [45, 55], [45, 45]];
-        setVectorLines(prev => {
-            // If we already have the box (check length 5), remove it? No, just add or reset.
-            // Let's just append it to whatever is there so we can see if it overlays.
-            return [...prev, box];
-        });
-        setLayerState(prev => ({ ...prev, showAiSymbols: true }));
-        alert("Injected Test Square (Center).");
+        }, 800); // 800ms fake delay for "feeling"
     };
 
     const handleSaveLayout = async () => {
@@ -574,13 +567,13 @@ const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, 
                     {({ zoomIn, zoomOut, resetTransform, centerView }) => (
                         <React.Fragment>
                             <MapController activeLayer="ELECTRICAL" setFitFn={setFitToScreen} />
-                            <TransformComponent wrapperClass="w-full" contentClass="">
+                            <TransformComponent wrapperClass="w-full h-full" contentClass="w-full h-full">
                                 <div
                                     ref={contentRef}
-                                    className={`relative shadow-2xl bg-slate-900 border border-slate-800 ${toolMode !== 'NONE' ? 'cursor-crosshair' : ''}`}
+                                    className={`relative shadow - 2xl bg - slate - 900 border border - slate - 800 ${toolMode !== 'NONE' ? 'cursor-crosshair' : ''} `}
                                     style={{
-                                        width: "fit-content",
-                                        height: "fit-content",
+                                        width: "100%",
+                                        height: "100%",
                                         // Ensure the container has dimensions so the image can fill it
                                     }}
                                     onPointerDown={(e) => { dragStartRef.current = { x: e.clientX, y: e.clientY }; }}
@@ -624,7 +617,7 @@ const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, 
                                         const size = s.type === 'ENCLOSURE' ? '120px' : '24px';
                                         return (
                                             <div
-                                                key={s.id || i}
+                                                key={i}
                                                 onPointerDown={(e) => handlePointerDown(e, s)}
                                                 onClick={(e) => { if (isLocked) { e.stopPropagation(); onLocate(s.id); } }}
                                                 className={!isLocked ? "cursor-move hover:scale-110" : "cursor-pointer hover:bg-white/10 rounded pointer-events-auto"}
@@ -768,23 +761,14 @@ const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, 
                                                 </div>
                                                 <div className="flex flex-col gap-1">
                                                     <button
-                                                        onClick={() => loadStaticVectors('main')}
-                                                        disabled={isScanning}
-                                                        className={`w-full p-1.5 text-[10px] rounded flex items-center gap-2 justify-center
-                                                            ${isScanning ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-purple-300 cursor-pointer'}`}
+                                                        onClick={loadStaticVectors}
+                                                        disabled={isScanning || vectorLines.length > 0}
+                                                        className={`w - full p - 1.5 text - [10px] rounded flex items - center gap - 2 justify - center
+                                                            ${vectorLines.length > 0 ? 'bg-green-700 text-white cursor-default' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-purple-300 cursor-pointer'}
+                                                            ${isScanning ? 'opacity-70 cursor-not-allowed' : ''} `}
                                                     >
                                                         <Zap size={10} className={isScanning ? "animate-spin" : ""} />
-                                                        {isScanning ? 'Loading...' : 'Reload AI Overlay'}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => loadStaticVectors('debug')}
-                                                        disabled={isScanning}
-                                                        className="w-full p-1 text-[10px] rounded bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-amber-200 border border-slate-700"
-                                                    >
-                                                        Load Debug Overlay (tiny test)
-                                                    </button>
-                                                    <button onClick={toggleTestVector} className="text-[9px] text-slate-500 hover:text-red-400 underline self-center">
-                                                        + Test Square
+                                                        {isScanning ? 'Loading...' : vectorLines.length > 0 ? 'AI Overlay Active (v2)' : 'Load AI Overlay (v2)'}
                                                     </button>
                                                 </div>
 
@@ -804,6 +788,7 @@ const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, 
                                                                 }));
                                                                 setLayoutData(prev => [...prev, ...newItems]);
                                                                 setAiSymbols([]); // Clear AI layer
+                                                                addLog('AI Import', { count: newItems.length });
                                                                 setIsLocked(false); // Enable edit mode to indicate unsaved changes
                                                             }}
                                                             className="w-full p-1.5 bg-purple-900/50 text-purple-200 text-[10px] rounded hover:bg-purple-800 flex items-center justify-center gap-2 border border-purple-700"
@@ -834,67 +819,18 @@ const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, 
     );
 };
 const MemoizedVectorOverlay = React.memo(({ lines }: { lines: number[][][] }) => {
-    // Split into polylines to avoid giant single-path strings that some browsers silently drop.
-    const polylines = useMemo(() => (
-        lines
-            .filter(line => line.length > 1)
-            .map(line => line.map(pt => `${pt[0]},${pt[1]}`).join(' '))
-    ), [lines]);
-
-    if (!polylines.length) return null;
+    const d = useMemo(() => {
+        return lines.map(line => {
+            if (line.length < 2) return '';
+            return line.map((pt, idx) => `${idx === 0 ? 'M' : 'L'} ${pt[0]} ${pt[1]} `).join(' ');
+        }).join(' ');
+    }, [lines]);
 
     return (
         <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ zIndex: 25 }}>
-            {polylines.map((points, idx) => (
-                <polyline
-                    key={idx}
-                    points={points}
-                    fill="none"
-                    stroke="#ef4444"
-                    strokeWidth="1.5"
-                    opacity="0.85"
-                    vectorEffect="non-scaling-stroke"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                />
-            ))}
+            <path d={d} stroke="#ef4444" strokeWidth="1.5" fill="none" opacity="0.8" vectorEffect="non-scaling-stroke" />
         </svg>
     );
 });
-
-const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
-    return (
-        <div className="h-full flex overflow-hidden bg-slate-950">
-            <div className="flex-1 relative overflow-hidden bg-black">
-                <TransformWrapper
-                    minScale={0.15}
-                    maxScale={5}
-                    initialScale={1}
-                    wheel={{ step: 0.1 }}
-                    doubleClick={{ disabled: true }}
-                    panning={{ disabled: false, velocityDisabled: true }}
-                    pinch={{ disabled: false }}
-                    limitToBounds={false}
-                    centerOnInit
-                >
-                    <TransformComponent wrapperClass="w-full h-full" contentClass="w-full h-full flex items-center justify-center">
-                        <img
-                            src={CLEAN_IMAGE}
-                            alt="Floor Plan (Clean)"
-                            draggable={false}
-                            className="block pointer-events-none select-none max-w-none"
-                            style={{ userSelect: 'none', width: 'auto', height: 'auto' }}
-                        />
-                    </TransformComponent>
-                </TransformWrapper>
-            </div>
-        </div>
-    );
-};
-
-const FloorPlanMap: React.FC<FloorPlanMapProps> = (props) => {
-    if (USE_BASELINE_VIEW) return <BaselineFloorPlan {...props} />;
-    return <LegacyFloorPlanMap {...props} />;
-};
 
 export default FloorPlanMap;

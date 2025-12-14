@@ -28,9 +28,10 @@ export const INITIAL_SYSTEMS: SystemDefinition[] = [
     },
     {
         id: 'outdoor',
-        title: 'Outdoor Lighting',
-        description: 'Landscape and facade lighting for aesthetics and security.',
-        technicalDetails: 'Zoned low-voltage landscape lighting transformers controlled via KNX relays. Facade lighting dimmable via DALI drivers. Automated based on astronomical clock and security events.'
+        title: 'Outdoor DMX Lighting',
+        description: 'Architectural 24V DC landscape and facade lighting with DMX control for dynamic color and tunable white.',
+        technicalDetails: 'DMX512-based outdoor lighting system controlled via KNX-to-DMX Gateway (Weinzierl 544) in LCP-1. Utilizes hybrid daisy-chain topology: shielded Cat5e (DMX data) bundled with 14/2 or 10/2 landscape wire (24V DC power). Field fixtures include RGBW tree uplights, tunable white bollards, and linear wall grazers. Powered by Mean Well HLG-series IP67 constant voltage drivers buried in weatherproof NEMA enclosures. System supports RDM (Remote Device Management) for automated addressing. Automated based on astronomical clock, security events, and seasonal color programs.',
+        warning: 'PHASED IMPLEMENTATION: Phase 1 (Immediate) = Rough-in cabling, DMX gateway, and control gear in LCP-1. Phase 2 (Future) = Fixtures and field drivers (quantities TBD based on photometric design plan).'
     },
     {
         id: 'irrigation',

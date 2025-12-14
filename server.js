@@ -14,6 +14,37 @@ const PORT = 3001;
 const DATA_FILE = path.join(__dirname, 'layout.json');
 const OVERRIDE_FILE = path.join(__dirname, 'layout.local.json');
 
+// AI Agent Detection Patterns
+// These agents need pre-rendered HTML because they can't reliably execute JavaScript
+const AI_AGENTS = [
+    'GoogleOther',           // Gemini Live Fetch (primary agent when users paste URLs)
+    'Gemini-Deep-Research',  // Gemini Deep Research (autonomous multi-step research)
+    'Google-InspectionTool', // Google Search Console testing tool
+    'GPTBot',                // OpenAI (future-proofing)
+    'ClaudeBot',             // Anthropic Claude (future-proofing)
+    'Applebot-Extended'      // Apple Intelligence (future-proofing)
+];
+
+// Legacy crawlers and tools
+const LEGACY_BOTS = [
+    'googlebot',
+    'crawler',
+    'spider',
+    'robot',
+    'crawling',
+    'curl',
+    'wget',
+    'python-requests',
+    'vertex',
+    'facebookexternalhit'
+];
+
+// Build combined bot detection pattern (case-insensitive)
+const BOT_PATTERN = new RegExp(
+    [...AI_AGENTS, ...LEGACY_BOTS].join('|'),
+    'i'
+);
+
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -238,7 +269,7 @@ function generateDynamicBomHtml() {
 // The user wants "ALL URL's".
 
 app.use((req, res, next) => {
-    // Skip API calls from bot detection (bots shouldn't be posting to api anyway, 
+    // Skip API calls from bot detection (bots shouldn't be posting to api anyway,
     // and if they get data from api that's fine, but we care about HTML views)
     if (req.path.startsWith('/api/') || req.path.includes('.')) {
         // Files (css, js) and API -> Skip
@@ -246,10 +277,23 @@ app.use((req, res, next) => {
     }
 
     const ua = req.headers['user-agent'] || '';
-    const isBot = /googlebot|crawler|spider|robot|crawling|curl|wget|python|gemini|vertex|facebookexternalhit/i.test(ua);
+    const isBot = BOT_PATTERN.test(ua);
 
     if (isBot) {
-        console.log(`Bot Detected (${ua}). Serving Dynamic BOM.`);
+        // Enhanced logging: identify specific agent type for monitoring
+        const agentType =
+            /GoogleOther/i.test(ua) ? 'Gemini-Live' :
+            /Gemini-Deep-Research/i.test(ua) ? 'Gemini-Research' :
+            /Google-InspectionTool/i.test(ua) ? 'Search-Console' :
+            /googlebot/i.test(ua) ? 'Googlebot-Search' :
+            /GPTBot/i.test(ua) ? 'OpenAI-GPT' :
+            /ClaudeBot/i.test(ua) ? 'Anthropic-Claude' :
+            /curl|wget/i.test(ua) ? 'CLI-Tool' :
+            'Other-Bot';
+
+        // Log with agent type and truncated UA string
+        console.log(`[BOT:${agentType}] ${ua.substring(0, 80)}${ua.length > 80 ? '...' : ''}`);
+
         try {
             const html = generateDynamicBomHtml();
             res.send(html);
@@ -273,6 +317,7 @@ app.get(/.*/, (req, res) => {
 });
 
 const APP_PORT = process.env.PORT || 3001;
-app.listen(APP_PORT, () => {
-    console.log(`API Server running on port ${APP_PORT}`);
+const APP_HOST = process.env.HOST || '0.0.0.0';
+app.listen(APP_PORT, APP_HOST, () => {
+    console.log(`API Server running on http://${APP_HOST}:${APP_PORT}`);
 });
