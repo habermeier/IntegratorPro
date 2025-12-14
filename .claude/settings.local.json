@@ -4,7 +4,8 @@
       "Bash(git add:*)",
       "Bash(git commit --no-verify -m \"$(cat <<''EOF''\nfeat: Comprehensive Security & Intercom System Specification\n\nCentralizes power architecture with detailed BOM for Akuvox intercoms (X915S main + E16C subs), SR01 security relays, backup batteries, mounting hardware, and fire-rated compliance accessories. Adds shielded 18/4 cabling and secure power routing via SR01 modules.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git push:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git rm:*)"
     ]
   }
 }
