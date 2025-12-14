@@ -863,30 +863,149 @@ const MemoizedVectorOverlay = React.memo(({ lines }: { lines: number[][][] }) =>
 });
 
 const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const imgRef = useRef<HTMLImageElement>(null);
+
+    // Transform state: scale and position
+    // Start at scale 1 - CSS object-fit will handle initial sizing
+    const [transform, setTransform] = useState({ scale: 1, x: 0, y: 0 });
+
+    // Wheel zoom batching
+    const wheelDeltaRef = useRef(0);
+    const wheelRafRef = useRef<number | null>(null);
+    const lastWheelPosRef = useRef<{ x: number, y: number } | null>(null);
+
+    // Pan state
+    const panStartRef = useRef<{ x: number, y: number, transformX: number, transformY: number } | null>(null);
+    const [isPanning, setIsPanning] = useState(false);
+
+    // Scale limits
+    const scaleRef = useRef({ min: 0.1, max: 5, fit: 1 });
+
+    //Set scale limits when image loads
+    const handleImageLoad = () => {
+        scaleRef.current = {
+            min: 1, // CSS object-fit handles the fit, so min scale is 1 (no zoom out)
+            max: 5,
+            fit: 1
+        };
+    };
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (wheelRafRef.current) cancelAnimationFrame(wheelRafRef.current);
+        };
+    }, []);
+
+    // Apply accumulated wheel zoom (called via rAF)
+    const applyWheelZoom = () => {
+        const delta = wheelDeltaRef.current;
+        wheelDeltaRef.current = 0;
+        lastWheelPosRef.current = null;
+        wheelRafRef.current = null;
+
+        if (delta === 0) return;
+
+        // Multiplicative zoom
+        const ZOOM_FACTOR = 1.07;
+        const zoomMultiplier = Math.pow(ZOOM_FACTOR, Math.abs(delta));
+        let nextScale = delta > 0 ? transform.scale / zoomMultiplier : transform.scale * zoomMultiplier;
+        nextScale = Math.max(scaleRef.current.min, Math.min(scaleRef.current.max, nextScale));
+
+        // Screen-centered zoom: just change scale, keep pan position
+        // transformOrigin: center handles the centering automatically
+        setTransform({ scale: nextScale, x: transform.x, y: transform.y });
+    };
+
+    // Wheel event handler
+    const handleWheel = (e: React.WheelEvent) => {
+        e.preventDefault();
+
+        const { deltaY, deltaMode } = e;
+        let normalized = 0;
+        if (deltaMode === 0) normalized = deltaY / 53; // pixels -> notches
+        else if (deltaMode === 1) normalized = deltaY;  // lines -> notches
+        else if (deltaMode === 2) normalized = deltaY * 10; // pages -> big jump
+
+        wheelDeltaRef.current += normalized;
+        lastWheelPosRef.current = { x: e.clientX, y: e.clientY };
+
+        if (!wheelRafRef.current) {
+            wheelRafRef.current = requestAnimationFrame(applyWheelZoom);
+        }
+    };
+
+    // Pan handlers
+    const handlePointerDown = (e: React.PointerEvent) => {
+        if (e.button !== 0) return; // Only left click
+        e.preventDefault();
+        panStartRef.current = {
+            x: e.clientX,
+            y: e.clientY,
+            transformX: transform.x,
+            transformY: transform.y
+        };
+        setIsPanning(true);
+        (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    };
+
+    const handlePointerMove = (e: React.PointerEvent) => {
+        if (!panStartRef.current) return;
+        e.preventDefault();
+
+        const dx = e.clientX - panStartRef.current.x;
+        const dy = e.clientY - panStartRef.current.y;
+
+        setTransform({
+            scale: transform.scale,
+            x: panStartRef.current.transformX + dx,
+            y: panStartRef.current.transformY + dy
+        });
+    };
+
+    const handlePointerUp = (e: React.PointerEvent) => {
+        panStartRef.current = null;
+        setIsPanning(false);
+        (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    };
+
     return (
         <div className="h-full flex overflow-hidden bg-slate-950">
-            <div className="flex-1 relative overflow-hidden bg-black">
-                <TransformWrapper
-                    minScale={0.15}
-                    maxScale={5}
-                    initialScale={1}
-                    wheel={{ step: 0.1 }}
-                    doubleClick={{ disabled: true }}
-                    panning={{ disabled: false, velocityDisabled: true }}
-                    pinch={{ disabled: false }}
-                    limitToBounds={false}
-                    centerOnInit
+            <div
+                ref={containerRef}
+                className={`flex-1 relative overflow-hidden bg-black ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
+                onWheel={handleWheel}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerUp}
+                style={{ touchAction: 'none' }}
+            >
+                <div
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
+                        transformOrigin: 'center center',
+                        willChange: 'transform',
+                        transition: isPanning ? 'none' : 'transform 0.15s ease-out',
+                    }}
                 >
-                    <TransformComponent wrapperClass="w-full h-full" contentClass="w-full h-full flex items-center justify-center">
-                        <img
-                            src={CLEAN_IMAGE}
-                            alt="Floor Plan (Clean)"
-                            draggable={false}
-                            className="block pointer-events-none select-none max-w-none"
-                            style={{ userSelect: 'none', width: 'auto', height: 'auto' }}
-                        />
-                    </TransformComponent>
-                </TransformWrapper>
+                    <img
+                        ref={imgRef}
+                        src={CLEAN_IMAGE}
+                        alt="Floor Plan (Clean)"
+                        draggable={false}
+                        className="block pointer-events-none select-none"
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
+                        }}
+                        onLoad={handleImageLoad}
+                    />
+                </div>
             </div>
         </div>
     );
