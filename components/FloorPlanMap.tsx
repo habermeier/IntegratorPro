@@ -1254,6 +1254,39 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
         loadFromLocalStorage('floorplan-routingMode', false)
     );
     const [routingPath, setRoutingPath] = useState<string[]>([]); // Device IDs in routing path
+    const [draggingDeviceId, setDraggingDeviceId] = useState<string | null>(null);
+    const [devicePlacementActive, setDevicePlacementActive] = useState<boolean>(false);
+
+    // Device icon renderer - returns SVG element for device type
+    const renderDeviceIcon = (deviceType: string, x: number, y: number, selected: boolean = false) => {
+        const color = selected ? '#22c55e' : '#3b82f6';
+        const size = 8;
+
+        switch (deviceType) {
+            case 'dt-downlight':
+                return (
+                    <g key={`device-${x}-${y}`}>
+                        <circle cx={x} cy={y} r={size} fill={color} opacity={0.7} stroke="#ffffff" strokeWidth={1.5} />
+                        <circle cx={x} cy={y} r={size * 0.4} fill="none" stroke="#ffffff" strokeWidth={1} />
+                    </g>
+                );
+            case 'dt-junction-box':
+                return (
+                    <g key={`device-${x}-${y}`}>
+                        <rect x={x - size} y={y - size} width={size * 2} height={size * 2} fill={color} opacity={0.7} stroke="#ffffff" strokeWidth={1.5} />
+                        <line x1={x - size * 0.5} y1={y} x2={x + size * 0.5} y2={y} stroke="#ffffff" strokeWidth={1} />
+                        <line x1={x} y1={y - size * 0.5} x2={x} y2={y + size * 0.5} stroke="#ffffff" strokeWidth={1} />
+                    </g>
+                );
+            default:
+                // Generic device icon
+                return (
+                    <g key={`device-${x}-${y}`}>
+                        <circle cx={x} cy={y} r={size} fill={color} opacity={0.7} stroke="#ffffff" strokeWidth={1.5} />
+                    </g>
+                );
+        }
+    };
 
     // Component catalog filtered by topology
     const getComponentsByTopology = (topology: Topology): { value: string, label: string }[] => {
@@ -1339,6 +1372,64 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
         return inside;
     };
 
+    // Detect which room contains a point
+    const detectRoomForPoint = (point: { x: number, y: number }): { roomId: string, roomName: string } | null => {
+        for (const room of rooms) {
+            if (room.visible && isPointInPolygon(point, room.path)) {
+                return { roomId: room.id, roomName: room.name };
+            }
+        }
+        return null;
+    };
+
+    // Generate semantic device ID: dt-downlight-bedroom-2:1
+    const generateDeviceId = (deviceType: string, roomName: string, network: string): string => {
+        // Convert device type to lowercase-snake-case prefix
+        const typePrefix = deviceType.replace('dt-', '');
+
+        // Convert room name to lowercase-snake-case
+        const roomSlug = roomName.toLowerCase().replace(/\s+/g, '-');
+
+        // Count existing devices of this type in this room on this network
+        const existingCount = daliDevices.filter(d =>
+            d.deviceType === deviceType &&
+            d.roomName === roomName &&
+            d.network === network
+        ).length;
+
+        // Generate ID: type-room:sequence
+        return `${typePrefix}-${roomSlug}-${network}:${existingCount + 1}`;
+    };
+
+    // Calculate cable length between two devices
+    const calculateCableLength = (device1: Device, device2: Device): number => {
+        // Manhattan distance (horizontal only)
+        const horizontalDistance = Math.abs(device1.x - device2.x) + Math.abs(device1.y - device2.y);
+
+        // Get actual heights in feet
+        const getHeight = (device: Device): number => {
+            if (device.mountingHeight === 'custom' && device.customHeight) {
+                return device.customHeight;
+            }
+            return heightSettings[device.mountingHeight] || 0;
+        };
+
+        const height1 = getHeight(device1);
+        const height2 = getHeight(device2);
+        const heightDifference = Math.abs(height1 - height2);
+
+        // Count bends (assume 1 bend for horizontal change + 1 for vertical if heights differ)
+        const bendCount = (horizontalDistance > 0 ? 1 : 0) + (heightDifference > 0 ? 1 : 0);
+        const bendSlack = bendCount * heightSettings.bendSlack;
+
+        // Convert pixels to feet (assuming scaleFactor is set)
+        const pixelsToFeet = scaleFactor ? 1 / (scaleFactor / 12) : 1; // scaleFactor is pixels per inch
+        const horizontalFeet = (horizontalDistance * pixelsToFeet);
+
+        // Total: horizontal + vertical + bend slack
+        return horizontalFeet + heightDifference + bendSlack;
+    };
+
     // Room snapping state
     const [snapPoint, setSnapPoint] = useState<{ x: number, y: number, type: 'vertex' | 'edge' } | null>(null);
 
@@ -1404,10 +1495,11 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     const hudTimeoutRef = useRef<number | null>(null);
 
     // Tool state
-    type Tool = 'select' | 'scale' | 'measure';
+    type Tool = 'select' | 'scale' | 'measure' | 'topology';
     const [activeTool, setActiveTool] = useState<Tool>(() =>
         loadFromLocalStorage('floorplan-activeTool', 'select')
     );
+    const [isMouseOverFloorPlan, setIsMouseOverFloorPlan] = useState<boolean>(false);
 
     // Scale tool state
     const [scalePoints, setScalePoints] = useState<{ x: number, y: number }[]>([]);
@@ -1718,7 +1810,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                 }
             }
 
-            if (e.code === 'Space' && (activeTool === 'scale' || activeTool === 'measure' || maskEditingActive || roomDrawingActive) && !isTyping) {
+            if (e.code === 'Space' && (activeTool === 'scale' || activeTool === 'measure' || activeTool === 'topology' || maskEditingActive || roomDrawingActive) && !isTyping) {
                 e.preventDefault();
                 setIsSpacePressed(true);
             }
@@ -1809,6 +1901,15 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                 } else if (activeTool === 'measure') {
                     // Clear measure points and exit to select mode
                     setMeasurePoints([]);
+                    setActiveTool('select');
+                    setMousePos(null);
+                    showHudMessage('Pan: Click + Drag  •  Zoom: Mouse Wheel');
+                } else if (activeTool === 'topology') {
+                    // Clear device selection and exit to select mode
+                    setSelectedDeviceId(null);
+                    setDraggingDeviceId(null);
+                    setRoutingMode(false);
+                    setRoutingPath([]);
                     setActiveTool('select');
                     setMousePos(null);
                     showHudMessage('Pan: Click + Drag  •  Zoom: Mouse Wheel');
@@ -2181,6 +2282,143 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
             }
         }
 
+        // Device placement mode (place new devices or select existing ones)
+        if (activeTool === 'topology' && !isSpacePressed && !routingMode) {
+            if (containerRef.current) {
+                const rect = containerRef.current.getBoundingClientRect();
+                const containerX = e.clientX - rect.left;
+                const containerY = e.clientY - rect.top;
+                const clickCoords = containerPosToImageCoords(containerX, containerY);
+
+                // Check if clicking on an existing device
+                const DEVICE_CLICK_THRESHOLD = 15; // pixels in image space
+                let clickedDevice: Device | null = null;
+
+                for (const device of daliDevices) {
+                    const dx = clickCoords.x - device.x;
+                    const dy = clickCoords.y - device.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < DEVICE_CLICK_THRESHOLD) {
+                        clickedDevice = device;
+                        break;
+                    }
+                }
+
+                if (clickedDevice) {
+                    // Clicked on existing device - select it and start drag
+                    setSelectedDeviceId(clickedDevice.id);
+                    setDraggingDeviceId(clickedDevice.id);
+                    showHudMessage(`Device "${clickedDevice.id}" selected  •  Drag to move  •  Del: delete`, 3000);
+                    return;
+                } else {
+                    // Clicking on empty space - place new device
+                    const roomInfo = detectRoomForPoint(clickCoords);
+
+                    if (!roomInfo) {
+                        showHudMessage('⚠ Device must be placed inside a room', 2000);
+                        return;
+                    }
+
+                    // Generate semantic ID
+                    const deviceId = generateDeviceId(selectedDeviceType, roomInfo.roomName, selectedNetwork);
+
+                    // Create new device
+                    const newDevice: Device = {
+                        id: deviceId,
+                        topology: selectedTopology,
+                        deviceType: selectedDeviceType,
+                        x: clickCoords.x,
+                        y: clickCoords.y,
+                        mountingHeight: selectedMountingHeight,
+                        network: selectedNetwork,
+                        roomId: roomInfo.roomId,
+                        roomName: roomInfo.roomName,
+                        connections: [],
+                    };
+
+                    setDaliDevices(prev => [...prev, newDevice]);
+                    setSelectedDeviceId(deviceId);
+                    showHudMessage(`✓ Placed ${selectedDeviceType.replace('dt-', '')} in ${roomInfo.roomName}`, 2000);
+                    return;
+                }
+            }
+        }
+
+        // Device routing mode (click-to-click daisy-chain)
+        if (activeTool === 'topology' && routingMode && !isSpacePressed) {
+            if (containerRef.current) {
+                const rect = containerRef.current.getBoundingClientRect();
+                const containerX = e.clientX - rect.left;
+                const containerY = e.clientY - rect.top;
+                const clickCoords = containerPosToImageCoords(containerX, containerY);
+
+                // Find clicked device
+                const DEVICE_CLICK_THRESHOLD = 15;
+                let clickedDevice: Device | null = null;
+
+                for (const device of daliDevices) {
+                    const dx = clickCoords.x - device.x;
+                    const dy = clickCoords.y - device.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < DEVICE_CLICK_THRESHOLD) {
+                        clickedDevice = device;
+                        break;
+                    }
+                }
+
+                if (clickedDevice) {
+                    // Add device to routing path
+                    setRoutingPath(prev => {
+                        const newPath = [...prev];
+
+                        // If this device is already in the path, remove everything after it (allow backtracking)
+                        const existingIndex = newPath.indexOf(clickedDevice.id);
+                        if (existingIndex !== -1) {
+                            return newPath.slice(0, existingIndex + 1);
+                        }
+
+                        // Validate: can only connect devices on same network
+                        if (newPath.length > 0) {
+                            const lastDeviceId = newPath[newPath.length - 1];
+                            const lastDevice = daliDevices.find(d => d.id === lastDeviceId);
+
+                            if (lastDevice && lastDevice.network !== clickedDevice.network) {
+                                showHudMessage('⚠ Can only connect devices on same network', 2000);
+                                return prev;
+                            }
+                        }
+
+                        // Add to path
+                        newPath.push(clickedDevice.id);
+
+                        // Update device connections
+                        setDaliDevices(prevDevices => prevDevices.map(device => {
+                            if (device.id === clickedDevice.id && newPath.length > 1) {
+                                const prevDeviceId = newPath[newPath.length - 2];
+                                if (!device.connections.includes(prevDeviceId)) {
+                                    return { ...device, connections: [...device.connections, prevDeviceId] };
+                                }
+                            }
+                            return device;
+                        }));
+
+                        showHudMessage(`Routing: ${newPath.length} device${newPath.length !== 1 ? 's' : ''} connected`, 1500);
+                        return newPath;
+                    });
+                    return;
+                } else {
+                    // Clicked empty space - clear routing path
+                    if (routingPath.length > 0) {
+                        showHudMessage(`Routing complete: ${routingPath.length} devices`, 2000);
+                    }
+                    setRoutingPath([]);
+                    return;
+                }
+            }
+        }
+
         // Mask drawing mode (only if not panning with Space)
         if (maskTool === 'draw' && maskEditingActive && layers.base.visible && masksVisible && !isSpacePressed && !panStartRef.current) {
             if (containerRef.current) {
@@ -2284,6 +2522,31 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     };
 
     const handlePointerMove = (e: React.PointerEvent) => {
+        // Handle device dragging (but not if Space is pressed for panning)
+        if (draggingDeviceId && !isSpacePressed && containerRef.current) {
+            const rect = containerRef.current.getBoundingClientRect();
+            const containerX = e.clientX - rect.left;
+            const containerY = e.clientY - rect.top;
+            const newCoords = containerPosToImageCoords(containerX, containerY);
+
+            setDaliDevices(prev => prev.map(device => {
+                if (device.id === draggingDeviceId) {
+                    // Update room assignment as device moves
+                    const roomInfo = detectRoomForPoint(newCoords);
+
+                    return {
+                        ...device,
+                        x: newCoords.x,
+                        y: newCoords.y,
+                        roomId: roomInfo?.roomId,
+                        roomName: roomInfo?.roomName,
+                    };
+                }
+                return device;
+            }));
+            return;
+        }
+
         // Handle room corner dragging
         if (draggingCorner && containerRef.current) {
             const rect = containerRef.current.getBoundingClientRect();
@@ -2486,6 +2749,14 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
             }
         }
 
+        // Always track mouse position for topology tool preview
+        if (activeTool === 'topology' && containerRef.current) {
+            const rect = containerRef.current.getBoundingClientRect();
+            const relX = e.clientX - rect.left;
+            const relY = e.clientY - rect.top;
+            setMousePos({ x: relX, y: relY });
+        }
+
         // Always track mouse position for mask editing cursor preview
         if (masksVisible && layers.base.visible && activeTool !== 'scale' && activeTool !== 'measure' && containerRef.current) {
             const rect = containerRef.current.getBoundingClientRect();
@@ -2509,6 +2780,12 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     };
 
     const handlePointerUp = (e: React.PointerEvent) => {
+        // Complete device dragging
+        if (draggingDeviceId) {
+            setDraggingDeviceId(null);
+            return;
+        }
+
         // Complete room corner dragging
         if (draggingCorner) {
             setDraggingCorner(null);
@@ -2589,6 +2866,9 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                         setScalePoints([]);
                         setDistanceInput('');
                         setEditingPointIndex(null);
+                        setSelectedDeviceId(null);
+                        setDraggingDeviceId(null);
+                        setRoutingMode(false);
                         showHudMessage('Pan: Click + Drag  •  Zoom: Mouse Wheel');
                     }}
                     className={`px-3 py-2 rounded text-sm transition-colors ${
@@ -2607,6 +2887,9 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                         setScalePoints([]);
                         setDistanceInput('');
                         setEditingPointIndex(null);
+                        setSelectedDeviceId(null);
+                        setDraggingDeviceId(null);
+                        setRoutingMode(false);
                         showHudMessage('Click first point  •  Hold Space to pan');
                     }}
                     className={`px-3 py-2 rounded text-sm transition-colors ${
@@ -2623,6 +2906,9 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                     onClick={() => {
                         setActiveTool('measure');
                         setMeasurePoints([]);
+                        setSelectedDeviceId(null);
+                        setDraggingDeviceId(null);
+                        setRoutingMode(false);
                         showHudMessage('Click first point  •  Hold Space to pan  •  ESC to cancel');
                     }}
                     className={`px-3 py-2 rounded text-sm transition-colors ${
@@ -2634,9 +2920,28 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                     Measure
                 </button>
 
+                {/* Topology Tool */}
+                <button
+                    onClick={() => {
+                        setActiveTool('topology');
+                        setSelectedDeviceId(null);
+                        setDraggingDeviceId(null);
+                        setRoutingMode(false);
+                        showHudMessage('Click to place device  •  Click device to select  •  Hold Space to pan  •  ESC to exit');
+                    }}
+                    className={`px-3 py-2 rounded text-sm transition-colors ${
+                        activeTool === 'topology'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    }`}
+                >
+                    Topology
+                </button>
+
                 <div className="border-t border-slate-700 my-2"></div>
 
-                {/* Device Placement Section */}
+                {/* Device Placement Section - Only visible in Topology mode */}
+                {activeTool === 'topology' && (
                 <div className="space-y-2">
                     <div className="text-slate-400 text-xs">Device Placement</div>
 
@@ -2732,6 +3037,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                         )}
                     </div>
                 </div>
+                )}
 
                 <div className="border-t border-slate-700 my-2"></div>
 
@@ -2743,6 +3049,105 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                     <Settings className="w-4 h-4 inline mr-1" />
                     Settings
                 </button>
+                </div>
+            )}
+
+            {/* Stats Panel - Lower Left */}
+            {activeTool === 'topology' && (
+                <div className="absolute left-4 bottom-4 z-30 bg-slate-900/90 backdrop-blur-sm rounded-lg border border-slate-700 w-64">
+                    <div className="p-3 border-b border-slate-700 text-slate-200 text-sm font-medium">
+                        Topology Stats
+                    </div>
+                    <div className="p-3 space-y-2">
+                        {/* Device counts by type */}
+                        <div className="space-y-1">
+                            <div className="text-slate-400 text-xs font-medium">Devices</div>
+                            {(() => {
+                                const deviceCounts: Record<string, number> = {};
+                                daliDevices.forEach(device => {
+                                    const type = device.deviceType.replace('dt-', '');
+                                    deviceCounts[type] = (deviceCounts[type] || 0) + 1;
+                                });
+
+                                return Object.entries(deviceCounts).map(([type, count]) => (
+                                    <div key={type} className="flex justify-between text-xs">
+                                        <span className="text-slate-300 capitalize">{type.replace('-', ' ')}</span>
+                                        <span className="text-slate-400">{count}</span>
+                                    </div>
+                                ));
+                            })()}
+                            <div className="flex justify-between text-xs font-medium border-t border-slate-700 pt-1 mt-1">
+                                <span className="text-slate-200">Total</span>
+                                <span className="text-blue-400">{daliDevices.length}</span>
+                            </div>
+                        </div>
+
+                        {/* Cable totals by network */}
+                        <div className="space-y-1 border-t border-slate-700 pt-2">
+                            <div className="text-slate-400 text-xs font-medium">Cable Runs</div>
+                            {(() => {
+                                const cableTotals: Record<string, { segments: number; totalLength: number }> = {};
+
+                                daliDevices.forEach(device => {
+                                    device.connections.forEach(connectedId => {
+                                        // Only count each connection once
+                                        if (device.id > connectedId) return;
+
+                                        const connectedDevice = daliDevices.find(d => d.id === connectedId);
+                                        if (!connectedDevice) return;
+
+                                        const network = device.network;
+                                        if (!cableTotals[network]) {
+                                            cableTotals[network] = { segments: 0, totalLength: 0 };
+                                        }
+
+                                        cableTotals[network].segments += 1;
+                                        cableTotals[network].totalLength += calculateCableLength(device, connectedDevice);
+                                    });
+                                });
+
+                                return Object.entries(cableTotals).map(([network, data]) => (
+                                    <div key={network} className="space-y-0.5">
+                                        <div className="flex justify-between text-xs">
+                                            <span className="text-slate-300">{network}</span>
+                                            <span className="text-slate-400">{data.segments} run{data.segments !== 1 ? 's' : ''}</span>
+                                        </div>
+                                        <div className="flex justify-between text-[10px] pl-2">
+                                            <span className="text-slate-500">Total length</span>
+                                            <span className="text-green-400">{data.totalLength.toFixed(1)} ft</span>
+                                        </div>
+                                    </div>
+                                ));
+                            })()}
+                        </div>
+
+                        {/* Active routing path */}
+                        {routingPath.length > 0 && (
+                            <div className="space-y-1 border-t border-slate-700 pt-2">
+                                <div className="text-green-400 text-xs font-medium">Active Route</div>
+                                <div className="flex justify-between text-xs">
+                                    <span className="text-slate-300">Devices</span>
+                                    <span className="text-green-400">{routingPath.length}</span>
+                                </div>
+                                {routingPath.length > 1 && (() => {
+                                    let totalLength = 0;
+                                    for (let i = 1; i < routingPath.length; i++) {
+                                        const device1 = daliDevices.find(d => d.id === routingPath[i - 1]);
+                                        const device2 = daliDevices.find(d => d.id === routingPath[i]);
+                                        if (device1 && device2) {
+                                            totalLength += calculateCableLength(device1, device2);
+                                        }
+                                    }
+                                    return (
+                                        <div className="flex justify-between text-xs">
+                                            <span className="text-slate-300">Length</span>
+                                            <span className="text-green-400">{totalLength.toFixed(1)} ft</span>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
 
@@ -3102,199 +3507,128 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                 </div>
             )}
 
-            {/* Magnified Cursor Preview (Scale Tool) */}
-            {activeTool === 'scale' && mousePos && scalePoints.length < 2 && (
-                <MagnifiedCursor
-                    mousePos={mousePos}
-                    containerRef={containerRef}
-                    imgRef={imgRef}
-                    imageUrl={CLEAN_IMAGE}
-                    isSpacePressed={isSpacePressed}
-                    mode="scale"
-                    containerPosToImageCoords={containerPosToImageCoords}
-                />
-            )}
+            {/* Unified Magnified Cursor - Configuration-driven approach */}
+            {(() => {
+                if (!mousePos || !isMouseOverFloorPlan) return null;
 
-            {/* Magnified Cursor Preview (Measure Tool) */}
-            {activeTool === 'measure' && mousePos && measurePoints.length < 2 && (
-                <MagnifiedCursor
-                    mousePos={mousePos}
-                    containerRef={containerRef}
-                    imgRef={imgRef}
-                    imageUrl={CLEAN_IMAGE}
-                    isSpacePressed={isSpacePressed}
-                    mode="measure"
-                    containerPosToImageCoords={containerPosToImageCoords}
-                />
-            )}
+                // Cursor configuration registry - each mode defines its own behavior
+                const cursorConfigs = [
+                    {
+                        id: 'scale',
+                        shouldShow: () => activeTool === 'scale' && scalePoints.length < 2,
+                        mode: 'scale' as const,
+                        renderOverlay: () => null,
+                    },
+                    {
+                        id: 'measure',
+                        shouldShow: () => activeTool === 'measure' && measurePoints.length < 2,
+                        mode: 'measure' as const,
+                        renderOverlay: () => null,
+                    },
+                    {
+                        id: 'topology',
+                        shouldShow: () => activeTool === 'topology' && !routingMode && !draggingDeviceId,
+                        mode: 'room' as const,
+                        renderOverlay: () => {
+                            const coords = containerPosToImageCoords(mousePos.x, mousePos.y);
+                            const roomInfo = detectRoomForPoint(coords);
+                            return (
+                                <>
+                                    {daliDevices.map(device => renderDeviceIcon(device.deviceType, device.x, device.y, device.id === selectedDeviceId))}
+                                    {rooms.filter(r => r.visible).map(room => {
+                                        const pathStr = room.path.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
+                                        return <g key={room.id}><path d={pathStr} fill="none" stroke="#3b82f6" strokeWidth={1} strokeDasharray="3,3" opacity={0.3} /></g>;
+                                    })}
+                                    <g opacity={roomInfo ? 0.7 : 0.3}>
+                                        {renderDeviceIcon(selectedDeviceType, coords.x, coords.y, false)}
+                                    </g>
+                                </>
+                            );
+                        },
+                    },
+                    {
+                        id: 'mask',
+                        shouldShow: () => maskEditingActive && maskTool === 'draw',
+                        mode: 'mask' as const,
+                        renderOverlay: () => {
+                            const coords = containerPosToImageCoords(mousePos.x, mousePos.y);
+                            return (
+                                <>
+                                    {layers.rooms.visible && rooms.filter(r => r.visible).map(room => {
+                                        const pathStr = room.path.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
+                                        return <g key={room.id}><path d={pathStr} fill="none" stroke="#3b82f6" strokeWidth={1} strokeDasharray="3,3" opacity={0.5} /></g>;
+                                    })}
+                                    {overlayMasks.map(mask => (
+                                        <g key={mask.id}>
+                                            <rect
+                                                x={mask.x - mask.width / 2} y={mask.y - mask.height / 2}
+                                                width={mask.width} height={mask.height}
+                                                fill="black" opacity={0.3} stroke="#ffffff" strokeWidth={1} strokeDasharray="2,2"
+                                                transform={`rotate(${mask.rotation}, ${mask.x}, ${mask.y})`}
+                                            />
+                                        </g>
+                                    ))}
+                                    <circle cx={coords.x} cy={coords.y} r={8} fill="none" stroke="#22c55e" strokeWidth={2} />
+                                    <circle cx={coords.x} cy={coords.y} r={4} fill="#22c55e" opacity={0.7} />
+                                </>
+                            );
+                        },
+                    },
+                    {
+                        id: 'room',
+                        shouldShow: () => roomDrawingActive && roomDrawing !== null && !roomPreviewFillColor,
+                        mode: 'room' as const,
+                        renderOverlay: () => {
+                            const coords = containerPosToImageCoords(mousePos.x, mousePos.y);
+                            const placementCoords = snapPoint || coords;
+                            return (
+                                <>
+                                    {rooms.filter(r => r.visible).map(room => {
+                                        const pathStr = room.path.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
+                                        return (
+                                            <g key={room.id}>
+                                                <path d={pathStr} fill="none" stroke="#3b82f6" strokeWidth={1} strokeDasharray="3,3" opacity={0.5} />
+                                                {room.path.map((point, idx) => (
+                                                    <circle key={idx} cx={point.x} cy={point.y} r={3} fill="#fbbf24" stroke="#ffffff" strokeWidth={1} />
+                                                ))}
+                                            </g>
+                                        );
+                                    })}
+                                    {roomDrawing.length > 0 && (
+                                        <>
+                                            <polyline points={roomDrawing.map(p => `${p.x},${p.y}`).join(' ')} fill="none" stroke="#22c55e" strokeWidth={2} />
+                                            {roomDrawing.map((point, i) => (
+                                                <circle key={i} cx={point.x} cy={point.y} r={i === 0 ? 4 : 2.5} fill={i === 0 ? '#22c55e' : '#3b82f6'} stroke="#ffffff" strokeWidth={1} />
+                                            ))}
+                                        </>
+                                    )}
+                                    <circle cx={placementCoords.x} cy={placementCoords.y} r={8} fill="none" stroke={snapPoint ? (snapPoint.type === 'vertex' ? '#fbbf24' : '#60a5fa') : '#22c55e'} strokeWidth={2} />
+                                    <circle cx={placementCoords.x} cy={placementCoords.y} r={4} fill={snapPoint ? (snapPoint.type === 'vertex' ? '#fbbf24' : '#60a5fa') : '#22c55e'} opacity={0.7} />
+                                </>
+                            );
+                        },
+                    },
+                ];
 
-            {/* Magnified Cursor Preview (Mask Editing) */}
-            {maskEditingActive && maskTool === 'draw' && mousePos && activeTool !== 'scale' && activeTool !== 'measure' && (
-                <MagnifiedCursor
-                    mousePos={mousePos}
-                    containerRef={containerRef}
-                    imgRef={imgRef}
-                    imageUrl={CLEAN_IMAGE}
-                    isSpacePressed={isSpacePressed}
-                    mode="mask"
-                    containerPosToImageCoords={containerPosToImageCoords}
-                >
-                    {/* Rooms in magnified view (if visible) */}
-                    {layers.rooms.visible && rooms.filter(r => r.visible).map(room => {
-                        const pathStr = room.path.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
-                        return (
-                            <path
-                                key={room.id}
-                                d={pathStr}
-                                fill={room.fillColor}
-                                stroke="#3b82f6"
-                                strokeWidth={1}
-                                strokeDasharray="3,3"
-                                opacity={0.3}
-                            />
-                        );
-                    })}
+                // Find active configuration
+                const activeConfig = cursorConfigs.find(config => config.shouldShow());
+                if (!activeConfig) return null;
 
-                    {/* Overlay mask outlines in preview */}
-                    {overlayMasks.filter(m => m.visible).map(mask => (
-                        <rect
-                            key={mask.id}
-                            x={mask.x - mask.width / 2}
-                            y={mask.y - mask.height / 2}
-                            width={mask.width}
-                            height={mask.height}
-                            fill="none"
-                            stroke="#ff0000"
-                            strokeWidth={1}
-                            strokeDasharray="2,2"
-                            transform={`rotate(${mask.rotation}, ${mask.x}, ${mask.y})`}
-                            opacity={0.5}
-                        />
-                    ))}
-
-                    {/* Placement indicator for mask start point */}
-                    {(() => {
-                        const coords = containerPosToImageCoords(mousePos.x, mousePos.y);
-                        return (
-                            <>
-                                <circle
-                                    cx={coords.x}
-                                    cy={coords.y}
-                                    r={6}
-                                    fill="none"
-                                    stroke="#ff0000"
-                                    strokeWidth={2}
-                                />
-                                <circle
-                                    cx={coords.x}
-                                    cy={coords.y}
-                                    r={3}
-                                    fill="#ff0000"
-                                    opacity={0.7}
-                                />
-                            </>
-                        );
-                    })()}
-                </MagnifiedCursor>
-            )}
-
-            {/* Magnified Cursor Preview (Room Drawing) */}
-            {roomDrawingActive && roomDrawing !== null && mousePos && activeTool !== 'scale' && activeTool !== 'measure' && !roomPreviewFillColor && (
-                <MagnifiedCursor
-                    mousePos={mousePos}
-                    containerRef={containerRef}
-                    imgRef={imgRef}
-                    imageUrl={CLEAN_IMAGE}
-                    isSpacePressed={isSpacePressed}
-                    mode="room"
-                    containerPosToImageCoords={containerPosToImageCoords}
-                >
-                    {/* Existing room boundaries in magnified view */}
-                    {rooms.filter(r => r.visible).map(room => {
-                        const pathStr = room.path.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
-                        return (
-                            <g key={room.id}>
-                                <path
-                                    d={pathStr}
-                                    fill="none"
-                                    stroke="#3b82f6"
-                                    strokeWidth={1}
-                                    strokeDasharray="3,3"
-                                    opacity={0.5}
-                                />
-                                {/* Vertex snap indicators */}
-                                {room.path.map((point, idx) => (
-                                    <circle
-                                        key={idx}
-                                        cx={point.x}
-                                        cy={point.y}
-                                        r={3}
-                                        fill="#fbbf24"
-                                        stroke="#ffffff"
-                                        strokeWidth={1}
-                                    />
-                                ))}
-                            </g>
-                        );
-                    })}
-
-                    {/* Current room path being drawn */}
-                    {roomDrawing.length > 0 && (
-                        <>
-                            <polyline
-                                points={roomDrawing.map(p => `${p.x},${p.y}`).join(' ')}
-                                fill="none"
-                                stroke="#22c55e"
-                                strokeWidth={2}
-                            />
-                            {roomDrawing.map((point, i) => (
-                                <circle
-                                    key={i}
-                                    cx={point.x}
-                                    cy={point.y}
-                                    r={i === 0 ? 4 : 2.5}
-                                    fill={i === 0 ? '#22c55e' : '#3b82f6'}
-                                    stroke="#ffffff"
-                                    strokeWidth={1}
-                                />
-                            ))}
-                        </>
-                    )}
-
-                    {/* Placement indicator - shows where next point will go */}
-                    {(() => {
-                        const coords = containerPosToImageCoords(mousePos.x, mousePos.y);
-                        let placementCoords = coords;
-
-                        // Use snap point if available
-                        if (snapPoint) {
-                            placementCoords = snapPoint;
-                        }
-
-                        return (
-                            <>
-                                {/* Outer circle */}
-                                <circle
-                                    cx={placementCoords.x}
-                                    cy={placementCoords.y}
-                                    r={8}
-                                    fill="none"
-                                    stroke={snapPoint ? (snapPoint.type === 'vertex' ? '#fbbf24' : '#60a5fa') : '#22c55e'}
-                                    strokeWidth={2}
-                                />
-                                {/* Inner fill */}
-                                <circle
-                                    cx={placementCoords.x}
-                                    cy={placementCoords.y}
-                                    r={4}
-                                    fill={snapPoint ? (snapPoint.type === 'vertex' ? '#fbbf24' : '#60a5fa') : '#22c55e'}
-                                    opacity={0.7}
-                                />
-                            </>
-                        );
-                    })()}
-                </MagnifiedCursor>
-            )}
+                // Render cursor with active config
+                return (
+                    <MagnifiedCursor
+                        mousePos={mousePos}
+                        containerRef={containerRef}
+                        imgRef={imgRef}
+                        imageUrl={CLEAN_IMAGE}
+                        isSpacePressed={isSpacePressed}
+                        mode={activeConfig.mode}
+                        containerPosToImageCoords={containerPosToImageCoords}
+                    >
+                        {activeConfig.renderOverlay()}
+                    </MagnifiedCursor>
+                );
+            })()}
 
             {/* Context Input - Bottom Center (When Needed) */}
             {scalePoints.length === 2 && (
@@ -3336,13 +3670,18 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
             <div
                 ref={containerRef}
                 className={`flex-1 relative overflow-hidden bg-black ${
-                    ((activeTool === 'scale' && scalePoints.length < 2) || (activeTool === 'measure' && measurePoints.length < 2) || (maskEditingActive && maskTool === 'draw') || (roomDrawingActive && roomDrawing !== null && !roomPreviewFillColor)) ? 'cursor-none' : (isPanning ? 'cursor-grabbing' : 'cursor-grab')
+                    ((activeTool === 'scale' && scalePoints.length < 2) || (activeTool === 'measure' && measurePoints.length < 2) || (activeTool === 'topology') || (maskEditingActive && maskTool === 'draw') || (roomDrawingActive && roomDrawing !== null && !roomPreviewFillColor)) ? 'cursor-none' : (isPanning ? 'cursor-grabbing' : 'cursor-grab')
                 }`}
                 onWheel={handleWheel}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
                 onPointerCancel={handlePointerUp}
+                onMouseEnter={() => setIsMouseOverFloorPlan(true)}
+                onMouseLeave={() => {
+                    setIsMouseOverFloorPlan(false);
+                    setMousePos(null);
+                }}
                 style={{ touchAction: 'none' }}
             >
                 <div
@@ -3642,6 +3981,102 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                                                 style={{ pointerEvents: 'none' }}
                                             />
                                         ))}
+                                    </g>
+                                );
+                            })}
+
+                            {/* Render cable connections between devices */}
+                            {(layers.dali.visible || activeTool === 'topology') && daliDevices.map(device => {
+                                return device.connections.map(connectedId => {
+                                    const connectedDevice = daliDevices.find(d => d.id === connectedId);
+                                    if (!connectedDevice) return null;
+
+                                    // Only render each connection once (from device with lower ID to avoid duplicates)
+                                    if (device.id > connectedId) return null;
+
+                                    const cableLength = calculateCableLength(device, connectedDevice);
+                                    const midX = (device.x + connectedDevice.x) / 2;
+                                    const midY = (device.y + connectedDevice.y) / 2;
+
+                                    // Highlight if in active routing path
+                                    const isInPath = routingPath.includes(device.id) && routingPath.includes(connectedId);
+
+                                    return (
+                                        <g key={`cable-${device.id}-${connectedId}`}>
+                                            {/* Cable line */}
+                                            <line
+                                                x1={device.x}
+                                                y1={device.y}
+                                                x2={connectedDevice.x}
+                                                y2={connectedDevice.y}
+                                                stroke={isInPath ? '#22c55e' : '#60a5fa'}
+                                                strokeWidth={isInPath ? 3 : 2}
+                                                strokeDasharray={isInPath ? 'none' : '5,5'}
+                                                opacity={0.7}
+                                            />
+                                            {/* Cable length label */}
+                                            {scaleFactor && (
+                                                <text
+                                                    x={midX}
+                                                    y={midY}
+                                                    fill="#ffffff"
+                                                    fontSize="12"
+                                                    fontWeight="bold"
+                                                    textAnchor="middle"
+                                                    dominantBaseline="middle"
+                                                    style={{ pointerEvents: 'none' }}
+                                                >
+                                                    <tspan fill="#000" stroke="#000" strokeWidth="3">{cableLength.toFixed(1)}ft</tspan>
+                                                    <tspan fill="#fff" x={midX} dy="0">{cableLength.toFixed(1)}ft</tspan>
+                                                </text>
+                                            )}
+                                        </g>
+                                    );
+                                });
+                            })}
+
+                            {/* Render active routing path (preview) */}
+                            {routingMode && routingPath.length > 1 && routingPath.map((deviceId, i) => {
+                                if (i === 0) return null;
+                                const device1 = daliDevices.find(d => d.id === routingPath[i - 1]);
+                                const device2 = daliDevices.find(d => d.id === deviceId);
+                                if (!device1 || !device2) return null;
+
+                                return (
+                                    <line
+                                        key={`routing-${i}`}
+                                        x1={device1.x}
+                                        y1={device1.y}
+                                        x2={device2.x}
+                                        y2={device2.y}
+                                        stroke="#22c55e"
+                                        strokeWidth={3}
+                                        opacity={0.9}
+                                    />
+                                );
+                            })}
+
+                            {/* Render DALI devices */}
+                            {(layers.dali.visible || activeTool === 'topology') && daliDevices.map(device => {
+                                const isSelected = device.id === selectedDeviceId;
+                                const isInRoutingPath = routingPath.includes(device.id);
+                                return (
+                                    <g key={device.id}>
+                                        {renderDeviceIcon(device.deviceType, device.x, device.y, isSelected || isInRoutingPath)}
+                                        {/* Show device number in routing path */}
+                                        {isInRoutingPath && (
+                                            <text
+                                                x={device.x}
+                                                y={device.y - 15}
+                                                fill="#22c55e"
+                                                fontSize="14"
+                                                fontWeight="bold"
+                                                textAnchor="middle"
+                                                style={{ pointerEvents: 'none' }}
+                                            >
+                                                {routingPath.indexOf(device.id) + 1}
+                                            </text>
+                                        )}
                                     </g>
                                 );
                             })}

@@ -46,7 +46,12 @@ export const MagnifiedCursor: React.FC<MagnifiedCursorProps> = ({
             }}
         >
             {/* Preview container with border */}
-            <div className={`w-full h-full border-2 ${borderColor} rounded overflow-hidden bg-black relative shadow-lg`}>
+            <div
+                className={`w-full h-full border-2 ${borderColor} rounded overflow-hidden bg-black relative`}
+                style={{
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.2)'
+                }}
+            >
                 {/* Magnified image view */}
                 <div
                     style={{
