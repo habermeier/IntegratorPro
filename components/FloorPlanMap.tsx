@@ -1099,11 +1099,12 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     const [layers, setLayers] = useState({
         base: { visible: true, opacity: 100 },
         rooms: { visible: true },
+        ceiling: { visible: true },
         electrical: { visible: false, opacity: 70 },
         annotations: { visible: true },
     });
     // Unified activation system - only one thing can be active at a time
-    const [activeMode, setActiveMode] = useState<'base' | 'base-masks' | 'rooms' | 'electrical' | 'annotations'>('annotations');
+    const [activeMode, setActiveMode] = useState<'base' | 'base-masks' | 'rooms' | 'ceiling' | 'electrical' | 'annotations'>('annotations');
 
     // Derived values for convenience
     const activeLayer = activeMode.startsWith('base') ? 'base' : activeMode as 'rooms' | 'electrical' | 'annotations';
@@ -1175,6 +1176,21 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
         const lightness = 80; // Consistent lightness for readability
         return `hsla(${hue}, ${saturation}%, ${lightness}%, 0.35)`;
     };
+
+    // Ceiling fixtures state
+    type FixtureType = 'canned-light' | 'sensor' | 'ceiling-fan' | 'decorative-light' | 'fan-light-combo';
+    interface CeilingFixture {
+        id: string;
+        type: FixtureType;
+        x: number;
+        y: number;
+        label?: string;
+        knxControlled: boolean;
+        roomId?: string; // Optional: which room this fixture belongs to
+    }
+    const [ceilingFixtures, setCeilingFixtures] = useState<CeilingFixture[]>([]);
+    const [selectedFixtureType, setSelectedFixtureType] = useState<FixtureType>('canned-light');
+    const [selectedFixtureId, setSelectedFixtureId] = useState<string | null>(null);
 
     // Point-in-polygon test using ray-casting algorithm
     const isPointInPolygon = (point: { x: number, y: number }, polygon: { x: number, y: number }[]): boolean => {
@@ -3180,6 +3196,12 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                                                         e.stopPropagation();
                                                         setSelectedRoomId(room.id);
                                                     }}
+                                                    onDoubleClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setEditingRoomId(room.id);
+                                                        setRoomNameInput(room.name);
+                                                        setShowRoomNameModal(true);
+                                                    }}
                                                 >
                                                     {room.name}
                                                 </text>
@@ -3406,52 +3428,27 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
             {showRoomNameModal && (
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50" style={{ pointerEvents: 'all' }}>
                     <div className="bg-slate-900 border border-slate-600 p-4 rounded-lg w-80" onClick={(e) => e.stopPropagation()}>
-                        <div className="text-white text-sm mb-3">Name this room:</div>
+                        <div className="text-white text-sm mb-3">{editingRoomId ? 'Rename room:' : 'Name this room:'}</div>
                         <input
                             type="text"
                             value={roomNameInput}
                             autoFocus
                             onChange={(e) => setRoomNameInput(e.target.value)}
                             onKeyDown={(e) => {
-                                if (e.key === 'Enter' && roomNameInput.trim() && roomDrawing && roomDrawing.length >= 3) {
-                                    const avgX = roomDrawing.reduce((sum, p) => sum + p.x, 0) / roomDrawing.length;
-                                    const avgY = roomDrawing.reduce((sum, p) => sum + p.y, 0) / roomDrawing.length;
-                                    const newRoom: Room = {
-                                        id: `room-${Date.now()}`,
-                                        path: roomDrawing,
-                                        name: roomNameInput.trim(),
-                                        labelX: avgX,
-                                        labelY: avgY,
-                                        labelRotation: 0,
-                                        fillColor: roomPreviewFillColor || generateRoomColor(),
-                                        visible: true
-                                    };
-                                    console.log('Creating room:', newRoom);
-                                    setRooms(prev => {
-                                        const updated = [...prev, newRoom];
-                                        console.log('Rooms state updated to:', updated);
-                                        return updated;
-                                    });
-                                    setRoomDrawing([]); // Stay in drawing mode with empty path
-                                    setRoomPreviewFillColor(null);
-                                    setRoomNameInput('');
-                                    setShowRoomNameModal(false);
-                                    showHudMessage(`Room "${newRoom.name}" created  •  Draw next room`, 3000);
-                                }
-                                if (e.key === 'Escape') {
-                                    setShowRoomNameModal(false);
-                                    setRoomNameInput('');
-                                    setRoomPreviewFillColor(null);
-                                    // Keep roomDrawing as-is to stay in drawing mode
-                                }
-                            }}
-                            className="w-full bg-black text-white px-3 py-2 rounded mb-3"
-                            placeholder="e.g., Living Room"
-                        />
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => {
-                                    if (roomNameInput.trim() && roomDrawing && roomDrawing.length >= 3) {
+                                if (e.key === 'Enter' && roomNameInput.trim()) {
+                                    if (editingRoomId) {
+                                        // Editing existing room
+                                        setRooms(prev => prev.map(r =>
+                                            r.id === editingRoomId
+                                                ? { ...r, name: roomNameInput.trim() }
+                                                : r
+                                        ));
+                                        setShowRoomNameModal(false);
+                                        setRoomNameInput('');
+                                        setEditingRoomId(null);
+                                        showHudMessage(`Room renamed to "${roomNameInput.trim()}"`, 2000);
+                                    } else if (roomDrawing && roomDrawing.length >= 3) {
+                                        // Creating new room
                                         const avgX = roomDrawing.reduce((sum, p) => sum + p.x, 0) / roomDrawing.length;
                                         const avgY = roomDrawing.reduce((sum, p) => sum + p.y, 0) / roomDrawing.length;
                                         const newRoom: Room = {
@@ -3464,7 +3461,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                                             fillColor: roomPreviewFillColor || generateRoomColor(),
                                             visible: true
                                         };
-                                        console.log('Creating room (button):', newRoom);
+                                        console.log('Creating room:', newRoom);
                                         setRooms(prev => {
                                             const updated = [...prev, newRoom];
                                             console.log('Rooms state updated to:', updated);
@@ -3476,16 +3473,71 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                                         setShowRoomNameModal(false);
                                         showHudMessage(`Room "${newRoom.name}" created  •  Draw next room`, 3000);
                                     }
+                                }
+                                if (e.key === 'Escape') {
+                                    setShowRoomNameModal(false);
+                                    setRoomNameInput('');
+                                    setRoomPreviewFillColor(null);
+                                    setEditingRoomId(null);
+                                    // Keep roomDrawing as-is to stay in drawing mode
+                                }
+                            }}
+                            className="w-full bg-black text-white px-3 py-2 rounded mb-3"
+                            placeholder="e.g., Living Room"
+                        />
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => {
+                                    if (roomNameInput.trim()) {
+                                        if (editingRoomId) {
+                                            // Editing existing room
+                                            setRooms(prev => prev.map(r =>
+                                                r.id === editingRoomId
+                                                    ? { ...r, name: roomNameInput.trim() }
+                                                    : r
+                                            ));
+                                            setShowRoomNameModal(false);
+                                            setRoomNameInput('');
+                                            setEditingRoomId(null);
+                                            showHudMessage(`Room renamed to "${roomNameInput.trim()}"`, 2000);
+                                        } else if (roomDrawing && roomDrawing.length >= 3) {
+                                            // Creating new room
+                                            const avgX = roomDrawing.reduce((sum, p) => sum + p.x, 0) / roomDrawing.length;
+                                            const avgY = roomDrawing.reduce((sum, p) => sum + p.y, 0) / roomDrawing.length;
+                                            const newRoom: Room = {
+                                                id: `room-${Date.now()}`,
+                                                path: roomDrawing,
+                                                name: roomNameInput.trim(),
+                                                labelX: avgX,
+                                                labelY: avgY,
+                                                labelRotation: 0,
+                                                fillColor: roomPreviewFillColor || generateRoomColor(),
+                                                visible: true
+                                            };
+                                            console.log('Creating room (button):', newRoom);
+                                            setRooms(prev => {
+                                                const updated = [...prev, newRoom];
+                                                console.log('Rooms state updated to:', updated);
+                                                return updated;
+                                            });
+                                            setRoomDrawing([]); // Stay in drawing mode with empty path
+                                            setRoomPreviewFillColor(null);
+                                            setRoomNameInput('');
+                                            setShowRoomNameModal(false);
+                                            showHudMessage(`Room "${newRoom.name}" created  •  Draw next room`, 3000);
+                                        }
+                                    }
                                 }}
                                 className="flex-1 bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded"
                             >
-                                Create Room
+                                {editingRoomId ? 'Rename' : 'Create Room'}
                             </button>
                             <button
                                 onClick={() => {
                                     setShowRoomNameModal(false);
                                     setRoomNameInput('');
                                     setRoomPreviewFillColor(null);
+                                    setEditingRoomId(null);
                                     // Keep roomDrawing as-is to stay in drawing mode
                                 }}
                                 className="flex-1 bg-red-900 hover:bg-red-800 text-white px-3 py-2 rounded"
