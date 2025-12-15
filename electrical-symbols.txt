@@ -1,0 +1,21 @@
+  1. Lighting
+    - Recessed light (filled square, with axis aligned cross hairs extending past square by 1/2 of a dimension)
+    - Pendant/Chandelier (circle with 5 radial spokes and circles at end).  Write ("chand") next to it.
+    - Ceiling fan (fan blade symbol)
+    - Exterior light ( circle with X terminating at circle radius.  It also has axis aligned cross hairs extended beyond circle similar to canned light.  It has a "foot" on one of the cross hairs (a perpendictular line) that attaches to ONE cross-hair line that bisects the "foot line") 
+  2. Low Voltage Controls
+    - KNX switch ($LV text symbol)
+    - Presence sensor (small rectangle, underneat write PRS-LV)
+    - Humidity/VOC sensor (small rectangle, underneath write HVOC-LV)
+  3. Receptacles & Power
+    - Standard outlet (this is a circle.  in the top 1/3 of the circle draw a straight line going through the circle extending out 1/2 diameter).  Bottom 1/3 of the circle draw a similar line.  The lines are parallel and start on the circumference of the circle on one side, and extend out to the other side (beydon it) by 1/2 diameter.
+    - Bathroom / Exterior receptacle (same as standard outlet, but add GFCI)
+    - 240 Vole Outlet same as standard, but write 220V near it.
+  4. HVAC & Ventilation
+    - DC vent fan (small fan with "DC")
+    - Motorized skylight (rectangle with up arrow -- add label SkyLight
+    - Weather station recangular box with " (weather-LV) under it
+  5. Safety & Security
+    - smoke detector / CO detector / alarm combo (FA/CO in circle)
+    
+

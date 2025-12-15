@@ -15,6 +15,8 @@ const DATA_FILE = path.join(__dirname, 'layout.json');
 const OVERRIDE_FILE = path.join(__dirname, 'layout.local.json');
 const SCALE_FILE = path.join(__dirname, 'scale.json');
 const SCALE_OVERRIDE_FILE = path.join(__dirname, 'scale.local.json');
+const ELECTRICAL_OVERLAY_FILE = path.join(__dirname, 'electricalOverlay.json');
+const ELECTRICAL_OVERLAY_OVERRIDE_FILE = path.join(__dirname, 'electricalOverlay.local.json');
 
 // AI Agent Detection Patterns
 // These agents need pre-rendered HTML because they can't reliably execute JavaScript
@@ -122,6 +124,142 @@ app.post('/api/scale', (req, res) => {
     } catch (err) {
         console.error('Error writing scale data:', err);
         res.status(500).json({ error: 'Failed to save scale data' });
+    }
+});
+
+// GET electrical overlay transform - Prefer Override
+app.get('/api/electrical-overlay', (req, res) => {
+    try {
+        const targetFile = fs.existsSync(ELECTRICAL_OVERLAY_OVERRIDE_FILE) ? ELECTRICAL_OVERLAY_OVERRIDE_FILE : ELECTRICAL_OVERLAY_FILE;
+        if (fs.existsSync(targetFile)) {
+            console.log(`Loading electrical overlay from: ${path.basename(targetFile)}`);
+            const data = fs.readFileSync(targetFile, 'utf8');
+            res.json(JSON.parse(data));
+        } else {
+            // Return default values if no file exists
+            res.json({ scale: 1, rotation: 0, x: 0, y: 0, opacity: 0.7, locked: false });
+        }
+    } catch (err) {
+        console.error('Error reading electrical overlay data:', err);
+        res.status(500).json({ error: 'Failed to read electrical overlay data' });
+    }
+});
+
+// POST electrical overlay transform - Always Write to Override
+app.post('/api/electrical-overlay', (req, res) => {
+    try {
+        const { scale, rotation, x, y, opacity, locked } = req.body;
+
+        // Validate inputs
+        if (typeof scale !== 'number' || scale <= 0) {
+            return res.status(400).json({ error: 'Invalid scale value' });
+        }
+        if (typeof rotation !== 'number') {
+            return res.status(400).json({ error: 'Invalid rotation value' });
+        }
+        if (typeof x !== 'number' || typeof y !== 'number') {
+            return res.status(400).json({ error: 'Invalid position values' });
+        }
+        if (typeof opacity !== 'number' || opacity < 0 || opacity > 1) {
+            return res.status(400).json({ error: 'Invalid opacity value (must be 0-1)' });
+        }
+
+        const overlayData = {
+            scale,
+            rotation,
+            x,
+            y,
+            opacity,
+            locked: !!locked
+        };
+
+        // Always write to the override file to prevent changing committed default
+        fs.writeFileSync(ELECTRICAL_OVERLAY_OVERRIDE_FILE, JSON.stringify(overlayData, null, 2));
+        console.log('Electrical overlay saved to electricalOverlay.local.json');
+        res.json({ success: true, ...overlayData, savedTo: 'local' });
+    } catch (err) {
+        console.error('Error writing electrical overlay data:', err);
+        res.status(500).json({ error: 'Failed to save electrical overlay data' });
+    }
+});
+
+// Base Layer Masks endpoints
+const BASE_MASKS_FILE = path.join(__dirname, 'baseMasks.json');
+const BASE_MASKS_OVERRIDE_FILE = path.join(__dirname, 'baseMasks.local.json');
+
+// GET base masks - Read from Override if Exists, Otherwise Base
+app.get('/api/base-masks', (req, res) => {
+    try {
+        const targetFile = fs.existsSync(BASE_MASKS_OVERRIDE_FILE) ? BASE_MASKS_OVERRIDE_FILE : BASE_MASKS_FILE;
+        if (fs.existsSync(targetFile)) {
+            console.log(`Loading base masks from: ${path.basename(targetFile)}`);
+            const data = fs.readFileSync(targetFile, 'utf8');
+            res.json(JSON.parse(data));
+        } else {
+            res.json({ masks: [] });
+        }
+    } catch (err) {
+        console.error('Error reading base masks data:', err);
+        res.status(500).json({ error: 'Failed to read base masks data' });
+    }
+});
+
+// POST base masks - Always Write to Override
+app.post('/api/base-masks', (req, res) => {
+    try {
+        const { masks } = req.body;
+
+        const masksData = {
+            masks: Array.isArray(masks) ? masks : []
+        };
+
+        // Always write to the override file to prevent changing committed default
+        fs.writeFileSync(BASE_MASKS_OVERRIDE_FILE, JSON.stringify(masksData, null, 2));
+        console.log('Base masks saved to baseMasks.local.json');
+        res.json({ success: true, ...masksData, savedTo: 'local' });
+    } catch (err) {
+        console.error('Error writing base masks data:', err);
+        res.status(500).json({ error: 'Failed to save base masks data' });
+    }
+});
+
+// Rooms endpoints
+const ROOMS_FILE = path.join(__dirname, 'rooms.json');
+const ROOMS_OVERRIDE_FILE = path.join(__dirname, 'rooms.local.json');
+
+// GET rooms - Read from Override if Exists, Otherwise Base
+app.get('/api/rooms', (req, res) => {
+    try {
+        const targetFile = fs.existsSync(ROOMS_OVERRIDE_FILE) ? ROOMS_OVERRIDE_FILE : ROOMS_FILE;
+        if (fs.existsSync(targetFile)) {
+            console.log(`Loading rooms from: ${path.basename(targetFile)}`);
+            const data = fs.readFileSync(targetFile, 'utf8');
+            res.json(JSON.parse(data));
+        } else {
+            res.json({ rooms: [] });
+        }
+    } catch (err) {
+        console.error('Error reading rooms data:', err);
+        res.status(500).json({ error: 'Failed to read rooms data' });
+    }
+});
+
+// POST rooms - Always Write to Override
+app.post('/api/rooms', (req, res) => {
+    try {
+        const { rooms } = req.body;
+
+        const roomsData = {
+            rooms: Array.isArray(rooms) ? rooms : []
+        };
+
+        // Always write to the override file to prevent changing committed default
+        fs.writeFileSync(ROOMS_OVERRIDE_FILE, JSON.stringify(roomsData, null, 2));
+        console.log('Rooms saved to rooms.local.json');
+        res.json({ success: true, ...roomsData, savedTo: 'local' });
+    } catch (err) {
+        console.error('Error writing rooms data:', err);
+        res.status(500).json({ error: 'Failed to save rooms data' });
     }
 });
 

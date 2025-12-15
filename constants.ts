@@ -20,20 +20,51 @@ export const INITIAL_MODULES: HardwareModule[] = [
     position: { x: 72, y: 60 }
   },
   {
-    id: 'lcp2-enc',
-    name: 'Leviton 47605-21E',
-    manufacturer: 'Leviton',
-    description: '21" Structured Media Enclosure',
+    id: 'lcp2-enc-top',
+    name: 'Legrand On-Q ENP4280-NA',
+    manufacturer: 'Legrand',
+    description: '42" Plastic Enclosure Kit (Automation / KNX / DALI)',
     type: ModuleType.ENCLOSURE,
     mountType: MountType.FLUSH,
     size: 0,
-    cost: 92.45,
+    cost: 240.00,
     powerWatts: 0,
     quantity: 1,
-    url: 'https://www.google.com/search?q=site:amazon.com+Leviton+47605-21E',
-    location: 'LCP-2',
-    notes: 'FRAMING ALERT: Stud bay is 18". Block down to 14.5".',
+    url: 'https://www.google.com/search?q=Legrand+ENP4280-NA',
+    location: 'LCP-2 (Automation)',
+    notes: 'Top box in double-stack. DIN rails only via AC1055 brackets. Drill 2" pass-through to lower box.',
     position: { x: 35, y: 55 }
+  },
+  {
+    id: 'lcp2-enc-bottom',
+    name: 'Legrand On-Q ENP3050-NA',
+    manufacturer: 'Legrand',
+    description: '30" Plastic Enclosure Kit (Network)',
+    type: ModuleType.ENCLOSURE,
+    mountType: MountType.FLUSH,
+    size: 0,
+    cost: 165.00,
+    powerWatts: 0,
+    quantity: 1,
+    url: 'https://www.google.com/search?q=Legrand+ENP3050-NA',
+    location: 'LCP-2 (Network)',
+    notes: 'Bottom box in double-stack. Houses UniFi switch, fiber, UPS. Connect to upper via 2" pass-through.',
+    position: { x: 35, y: 56 }
+  },
+  {
+    id: 'lcp2-din-bracket',
+    name: 'Legrand AC1055 DIN Rail Kit',
+    manufacturer: 'Legrand',
+    description: 'DIN Rail Mounting Bracket for On-Q',
+    type: ModuleType.ACCESSORY,
+    mountType: MountType.FLUSH,
+    size: 0,
+    cost: 12.00,
+    powerWatts: 0,
+    quantity: 4,
+    url: 'https://www.google.com/search?q=Legrand+AC1055',
+    location: 'LCP-2 (Automation)',
+    notes: 'Buy extra. Required to mount DIN gateways/drivers in On-Q enclosure.'
   },
 
   // --- CONTROLLERS & GATEWAYS (CONSOLIDATED) ---
@@ -239,6 +270,21 @@ export const INITIAL_MODULES: HardwareModule[] = [
     notes: 'ALTERNATIVE: 4.5" Aperture for less busy ceiling. Higher lumens allows fewer fixtures.'
   },
   {
+    id: 'led-strip-runs-tbd',
+    name: 'LED Strip Runs (TBD)',
+    manufacturer: 'Project Input',
+    description: 'Placeholder for all linear LED tape runs; lengths and watt/ft TBD.',
+    type: ModuleType.LIGHTING,
+    mountType: MountType.NA,
+    size: 0,
+    cost: 0,
+    powerWatts: 0,
+    quantity: 0,
+    systemIds: ['lighting'],
+    url: '',
+    notes: 'Collect per-run data: location, length, watt/ft, channel mapping, and voltage (24V). Use totals to size HDR-150 supplies; remove any other PSUs from LCP-2.'
+  },
+  {
     id: 'mw-hdr-150',
     name: 'HDR-150-24 PSU',
     manufacturer: 'Mean Well',
@@ -253,7 +299,7 @@ export const INITIAL_MODULES: HardwareModule[] = [
     url: 'https://www.google.com/search?q=site:mouser.com+Mean+Well+HDR-150-24',
     instances: [
       { id: 'lcp1-psu2', location: 'LCP-1', notes: 'Kitchen LEDs' },
-      { id: 'lcp2-psu', location: 'LCP-2', notes: 'Master LEDs' }
+      { id: 'lcp2-psu', location: 'LCP-2 (Automation)', notes: 'Depth-critical. Only HDR-150 allowed; remove/relocate any other LED PSU from LCP-2.' }
     ]
   },
   {
@@ -335,6 +381,30 @@ export const INITIAL_MODULES: HardwareModule[] = [
       { id: 'int-side', location: 'Side Gate', notes: 'Service Entry' }
     ]
   },
+  {
+    id: 'sec-indoor-s567g',
+    name: 'Akuvox S567G',
+    manufacturer: 'Akuvox',
+    description: '10" Android Indoor Monitor (GMS)',
+    type: ModuleType.SECURITY,
+    mountType: MountType.WALL_MOUNT,
+    size: 0,
+    cost: 1200.00,
+    powerWatts: 12,
+    quantity: 1,
+    requiresPoE: true,
+    systemIds: ['access', 'security'],
+    url: 'https://akuvox.com/productsDispParameter?pid=82',
+    linkStatus: 'PREFERRED',
+    backupUrl: 'https://akuvoxdealer.com/products/akuvox-s567',
+    specUrl: 'https://www.globalvisionsinc.com/wp-content/uploads/2024/05/Akuvox-S567-Datasheet.pdf',
+    dimensions: { width: 278, height: 164, depth: 22.8, unit: 'mm' },
+    genericRole: 'Indoor Monitor',
+    notes: 'Android 12 OS, Wi-Fi 6, GMS Certified. Dual mics, quad speakers. Fallback: S567W if G unavailable.',
+    instances: [
+      { id: 'int-indoor-main', location: 'Main Floor', notes: 'Primary answering station' }
+    ]
+  },
 
   // --- SENSORS & INPUTS ---
   {
@@ -353,6 +423,28 @@ export const INITIAL_MODULES: HardwareModule[] = [
     instances: [
       { id: 'lcp1-inp', location: 'LCP-1', notes: 'Door Sensors (Main)' },
       { id: 'lcp2-inp', location: 'LCP-2', notes: 'Door Sensors (Master)' }
+    ]
+  },
+  {
+    id: 'steinel-tp',
+    name: 'True Presence KNX',
+    manufacturer: 'Steinel',
+    description: 'Breathing-level mmWave Presence Sensor',
+    type: ModuleType.SENSOR,
+    mountType: MountType.CEILING_MOUNT,
+    size: 0,
+    cost: 265.00,
+    powerWatts: 2,
+    quantity: 4,
+    requiresBus: [ConnectionType.KNX],
+    systemIds: ['lighting', 'hvac'],
+    url: 'https://www.google.com/search?q=Steinel+True+Presence+KNX',
+    notes: 'Use in walk-in closets, office, and primary bath. Higher bus load—only where true presence needed.',
+    instances: [
+      { id: 'tp-office', location: 'Office', notes: 'mmWave true presence' },
+      { id: 'tp-master-closet', location: 'Master Closet', notes: 'mmWave true presence' },
+      { id: 'tp-master-bath', location: 'Master Bath', notes: 'mmWave true presence' },
+      { id: 'tp-laundry', location: 'Laundry', notes: 'mmWave true presence' }
     ]
   },
 
@@ -393,6 +485,56 @@ export const INITIAL_MODULES: HardwareModule[] = [
     genericRole: 'PoE Switch',
     url: 'https://www.google.com/search?q=site:store.ui.com+UniFi+Pro+Max+24+PoE',
     position: { x: 62, y: 39 }
+  },
+  {
+    id: 'lcp2-sw',
+    name: 'UniFi Pro Max 16 PoE',
+    manufacturer: 'Ubiquiti',
+    description: 'Edge Switch for LCP-2 Network Box',
+    location: 'LCP-2 (Network)',
+    type: ModuleType.NETWORK,
+    mountType: MountType.SURFACE,
+    size: 0,
+    cost: 599.00,
+    powerWatts: 45,
+    quantity: 1,
+    requiresMains: true,
+    systemIds: ['infra', 'network'],
+    url: 'https://www.google.com/search?q=UniFi+Pro+Max+16+PoE',
+    notes: 'Lives in lower 30" On-Q. Allow clearance for power brick/UPS.'
+  },
+  {
+    id: 'lcp2-ups',
+    name: 'CyberPower SL750U',
+    manufacturer: 'CyberPower',
+    description: 'Slimline 750VA UPS',
+    location: 'LCP-2 (Network)',
+    type: ModuleType.POWER,
+    mountType: MountType.SURFACE,
+    size: 0,
+    cost: 99.00,
+    powerWatts: 0,
+    quantity: 1,
+    requiresMains: true,
+    systemIds: ['infra', 'network'],
+    url: 'https://www.google.com/search?q=CyberPower+SL750U',
+    notes: 'Mount low in 30" On-Q. Provides ride-through for switch and fiber.'
+  },
+  {
+    id: 'lcp2-sfp',
+    name: '10G SFP+ Module Pair',
+    manufacturer: 'Ubiquiti',
+    description: '2x SFP+ SR Modules + Duplex Fiber Patch',
+    location: 'LCP-2 (Network)',
+    type: ModuleType.ACCESSORY,
+    mountType: MountType.NA,
+    size: 0,
+    cost: 140.00,
+    powerWatts: 0,
+    quantity: 1,
+    systemIds: ['infra', 'network'],
+    url: 'https://www.google.com/search?q=Ubiquiti+UF-MM-10G+pair',
+    notes: 'Pair for MDF <-> LCP-2 link. Include duplex LC fiber patch; keep radius gentle in On-Q.'
   },
 
   // --- FIELD DEVICES ---
@@ -645,19 +787,20 @@ export const INITIAL_MODULES: HardwareModule[] = [
   },
   {
     id: 'cable-knx',
-    name: 'KNX Bus Cable (UL)',
-    manufacturer: 'KNX Supply / Unitronic',
+    name: 'Syston 18/4 Solid Shielded FPLR',
+    manufacturer: 'Syston Cable',
     type: ModuleType.ACCESSORY,
     mountType: MountType.NA,
     size: 0,
-    cost: 850.00,
+    cost: 203.00,
     powerWatts: 0,
-    quantity: 1,
-    systemIds: ['infra', 'lighting'],
-    url: 'https://knxsupply.com/product/knx-cable-ul-compliance-1000ft/',
+    quantity: 1, // 500ft roll
+    systemIds: ['infra', 'lighting', 'hvac', 'irrigation'],
+    url: 'https://www.walmart.com/ip/Syston-Fire-Alarm-Cable-Security-Burglar-Station-Wire-18-4-500-ft-100-Solid-Copper-Shielded-FPLP-CL3P-FT6-CMP-Plenum-Rated-UL-and-or-ETL-Listed-18-Ga/10245316771',
     linkStatus: 'PREFERRED',
-    description: '20 AWG 4-Conductor (2-Pair) Green (UL Listed)',
-    notes: 'Standard Green Jacket. Pairs: Red/Black (Bus) + Yellow/White (Aux Power/Data).',
+    backupUrl: 'https://www.google.com/search?q=Southwire+F40567-1A+18/4+Shielded+FPLR',
+    description: '18 AWG 4-Conductor Solid Core Shielded Fire Alarm Cable (FPLR Rated)',
+    notes: 'US-LEGAL KNX CABLE. 18 AWG Solid Core pushes directly into KNX terminals (no ferrules). FPLR = Fire Power Limited Riser (UL Listed). COLOR MAPPING: Red=Bus+, Black=Bus-, Yellow/White=Aux (spares). CRITICAL: Use Wago 221 pigtails at switches (see conn-wago-221). Alternative: Southwire F40567-1A (~$0.50/ft from Platt Electric).',
     location: 'Infra'
   },
   {
@@ -689,6 +832,40 @@ export const INITIAL_MODULES: HardwareModule[] = [
     quantity: 2, // Pack of 50
     url: 'https://www.google.com/search?q=site:knxsupply.com+Wago+KNX+Connectors',
     description: 'Red/Black Push-Wire (Box of 50)',
+    location: 'Infra'
+  },
+  {
+    id: 'conn-wago-221',
+    name: 'Wago 221-412 Lever Nuts',
+    manufacturer: 'Wago',
+    type: ModuleType.ACCESSORY,
+    mountType: MountType.NA,
+    size: 0,
+    cost: 18.00,
+    powerWatts: 0,
+    quantity: 2, // 2 boxes (50 pcs total)
+    systemIds: ['infra', 'lighting', 'hvac', 'irrigation'],
+    url: 'https://www.amazon.com/Wago-221-412-LEVER-NUTS-Conductor-Connectors/dp/B00J3WTEOQ',
+    linkStatus: 'PREFERRED',
+    description: '2-Conductor Compact Splicing Connectors (25 pack)',
+    notes: 'PIGTAIL TECHNIQUE (CRITICAL): 18 AWG wire is too thick for KNX switch terminals. At each switch box: (1) Join incoming Red + outgoing Red + 6" pigtail (20-22 AWG thin wire) in Wago 221. (2) Plug pigtail into switch. (3) Repeat for Black. This passes inspection, fits in box, and ensures perfect connection. Buy extra for field changes.',
+    location: 'Infra'
+  },
+  {
+    id: 'wire-pigtail-22awg',
+    name: '22 AWG Solid Hook-Up Wire',
+    manufacturer: 'Generic',
+    type: ModuleType.ACCESSORY,
+    mountType: MountType.NA,
+    size: 0,
+    cost: 25.00,
+    powerWatts: 0,
+    quantity: 2, // 100ft each Red + Black
+    systemIds: ['infra', 'lighting', 'hvac', 'irrigation'],
+    url: 'https://www.google.com/search?q=22+AWG+Solid+Tinned+Copper+Hook-Up+Wire',
+    linkStatus: 'MARKET',
+    description: '22 AWG Solid Core (Red + Black spools)',
+    notes: 'For KNX switch pigtails. Cut 6" lengths. Thin enough to fit KNX terminals, thick enough for Wago 221. Buy red and black spools (100ft each). Can substitute 20 AWG if 22 unavailable.',
     location: 'Infra'
   },
 

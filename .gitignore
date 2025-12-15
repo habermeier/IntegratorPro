@@ -124,6 +124,9 @@ __pycache__/
 layout.local.json
 scale.local.json
 cableRuns.local.json
+electricalOverlay.local.json
+baseMasks.local.json
+rooms.local.json
 bom.snapshot.json
 client_debug.log
 .DS_Store

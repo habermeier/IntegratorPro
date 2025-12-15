@@ -8,6 +8,7 @@ import { MousePointer2, Move, Activity, Layers, Wand2, ScanLine, Trash2, Lock, U
 import { extractMapSymbols } from '../services/geminiService';
 import { MapSymbols } from './MapSymbols';
 import { parseDistanceInput, formatDistance, CM_PER_INCH } from '../utils/measurementUtils';
+import { MagnifiedCursor } from './MagnifiedCursor';
 
 const USE_BASELINE_VIEW = true; // Temporary: isolates minimal pan/zoom for performance baseline.
 
@@ -84,6 +85,16 @@ const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, 
     const [layerState, setLayerState] = useState({
         showBasePlan: true, // The electrical image
         showAiSymbols: false, // The vector overlay
+    });
+
+    // --- ELECTRICAL OVERLAY TRANSFORM STATE ---
+    const [electricalOverlay, setElectricalOverlay] = useState({
+        scale: 1,
+        rotation: 0,
+        x: 0,
+        y: 0,
+        opacity: 0.7,
+        locked: false
     });
 
     // Default: Show common layers
@@ -595,18 +606,38 @@ const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, 
                                     }}
                                     onPointerMove={handlePointerMove}
                                 >
-                                    {/* BASE LAYER: Always Electric Plan (Relative to define container size) */}
+                                    {/* BASE LAYER: Clean Floor Plan (Always visible, defines container size) */}
                                     <img
-                                        src={ELECTRICAL_IMAGE}
+                                        ref={imgRef}
+                                        src={CLEAN_IMAGE}
                                         draggable={false}
-                                        alt="Electric Floor Plan"
+                                        alt="Clean Floor Plan"
                                         className="block w-full h-auto object-contain pointer-events-none select-none max-w-none"
-                                        style={{ opacity: layerState.showBasePlan ? 1.0 : 0.0, transition: 'opacity 0.2s' }}
                                         onLoad={() => {
                                             console.log("Image Loaded, fitting screen...");
                                             fitToScreen();
                                         }}
                                     />
+
+                                    {/* ELECTRICAL OVERLAY: Transformable electrical plan */}
+                                    {layerState.showBasePlan && (
+                                        <img
+                                            src={ELECTRICAL_IMAGE}
+                                            draggable={false}
+                                            alt="Electrical Overlay"
+                                            className="absolute inset-0 w-full h-auto object-contain pointer-events-none select-none max-w-none"
+                                            style={{
+                                                opacity: electricalOverlay.opacity,
+                                                transform: `
+                                                    translate(${electricalOverlay.x}px, ${electricalOverlay.y}px)
+                                                    scale(${electricalOverlay.scale})
+                                                    rotate(${electricalOverlay.rotation}deg)
+                                                `,
+                                                transformOrigin: 'center',
+                                                transition: electricalOverlay.locked ? 'none' : 'transform 0.1s ease-out',
+                                            }}
+                                        />
+                                    )}
 
                                     {/* AI VECTOR OVERLAY (Generated Walls) */}
                                     {/* AI VECTOR OVERLAY (Optimized Single Path) */}
@@ -694,6 +725,93 @@ const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, 
                                 </div>
                             )}
 
+                            {/* Room Name Modal */}
+                            {showRoomNameModal && (
+                                <div className="absolute inset-0 z-[250] flex items-center justify-center bg-black/50">
+                                    <div className="bg-slate-900 border border-slate-600 p-4 rounded-lg w-80">
+                                        <div className="text-white text-sm mb-3">Name this room:</div>
+                                        <input
+                                            type="text"
+                                            value={roomNameInput}
+                                            onChange={(e) => setRoomNameInput(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' && roomNameInput.trim()) {
+                                                    // Create the room
+                                                    if (roomDrawing && roomDrawing.length >= 3) {
+                                                        // Calculate center of path for label placement
+                                                        const avgX = roomDrawing.reduce((sum, p) => sum + p.x, 0) / roomDrawing.length;
+                                                        const avgY = roomDrawing.reduce((sum, p) => sum + p.y, 0) / roomDrawing.length;
+
+                                                        const newRoom: Room = {
+                                                            id: `room-${Date.now()}`,
+                                                            path: roomDrawing,
+                                                            name: roomNameInput.trim(),
+                                                            labelX: avgX,
+                                                            labelY: avgY,
+                                                            labelRotation: 0,
+                                                            visible: true
+                                                        };
+
+                                                        setRooms(prev => [...prev, newRoom]);
+                                                        setRoomDrawing(null);
+                                                        setRoomNameInput('');
+                                                        setShowRoomNameModal(false);
+                                                        showHudMessage(`Room "${newRoom.name}" created`, 3000);
+                                                    }
+                                                }
+                                                if (e.key === 'Escape') {
+                                                    setShowRoomNameModal(false);
+                                                    setRoomNameInput('');
+                                                    setRoomDrawing(null);
+                                                }
+                                            }}
+                                            className="w-full bg-black text-white px-3 py-2 rounded mb-3"
+                                            placeholder="e.g., Living Room"
+                                            autoFocus
+                                        />
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    if (roomNameInput.trim() && roomDrawing && roomDrawing.length >= 3) {
+                                                        const avgX = roomDrawing.reduce((sum, p) => sum + p.x, 0) / roomDrawing.length;
+                                                        const avgY = roomDrawing.reduce((sum, p) => sum + p.y, 0) / roomDrawing.length;
+
+                                                        const newRoom: Room = {
+                                                            id: `room-${Date.now()}`,
+                                                            path: roomDrawing,
+                                                            name: roomNameInput.trim(),
+                                                            labelX: avgX,
+                                                            labelY: avgY,
+                                                            labelRotation: 0,
+                                                            visible: true
+                                                        };
+
+                                                        setRooms(prev => [...prev, newRoom]);
+                                                        setRoomDrawing(null);
+                                                        setRoomNameInput('');
+                                                        setShowRoomNameModal(false);
+                                                        showHudMessage(`Room "${newRoom.name}" created`, 3000);
+                                                    }
+                                                }}
+                                                className="flex-1 bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded"
+                                            >
+                                                Create Room
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setShowRoomNameModal(false);
+                                                    setRoomNameInput('');
+                                                    setRoomDrawing(null);
+                                                }}
+                                                className="flex-1 bg-red-900 hover:bg-red-800 text-white px-3 py-2 rounded"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             {toolMode === 'CABLE' && (
                                 <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[200] bg-slate-900 p-2 rounded-xl flex gap-2">
                                     <select value={selectedCableType} onChange={(e) => setSelectedCableType(e.target.value as any)} className="bg-black text-white px-2 py-1">
@@ -708,6 +826,13 @@ const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, 
                                 {hudMessage}
                             </div>
 
+                            {/* Rotation Degree Display */}
+                            {showRotationDegrees !== null && (
+                                <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[150] bg-blue-900/90 text-white px-4 py-2 rounded-lg border border-blue-600 font-mono text-lg">
+                                    {showRotationDegrees.toFixed(0)}°
+                                </div>
+                            )}
+
                             <div className="absolute top-4 right-4 z-50 flex flex-col items-end gap-2">
                                 <button onClick={() => setIsControlsOpen(!isControlsOpen)} className="p-2 bg-slate-900 rounded-lg border border-slate-700 text-slate-400">
                                     <Settings size={20} />
@@ -720,9 +845,103 @@ const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, 
                                             <div className="text-[10px] uppercase font-bold text-slate-500 mb-1">Scene Layers</div>
 
                                             <button onClick={() => toggleLayer('showBasePlan')} className="w-full flex items-center justify-between text-xs p-1.5 rounded hover:bg-slate-800 text-slate-300">
-                                                <span>Base Plan (Electric)</span>
+                                                <span>Electrical Overlay</span>
                                                 {layerState.showBasePlan ? <Eye size={14} className="text-blue-400" /> : <EyeOff size={14} />}
                                             </button>
+
+                                            {/* ELECTRICAL OVERLAY CONTROLS */}
+                                            {layerState.showBasePlan && (
+                                                <div className="ml-2 mt-1 p-2 bg-slate-900/50 rounded border border-slate-700/50 space-y-2">
+                                                    <div className="flex items-center justify-between text-[10px] text-slate-400">
+                                                        <span>Transform Controls</span>
+                                                        <button
+                                                            onClick={() => setElectricalOverlay(prev => ({ ...prev, locked: !prev.locked }))}
+                                                            className={`px-2 py-0.5 rounded text-[10px] flex items-center gap-1 ${electricalOverlay.locked ? 'bg-red-600 text-white' : 'bg-slate-700 text-slate-300'}`}
+                                                            title={electricalOverlay.locked ? 'Unlock to edit' : 'Lock overlay'}
+                                                        >
+                                                            {electricalOverlay.locked ? <Lock size={10} /> : <Unlock size={10} />}
+                                                            {electricalOverlay.locked ? 'Locked' : 'Unlocked'}
+                                                        </button>
+                                                    </div>
+
+                                                    {!electricalOverlay.locked && (
+                                                        <>
+                                                            <div>
+                                                                <label className="text-[10px] text-slate-400">Opacity: {Math.round(electricalOverlay.opacity * 100)}%</label>
+                                                                <input
+                                                                    type="range"
+                                                                    min="0"
+                                                                    max="1"
+                                                                    step="0.01"
+                                                                    value={electricalOverlay.opacity}
+                                                                    onChange={(e) => setElectricalOverlay(prev => ({ ...prev, opacity: parseFloat(e.target.value) }))}
+                                                                    className="w-full h-1 bg-slate-700 rounded appearance-none cursor-pointer"
+                                                                />
+                                                            </div>
+
+                                                            <div>
+                                                                <label className="text-[10px] text-slate-400">Scale: {electricalOverlay.scale.toFixed(2)}x</label>
+                                                                <input
+                                                                    type="range"
+                                                                    min="0.5"
+                                                                    max="2"
+                                                                    step="0.01"
+                                                                    value={electricalOverlay.scale}
+                                                                    onChange={(e) => setElectricalOverlay(prev => ({ ...prev, scale: parseFloat(e.target.value) }))}
+                                                                    className="w-full h-1 bg-slate-700 rounded appearance-none cursor-pointer"
+                                                                />
+                                                            </div>
+
+                                                            <div>
+                                                                <label className="text-[10px] text-slate-400">Rotation: {electricalOverlay.rotation}°</label>
+                                                                <input
+                                                                    type="range"
+                                                                    min="-45"
+                                                                    max="45"
+                                                                    step="0.1"
+                                                                    value={electricalOverlay.rotation}
+                                                                    onChange={(e) => setElectricalOverlay(prev => ({ ...prev, rotation: parseFloat(e.target.value) }))}
+                                                                    className="w-full h-1 bg-slate-700 rounded appearance-none cursor-pointer"
+                                                                />
+                                                            </div>
+
+                                                            <div className="grid grid-cols-2 gap-2">
+                                                                <div>
+                                                                    <label className="text-[10px] text-slate-400">X: {electricalOverlay.x}px</label>
+                                                                    <input
+                                                                        type="range"
+                                                                        min="-500"
+                                                                        max="500"
+                                                                        step="1"
+                                                                        value={electricalOverlay.x}
+                                                                        onChange={(e) => setElectricalOverlay(prev => ({ ...prev, x: parseInt(e.target.value) }))}
+                                                                        className="w-full h-1 bg-slate-700 rounded appearance-none cursor-pointer"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="text-[10px] text-slate-400">Y: {electricalOverlay.y}px</label>
+                                                                    <input
+                                                                        type="range"
+                                                                        min="-500"
+                                                                        max="500"
+                                                                        step="1"
+                                                                        value={electricalOverlay.y}
+                                                                        onChange={(e) => setElectricalOverlay(prev => ({ ...prev, y: parseInt(e.target.value) }))}
+                                                                        className="w-full h-1 bg-slate-700 rounded appearance-none cursor-pointer"
+                                                                    />
+                                                                </div>
+                                                            </div>
+
+                                                            <button
+                                                                onClick={() => setElectricalOverlay({ scale: 1, rotation: 0, x: 0, y: 0, opacity: 0.7, locked: false })}
+                                                                className="w-full px-2 py-1 text-[10px] bg-slate-700 hover:bg-slate-600 text-slate-300 rounded"
+                                                            >
+                                                                Reset to Default
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )}
 
                                             <button onClick={() => toggleLayer('showAiSymbols')} className="w-full flex items-center justify-between text-xs p-1.5 rounded hover:bg-slate-800 text-slate-300">
                                                 <span>AI Data Overlay</span>
@@ -876,7 +1095,64 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
         electrical: { visible: false, opacity: 70 },
         annotations: { visible: true },
     });
-    const [activeLayer, setActiveLayer] = useState<'base' | 'electrical' | 'annotations'>('annotations');
+    // Unified activation system - only one thing can be active at a time
+    const [activeMode, setActiveMode] = useState<'base' | 'base-masks' | 'base-rooms' | 'electrical' | 'annotations'>('annotations');
+
+    // Derived values for convenience
+    const activeLayer = activeMode.startsWith('base') ? 'base' : activeMode as 'electrical' | 'annotations';
+    const maskEditingActive = activeMode === 'base-masks';
+    const roomDrawingActive = activeMode === 'base-rooms';
+
+    // Electrical overlay transform state
+    const [electricalOverlay, setElectricalOverlay] = useState({
+        scale: 1,
+        rotation: 0,
+        x: 0,
+        y: 0,
+        opacity: 0.7,
+        locked: false
+    });
+
+    // Active control for keyboard adjustment
+    type OverlayControl = 'position' | 'rotation' | 'scale' | null;
+    const [activeOverlayControl, setActiveOverlayControl] = useState<OverlayControl>(null);
+
+    // Overlay masking rectangles
+    interface OverlayMask {
+        id: string;
+        x: number;        // Center X in image coordinates
+        y: number;        // Center Y in image coordinates
+        width: number;
+        height: number;
+        rotation: number; // Degrees
+        color: string;
+        visible: boolean;
+    }
+    const [overlayMasks, setOverlayMasks] = useState<OverlayMask[]>([]);
+    const [selectedMaskId, setSelectedMaskId] = useState<string | null>(null);
+    const [maskDrawing, setMaskDrawing] = useState<{ startX: number, startY: number } | null>(null);
+    const [maskTool, setMaskTool] = useState<'draw' | 'select'>('select');
+    const [dragMode, setDragMode] = useState<'move' | 'resize' | null>(null);
+    const [dragCorner, setDragCorner] = useState<'nw' | 'ne' | 'sw' | 'se' | null>(null);
+    const [masksVisible, setMasksVisible] = useState(true);
+    const [showRotationDegrees, setShowRotationDegrees] = useState<number | null>(null);
+
+    // Room definition state
+    interface Room {
+        id: string;
+        path: { x: number, y: number }[];
+        name: string;
+        labelX: number;
+        labelY: number;
+        labelRotation: number;
+        visible: boolean;
+    }
+    const [rooms, setRooms] = useState<Room[]>([]);
+    const [roomDrawing, setRoomDrawing] = useState<{ x: number, y: number }[] | null>(null);
+    const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
+    const [roomLabelsVisible, setRoomLabelsVisible] = useState(true);
+    const [roomNameInput, setRoomNameInput] = useState('');
+    const [showRoomNameModal, setShowRoomNameModal] = useState(false);
 
     // HUD message state
     const [hudMessage, setHudMessage] = useState<string | null>('Pan: Click + Drag  •  Zoom: Mouse Wheel');
@@ -903,14 +1179,21 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     const panStartRef = useRef<{ x: number, y: number, transformX: number, transformY: number } | null>(null);
     const [isPanning, setIsPanning] = useState(false);
 
+    // Mask drag state
+    const maskDragRef = useRef<{
+        startMouseX: number,
+        startMouseY: number,
+        initialMask: OverlayMask | null
+    } | null>(null);
+
     // Scale limits
-    const scaleRef = useRef({ min: 0.1, max: 5, fit: 1 });
+    const scaleRef = useRef({ min: 0.1, max: 10, fit: 1 });
 
     //Set scale limits when image loads
     const handleImageLoad = () => {
         scaleRef.current = {
             min: 1, // CSS object-fit handles the fit, so min scale is 1 (no zoom out)
-            max: 5,
+            max: 10,
             fit: 1
         };
     };
@@ -974,18 +1257,176 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
         showHudMessage(`Scale set: "${distanceInput}" = ${pixelDistance.toFixed(0)}px`, 5000);
     };
 
-    // Keyboard event handlers for Space and ESC keys
+    // Keyboard event handlers for Space, ESC, and Arrow keys
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            // Don't capture space if user is typing in an input field
+            // Don't capture keys if user is typing in an input field
             const isTyping = (e.target as HTMLElement)?.tagName === 'INPUT';
 
-            if (e.code === 'Space' && activeTool === 'scale' && !isTyping) {
+            // Arrow key controls for electrical overlay
+            if (activeOverlayControl && !electricalOverlay.locked && !isTyping) {
+                let handled = false;
+
+                if (activeOverlayControl === 'position') {
+                    if (e.code === 'ArrowLeft') {
+                        setElectricalOverlay(prev => ({ ...prev, x: prev.x - (e.shiftKey ? 10 : 1) }));
+                        handled = true;
+                    } else if (e.code === 'ArrowRight') {
+                        setElectricalOverlay(prev => ({ ...prev, x: prev.x + (e.shiftKey ? 10 : 1) }));
+                        handled = true;
+                    } else if (e.code === 'ArrowUp') {
+                        setElectricalOverlay(prev => ({ ...prev, y: prev.y - (e.shiftKey ? 10 : 1) }));
+                        handled = true;
+                    } else if (e.code === 'ArrowDown') {
+                        setElectricalOverlay(prev => ({ ...prev, y: prev.y + (e.shiftKey ? 10 : 1) }));
+                        handled = true;
+                    }
+                } else if (activeOverlayControl === 'rotation') {
+                    if (e.code === 'ArrowLeft') {
+                        setElectricalOverlay(prev => ({ ...prev, rotation: prev.rotation - (e.shiftKey ? 1 : 0.1) }));
+                        handled = true;
+                    } else if (e.code === 'ArrowRight') {
+                        setElectricalOverlay(prev => ({ ...prev, rotation: prev.rotation + (e.shiftKey ? 1 : 0.1) }));
+                        handled = true;
+                    }
+                } else if (activeOverlayControl === 'scale') {
+                    if (e.code === 'ArrowLeft') {
+                        setElectricalOverlay(prev => ({ ...prev, scale: Math.max(0.5, prev.scale - (e.shiftKey ? 0.1 : 0.01)) }));
+                        handled = true;
+                    } else if (e.code === 'ArrowRight') {
+                        setElectricalOverlay(prev => ({ ...prev, scale: Math.min(2, prev.scale + (e.shiftKey ? 0.1 : 0.01)) }));
+                        handled = true;
+                    }
+                }
+
+                if (handled) {
+                    e.preventDefault();
+                    return;
+                }
+            }
+
+            // Mask rotation controls (R key for 45° increments, arrow keys for fine-tuning)
+            if (selectedMaskId && !isTyping) {
+                let handled = false;
+
+                // R key: Rotate by 45°
+                if (e.code === 'KeyR') {
+                    setOverlayMasks(prev => prev.map(mask =>
+                        mask.id === selectedMaskId
+                            ? { ...mask, rotation: mask.rotation + 45 }
+                            : mask
+                    ));
+                    handled = true;
+                }
+
+                // Arrow keys: Fine-tune rotation by ±1°
+                if (e.code === 'ArrowLeft') {
+                    setOverlayMasks(prev => prev.map(mask => {
+                        if (mask.id === selectedMaskId) {
+                            const newRotation = mask.rotation - 1;
+                            setShowRotationDegrees(newRotation);
+                            setTimeout(() => setShowRotationDegrees(null), 1500);
+                            return { ...mask, rotation: newRotation };
+                        }
+                        return mask;
+                    }));
+                    handled = true;
+                } else if (e.code === 'ArrowRight') {
+                    setOverlayMasks(prev => prev.map(mask => {
+                        if (mask.id === selectedMaskId) {
+                            const newRotation = mask.rotation + 1;
+                            setShowRotationDegrees(newRotation);
+                            setTimeout(() => setShowRotationDegrees(null), 1500);
+                            return { ...mask, rotation: newRotation };
+                        }
+                        return mask;
+                    }));
+                    handled = true;
+                }
+
+                // Delete key: Remove selected mask
+                if (e.code === 'Delete' || e.code === 'Backspace') {
+                    setOverlayMasks(prev => prev.filter(mask => mask.id !== selectedMaskId));
+                    setSelectedMaskId(null);
+                    handled = true;
+                }
+
+                if (handled) {
+                    e.preventDefault();
+                    return;
+                }
+            }
+
+            // Room label rotation controls (same as masks)
+            if (selectedRoomId && !isTyping) {
+                let handled = false;
+
+                // R key: Rotate by 45°
+                if (e.code === 'KeyR') {
+                    setRooms(prev => prev.map(room =>
+                        room.id === selectedRoomId
+                            ? { ...room, labelRotation: room.labelRotation + 45 }
+                            : room
+                    ));
+                    handled = true;
+                }
+
+                // Arrow keys: Fine-tune rotation by ±1°
+                if (e.code === 'ArrowLeft') {
+                    setRooms(prev => prev.map(room => {
+                        if (room.id === selectedRoomId) {
+                            const newRotation = room.labelRotation - 1;
+                            setShowRotationDegrees(newRotation);
+                            setTimeout(() => setShowRotationDegrees(null), 1500);
+                            return { ...room, labelRotation: newRotation };
+                        }
+                        return room;
+                    }));
+                    handled = true;
+                } else if (e.code === 'ArrowRight') {
+                    setRooms(prev => prev.map(room => {
+                        if (room.id === selectedRoomId) {
+                            const newRotation = room.labelRotation + 1;
+                            setShowRotationDegrees(newRotation);
+                            setTimeout(() => setShowRotationDegrees(null), 1500);
+                            return { ...room, labelRotation: newRotation };
+                        }
+                        return room;
+                    }));
+                    handled = true;
+                }
+
+                // Delete key: Remove selected room
+                if (e.code === 'Delete' || e.code === 'Backspace') {
+                    setRooms(prev => prev.filter(room => room.id !== selectedRoomId));
+                    setSelectedRoomId(null);
+                    handled = true;
+                }
+
+                if (handled) {
+                    e.preventDefault();
+                    return;
+                }
+            }
+
+            if (e.code === 'Space' && (activeTool === 'scale' || maskEditingActive || roomDrawingActive) && !isTyping) {
                 e.preventDefault();
                 setIsSpacePressed(true);
             }
             if (e.code === 'Escape') {
                 e.preventDefault();
+
+                // Deselect mask if active
+                if (selectedMaskId) {
+                    setSelectedMaskId(null);
+                    return;
+                }
+
+                // Deselect overlay control if active
+                if (activeOverlayControl) {
+                    setActiveOverlayControl(null);
+                    return;
+                }
 
                 // Progressive undo in scale mode
                 if (activeTool === 'scale') {
@@ -1035,7 +1476,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
         };
-    }, [activeTool]);
+    }, [activeTool, activeOverlayControl, electricalOverlay.locked, selectedMaskId]);
 
     // Load saved scale factor from server on mount
     useEffect(() => {
@@ -1051,6 +1492,117 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                 console.error('Failed to load scale factor:', err);
             });
     }, []);
+
+    // Load electrical overlay transform from server on mount
+    useEffect(() => {
+        fetch('/api/electrical-overlay')
+            .then(res => res.json())
+            .then(data => {
+                if (data) {
+                    setElectricalOverlay(data);
+                    console.log('Loaded electrical overlay from server:', data);
+                }
+            })
+            .catch(err => {
+                console.error('Failed to load electrical overlay:', err);
+            });
+    }, []);
+
+    // Load base layer masks from server on mount
+    useEffect(() => {
+        fetch('/api/base-masks')
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.masks) {
+                    setOverlayMasks(data.masks);
+                    console.log('Loaded base masks from server:', data);
+                }
+            })
+            .catch(err => {
+                console.error('Failed to load base masks:', err);
+            });
+    }, []);
+
+    // Save electrical overlay transform to server (debounced)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetch('/api/electrical-overlay', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(electricalOverlay),
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Electrical overlay saved to server');
+                }
+            })
+            .catch(err => {
+                console.error('Failed to save electrical overlay:', err);
+            });
+        }, 500); // 500ms debounce
+
+        return () => clearTimeout(timer);
+    }, [electricalOverlay]);
+
+    // Save base layer masks to server (debounced)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetch('/api/base-masks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ masks: overlayMasks }),
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Base masks saved to server');
+                }
+            })
+            .catch(err => {
+                console.error('Failed to save base masks:', err);
+            });
+        }, 500); // 500ms debounce
+
+        return () => clearTimeout(timer);
+    }, [overlayMasks]);
+
+    // Load rooms from server on mount
+    useEffect(() => {
+        fetch('/api/rooms')
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.rooms) {
+                    setRooms(data.rooms);
+                    console.log('Loaded rooms from server:', data);
+                }
+            })
+            .catch(err => {
+                console.error('Failed to load rooms:', err);
+            });
+    }, []);
+
+    // Save rooms to server (debounced)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetch('/api/rooms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rooms }),
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Rooms saved to server');
+                }
+            })
+            .catch(err => {
+                console.error('Failed to save rooms:', err);
+            });
+        }, 500); // 500ms debounce
+
+        return () => clearTimeout(timer);
+    }, [rooms]);
 
     // Cleanup on unmount
     useEffect(() => {
@@ -1174,6 +1726,51 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
         if (e.button !== 0) return; // Only left click
         e.preventDefault();
 
+        // Room drawing mode (click to add points)
+        if (roomDrawingActive && !isSpacePressed) {
+            if (containerRef.current) {
+                const rect = containerRef.current.getBoundingClientRect();
+                const containerX = e.clientX - rect.left;
+                const containerY = e.clientY - rect.top;
+                const clickCoords = containerPosToImageCoords(containerX, containerY);
+
+                // Check if clicking near first point to close the path
+                if (roomDrawing.length >= 3) {
+                    const firstPoint = roomDrawing[0];
+                    const dx = clickCoords.x - firstPoint.x;
+                    const dy = clickCoords.y - firstPoint.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 20) {
+                        // Close the path and prompt for room name
+                        setShowRoomNameModal(true);
+                        return;
+                    }
+                }
+
+                // Add point to path
+                setRoomDrawing(prev => [...(prev || []), clickCoords]);
+                return;
+            }
+            return;
+        }
+
+        // Mask drawing mode (only if not panning with Space)
+        if (maskTool === 'draw' && maskEditingActive && layers.base.visible && masksVisible && !isSpacePressed && !panStartRef.current) {
+            if (containerRef.current) {
+                const rect = containerRef.current.getBoundingClientRect();
+                const containerX = e.clientX - rect.left;
+                const containerY = e.clientY - rect.top;
+                const clickCoords = containerPosToImageCoords(containerX, containerY);
+
+                // Start drawing a new mask
+                setMaskDrawing({ startX: clickCoords.x, startY: clickCoords.y });
+                setSelectedMaskId(null);
+                return;
+            }
+            return;
+        }
+
         if (activeTool === 'scale' && !isSpacePressed) {
             if (containerRef.current) {
                 const rect = containerRef.current.getBoundingClientRect();
@@ -1226,6 +1823,95 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     };
 
     const handlePointerMove = (e: React.PointerEvent) => {
+        // Handle mask dragging (move or resize)
+        if (dragMode && maskDragRef.current && selectedMaskId && containerRef.current) {
+            const dx = e.clientX - maskDragRef.current.startMouseX;
+            const dy = e.clientY - maskDragRef.current.startMouseY;
+
+            const rect = containerRef.current.getBoundingClientRect();
+            const dxImg = (dx / rect.width) * (imgRef.current?.naturalWidth || 1);
+            const dyImg = (dy / rect.height) * (imgRef.current?.naturalHeight || 1);
+
+            setOverlayMasks(prev => prev.map(mask => {
+                if (mask.id !== selectedMaskId || !maskDragRef.current?.initialMask) return mask;
+                const initial = maskDragRef.current.initialMask;
+
+                if (dragMode === 'move') {
+                    // Simple translation for center drag
+                    return {
+                        ...mask,
+                        x: initial.x + dxImg,
+                        y: initial.y + dyImg
+                    };
+                } else if (dragMode === 'resize' && dragCorner) {
+                    // Resize with rotation support
+                    const rad = (initial.rotation * Math.PI) / 180;
+                    const cos = Math.cos(rad);
+                    const sin = Math.sin(rad);
+
+                    // Transform mouse delta to rotated coordinate system
+                    const localDx = dxImg * cos + dyImg * sin;
+                    const localDy = -dxImg * sin + dyImg * cos;
+
+                    // Calculate new dimensions based on corner being dragged
+                    let newWidth = initial.width;
+                    let newHeight = initial.height;
+                    let centerDx = 0;
+                    let centerDy = 0;
+
+                    switch (dragCorner) {
+                        case 'nw':
+                            newWidth = initial.width - localDx;
+                            newHeight = initial.height - localDy;
+                            centerDx = localDx / 2;
+                            centerDy = localDy / 2;
+                            break;
+                        case 'ne':
+                            newWidth = initial.width + localDx;
+                            newHeight = initial.height - localDy;
+                            centerDx = localDx / 2;
+                            centerDy = localDy / 2;
+                            break;
+                        case 'sw':
+                            newWidth = initial.width - localDx;
+                            newHeight = initial.height + localDy;
+                            centerDx = localDx / 2;
+                            centerDy = localDy / 2;
+                            break;
+                        case 'se':
+                            newWidth = initial.width + localDx;
+                            newHeight = initial.height + localDy;
+                            centerDx = localDx / 2;
+                            centerDy = localDy / 2;
+                            break;
+                    }
+
+                    // Transform center offset back to global coordinates
+                    const globalCenterDx = centerDx * cos - centerDy * sin;
+                    const globalCenterDy = centerDx * sin + centerDy * cos;
+
+                    return {
+                        ...mask,
+                        width: Math.max(10, newWidth),
+                        height: Math.max(10, newHeight),
+                        x: initial.x + globalCenterDx,
+                        y: initial.y + globalCenterDy
+                    };
+                }
+                return mask;
+            }));
+            return;
+        }
+
+        // Track mouse position for mask drawing preview
+        if (maskDrawing && containerRef.current) {
+            const rect = containerRef.current.getBoundingClientRect();
+            const relX = e.clientX - rect.left;
+            const relY = e.clientY - rect.top;
+            setMousePos({ x: relX, y: relY });
+            return; // Don't pan while drawing
+        }
+
         // Always track mouse position for scale tool preview
         if (activeTool === 'scale') {
             if (containerRef.current) {
@@ -1246,6 +1932,14 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
             }
         }
 
+        // Always track mouse position for mask editing cursor preview
+        if (masksVisible && layers.base.visible && activeTool !== 'scale' && containerRef.current) {
+            const rect = containerRef.current.getBoundingClientRect();
+            const relX = e.clientX - rect.left;
+            const relY = e.clientY - rect.top;
+            setMousePos({ x: relX, y: relY });
+        }
+
         // Handle panning if active
         if (!panStartRef.current) return;
         e.preventDefault();
@@ -1261,6 +1955,47 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     };
 
     const handlePointerUp = (e: React.PointerEvent) => {
+        // Complete mask dragging
+        if (dragMode) {
+            setDragMode(null);
+            setDragCorner(null);
+            maskDragRef.current = null;
+            return;
+        }
+
+        // Complete mask drawing
+        if (maskDrawing && mousePos && containerRef.current) {
+            const endCoords = containerPosToImageCoords(mousePos.x, mousePos.y);
+
+            // Calculate mask dimensions (center-based)
+            const width = Math.abs(endCoords.x - maskDrawing.startX);
+            const height = Math.abs(endCoords.y - maskDrawing.startY);
+
+            // Only create if mask has meaningful size (at least 10x10 pixels)
+            if (width > 10 && height > 10) {
+                const centerX = (maskDrawing.startX + endCoords.x) / 2;
+                const centerY = (maskDrawing.startY + endCoords.y) / 2;
+
+                const newMask: OverlayMask = {
+                    id: `mask-${Date.now()}`,
+                    x: centerX,
+                    y: centerY,
+                    width,
+                    height,
+                    rotation: 0,
+                    color: '#ffffff',
+                    visible: true
+                };
+
+                setOverlayMasks(prev => [...prev, newMask]);
+                setSelectedMaskId(newMask.id);
+            }
+
+            setMaskDrawing(null);
+            setMousePos(null);
+            return;
+        }
+
         // Finish editing point if active
         if (editingPointIndex !== null) {
             setEditingPointIndex(null);
@@ -1321,75 +2056,256 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                 </div>
                 <div className="p-3 space-y-2">
                     {/* Base Floor Plan */}
-                    <div
-                        className={`flex items-center gap-2 text-xs p-1.5 rounded cursor-pointer ${activeLayer === 'base' ? 'bg-slate-800' : 'hover:bg-slate-800/50'}`}
-                        onClick={() => setActiveLayer('base')}
-                    >
-                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activeLayer === 'base' ? 'bg-blue-500' : 'bg-slate-600'}`} />
-                        <input
-                            type="checkbox"
-                            checked={layers.base.visible}
-                            onChange={(e) => {
-                                e.stopPropagation();
-                                setLayers(prev => ({ ...prev, base: { ...prev.base, visible: e.target.checked } }));
-                            }}
-                            className="rounded flex-shrink-0"
-                        />
-                        <span className="text-slate-300 flex-shrink-0 w-16">Base</span>
-                        <div className="flex items-center gap-1 flex-1 min-w-0">
+                    <div className="space-y-1">
+                        <div
+                            className={`flex items-center gap-2 text-xs p-1.5 rounded cursor-pointer ${activeLayer === 'base' ? 'bg-slate-800' : 'hover:bg-slate-800/50'}`}
+                            onClick={() => setActiveMode('base')}
+                        >
+                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activeLayer === 'base' && activeMode === 'base' ? 'bg-blue-500' : 'bg-slate-600'}`} />
                             <input
-                                type="range"
-                                min="0"
-                                max="100"
-                                value={layers.base.opacity}
+                                type="checkbox"
+                                checked={layers.base.visible}
                                 onChange={(e) => {
                                     e.stopPropagation();
-                                    setLayers(prev => ({ ...prev, base: { ...prev.base, opacity: Number(e.target.value) } }));
+                                    setLayers(prev => ({ ...prev, base: { ...prev.base, visible: e.target.checked } }));
                                 }}
-                                className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                                className="rounded flex-shrink-0"
                             />
-                            <span className="text-slate-500 text-[10px] flex-shrink-0 w-7 text-right">{layers.base.opacity}%</span>
+                            <span className="text-slate-300 flex-shrink-0 w-16">Base</span>
+                            <div className="flex items-center gap-1 flex-1 min-w-0">
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    value={layers.base.opacity}
+                                    onChange={(e) => {
+                                        e.stopPropagation();
+                                        setLayers(prev => ({ ...prev, base: { ...prev.base, opacity: Number(e.target.value) } }));
+                                    }}
+                                    className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                                />
+                                <span className="text-slate-500 text-[10px] flex-shrink-0 w-7 text-right">{layers.base.opacity}%</span>
+                            </div>
                         </div>
+
+                        {/* BASE LAYER MASK TOOLS */}
+                        {activeLayer === 'base' && (
+                            <>
+                                <div
+                                    className={`ml-6 p-2 rounded border space-y-2 text-[10px] cursor-pointer ${
+                                        activeMode === 'base-masks' ? 'bg-slate-800 border-slate-600' : 'bg-slate-900/50 border-slate-700/50 hover:bg-slate-800/50'
+                                    }`}
+                                    onClick={() => setActiveMode(activeMode === 'base-masks' ? 'base' : 'base-masks')}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activeMode === 'base-masks' ? 'bg-blue-500' : 'bg-slate-600'}`} />
+                                            <span className="text-slate-300">Overlay Masks</span>
+                                        </div>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setMasksVisible(!masksVisible);
+                                            }}
+                                            className={`px-2 py-0.5 rounded text-[9px] ${masksVisible ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-300'}`}
+                                        >
+                                            {masksVisible ? 'Visible' : 'Hidden'}
+                                        </button>
+                                    </div>
+
+                                    {maskEditingActive && (
+                                        <div className="space-y-1">
+                                            <div className="text-slate-400 text-[9px]">Mask Tools:</div>
+                                            <div className="flex gap-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setMaskTool('select');
+                                                        (e.target as HTMLButtonElement).blur();
+                                                    }}
+                                                    className={`flex-1 px-2 py-1 rounded text-[10px] ${
+                                                        maskTool === 'select'
+                                                            ? 'bg-blue-600 text-white'
+                                                            : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                                                    }`}
+                                                >
+                                                    Select
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setMaskTool('draw');
+                                                        (e.target as HTMLButtonElement).blur();
+                                                    }}
+                                                    className={`flex-1 px-2 py-1 rounded text-[10px] ${
+                                                        maskTool === 'draw'
+                                                            ? 'bg-blue-600 text-white'
+                                                            : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                                                    }`}
+                                                >
+                                                    Draw
+                                                </button>
+                                            </div>
+                                            <div className="text-slate-500 text-[8px]">
+                                                {maskTool === 'draw' ? 'Click-drag to draw mask' : 'R: rotate 45° • Arrows: fine-tune • Del: delete'}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* BASE LAYER ROOMS */}
+                                <div
+                                    className={`ml-6 p-2 rounded border space-y-2 text-[10px] cursor-pointer ${
+                                        activeMode === 'base-rooms' ? 'bg-slate-800 border-slate-600' : 'bg-slate-900/50 border-slate-700/50 hover:bg-slate-800/50'
+                                    }`}
+                                    onClick={() => {
+                                        const newMode = activeMode === 'base-rooms' ? 'base' : 'base-rooms';
+                                        setActiveMode(newMode);
+                                        if (newMode === 'base-rooms') {
+                                            setRoomDrawing([]);
+                                            showHudMessage('Click to start room outline  •  Click first point to close', 5000);
+                                        } else {
+                                            setRoomDrawing(null);
+                                        }
+                                    }}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activeMode === 'base-rooms' ? 'bg-blue-500' : 'bg-slate-600'}`} />
+                                            <span className="text-slate-300">Rooms</span>
+                                        </div>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setRoomLabelsVisible(!roomLabelsVisible);
+                                            }}
+                                            className={`px-2 py-0.5 rounded text-[9px] ${roomLabelsVisible ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-300'}`}
+                                        >
+                                            {roomLabelsVisible ? 'Labels On' : 'Labels Off'}
+                                        </button>
+                                    </div>
+                                    {activeMode === 'base-rooms' && rooms.length > 0 && (
+                                        <div className="text-slate-500 text-[8px] pt-1">
+                                            {rooms.length} room{rooms.length !== 1 ? 's' : ''} defined
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     {/* Electrical Overlay */}
-                    <div
-                        className={`flex items-center gap-2 text-xs p-1.5 rounded cursor-pointer ${activeLayer === 'electrical' ? 'bg-slate-800' : 'hover:bg-slate-800/50'}`}
-                        onClick={() => setActiveLayer('electrical')}
-                    >
-                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activeLayer === 'electrical' ? 'bg-blue-500' : 'bg-slate-600'}`} />
-                        <input
-                            type="checkbox"
-                            checked={layers.electrical.visible}
-                            onChange={(e) => {
-                                e.stopPropagation();
-                                setLayers(prev => ({ ...prev, electrical: { ...prev.electrical, visible: e.target.checked } }));
-                            }}
-                            className="rounded flex-shrink-0"
-                        />
-                        <span className="text-slate-300 flex-shrink-0 w-16">Electrical</span>
-                        <div className="flex items-center gap-1 flex-1 min-w-0">
+                    <div className="space-y-1">
+                        <div
+                            className={`flex items-center gap-2 text-xs p-1.5 rounded cursor-pointer ${activeLayer === 'electrical' ? 'bg-slate-800' : 'hover:bg-slate-800/50'}`}
+                            onClick={() => setActiveMode('electrical')}
+                        >
+                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activeMode === 'electrical' ? 'bg-blue-500' : 'bg-slate-600'}`} />
                             <input
-                                type="range"
-                                min="0"
-                                max="100"
-                                value={layers.electrical.opacity}
+                                type="checkbox"
+                                checked={layers.electrical.visible}
                                 onChange={(e) => {
                                     e.stopPropagation();
-                                    setLayers(prev => ({ ...prev, electrical: { ...prev.electrical, opacity: Number(e.target.value) } }));
+                                    setLayers(prev => ({ ...prev, electrical: { ...prev.electrical, visible: e.target.checked } }));
                                 }}
-                                className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                                className="rounded flex-shrink-0"
                             />
-                            <span className="text-slate-500 text-[10px] flex-shrink-0 w-7 text-right">{layers.electrical.opacity}%</span>
+                            <span className="text-slate-300 flex-1">Electrical Overlay</span>
                         </div>
+
+                        {/* ELECTRICAL OVERLAY TRANSFORM CONTROLS */}
+                        {layers.electrical.visible && (
+                            <div className="ml-6 p-2 bg-slate-900/50 rounded border border-slate-700/50 space-y-2 text-[10px]">
+                                <div className="flex items-center justify-between text-slate-400">
+                                    <span>Transform Controls</span>
+                                    <button
+                                        onClick={() => setElectricalOverlay(prev => ({ ...prev, locked: !prev.locked }))}
+                                        className={`px-2 py-0.5 rounded flex items-center gap-1 ${electricalOverlay.locked ? 'bg-red-600 text-white' : 'bg-slate-700 text-slate-300'}`}
+                                        title={electricalOverlay.locked ? 'Unlock to edit' : 'Lock overlay'}
+                                    >
+                                        {electricalOverlay.locked ? <Lock size={10} /> : <Unlock size={10} />}
+                                        {electricalOverlay.locked ? 'Locked' : 'Unlocked'}
+                                    </button>
+                                </div>
+
+                                {!electricalOverlay.locked && (
+                                    <>
+                                        <div>
+                                            <label className="text-slate-400">Opacity: {Math.round(electricalOverlay.opacity * 100)}%</label>
+                                            <input
+                                                type="range"
+                                                min="0"
+                                                max="1"
+                                                step="0.01"
+                                                value={electricalOverlay.opacity}
+                                                onChange={(e) => setElectricalOverlay(prev => ({ ...prev, opacity: parseFloat(e.target.value) }))}
+                                                className="w-full h-1 bg-slate-700 rounded appearance-none cursor-pointer"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <div className="text-slate-500 text-[9px]">Arrow Keys (Shift=10x faster):</div>
+
+                                            <button
+                                                onClick={() => setActiveOverlayControl(activeOverlayControl === 'position' ? null : 'position')}
+                                                className={`w-full px-2 py-1 rounded text-left flex items-center justify-between ${
+                                                    activeOverlayControl === 'position'
+                                                        ? 'bg-blue-600 text-white'
+                                                        : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                                                }`}
+                                            >
+                                                <span>Position</span>
+                                                <span className="text-[9px]">X:{electricalOverlay.x} Y:{electricalOverlay.y}</span>
+                                            </button>
+
+                                            <button
+                                                onClick={() => setActiveOverlayControl(activeOverlayControl === 'rotation' ? null : 'rotation')}
+                                                className={`w-full px-2 py-1 rounded text-left flex items-center justify-between ${
+                                                    activeOverlayControl === 'rotation'
+                                                        ? 'bg-blue-600 text-white'
+                                                        : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                                                }`}
+                                            >
+                                                <span>Rotation</span>
+                                                <span className="text-[9px]">{electricalOverlay.rotation.toFixed(1)}°</span>
+                                            </button>
+
+                                            <button
+                                                onClick={() => setActiveOverlayControl(activeOverlayControl === 'scale' ? null : 'scale')}
+                                                className={`w-full px-2 py-1 rounded text-left flex items-center justify-between ${
+                                                    activeOverlayControl === 'scale'
+                                                        ? 'bg-blue-600 text-white'
+                                                        : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                                                }`}
+                                            >
+                                                <span>Scale</span>
+                                                <span className="text-[9px]">{electricalOverlay.scale.toFixed(3)}x</span>
+                                            </button>
+                                        </div>
+
+                                        <button
+                                            onClick={() => {
+                                                setElectricalOverlay({ scale: 1, rotation: 0, x: 0, y: 0, opacity: 0.7, locked: false });
+                                                setActiveOverlayControl(null);
+                                            }}
+                                            className="w-full px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded"
+                                        >
+                                            Reset to Default
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Annotations */}
                     <div
                         className={`flex items-center gap-2 text-xs p-1.5 rounded cursor-pointer ${activeLayer === 'annotations' ? 'bg-slate-800' : 'hover:bg-slate-800/50'}`}
-                        onClick={() => setActiveLayer('annotations')}
+                        onClick={() => setActiveMode('annotations')}
                     >
-                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activeLayer === 'annotations' ? 'bg-blue-500' : 'bg-slate-600'}`} />
+                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activeMode === 'annotations' ? 'bg-blue-500' : 'bg-slate-600'}`} />
                         <input
                             type="checkbox"
                             checked={layers.annotations.visible}
@@ -1424,52 +2340,79 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
 
             {/* Magnified Cursor Preview (Scale Tool) */}
             {activeTool === 'scale' && mousePos && scalePoints.length < 2 && (
-                <div
-                    className="absolute z-50 pointer-events-none"
-                    style={{
-                        left: mousePos.x - 37.5,
-                        top: mousePos.y - 37.5,
-                        width: 75,
-                        height: 75,
-                    }}
+                <MagnifiedCursor
+                    mousePos={mousePos}
+                    containerRef={containerRef}
+                    imgRef={imgRef}
+                    imageUrl={CLEAN_IMAGE}
+                    isSpacePressed={isSpacePressed}
+                    mode="scale"
+                    containerPosToImageCoords={containerPosToImageCoords}
+                />
+            )}
+
+            {/* Magnified Cursor Preview (Mask Editing) */}
+            {maskEditingActive && maskTool === 'draw' && mousePos && activeTool !== 'scale' && (
+                <MagnifiedCursor
+                    mousePos={mousePos}
+                    containerRef={containerRef}
+                    imgRef={imgRef}
+                    imageUrl={CLEAN_IMAGE}
+                    isSpacePressed={isSpacePressed}
+                    mode="mask"
+                    containerPosToImageCoords={containerPosToImageCoords}
                 >
-                    {/* Preview container with border */}
-                    <div className={`w-full h-full border-2 ${isSpacePressed ? 'border-orange-500' : 'border-red-500'} rounded overflow-hidden bg-black relative shadow-lg`}>
-                        {/* Magnified image view */}
-                        {imgRef.current && containerRef.current && (
-                            <div
-                                style={{
-                                    position: 'absolute',
-                                    inset: 0,
-                                    backgroundImage: `url(${CLEAN_IMAGE})`,
-                                    backgroundSize: `${imgRef.current.naturalWidth * 2}px ${imgRef.current.naturalHeight * 2}px`,
-                                    backgroundPosition: (() => {
-                                        const coords = containerPosToImageCoords(mousePos.x, mousePos.y);
-                                        // Calculate background position to center this point in 75px preview at 2x zoom
-                                        const bgX = coords.x * 2 - 37.5;
-                                        const bgY = coords.y * 2 - 37.5;
-                                        return `${-bgX}px ${-bgY}px`;
-                                    })(),
-                                }}
-                            />
-                        )}
-                        {/* Red center dot */}
-                        <div
-                            className="absolute w-2 h-2 bg-red-500 rounded-full"
-                            style={{
-                                left: '50%',
-                                top: '50%',
-                                transform: 'translate(-50%, -50%)',
-                            }}
+                    {/* Overlay mask outlines in preview */}
+                    {overlayMasks.filter(m => m.visible).map(mask => (
+                        <rect
+                            key={mask.id}
+                            x={mask.x - mask.width / 2}
+                            y={mask.y - mask.height / 2}
+                            width={mask.width}
+                            height={mask.height}
+                            fill="none"
+                            stroke={maskTool === 'select' && maskEditingActive ? (selectedMaskId === mask.id ? '#3b82f6' : '#666') : 'none'}
+                            strokeWidth={maskTool === 'select' && maskEditingActive ? 2 : 0}
+                            transform={`rotate(${mask.rotation}, ${mask.x}, ${mask.y})`}
                         />
-                        {/* Pan mode indicator */}
-                        {isSpacePressed && (
-                            <div className="absolute bottom-1 right-1 text-orange-500 text-[10px] font-bold">
-                                [PAN]
-                            </div>
-                        )}
-                    </div>
-                </div>
+                    ))}
+                </MagnifiedCursor>
+            )}
+
+            {/* Magnified Cursor Preview (Room Drawing) */}
+            {roomDrawingActive && mousePos && activeTool !== 'scale' && (
+                <MagnifiedCursor
+                    mousePos={mousePos}
+                    containerRef={containerRef}
+                    imgRef={imgRef}
+                    imageUrl={CLEAN_IMAGE}
+                    isSpacePressed={isSpacePressed}
+                    mode="room"
+                    containerPosToImageCoords={containerPosToImageCoords}
+                >
+                    {/* Room path preview in magnified view */}
+                    {roomDrawing.length > 0 && (
+                        <>
+                            <polyline
+                                points={roomDrawing.map(p => `${p.x},${p.y}`).join(' ')}
+                                fill="none"
+                                stroke="#22c55e"
+                                strokeWidth={1.5}
+                            />
+                            {roomDrawing.map((point, i) => (
+                                <circle
+                                    key={i}
+                                    cx={point.x}
+                                    cy={point.y}
+                                    r={i === 0 ? 4 : 2.5}
+                                    fill={i === 0 ? '#22c55e' : '#3b82f6'}
+                                    stroke="#ffffff"
+                                    strokeWidth={1}
+                                />
+                            ))}
+                        </>
+                    )}
+                </MagnifiedCursor>
             )}
 
             {/* Context Input - Bottom Center (When Needed) */}
@@ -1512,7 +2455,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
             <div
                 ref={containerRef}
                 className={`flex-1 relative overflow-hidden bg-black ${
-                    activeTool === 'scale' && scalePoints.length < 2 ? 'cursor-none' : (isPanning ? 'cursor-grabbing' : 'cursor-grab')
+                    (activeTool === 'scale' && scalePoints.length < 2) || (maskEditingActive && maskTool === 'draw') || roomDrawingActive ? 'cursor-none' : (isPanning ? 'cursor-grabbing' : 'cursor-grab')
                 }`}
                 onWheel={handleWheel}
                 onPointerDown={handlePointerDown}
@@ -1550,6 +2493,243 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                         />
                     )}
 
+                    {/* Base Layer Overlay Masks */}
+                    {layers.base.visible && masksVisible && imgRef.current && (
+                        <svg
+                            className="absolute inset-0"
+                            viewBox={`0 0 ${imgRef.current.naturalWidth} ${imgRef.current.naturalHeight}`}
+                            preserveAspectRatio="xMidYMid meet"
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                pointerEvents: 'none',
+                            }}
+                        >
+                            {/* Render existing masks */}
+                            {overlayMasks.filter(m => m.visible).map(mask => (
+                                <rect
+                                    key={mask.id}
+                                    x={mask.x - mask.width / 2}
+                                    y={mask.y - mask.height / 2}
+                                    width={mask.width}
+                                    height={mask.height}
+                                    fill={mask.color}
+                                    fillOpacity={0.95}
+                                    stroke={maskTool === 'select' && maskEditingActive ? (selectedMaskId === mask.id ? '#3b82f6' : '#666') : 'none'}
+                                    strokeWidth={maskTool === 'select' && maskEditingActive ? (selectedMaskId === mask.id ? 4 : 2) : 0}
+                                    transform={`rotate(${mask.rotation}, ${mask.x}, ${mask.y})`}
+                                    style={{
+                                        pointerEvents: maskTool === 'select' && maskEditingActive ? 'auto' : 'none',
+                                        cursor: maskTool === 'select' && maskEditingActive ? 'pointer' : 'default'
+                                    }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (maskTool === 'select' && maskEditingActive) {
+                                            setSelectedMaskId(mask.id);
+                                        }
+                                    }}
+                                />
+                            ))}
+
+                            {/* Preview mask while drawing */}
+                            {maskDrawing && mousePos && (() => {
+                                const endCoords = containerPosToImageCoords(mousePos.x, mousePos.y);
+                                const width = Math.abs(endCoords.x - maskDrawing.startX);
+                                const height = Math.abs(endCoords.y - maskDrawing.startY);
+                                const centerX = (maskDrawing.startX + endCoords.x) / 2;
+                                const centerY = (maskDrawing.startY + endCoords.y) / 2;
+
+                                return (
+                                    <rect
+                                        x={centerX - width / 2}
+                                        y={centerY - height / 2}
+                                        width={width}
+                                        height={height}
+                                        fill="#ffffff"
+                                        fillOpacity={0.5}
+                                        stroke="#3b82f6"
+                                        strokeWidth={2}
+                                        strokeDasharray="5,5"
+                                    />
+                                );
+                            })()}
+
+                            {/* Corner handles for selected mask */}
+                            {selectedMaskId && (() => {
+                                const selectedMask = overlayMasks.find(m => m.id === selectedMaskId);
+                                if (!selectedMask) return null;
+
+                                const { x: cx, y: cy, width, height, rotation } = selectedMask;
+                                const rad = (rotation * Math.PI) / 180;
+                                const cos = Math.cos(rad);
+                                const sin = Math.sin(rad);
+                                const handleSize = 12;
+
+                                // Calculate rotated corner positions
+                                const corners = [
+                                    { dx: -width / 2, dy: -height / 2, corner: 'nw' }, // Top-left
+                                    { dx: width / 2, dy: -height / 2, corner: 'ne' },  // Top-right
+                                    { dx: -width / 2, dy: height / 2, corner: 'sw' },  // Bottom-left
+                                    { dx: width / 2, dy: height / 2, corner: 'se' },   // Bottom-right
+                                ].map(({ dx, dy, corner }) => {
+                                    const rotatedX = dx * cos - dy * sin;
+                                    const rotatedY = dx * sin + dy * cos;
+                                    return {
+                                        x: cx + rotatedX,
+                                        y: cy + rotatedY,
+                                        corner,
+                                    };
+                                });
+
+                                return (
+                                    <>
+                                        {corners.map(({ x, y, corner }) => (
+                                            <circle
+                                                key={corner}
+                                                cx={x}
+                                                cy={y}
+                                                r={handleSize}
+                                                fill="#3b82f6"
+                                                stroke="#ffffff"
+                                                strokeWidth={2}
+                                                style={{
+                                                    pointerEvents: 'auto',
+                                                    cursor: 'nwse-resize'
+                                                }}
+                                                onPointerDown={(e) => {
+                                                    e.stopPropagation();
+                                                    e.preventDefault();
+                                                    setDragMode('resize');
+                                                    setDragCorner(corner as 'nw' | 'ne' | 'sw' | 'se');
+                                                    maskDragRef.current = {
+                                                        startMouseX: e.clientX,
+                                                        startMouseY: e.clientY,
+                                                        initialMask: { ...selectedMask }
+                                                    };
+                                                }}
+                                            />
+                                        ))}
+
+                                        {/* Center handle for moving */}
+                                        <circle
+                                            cx={cx}
+                                            cy={cy}
+                                            r={handleSize * 0.8}
+                                            fill="#22c55e"
+                                            stroke="#ffffff"
+                                            strokeWidth={2}
+                                            style={{
+                                                pointerEvents: 'auto',
+                                                cursor: 'move'
+                                            }}
+                                            onPointerDown={(e) => {
+                                                e.stopPropagation();
+                                                e.preventDefault();
+                                                setDragMode('move');
+                                                maskDragRef.current = {
+                                                    startMouseX: e.clientX,
+                                                    startMouseY: e.clientY,
+                                                    initialMask: { ...selectedMask }
+                                                };
+                                            }}
+                                        />
+                                    </>
+                                );
+                            })()}
+                        </svg>
+                    )}
+
+                    {/* Room Boundaries and Labels */}
+                    {layers.base.visible && activeLayer === 'base' && imgRef.current && (
+                        <svg
+                            className="absolute inset-0"
+                            viewBox={`0 0 ${imgRef.current.naturalWidth} ${imgRef.current.naturalHeight}`}
+                            preserveAspectRatio="xMidYMid meet"
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                pointerEvents: 'none',
+                            }}
+                        >
+                            {/* Render completed rooms */}
+                            {rooms.filter(r => r.visible).map(room => {
+                                const pathStr = room.path.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
+                                return (
+                                    <g key={room.id}>
+                                        <path
+                                            d={pathStr}
+                                            fill="none"
+                                            stroke="#3b82f6"
+                                            strokeWidth={2}
+                                            strokeDasharray="5,5"
+                                        />
+                                        {roomLabelsVisible && (
+                                            <text
+                                                x={room.labelX}
+                                                y={room.labelY}
+                                                fill="#3b82f6"
+                                                fontSize="16"
+                                                fontWeight="bold"
+                                                textAnchor="middle"
+                                                dominantBaseline="middle"
+                                                transform={`rotate(${room.labelRotation}, ${room.labelX}, ${room.labelY})`}
+                                                style={{
+                                                    pointerEvents: 'auto',
+                                                    cursor: 'pointer',
+                                                    textShadow: '0 0 4px black, 0 0 4px black, 0 0 4px black'
+                                                }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedRoomId(room.id);
+                                                }}
+                                            >
+                                                {room.name}
+                                            </text>
+                                        )}
+                                    </g>
+                                );
+                            })}
+
+                            {/* Preview room while drawing */}
+                            {roomDrawing && roomDrawing.length > 0 && (
+                                <>
+                                    <polyline
+                                        points={roomDrawing.map(p => `${p.x},${p.y}`).join(' ')}
+                                        fill="none"
+                                        stroke="#22c55e"
+                                        strokeWidth={2}
+                                    />
+                                    {roomDrawing.map((point, i) => (
+                                        <circle
+                                            key={i}
+                                            cx={point.x}
+                                            cy={point.y}
+                                            r={i === 0 ? 8 : 5}
+                                            fill={i === 0 ? '#22c55e' : '#3b82f6'}
+                                            stroke="#ffffff"
+                                            strokeWidth={2}
+                                        />
+                                    ))}
+                                    {mousePos && (() => {
+                                        const lastPoint = roomDrawing[roomDrawing.length - 1];
+                                        const mouseCoords = containerPosToImageCoords(mousePos.x, mousePos.y);
+                                        return (
+                                            <line
+                                                x1={lastPoint.x}
+                                                y1={lastPoint.y}
+                                                x2={mouseCoords.x}
+                                                y2={mouseCoords.y}
+                                                stroke="#22c55e"
+                                                strokeWidth={2}
+                                                strokeDasharray="3,3"
+                                            />
+                                        );
+                                    })()}
+                                </>
+                            )}
+                        </svg>
+                    )}
+
                     {/* Electrical Overlay Layer */}
                     {layers.electrical.visible && (
                         <img
@@ -1561,7 +2741,14 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                                 width: '100%',
                                 height: '100%',
                                 objectFit: 'contain',
-                                opacity: layers.electrical.opacity / 100,
+                                opacity: electricalOverlay.opacity,
+                                transform: `
+                                    translate(${electricalOverlay.x}px, ${electricalOverlay.y}px)
+                                    scale(${electricalOverlay.scale})
+                                    rotate(${electricalOverlay.rotation}deg)
+                                `,
+                                transformOrigin: 'center',
+                                transition: electricalOverlay.locked ? 'none' : 'transform 0.1s ease-out',
                             }}
                         />
                     )}
@@ -1680,14 +2867,22 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                                 <div className="flex flex-col items-start gap-1 mb-3">
                                     <div className="relative" style={{ width: barLength, height: 20 }}>
                                         <svg width={barLength} height="20" className="overflow-visible">
+                                            {/* Main bar - black shadow */}
+                                            <line x1="0" y1="10" x2={barLength} y2="10" stroke="black" strokeWidth="4" opacity="0.5" />
                                             {/* Main bar */}
-                                            <line x1="0" y1="10" x2={barLength} y2="10" stroke="white" strokeWidth="2" />
+                                            <line x1="0" y1="10" x2={barLength} y2="10" stroke="#3b82f6" strokeWidth="2" />
+                                            {/* Left tick - black shadow */}
+                                            <line x1="0" y1="5" x2="0" y2="15" stroke="black" strokeWidth="4" opacity="0.5" />
                                             {/* Left tick */}
-                                            <line x1="0" y1="5" x2="0" y2="15" stroke="white" strokeWidth="2" />
+                                            <line x1="0" y1="5" x2="0" y2="15" stroke="#3b82f6" strokeWidth="2" />
+                                            {/* Right tick - black shadow */}
+                                            <line x1={barLength} y1="5" x2={barLength} y2="15" stroke="black" strokeWidth="4" opacity="0.5" />
                                             {/* Right tick */}
-                                            <line x1={barLength} y1="5" x2={barLength} y2="15" stroke="white" strokeWidth="2" />
+                                            <line x1={barLength} y1="5" x2={barLength} y2="15" stroke="#3b82f6" strokeWidth="2" />
+                                            {/* Middle tick - black shadow */}
+                                            <line x1={barLength / 2} y1="7" x2={barLength / 2} y2="13" stroke="black" strokeWidth="3.5" opacity="0.5" />
                                             {/* Middle tick */}
-                                            <line x1={barLength / 2} y1="7" x2={barLength / 2} y2="13" stroke="white" strokeWidth="1.5" />
+                                            <line x1={barLength / 2} y1="7" x2={barLength / 2} y2="13" stroke="#3b82f6" strokeWidth="1.5" />
                                         </svg>
                                     </div>
                                     <div className="text-white text-xs font-medium bg-slate-900/80 px-2 py-0.5 rounded backdrop-blur-sm">
@@ -1699,14 +2894,22 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                                 <div className="flex items-end gap-1">
                                     <div className="relative" style={{ width: 20, height: barLength }}>
                                         <svg width="20" height={barLength} className="overflow-visible">
+                                            {/* Main bar - black shadow */}
+                                            <line x1="10" y1="0" x2="10" y2={barLength} stroke="black" strokeWidth="4" opacity="0.5" />
                                             {/* Main bar */}
-                                            <line x1="10" y1="0" x2="10" y2={barLength} stroke="white" strokeWidth="2" />
+                                            <line x1="10" y1="0" x2="10" y2={barLength} stroke="#3b82f6" strokeWidth="2" />
+                                            {/* Top tick - black shadow */}
+                                            <line x1="5" y1="0" x2="15" y2="0" stroke="black" strokeWidth="4" opacity="0.5" />
                                             {/* Top tick */}
-                                            <line x1="5" y1="0" x2="15" y2="0" stroke="white" strokeWidth="2" />
+                                            <line x1="5" y1="0" x2="15" y2="0" stroke="#3b82f6" strokeWidth="2" />
+                                            {/* Bottom tick - black shadow */}
+                                            <line x1="5" y1={barLength} x2="15" y2={barLength} stroke="black" strokeWidth="4" opacity="0.5" />
                                             {/* Bottom tick */}
-                                            <line x1="5" y1={barLength} x2="15" y2={barLength} stroke="white" strokeWidth="2" />
+                                            <line x1="5" y1={barLength} x2="15" y2={barLength} stroke="#3b82f6" strokeWidth="2" />
+                                            {/* Middle tick - black shadow */}
+                                            <line x1="7" y1={barLength / 2} x2="13" y2={barLength / 2} stroke="black" strokeWidth="3.5" opacity="0.5" />
                                             {/* Middle tick */}
-                                            <line x1="7" y1={barLength / 2} x2="13" y2={barLength / 2} stroke="white" strokeWidth="1.5" />
+                                            <line x1="7" y1={barLength / 2} x2="13" y2={barLength / 2} stroke="#3b82f6" strokeWidth="1.5" />
                                         </svg>
                                     </div>
                                     <div className="text-white text-xs font-medium bg-slate-900/80 px-2 py-0.5 rounded backdrop-blur-sm">

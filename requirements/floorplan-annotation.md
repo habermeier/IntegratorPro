@@ -296,23 +296,304 @@ interface LayerDefinition {
   - Preserve ability to toggle “show all vectors” vs “walls only”.
 - AI vectors live in their own layer with visibility toggle and opacity control.
 
-## Annotation Layers
-- Supported layers (initial set): labels (text), lights, fans, sensors, switches, receptacles, ethernet, security cameras, skylights, exterior lights, exterior receptacles. More can be added.
-- Each layer holds SVG symbols; symbols come from a palette menu.
-- User selects a symbol type; each click places a new symbol on the active layer.
-- Placement behavior:
-  - If cursor is within N pixels of a wall vector, snap/align the symbol axis to the nearest wall segment; otherwise use default orientation.
-  - Click-drag on an existing symbol repositions it with the same snapping rules.
-- Deletion/undo:
-  - Backspace deletes the last placement on the active layer only.
-  - Provide redo to restore the last N deletions for that layer.
-  - Undo/redo history is layer-scoped.
-- All changes save immediately to server storage (no manual save).
+## Symbol Placement System
 
-## Metadata per Symbol
-- Auto-generate a unique, human-readable ID (layer prefix + serial).
-- Store: type (light, outlet, etc.), name/ID, room/location text, optional productId (for BOM deep link), optional product spec URL, optional cost estimate, optional freeform note.
-- Hover tooltip shows: type, name/ID, room/location, spec link (opens new tab if present), cost (if present), note (if present).
+### Equipment Categories (Annotation Layers)
+
+Each category is a toggleable layer containing specific symbol types. Categories organize symbols by function.
+
+#### 1. Lighting
+- **Recessed Light**: Filled square with axis-aligned crosshairs extending 1/2 dimension past square edges
+- **Pendant/Chandelier**: Circle with 5 radial spokes, small circles at spoke ends, label "chand"
+- **Ceiling Fan**: Fan blade symbol (4-6 blades radiating from center)
+- **Exterior Light**: Circle with X (terminating at radius), crosshairs extending beyond circle, "foot" (perpendicular line) attached to one crosshair
+
+#### 2. Low Voltage Controls
+- **KNX Switch**: Text symbol "$LV"
+- **Presence Sensor**: Small rectangle, label "PRS-LV" underneath
+- **Humidity/VOC Sensor**: Small rectangle, label "HVOC-LV" underneath
+
+#### 3. Receptacles & Power
+- **Standard Outlet**: Circle with two parallel lines (top 1/3 and bottom 1/3 of circle), lines extend 1/2 diameter beyond circle on both sides
+- **Bathroom/Exterior (GFCI)**: Same as standard outlet + "GFCI" label
+- **240V Outlet**: Same as standard outlet + "220V" label
+
+#### 4. HVAC & Ventilation
+- **DC Vent Fan**: Small fan symbol with "DC" label
+- **Motorized Skylight**: Rectangle with up arrow ↑, label "SkyLight"
+- **Weather Station**: Rectangular box, label "weather-LV" underneath
+
+#### 5. Safety & Security
+- **Smoke/CO/Alarm Combo**: Text "FA/CO" in circle
+
+#### 6. Infrastructure
+- **LCP Panel**: Rectangular box (40x60px base), label "LCP-1" or "LCP-2", can be wall-mounted or free-standing
+- **Ethernet Switch Panel**: Rectangular box, label "ETH-SW" or model number
+
+### Symbol Design Specifications
+
+**SVG Implementation:**
+- Base sizes: Small (16x16px), Medium (24x24px), Large (32x48px for panels)
+- All symbols scale proportionally with floor plan zoom level
+- Stroke width: 2px at base scale, scales with symbol
+- Colors: Category-based (Lighting: yellow, LV Controls: blue, Receptacles: orange, HVAC: green, Safety: red, Infrastructure: gray)
+- Rotation anchor: Center point of symbol
+- Text labels: Font size scales with symbol size
+
+**Coordinate System:**
+- All symbols placed in natural image pixel coordinates (consistent across zoom levels)
+- SVG rendered with viewBox matching floor plan image dimensions
+- Symbols transform with floor plan pan/zoom operations
+
+### Placement Workflow
+
+**Tool Activation:**
+1. Click equipment category in layers panel (e.g., "Lighting")
+2. Category expands to show symbol palette
+3. Click specific symbol to activate placement tool
+4. Cursor shows preview of symbol at current rotation
+
+**Placement Mechanics:**
+- **Normal click**: Place symbol at cursor position
+- **Space + drag**: Pan map without placing symbol
+- **R key (before or after placement)**: Rotate 45° clockwise
+- **Shift + R**: Rotate 45° counter-clockwise
+- **Shift + Arrow keys (after selection)**: Fine-tune rotation in 1° increments
+- **Drag placed symbol**: Reposition (symbol remains selected)
+- **ESC**: Undo last placement (removes most recent symbol from active category)
+- **Delete key**: Remove selected symbol
+
+**Rotation System:**
+- Default angles: 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315° (quick rotate with R)
+- Fine-tune mode: Hold Shift + use arrow keys for ±1° adjustments
+- Rotation persists for next placement (can place multiple symbols at same angle)
+- Displayed in HUD: "Rotation: 45°"
+
+**Undo/Redo:**
+- ESC: Undo last placement in active category
+- Ctrl+Z: Undo (cross-category, up to 50 operations)
+- Ctrl+Shift+Z: Redo
+- History stored per-category with 50-operation depth
+
+### Layer Visibility & Management
+
+**Categories Panel Structure:**
+```
+Symbol Placement
+├─ [eye] Lighting (12)
+│  └─ [palette when expanded]
+├─ [eye] LV Controls (8)
+├─ [eye] Receptacles (24)
+├─ [eye] HVAC (6)
+├─ [eye] Safety (10)
+└─ [eye] Infrastructure (4)
+```
+
+- Click eye icon to toggle category visibility
+- Number in parentheses shows count of placed symbols
+- Click category name to expand/collapse symbol palette
+- Active category highlighted in blue
+- Symbols from hidden categories do not render
+
+### Symbol Properties & Metadata
+
+**Data Structure per Symbol:**
+```typescript
+interface PlacedSymbol {
+  id: string;              // "lighting-001", "lv-control-003"
+  type: string;            // "recessed-light", "knx-switch"
+  category: string;        // "lighting", "lv-controls", etc.
+  x: number;              // Image pixel coordinates
+  y: number;
+  rotation: number;        // Degrees (0-359)
+  scale: number;           // Default 1.0 (for custom sizing)
+  label?: string;          // Optional custom label
+  room?: string;           // Auto-assigned based on room boundaries
+  metadata: {
+    circuit?: string;
+    notes?: string;
+    productId?: string;
+    specUrl?: string;
+    cost?: number;
+  };
+  createdAt: string;       // ISO timestamp
+}
+```
+
+**Auto-generated IDs:**
+- Format: `{category}-{sequential-number}`
+- Examples: `lighting-001`, `receptacle-042`, `infrastructure-003`
+- Unique within project, persist across sessions
+
+**Room Assignment:**
+- Automatically assigned when symbol placed inside defined room boundary
+- Default: "external" if not within any room boundary
+- Can be manually overridden in symbol properties dialog
+
+**Tooltip on Hover:**
+- Line 1: Symbol type (e.g., "Recessed Light")
+- Line 2: ID and room (e.g., "lighting-012 • Kitchen")
+- Line 3: Rotation if non-zero (e.g., "↻ 45°")
+- Line 4: Notes (if present)
+
+## Room Boundary & Naming System
+
+### Purpose
+Define spatial zones on the floor plan to automatically assign room locations to placed symbols and enable room-based organization/filtering.
+
+### Room Boundary Drawing
+
+**Tool Activation:**
+- Click "Define Room" tool in layers panel
+- Tool activates with multi-point drawing mode (similar to measurement tool)
+
+**Drawing Mechanics:**
+- **Click to add vertices**: Each click adds a point to the boundary polygon
+- **Live preview**: Line drawn from last point to cursor showing next edge
+- **Space + drag**: Pan map without adding point
+- **Snap to existing boundaries**: When cursor within 10px of existing room boundary, snap to that edge (allows sharing walls)
+- **Close polygon**: Click near first point (within 20px) or press Enter to complete
+- **Cancel**: Press ESC to abort room definition
+
+**Boundary Sharing:**
+- When drawing near an existing room boundary, edge highlights in yellow
+- Clicking on highlighted edge attaches new room to that boundary
+- Shared edges reduce data redundancy and ensure rooms don't overlap
+- Moving a shared edge updates both rooms simultaneously
+
+**Completion Dialog:**
+- After closing polygon, dialog prompts for room name
+- Suggested names: "Kitchen", "Master Bedroom", "Garage", "Backyard", "Left Side Yard"
+- Room name stored with boundary data
+
+### Room Data Structure
+
+```typescript
+interface RoomBoundary {
+  id: string;                    // "room-001"
+  name: string;                  // "Kitchen", "Backyard", etc.
+  type: 'interior' | 'exterior'; // Auto-detected or manual
+  boundary: {
+    points: { x: number, y: number }[];  // Polygon vertices in image coordinates
+    sharedEdges?: {                       // Edges shared with other rooms
+      roomId: string;
+      edgeIndices: [number, number];      // Start and end vertex indices
+    }[];
+  };
+  color?: string;                // Optional color for boundary display
+  visible: boolean;              // Toggle room boundary visibility
+  createdAt: string;
+}
+```
+
+### Room Assignment Logic
+
+**Automatic Assignment:**
+- When symbol is placed, check if its coordinates (x, y) fall inside any room boundary polygon
+- Use point-in-polygon algorithm (ray casting)
+- Assign symbol's `room` property to matching room name
+- If inside multiple rooms (shouldn't happen with proper boundaries), use smallest area room
+- If outside all rooms, assign "external"
+
+**Manual Override:**
+- User can click symbol → properties → change room assignment
+- Useful for boundary edge cases or symbols on walls
+
+### Room Layer Management
+
+**Visibility Controls:**
+```
+Room Boundaries
+├─ [eye] Show All Boundaries
+├─ Kitchen [edit] [delete]
+├─ Master Bedroom [edit] [delete]
+├─ Backyard [edit] [delete]
+└─ [+] Define New Room
+```
+
+- Toggle "Show All Boundaries" to display/hide all room outlines
+- Individual room visibility: Show/hide specific room's boundary
+- Edit: Modify boundary vertices or rename
+- Delete: Remove room (symbols in room revert to "external")
+
+**Boundary Rendering:**
+- Thin dashed line (1px, dashed: 5px on / 5px off)
+- Color: Semi-transparent blue (#3b82f6 at 40% opacity)
+- Rendered on separate layer above floor plan but below symbols
+- Z-order: Base image → Electrical overlay → AI vectors → Room boundaries → Symbols
+
+### External Area Naming
+
+**Default External:**
+- Any area not within a defined room boundary is "external"
+- Symbols placed outside rooms show room: "external"
+
+**Named External Areas:**
+- Can define external room boundaries for: "Backyard", "Front Yard", "Left Side Yard", "Right Side Yard", "Driveway"
+- Same polygon drawing tool, but mark as `type: 'exterior'`
+- Exterior rooms rendered with different color (green tint instead of blue)
+
+## Overlay Masking Rectangles
+
+### Purpose
+Hide unwanted text, notes, or visual clutter from the electrical plan overlay without modifying the source image.
+
+### Masking Tool
+
+**Tool Activation:**
+- Sub-layer under "Electrical Overlay" called "Overlay Masks"
+- Click "Add Mask" to activate rectangle drawing mode
+
+**Rectangle Drawing:**
+- **Click and drag**: Click to set one corner, drag to opposite corner, release to place
+- **Rotation**: After placement, press R to rotate in 45° increments (or Shift+arrows for fine-tune)
+- **Resize**: Drag corner handles to resize
+- **Reposition**: Drag center to move
+- **Multiple masks**: Can place unlimited masking rectangles
+
+**Visual Properties:**
+- Fill: Solid white (#FFFFFF) or match background color
+- Opacity: 100% (fully opaque, completely hides content beneath)
+- Border: Thin red outline (1px) when selected, no border when deselected
+- Z-order: Rendered on top of electrical overlay, below symbols
+
+### Mask Data Structure
+
+```typescript
+interface OverlayMask {
+  id: string;           // "mask-001"
+  x: number;           // Top-left corner in image coordinates
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;     // Degrees
+  color: string;        // Default "#FFFFFF"
+  visible: boolean;
+  createdAt: string;
+}
+```
+
+### Mask Management
+
+**Visibility:**
+- Toggle "Overlay Masks" sub-layer to show/hide all masks
+- Individual mask visibility via selection menu
+
+**Editing:**
+- Click mask to select (shows resize handles and rotation indicator)
+- Delete key: Remove selected mask
+- ESC: Deselect mask
+
+**Use Cases:**
+- Hide text notes from engineer on electrical plan
+- Mask out revision stamps or dates
+- Cover legend boxes or title blocks
+- Hide contractor annotations
+
+**Persistence:**
+- Masks stored with electrical overlay transform data
+- Saved to `electricalOverlay.json` / `electricalOverlay.local.json`
+- Auto-save on any mask change (add, move, resize, rotate, delete)
 
 ## Data Persistence & Snapshots
 - Primary state stored on server as JSON (includes layer visibility/opacity, overlay transform, AI filter mode, all annotations).

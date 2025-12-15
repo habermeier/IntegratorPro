@@ -154,7 +154,7 @@ const App = () => {
               } />
 
               {/* 2. Systems Overview */}
-              <Route path="/systems" element={
+              <Route path="/systems/:systemId?" element={
                 <div className="overflow-y-auto p-4 w-full h-full">
                   <SystemsOverview modules={products} highlightedId={null} onNavigate={handleNavigate} />
                 </div>

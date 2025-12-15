@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { HardwareModule, SystemDefinition, ViewMode } from '../types';
 import { INITIAL_SYSTEMS } from '../systems';
 import ProjectBOM from './ProjectBOM';
-import { ChevronDown, ChevronRight, Share2, Info, AlertTriangle } from 'lucide-react';
+import { ChevronDown, ChevronRight, Share2, Info, AlertTriangle, Copy, Check } from 'lucide-react';
 
 interface SystemsOverviewProps {
     modules: HardwareModule[];
@@ -11,11 +12,76 @@ interface SystemsOverviewProps {
 }
 
 const SystemsOverview: React.FC<SystemsOverviewProps> = ({ modules, highlightedId, onNavigate }) => {
+    const { systemId } = useParams<{ systemId?: string }>();
+    const navigate = useNavigate();
+
     // Track expanded sections. specific systemId or empty.
-    const [expandedSystemId, setExpandedSystemId] = useState<string | null>(null);
+    const [expandedSystemId, setExpandedSystemId] = useState<string | null>(systemId || null);
+    const [copiedSystemId, setCopiedSystemId] = useState<string | null>(null);
+
+    // Sync URL param with expanded state
+    useEffect(() => {
+        if (systemId && systemId !== expandedSystemId) {
+            setExpandedSystemId(systemId);
+            // Scroll to the system after a brief delay to ensure rendering
+            setTimeout(() => {
+                const element = document.getElementById(`sys-${systemId}`);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 100);
+        }
+    }, [systemId]);
 
     const toggleSystem = (id: string) => {
-        setExpandedSystemId(prev => prev === id ? null : id);
+        const newExpandedId = expandedSystemId === id ? null : id;
+        setExpandedSystemId(newExpandedId);
+
+        // Update URL
+        if (newExpandedId) {
+            navigate(`/systems/${newExpandedId}`, { replace: true });
+        } else {
+            navigate('/systems', { replace: true });
+        }
+    };
+
+    const generateMarkdown = (sys: SystemDefinition, systemModules: HardwareModule[]): string => {
+        const totalCost = systemModules.reduce((acc, m) => acc + (m.cost * m.quantity), 0);
+        const deepLink = `${window.location.origin}/systems/${sys.id}`;
+
+        let markdown = `# ${sys.title}\n\n`;
+        markdown += `**Deep Link:** ${deepLink}\n\n`;
+        markdown += `## Goal\n\n${sys.description}\n\n`;
+        markdown += `## Implementation\n\n${sys.technicalDetails}\n\n`;
+
+        if (sys.warning) {
+            markdown += `## ⚠️ Status Alert\n\n${sys.warning}\n\n`;
+        }
+
+        markdown += `## System Components\n\n`;
+        markdown += `**Estimated Budget:** $${totalCost.toLocaleString()}\n\n`;
+
+        if (systemModules.length > 0) {
+            markdown += `| Item | Manufacturer | Quantity | Unit Cost | Total |\n`;
+            markdown += `|------|--------------|----------|-----------|-------|\n`;
+            systemModules.forEach(m => {
+                markdown += `| ${m.name} | ${m.manufacturer} | ${m.quantity} | $${m.cost.toLocaleString()} | $${(m.cost * m.quantity).toLocaleString()} |\n`;
+            });
+        }
+
+        return markdown;
+    };
+
+    const copyToMarkdown = async (sys: SystemDefinition, systemModules: HardwareModule[]) => {
+        const markdown = generateMarkdown(sys, systemModules);
+
+        try {
+            await navigator.clipboard.writeText(markdown);
+            setCopiedSystemId(sys.id);
+            setTimeout(() => setCopiedSystemId(null), 2000);
+        } catch (err) {
+            console.error('Failed to copy to clipboard:', err);
+        }
     };
 
     return (
@@ -68,6 +134,26 @@ const SystemsOverview: React.FC<SystemsOverviewProps> = ({ modules, highlightedI
                             {/* Expanded Content */}
                             {isExpanded && (
                                 <div className="border-t border-slate-800/50 bg-slate-950/30">
+                                    {/* Action Bar */}
+                                    <div className="p-4 md:px-6 md:pt-4 md:pb-2 flex justify-end">
+                                        <button
+                                            onClick={() => copyToMarkdown(sys, systemModules)}
+                                            className="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition-all text-sm font-medium"
+                                        >
+                                            {copiedSystemId === sys.id ? (
+                                                <>
+                                                    <Check size={16} className="text-emerald-400" />
+                                                    <span className="text-emerald-400">Copied!</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy size={16} />
+                                                    <span>Copy as Markdown</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+
                                     {/* Narrative Section */}
                                     <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 mb-0 md:mb-4">
                                         <div className="space-y-2">
