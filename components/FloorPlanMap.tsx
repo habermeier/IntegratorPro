@@ -1099,12 +1099,12 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     const [layers, setLayers] = useState({
         base: { visible: true, opacity: 100 },
         rooms: { visible: true },
-        ceiling: { visible: true },
+        dali: { visible: true },
         electrical: { visible: false, opacity: 70 },
         annotations: { visible: true },
     });
     // Unified activation system - only one thing can be active at a time
-    const [activeMode, setActiveMode] = useState<'base' | 'base-masks' | 'rooms' | 'ceiling' | 'electrical' | 'annotations'>('annotations');
+    const [activeMode, setActiveMode] = useState<'base' | 'base-masks' | 'rooms' | 'dali' | 'electrical' | 'annotations'>('annotations');
 
     // Derived values for convenience
     const activeLayer = activeMode.startsWith('base') ? 'base' : activeMode as 'rooms' | 'electrical' | 'annotations';
@@ -1177,20 +1177,42 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
         return `hsla(${hue}, ${saturation}%, ${lightness}%, 0.35)`;
     };
 
-    // Ceiling fixtures state
-    type FixtureType = 'canned-light' | 'sensor' | 'ceiling-fan' | 'decorative-light' | 'fan-light-combo';
-    interface CeilingFixture {
-        id: string;
-        type: FixtureType;
+    // Height settings for cable calculations
+    interface HeightSettings {
+        ceiling: number; // feet
+        switch: number; // feet
+        exteriorSconce: number; // feet
+        bendSlack: number; // feet per bend
+    }
+    const [heightSettings, setHeightSettings] = useState<HeightSettings>({
+        ceiling: 10,
+        switch: 4, // 48 inches
+        exteriorSconce: 6,
+        bendSlack: 0.5 // 6 inches per bend
+    });
+    const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+    // DALI device types and state
+    type MountingHeight = 'ceiling' | 'switch' | 'exterior-sconce' | 'custom';
+    interface DaliDevice {
+        id: string; // Semantic ID: dt-downlight-bedroom-2:1
+        deviceType: string; // Abstract type: dt-downlight, dt-junction-box
         x: number;
         y: number;
-        label?: string;
-        knxControlled: boolean;
-        roomId?: string; // Optional: which room this fixture belongs to
+        mountingHeight: MountingHeight;
+        customHeight?: number; // If mountingHeight is 'custom'
+        universe: string; // lcp-1:1, lcp-1:2, lcp-2:1, lcp-2:2
+        roomId?: string;
+        roomName?: string;
+        connections: string[]; // IDs of connected devices for daisy-chain
     }
-    const [ceilingFixtures, setCeilingFixtures] = useState<CeilingFixture[]>([]);
-    const [selectedFixtureType, setSelectedFixtureType] = useState<FixtureType>('canned-light');
-    const [selectedFixtureId, setSelectedFixtureId] = useState<string | null>(null);
+    const [daliDevices, setDaliDevices] = useState<DaliDevice[]>([]);
+    const [selectedDaliDeviceType, setSelectedDaliDeviceType] = useState<string>('dt-downlight');
+    const [selectedMountingHeight, setSelectedMountingHeight] = useState<MountingHeight>('ceiling');
+    const [selectedUniverse, setSelectedUniverse] = useState<string>('lcp-1:1');
+    const [selectedDaliDeviceId, setSelectedDaliDeviceId] = useState<string | null>(null);
+    const [daliRoutingMode, setDaliRoutingMode] = useState<boolean>(false); // true when routing cables
+    const [daliRoutingPath, setDaliRoutingPath] = useState<string[]>([]); // Device IDs in routing path
 
     // Point-in-polygon test using ray-casting algorithm
     const isPointInPolygon = (point: { x: number, y: number }, polygon: { x: number, y: number }[]): boolean => {
@@ -1271,7 +1293,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     const hudTimeoutRef = useRef<number | null>(null);
 
     // Tool state
-    type Tool = 'select' | 'scale';
+    type Tool = 'select' | 'scale' | 'measure';
     const [activeTool, setActiveTool] = useState<Tool>('select');
 
     // Scale tool state
@@ -1281,6 +1303,9 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     const [isSpacePressed, setIsSpacePressed] = useState(false);
     const [distanceInput, setDistanceInput] = useState('');
     const [editingPointIndex, setEditingPointIndex] = useState<number | null>(null);
+
+    // Measure tool state
+    const [measurePoints, setMeasurePoints] = useState<{ x: number, y: number }[]>([]);
 
     // Wheel zoom batching
     const wheelDeltaRef = useRef(0);
@@ -1523,7 +1548,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                 }
             }
 
-            if (e.code === 'Space' && (activeTool === 'scale' || maskEditingActive || roomDrawingActive) && !isTyping) {
+            if (e.code === 'Space' && (activeTool === 'scale' || activeTool === 'measure' || maskEditingActive || roomDrawingActive) && !isTyping) {
                 e.preventDefault();
                 setIsSpacePressed(true);
             }
@@ -1608,6 +1633,12 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                     }
 
                     // No points, exit to select mode
+                    setActiveTool('select');
+                    setMousePos(null);
+                    showHudMessage('Pan: Click + Drag  •  Zoom: Mouse Wheel');
+                } else if (activeTool === 'measure') {
+                    // Clear measure points and exit to select mode
+                    setMeasurePoints([]);
                     setActiveTool('select');
                     setMousePos(null);
                     showHudMessage('Pan: Click + Drag  •  Zoom: Mouse Wheel');
@@ -2036,6 +2067,41 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
             return;
         }
 
+        if (activeTool === 'measure' && !isSpacePressed) {
+            if (containerRef.current) {
+                const rect = containerRef.current.getBoundingClientRect();
+                const containerX = e.clientX - rect.left;
+                const containerY = e.clientY - rect.top;
+                const clickCoords = containerPosToImageCoords(containerX, containerY);
+
+                if (clickCoords && measurePoints.length < 2) {
+                    setMeasurePoints(prev => [...prev, clickCoords]);
+
+                    if (measurePoints.length === 0) {
+                        showHudMessage('Click second point  •  Hold Space to pan  •  ESC to cancel');
+                    } else if (measurePoints.length === 1) {
+                        // Calculate distance
+                        const dx = clickCoords.x - measurePoints[0].x;
+                        const dy = clickCoords.y - measurePoints[0].y;
+                        const pixelDistance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (scaleFactor) {
+                            const inches = pixelDistance / scaleFactor;
+                            const feet = Math.floor(inches / 12);
+                            const remainingInches = inches % 12;
+                            const distanceStr = feet > 0
+                                ? `${feet}' ${remainingInches.toFixed(1)}"`
+                                : `${remainingInches.toFixed(1)}"`;
+                            showHudMessage(`Distance: ${distanceStr}  •  ESC to clear`, 0);
+                        } else {
+                            showHudMessage(`Distance: ${pixelDistance.toFixed(0)} px (no scale set)  •  ESC to clear`, 0);
+                        }
+                    }
+                }
+            }
+            return;
+        }
+
         // Pan mode (either select tool, or scale tool with Space pressed)
         panStartRef.current = {
             x: e.clientX,
@@ -2165,8 +2231,8 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
             return; // Don't pan while drawing
         }
 
-        // Always track mouse position for scale tool preview
-        if (activeTool === 'scale') {
+        // Always track mouse position for scale/measure tool preview
+        if (activeTool === 'scale' || activeTool === 'measure') {
             if (containerRef.current) {
                 const rect = containerRef.current.getBoundingClientRect();
                 const relX = e.clientX - rect.left;
@@ -2251,7 +2317,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
         }
 
         // Always track mouse position for mask editing cursor preview
-        if (masksVisible && layers.base.visible && activeTool !== 'scale' && containerRef.current) {
+        if (masksVisible && layers.base.visible && activeTool !== 'scale' && activeTool !== 'measure' && containerRef.current) {
             const rect = containerRef.current.getBoundingClientRect();
             const relX = e.clientX - rect.left;
             const relY = e.clientY - rect.top;
@@ -2370,6 +2436,33 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                     }`}
                 >
                     Scale
+                </button>
+
+                {/* Measure Tool */}
+                <button
+                    onClick={() => {
+                        setActiveTool('measure');
+                        setMeasurePoints([]);
+                        showHudMessage('Click first point  •  Hold Space to pan  •  ESC to cancel');
+                    }}
+                    className={`px-3 py-2 rounded text-sm transition-colors ${
+                        activeTool === 'measure'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    }`}
+                >
+                    Measure
+                </button>
+
+                <div className="border-t border-slate-700 my-2"></div>
+
+                {/* Settings Button */}
+                <button
+                    onClick={() => setShowSettingsModal(true)}
+                    className="px-3 py-2 rounded text-sm transition-colors bg-slate-800 text-slate-300 hover:bg-slate-700"
+                >
+                    <Settings className="w-4 h-4 inline mr-1" />
+                    Settings
                 </button>
             </div>
 
@@ -2564,6 +2657,114 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                         )}
                     </div>
 
+                    {/* DALI Layer */}
+                    <div className="space-y-1">
+                        <div
+                            className={`flex items-center gap-2 text-xs p-1.5 rounded cursor-pointer ${activeMode === 'dali' ? 'bg-slate-800' : 'hover:bg-slate-800/50'}`}
+                            onClick={() => {
+                                const newMode = activeMode === 'dali' ? 'annotations' : 'dali';
+                                setActiveMode(newMode);
+                                if (newMode === 'dali') {
+                                    showHudMessage('DALI Layer  •  Select device type and universe, then click to place', 5000);
+                                }
+                            }}
+                        >
+                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activeMode === 'dali' ? 'bg-blue-500' : 'bg-slate-600'}`} />
+                            <input
+                                type="checkbox"
+                                checked={layers.dali.visible}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={(e) => {
+                                    e.stopPropagation();
+                                    setLayers(prev => ({ ...prev, dali: { ...prev.dali, visible: e.target.checked } }));
+                                }}
+                                className="rounded flex-shrink-0"
+                            />
+                            <span className="text-slate-300 flex-1">DALI</span>
+                            {daliDevices.length > 0 && (
+                                <span className="text-slate-500 text-[10px]">{daliDevices.length} device{daliDevices.length !== 1 ? 's' : ''}</span>
+                            )}
+                        </div>
+                        {activeMode === 'dali' && (
+                            <div className="ml-6 text-[9px] text-slate-400 space-y-2">
+                                {/* Universe Selection */}
+                                <div>
+                                    <label className="text-slate-400 text-[9px] block mb-1">Universe:</label>
+                                    <select
+                                        value={selectedUniverse}
+                                        onChange={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedUniverse(e.target.value);
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="w-full bg-slate-800 text-slate-300 px-2 py-1 rounded text-[10px]"
+                                    >
+                                        <option value="lcp-1:1">LCP-1:1</option>
+                                        <option value="lcp-1:2">LCP-1:2</option>
+                                        <option value="lcp-2:1">LCP-2:1</option>
+                                        <option value="lcp-2:2">LCP-2:2</option>
+                                    </select>
+                                </div>
+
+                                {/* Device Type Selection */}
+                                <div>
+                                    <label className="text-slate-400 text-[9px] block mb-1">Device Type:</label>
+                                    <select
+                                        value={selectedDaliDeviceType}
+                                        onChange={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedDaliDeviceType(e.target.value);
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="w-full bg-slate-800 text-slate-300 px-2 py-1 rounded text-[10px]"
+                                    >
+                                        <option value="dt-downlight">Downlight</option>
+                                        <option value="dt-junction-box">Junction Box</option>
+                                    </select>
+                                </div>
+
+                                {/* Mounting Height Selection */}
+                                <div>
+                                    <label className="text-slate-400 text-[9px] block mb-1">Mounting Height:</label>
+                                    <select
+                                        value={selectedMountingHeight}
+                                        onChange={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedMountingHeight(e.target.value as MountingHeight);
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="w-full bg-slate-800 text-slate-300 px-2 py-1 rounded text-[10px]"
+                                    >
+                                        <option value="ceiling">Ceiling ({heightSettings.ceiling}ft)</option>
+                                        <option value="switch">Switch ({heightSettings.switch}ft)</option>
+                                        <option value="exterior-sconce">Exterior Sconce ({heightSettings.exteriorSconce}ft)</option>
+                                        <option value="custom">Custom...</option>
+                                    </select>
+                                </div>
+
+                                {/* Cable Routing Mode Toggle */}
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setDaliRoutingMode(!daliRoutingMode);
+                                        setDaliRoutingPath([]);
+                                    }}
+                                    className={`w-full px-2 py-1 rounded text-[9px] ${daliRoutingMode ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-300'}`}
+                                >
+                                    {daliRoutingMode ? 'Routing Mode: ON' : 'Routing Mode: OFF'}
+                                </button>
+
+                                <div className="text-slate-500 text-[8px] pt-1">
+                                    {daliRoutingMode ? (
+                                        <>Click devices to daisy-chain • ESC to finish</>
+                                    ) : (
+                                        <>Click to place device • Del: delete</>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
                     {/* Electrical Overlay */}
                     <div className="space-y-1">
                         <div
@@ -2723,8 +2924,21 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                 />
             )}
 
+            {/* Magnified Cursor Preview (Measure Tool) */}
+            {activeTool === 'measure' && mousePos && measurePoints.length < 2 && (
+                <MagnifiedCursor
+                    mousePos={mousePos}
+                    containerRef={containerRef}
+                    imgRef={imgRef}
+                    imageUrl={CLEAN_IMAGE}
+                    isSpacePressed={isSpacePressed}
+                    mode="measure"
+                    containerPosToImageCoords={containerPosToImageCoords}
+                />
+            )}
+
             {/* Magnified Cursor Preview (Mask Editing) */}
-            {maskEditingActive && maskTool === 'draw' && mousePos && activeTool !== 'scale' && (
+            {maskEditingActive && maskTool === 'draw' && mousePos && activeTool !== 'scale' && activeTool !== 'measure' && (
                 <MagnifiedCursor
                     mousePos={mousePos}
                     containerRef={containerRef}
@@ -2794,7 +3008,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
             )}
 
             {/* Magnified Cursor Preview (Room Drawing) */}
-            {roomDrawingActive && roomDrawing !== null && mousePos && activeTool !== 'scale' && !roomPreviewFillColor && (
+            {roomDrawingActive && roomDrawing !== null && mousePos && activeTool !== 'scale' && activeTool !== 'measure' && !roomPreviewFillColor && (
                 <MagnifiedCursor
                     mousePos={mousePos}
                     containerRef={containerRef}
@@ -2931,7 +3145,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
             <div
                 ref={containerRef}
                 className={`flex-1 relative overflow-hidden bg-black ${
-                    (activeTool === 'scale' && scalePoints.length < 2) || (maskEditingActive && maskTool === 'draw') || (roomDrawingActive && roomDrawing !== null && !roomPreviewFillColor) ? 'cursor-none' : (isPanning ? 'cursor-grabbing' : 'cursor-grab')
+                    ((activeTool === 'scale' && scalePoints.length < 2) || (activeTool === 'measure' && measurePoints.length < 2) || (maskEditingActive && maskTool === 'draw') || (roomDrawingActive && roomDrawing !== null && !roomPreviewFillColor)) ? 'cursor-none' : (isPanning ? 'cursor-grabbing' : 'cursor-grab')
                 }`}
                 onWheel={handleWheel}
                 onPointerDown={handlePointerDown}
@@ -3421,6 +3635,118 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                         </svg>
                     )}
 
+                    {/* Measure Tool Overlay */}
+                    {activeTool === 'measure' && measurePoints.length > 0 && imgRef.current && (
+                        <svg
+                            className="absolute inset-0 pointer-events-none"
+                            viewBox={`0 0 ${imgRef.current.naturalWidth} ${imgRef.current.naturalHeight}`}
+                            preserveAspectRatio="xMidYMid meet"
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                            }}
+                        >
+                            <defs>
+                                <filter id="measure-shadow" x="-50%" y="-50%" width="200%" height="200%">
+                                    <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="black" floodOpacity="0.8"/>
+                                </filter>
+                            </defs>
+
+                            {/* Draw line from first point to mouse (if placing second point) */}
+                            {measurePoints.length === 1 && mousePos && (
+                                (() => {
+                                    const pt2 = containerPosToImageCoords(mousePos.x, mousePos.y);
+                                    return (
+                                        <line
+                                            x1={measurePoints[0].x}
+                                            y1={measurePoints[0].y}
+                                            x2={pt2.x}
+                                            y2={pt2.y}
+                                            stroke="#22c55e"
+                                            strokeWidth="3"
+                                            strokeDasharray="8,4"
+                                            filter="url(#measure-shadow)"
+                                        />
+                                    );
+                                })()
+                            )}
+
+                            {/* Draw line between two points (if both placed) */}
+                            {measurePoints.length === 2 && (
+                                <>
+                                    <line
+                                        x1={measurePoints[0].x}
+                                        y1={measurePoints[0].y}
+                                        x2={measurePoints[1].x}
+                                        y2={measurePoints[1].y}
+                                        stroke="#22c55e"
+                                        strokeWidth="3"
+                                        filter="url(#measure-shadow)"
+                                    />
+                                    {/* Distance annotation */}
+                                    {(() => {
+                                        const dx = measurePoints[1].x - measurePoints[0].x;
+                                        const dy = measurePoints[1].y - measurePoints[0].y;
+                                        const pixelDistance = Math.sqrt(dx * dx + dy * dy);
+                                        const midX = (measurePoints[0].x + measurePoints[1].x) / 2;
+                                        const midY = (measurePoints[0].y + measurePoints[1].y) / 2;
+
+                                        let distanceText = '';
+                                        if (scaleFactor) {
+                                            const inches = pixelDistance / scaleFactor;
+                                            const feet = Math.floor(inches / 12);
+                                            const remainingInches = inches % 12;
+                                            distanceText = feet > 0
+                                                ? `${feet}' ${remainingInches.toFixed(1)}"`
+                                                : `${remainingInches.toFixed(1)}"`;
+                                        } else {
+                                            distanceText = `${pixelDistance.toFixed(0)} px`;
+                                        }
+
+                                        return (
+                                            <>
+                                                <rect
+                                                    x={midX - 60}
+                                                    y={midY - 20}
+                                                    width="120"
+                                                    height="40"
+                                                    fill="rgba(34, 197, 94, 0.9)"
+                                                    rx="4"
+                                                    filter="url(#measure-shadow)"
+                                                />
+                                                <text
+                                                    x={midX}
+                                                    y={midY + 5}
+                                                    textAnchor="middle"
+                                                    fill="white"
+                                                    fontSize="18"
+                                                    fontWeight="bold"
+                                                    fontFamily="monospace"
+                                                >
+                                                    {distanceText}
+                                                </text>
+                                            </>
+                                        );
+                                    })()}
+                                </>
+                            )}
+
+                            {/* Draw placed points */}
+                            {measurePoints.map((pt, idx) => (
+                                <circle
+                                    key={idx}
+                                    cx={pt.x}
+                                    cy={pt.y}
+                                    r="6"
+                                    fill="#22c55e"
+                                    stroke="white"
+                                    strokeWidth="2"
+                                    filter="url(#measure-shadow)"
+                                />
+                            ))}
+                        </svg>
+                    )}
+
                 </div>
             </div>
 
@@ -3543,6 +3869,91 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                                 className="flex-1 bg-red-900 hover:bg-red-800 text-white px-3 py-2 rounded"
                             >
                                 Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Settings Modal - Outside transformed container to avoid zoom scaling */}
+            {showSettingsModal && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50" style={{ pointerEvents: 'all' }}>
+                    <div className="bg-slate-900 border border-slate-600 p-6 rounded-lg w-96" onClick={(e) => e.stopPropagation()}>
+                        <div className="text-white text-lg font-medium mb-4">Height Settings</div>
+                        <div className="space-y-4">
+                            {/* Ceiling Height */}
+                            <div>
+                                <label className="text-slate-300 text-sm block mb-1">Ceiling Height (ft)</label>
+                                <input
+                                    type="number"
+                                    step="0.5"
+                                    value={heightSettings.ceiling}
+                                    onChange={(e) => setHeightSettings(prev => ({ ...prev, ceiling: parseFloat(e.target.value) || 0 }))}
+                                    className="w-full bg-black text-white px-3 py-2 rounded"
+                                />
+                                <div className="text-slate-500 text-xs mt-1">Default: 10 ft (conservative for cable estimates)</div>
+                            </div>
+
+                            {/* Switch Height */}
+                            <div>
+                                <label className="text-slate-300 text-sm block mb-1">Switch Height (ft)</label>
+                                <input
+                                    type="number"
+                                    step="0.25"
+                                    value={heightSettings.switch}
+                                    onChange={(e) => setHeightSettings(prev => ({ ...prev, switch: parseFloat(e.target.value) || 0 }))}
+                                    className="w-full bg-black text-white px-3 py-2 rounded"
+                                />
+                                <div className="text-slate-500 text-xs mt-1">Standard: 4 ft (48 inches to center)</div>
+                            </div>
+
+                            {/* Exterior Sconce Height */}
+                            <div>
+                                <label className="text-slate-300 text-sm block mb-1">Exterior Sconce Height (ft)</label>
+                                <input
+                                    type="number"
+                                    step="0.25"
+                                    value={heightSettings.exteriorSconce}
+                                    onChange={(e) => setHeightSettings(prev => ({ ...prev, exteriorSconce: parseFloat(e.target.value) || 0 }))}
+                                    className="w-full bg-black text-white px-3 py-2 rounded"
+                                />
+                                <div className="text-slate-500 text-xs mt-1">Typical: 6-7 ft</div>
+                            </div>
+
+                            {/* Bend Slack */}
+                            <div>
+                                <label className="text-slate-300 text-sm block mb-1">Bend Slack (ft per bend)</label>
+                                <input
+                                    type="number"
+                                    step="0.1"
+                                    value={heightSettings.bendSlack}
+                                    onChange={(e) => setHeightSettings(prev => ({ ...prev, bendSlack: parseFloat(e.target.value) || 0 }))}
+                                    className="w-full bg-black text-white px-3 py-2 rounded"
+                                />
+                                <div className="text-slate-500 text-xs mt-1">Recommended: 0.5 ft (6 inches per 90° bend)</div>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-2 mt-6">
+                            <button
+                                onClick={() => setShowSettingsModal(false)}
+                                className="flex-1 bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded"
+                            >
+                                Save
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setHeightSettings({
+                                        ceiling: 10,
+                                        switch: 4,
+                                        exteriorSconce: 6,
+                                        bendSlack: 0.5
+                                    });
+                                    setShowSettingsModal(false);
+                                }}
+                                className="flex-1 bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded"
+                            >
+                                Reset to Defaults
                             </button>
                         </div>
                     </div>
