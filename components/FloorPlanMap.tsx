@@ -1165,12 +1165,14 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     const [draggingCorner, setDraggingCorner] = useState<{ roomId: string, pointIndex: number } | null>(null);
     const roomsMountedRef = useRef(false);
 
-    // Generate random light color for room fills
+    // Generate distinct color for room fills using evenly-spaced hues
     const generateRoomColor = () => {
-        const hue = Math.floor(Math.random() * 360);
-        const saturation = 60 + Math.floor(Math.random() * 20); // 60-80%
-        const lightness = 75 + Math.floor(Math.random() * 15); // 75-90% (light colors)
-        return `hsla(${hue}, ${saturation}%, ${lightness}%, 0.3)`;
+        // Use golden angle for even distribution of hues
+        const goldenAngle = 137.508; // degrees
+        const hue = (rooms.length * goldenAngle) % 360;
+        const saturation = 70; // Consistent saturation
+        const lightness = 80; // Consistent lightness for readability
+        return `hsla(${hue}, ${saturation}%, ${lightness}%, 0.35)`;
     };
 
     // Point-in-polygon test using ray-casting algorithm
@@ -1514,6 +1516,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                 e.preventDefault();
                 // Generate fill color for preview
                 setRoomPreviewFillColor(generateRoomColor());
+                setRoomNameInput(''); // Clear input buffer before opening modal
                 setShowRoomNameModal(true);
                 return;
             }
@@ -1915,6 +1918,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                         // Close the path and prompt for room name
                         // Generate fill color for preview
                         setRoomPreviewFillColor(generateRoomColor());
+                        setRoomNameInput(''); // Clear input buffer before opening modal
                         setShowRoomNameModal(true);
                         setSnapPoint(null); // Clear snap point
                         return;
@@ -3398,7 +3402,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
 
                     {/* Room Name Modal */}
                     {showRoomNameModal && (
-                        <div className="absolute inset-0 z-[250] flex items-center justify-center bg-black/50" style={{ pointerEvents: 'all' }}>
+                        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50" style={{ pointerEvents: 'all' }}>
                             <div className="bg-slate-900 border border-slate-600 p-4 rounded-lg w-80" onClick={(e) => e.stopPropagation()}>
                                 <div className="text-white text-sm mb-3">Name this room:</div>
                                 <input
@@ -3426,11 +3430,11 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                                                 console.log('Rooms state updated to:', updated);
                                                 return updated;
                                             });
-                                            setRoomDrawing(null);
+                                            setRoomDrawing([]); // Stay in drawing mode with empty path
                                             setRoomPreviewFillColor(null);
                                             setRoomNameInput('');
                                             setShowRoomNameModal(false);
-                                            showHudMessage(`Room "${newRoom.name}" created`, 3000);
+                                            showHudMessage(`Room "${newRoom.name}" created  •  Draw next room`, 3000);
                                         }
                                         if (e.key === 'Escape') {
                                             setShowRoomNameModal(false);
@@ -3464,11 +3468,11 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                                                     console.log('Rooms state updated to:', updated);
                                                     return updated;
                                                 });
-                                                setRoomDrawing(null);
+                                                setRoomDrawing([]); // Stay in drawing mode with empty path
                                                 setRoomPreviewFillColor(null);
                                                 setRoomNameInput('');
                                                 setShowRoomNameModal(false);
-                                                showHudMessage(`Room "${newRoom.name}" created`, 3000);
+                                                showHudMessage(`Room "${newRoom.name}" created  •  Draw next room`, 3000);
                                             }
                                         }}
                                         className="flex-1 bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded"
