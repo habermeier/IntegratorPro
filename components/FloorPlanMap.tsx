@@ -1162,6 +1162,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     const [roomLabelsVisible, setRoomLabelsVisible] = useState(true);
     const [roomNameInput, setRoomNameInput] = useState('');
     const [showRoomNameModal, setShowRoomNameModal] = useState(false);
+    const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
     const [draggingCorner, setDraggingCorner] = useState<{ roomId: string, pointIndex: number } | null>(null);
     const roomsMountedRef = useRef(false);
 
@@ -2396,74 +2397,72 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                             </div>
                         </div>
 
-                        {/* BASE LAYER MASK TOOLS */}
-                        {activeLayer === 'base' && (
-                            <>
-                                <div
-                                    className={`ml-6 p-2 rounded border space-y-2 text-[10px] cursor-pointer ${
-                                        activeMode === 'base-masks' ? 'bg-slate-800 border-slate-600' : 'bg-slate-900/50 border-slate-700/50 hover:bg-slate-800/50'
-                                    }`}
-                                    onClick={() => setActiveMode(activeMode === 'base-masks' ? 'base' : 'base-masks')}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activeMode === 'base-masks' ? 'bg-blue-500' : 'bg-slate-600'}`} />
-                                            <span className="text-slate-300">Overlay Masks</span>
-                                        </div>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setMasksVisible(!masksVisible);
-                                            }}
-                                            className={`px-2 py-0.5 rounded text-[9px] ${masksVisible ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-300'}`}
-                                        >
-                                            {masksVisible ? 'Visible' : 'Hidden'}
-                                        </button>
-                                    </div>
+                    </div>
 
-                                    {maskEditingActive && (
-                                        <div className="space-y-1">
-                                            <div className="text-slate-400 text-[9px]">Mask Tools:</div>
-                                            <div className="flex gap-1">
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setMaskTool('select');
-                                                        (e.target as HTMLButtonElement).blur();
-                                                    }}
-                                                    className={`flex-1 px-2 py-1 rounded text-[10px] ${
-                                                        maskTool === 'select'
-                                                            ? 'bg-blue-600 text-white'
-                                                            : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
-                                                    }`}
-                                                >
-                                                    Select
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setMaskTool('draw');
-                                                        (e.target as HTMLButtonElement).blur();
-                                                    }}
-                                                    className={`flex-1 px-2 py-1 rounded text-[10px] ${
-                                                        maskTool === 'draw'
-                                                            ? 'bg-blue-600 text-white'
-                                                            : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
-                                                    }`}
-                                                >
-                                                    Draw
-                                                </button>
-                                            </div>
-                                            <div className="text-slate-500 text-[8px]">
-                                                {maskTool === 'draw' ? 'Click-drag to draw mask' : 'R: rotate 45° • Arrows: fine-tune • Del: delete'}
-                                            </div>
-                                        </div>
-                                    )}
+                    {/* Overlay Masks Layer */}
+                    <div className="space-y-1">
+                        <div
+                            className={`flex items-center gap-2 text-xs p-1.5 rounded cursor-pointer ${activeMode === 'base-masks' ? 'bg-slate-800' : 'hover:bg-slate-800/50'}`}
+                            onClick={() => {
+                                const newMode = activeMode === 'base-masks' ? 'annotations' : 'base-masks';
+                                setActiveMode(newMode);
+                                if (newMode === 'base-masks') {
+                                    setMaskTool('select');
+                                    setSelectedMaskId(null);
+                                    showHudMessage('Select mask to edit  •  Or draw new mask', 4000);
+                                }
+                            }}
+                        >
+                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activeMode === 'base-masks' ? 'bg-blue-500' : 'bg-slate-600'}`} />
+                            <input
+                                type="checkbox"
+                                checked={masksVisible}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={(e) => {
+                                    e.stopPropagation();
+                                    setMasksVisible(e.target.checked);
+                                }}
+                                className="rounded flex-shrink-0"
+                            />
+                            <span className="text-slate-300 flex-1">Overlay Masks</span>
+                            {overlayMasks.length > 0 && (
+                                <span className="text-slate-500 text-[10px]">{overlayMasks.length} mask{overlayMasks.length !== 1 ? 's' : ''}</span>
+                            )}
+                        </div>
+                        {activeMode === 'base-masks' && (
+                            <div className="ml-6 text-[9px] text-slate-400 space-y-1">
+                                <div className="flex gap-1">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setMaskTool('select');
+                                        }}
+                                        className={`flex-1 px-2 py-1 rounded text-[10px] ${
+                                            maskTool === 'select'
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                                        }`}
+                                    >
+                                        Select
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setMaskTool('draw');
+                                        }}
+                                        className={`flex-1 px-2 py-1 rounded text-[10px] ${
+                                            maskTool === 'draw'
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                                        }`}
+                                    >
+                                        Draw
+                                    </button>
                                 </div>
-
-                            </>
+                                <div className="text-slate-500 text-[8px]">
+                                    {maskTool === 'draw' ? 'Click-drag to draw mask' : 'R: rotate 45° • Arrows: fine-tune • Del: delete'}
+                                </div>
+                            </div>
                         )}
                     </div>
 
@@ -3400,102 +3399,103 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                         </svg>
                     )}
 
-                    {/* Room Name Modal */}
-                    {showRoomNameModal && (
-                        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50" style={{ pointerEvents: 'all' }}>
-                            <div className="bg-slate-900 border border-slate-600 p-4 rounded-lg w-80" onClick={(e) => e.stopPropagation()}>
-                                <div className="text-white text-sm mb-3">Name this room:</div>
-                                <input
-                                    type="text"
-                                    value={roomNameInput}
-                                    autoFocus
-                                    onChange={(e) => setRoomNameInput(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' && roomNameInput.trim() && roomDrawing && roomDrawing.length >= 3) {
-                                            const avgX = roomDrawing.reduce((sum, p) => sum + p.x, 0) / roomDrawing.length;
-                                            const avgY = roomDrawing.reduce((sum, p) => sum + p.y, 0) / roomDrawing.length;
-                                            const newRoom: Room = {
-                                                id: `room-${Date.now()}`,
-                                                path: roomDrawing,
-                                                name: roomNameInput.trim(),
-                                                labelX: avgX,
-                                                labelY: avgY,
-                                                labelRotation: 0,
-                                                fillColor: roomPreviewFillColor || generateRoomColor(),
-                                                visible: true
-                                            };
-                                            console.log('Creating room:', newRoom);
-                                            setRooms(prev => {
-                                                const updated = [...prev, newRoom];
-                                                console.log('Rooms state updated to:', updated);
-                                                return updated;
-                                            });
-                                            setRoomDrawing([]); // Stay in drawing mode with empty path
-                                            setRoomPreviewFillColor(null);
-                                            setRoomNameInput('');
-                                            setShowRoomNameModal(false);
-                                            showHudMessage(`Room "${newRoom.name}" created  •  Draw next room`, 3000);
-                                        }
-                                        if (e.key === 'Escape') {
-                                            setShowRoomNameModal(false);
-                                            setRoomNameInput('');
-                                            setRoomDrawing(null);
-                                            setRoomPreviewFillColor(null);
-                                        }
-                                    }}
-                                    className="w-full bg-black text-white px-3 py-2 rounded mb-3"
-                                    placeholder="e.g., Living Room"
-                                />
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => {
-                                            if (roomNameInput.trim() && roomDrawing && roomDrawing.length >= 3) {
-                                                const avgX = roomDrawing.reduce((sum, p) => sum + p.x, 0) / roomDrawing.length;
-                                                const avgY = roomDrawing.reduce((sum, p) => sum + p.y, 0) / roomDrawing.length;
-                                                const newRoom: Room = {
-                                                    id: `room-${Date.now()}`,
-                                                    path: roomDrawing,
-                                                    name: roomNameInput.trim(),
-                                                    labelX: avgX,
-                                                    labelY: avgY,
-                                                    labelRotation: 0,
-                                                    fillColor: roomPreviewFillColor || generateRoomColor(),
-                                                    visible: true
-                                                };
-                                                console.log('Creating room (button):', newRoom);
-                                                setRooms(prev => {
-                                                    const updated = [...prev, newRoom];
-                                                    console.log('Rooms state updated to:', updated);
-                                                    return updated;
-                                                });
-                                                setRoomDrawing([]); // Stay in drawing mode with empty path
-                                                setRoomPreviewFillColor(null);
-                                                setRoomNameInput('');
-                                                setShowRoomNameModal(false);
-                                                showHudMessage(`Room "${newRoom.name}" created  •  Draw next room`, 3000);
-                                            }
-                                        }}
-                                        className="flex-1 bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded"
-                                    >
-                                        Create Room
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setShowRoomNameModal(false);
-                                            setRoomNameInput('');
-                                            setRoomDrawing(null);
-                                            setRoomPreviewFillColor(null);
-                                        }}
-                                        className="flex-1 bg-red-900 hover:bg-red-800 text-white px-3 py-2 rounded"
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
+
+            {/* Room Name Modal - Outside transformed container to avoid zoom scaling */}
+            {showRoomNameModal && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50" style={{ pointerEvents: 'all' }}>
+                    <div className="bg-slate-900 border border-slate-600 p-4 rounded-lg w-80" onClick={(e) => e.stopPropagation()}>
+                        <div className="text-white text-sm mb-3">Name this room:</div>
+                        <input
+                            type="text"
+                            value={roomNameInput}
+                            autoFocus
+                            onChange={(e) => setRoomNameInput(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && roomNameInput.trim() && roomDrawing && roomDrawing.length >= 3) {
+                                    const avgX = roomDrawing.reduce((sum, p) => sum + p.x, 0) / roomDrawing.length;
+                                    const avgY = roomDrawing.reduce((sum, p) => sum + p.y, 0) / roomDrawing.length;
+                                    const newRoom: Room = {
+                                        id: `room-${Date.now()}`,
+                                        path: roomDrawing,
+                                        name: roomNameInput.trim(),
+                                        labelX: avgX,
+                                        labelY: avgY,
+                                        labelRotation: 0,
+                                        fillColor: roomPreviewFillColor || generateRoomColor(),
+                                        visible: true
+                                    };
+                                    console.log('Creating room:', newRoom);
+                                    setRooms(prev => {
+                                        const updated = [...prev, newRoom];
+                                        console.log('Rooms state updated to:', updated);
+                                        return updated;
+                                    });
+                                    setRoomDrawing([]); // Stay in drawing mode with empty path
+                                    setRoomPreviewFillColor(null);
+                                    setRoomNameInput('');
+                                    setShowRoomNameModal(false);
+                                    showHudMessage(`Room "${newRoom.name}" created  •  Draw next room`, 3000);
+                                }
+                                if (e.key === 'Escape') {
+                                    setShowRoomNameModal(false);
+                                    setRoomNameInput('');
+                                    setRoomPreviewFillColor(null);
+                                    // Keep roomDrawing as-is to stay in drawing mode
+                                }
+                            }}
+                            className="w-full bg-black text-white px-3 py-2 rounded mb-3"
+                            placeholder="e.g., Living Room"
+                        />
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => {
+                                    if (roomNameInput.trim() && roomDrawing && roomDrawing.length >= 3) {
+                                        const avgX = roomDrawing.reduce((sum, p) => sum + p.x, 0) / roomDrawing.length;
+                                        const avgY = roomDrawing.reduce((sum, p) => sum + p.y, 0) / roomDrawing.length;
+                                        const newRoom: Room = {
+                                            id: `room-${Date.now()}`,
+                                            path: roomDrawing,
+                                            name: roomNameInput.trim(),
+                                            labelX: avgX,
+                                            labelY: avgY,
+                                            labelRotation: 0,
+                                            fillColor: roomPreviewFillColor || generateRoomColor(),
+                                            visible: true
+                                        };
+                                        console.log('Creating room (button):', newRoom);
+                                        setRooms(prev => {
+                                            const updated = [...prev, newRoom];
+                                            console.log('Rooms state updated to:', updated);
+                                            return updated;
+                                        });
+                                        setRoomDrawing([]); // Stay in drawing mode with empty path
+                                        setRoomPreviewFillColor(null);
+                                        setRoomNameInput('');
+                                        setShowRoomNameModal(false);
+                                        showHudMessage(`Room "${newRoom.name}" created  •  Draw next room`, 3000);
+                                    }
+                                }}
+                                className="flex-1 bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded"
+                            >
+                                Create Room
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowRoomNameModal(false);
+                                    setRoomNameInput('');
+                                    setRoomPreviewFillColor(null);
+                                    // Keep roomDrawing as-is to stay in drawing mode
+                                }}
+                                className="flex-1 bg-red-900 hover:bg-red-800 text-white px-3 py-2 rounded"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Scale Warning or Scale Bars - Lower Right Corner */}
             {!scaleFactor ? (
