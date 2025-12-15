@@ -52,6 +52,44 @@ const BOT_PATTERN = new RegExp(
 app.use(cors());
 app.use(bodyParser.json());
 
+// Helper function to create GET/POST endpoints for JSON data with override pattern
+function createDataEndpoints(apiPath, baseFile, overrideFile, dataKey, displayName) {
+    // GET endpoint - Read from Override if Exists, Otherwise Base
+    app.get(apiPath, (req, res) => {
+        try {
+            const targetFile = fs.existsSync(overrideFile) ? overrideFile : baseFile;
+            if (fs.existsSync(targetFile)) {
+                console.log(`Loading ${displayName} from: ${path.basename(targetFile)}`);
+                const data = fs.readFileSync(targetFile, 'utf8');
+                res.json(JSON.parse(data));
+            } else {
+                res.json({ [dataKey]: [] });
+            }
+        } catch (err) {
+            console.error(`Error reading ${displayName} data:`, err);
+            res.status(500).json({ error: `Failed to read ${displayName} data` });
+        }
+    });
+
+    // POST endpoint - Always Write to Override
+    app.post(apiPath, (req, res) => {
+        try {
+            const data = req.body[dataKey];
+            const fileData = {
+                [dataKey]: Array.isArray(data) ? data : []
+            };
+
+            // Always write to the override file to prevent changing committed default
+            fs.writeFileSync(overrideFile, JSON.stringify(fileData, null, 2));
+            console.log(`${displayName} saved to ${path.basename(overrideFile)}`);
+            res.json({ success: true, ...fileData, savedTo: 'local' });
+        } catch (err) {
+            console.error(`Error writing ${displayName} data:`, err);
+            res.status(500).json({ error: `Failed to save ${displayName} data` });
+        }
+    });
+}
+
 // Serve static files from the React app (dist folder)
 // Ensure 'dist' exists (run 'npm run build' first)
 const distPath = path.join(__dirname, 'dist');
@@ -186,82 +224,12 @@ app.post('/api/electrical-overlay', (req, res) => {
 // Base Layer Masks endpoints
 const BASE_MASKS_FILE = path.join(__dirname, 'baseMasks.json');
 const BASE_MASKS_OVERRIDE_FILE = path.join(__dirname, 'baseMasks.local.json');
-
-// GET base masks - Read from Override if Exists, Otherwise Base
-app.get('/api/base-masks', (req, res) => {
-    try {
-        const targetFile = fs.existsSync(BASE_MASKS_OVERRIDE_FILE) ? BASE_MASKS_OVERRIDE_FILE : BASE_MASKS_FILE;
-        if (fs.existsSync(targetFile)) {
-            console.log(`Loading base masks from: ${path.basename(targetFile)}`);
-            const data = fs.readFileSync(targetFile, 'utf8');
-            res.json(JSON.parse(data));
-        } else {
-            res.json({ masks: [] });
-        }
-    } catch (err) {
-        console.error('Error reading base masks data:', err);
-        res.status(500).json({ error: 'Failed to read base masks data' });
-    }
-});
-
-// POST base masks - Always Write to Override
-app.post('/api/base-masks', (req, res) => {
-    try {
-        const { masks } = req.body;
-
-        const masksData = {
-            masks: Array.isArray(masks) ? masks : []
-        };
-
-        // Always write to the override file to prevent changing committed default
-        fs.writeFileSync(BASE_MASKS_OVERRIDE_FILE, JSON.stringify(masksData, null, 2));
-        console.log('Base masks saved to baseMasks.local.json');
-        res.json({ success: true, ...masksData, savedTo: 'local' });
-    } catch (err) {
-        console.error('Error writing base masks data:', err);
-        res.status(500).json({ error: 'Failed to save base masks data' });
-    }
-});
+createDataEndpoints('/api/base-masks', BASE_MASKS_FILE, BASE_MASKS_OVERRIDE_FILE, 'masks', 'Base masks');
 
 // Rooms endpoints
 const ROOMS_FILE = path.join(__dirname, 'rooms.json');
 const ROOMS_OVERRIDE_FILE = path.join(__dirname, 'rooms.local.json');
-
-// GET rooms - Read from Override if Exists, Otherwise Base
-app.get('/api/rooms', (req, res) => {
-    try {
-        const targetFile = fs.existsSync(ROOMS_OVERRIDE_FILE) ? ROOMS_OVERRIDE_FILE : ROOMS_FILE;
-        if (fs.existsSync(targetFile)) {
-            console.log(`Loading rooms from: ${path.basename(targetFile)}`);
-            const data = fs.readFileSync(targetFile, 'utf8');
-            res.json(JSON.parse(data));
-        } else {
-            res.json({ rooms: [] });
-        }
-    } catch (err) {
-        console.error('Error reading rooms data:', err);
-        res.status(500).json({ error: 'Failed to read rooms data' });
-    }
-});
-
-// POST rooms - Always Write to Override
-app.post('/api/rooms', (req, res) => {
-    try {
-        const { rooms } = req.body;
-
-        const roomsData = {
-            rooms: Array.isArray(rooms) ? rooms : []
-        };
-
-        // Always write to the override file to prevent changing committed default
-        fs.writeFileSync(ROOMS_OVERRIDE_FILE, JSON.stringify(roomsData, null, 2));
-        console.log('Rooms saved to rooms.local.json');
-        res.json({ success: true, ...roomsData, savedTo: 'local' });
-    } catch (err) {
-        console.error('Error writing rooms data:', err);
-        res.status(500).json({ error: 'Failed to save rooms data' });
-    }
-});
+createDataEndpoints('/api/rooms', ROOMS_FILE, ROOMS_OVERRIDE_FILE, 'rooms', 'Rooms');
 
 // POST debug log
 const LOG_FILE = path.join(__dirname, 'client_debug.log');

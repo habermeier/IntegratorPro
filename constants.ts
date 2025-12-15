@@ -760,14 +760,15 @@ export const INITIAL_MODULES: HardwareModule[] = [
     type: ModuleType.ACCESSORY,
     mountType: MountType.NA,
     size: 0,
-    cost: 1450.00, // Est for 1000ft
+    cost: 1250.00, // Est for 1000ft
     powerWatts: 0,
     quantity: 1, // 1000ft Spool
     systemIds: ['infra', 'lighting'],
-    url: 'https://www.google.com/search?q=Southwire+67962802+Romex+PCS+Duo+12/2+16/2',
+    url: 'https://www.nassauelectrical.com/products/14-awg-2c-nm-b-pcs-duo-control-signal-copper-conductors-600v-white?variant=42497383006271',
     linkStatus: 'PREFERRED',
-    description: '12/2 Power + 16/2 Control (NM-B-PCS)',
-    notes: 'CORE STRATEGY: "Code Hack" for NEC. Bundles Class 1 (120V) + Class 2 (0-10V/DALI) in one cable. Saves dual pulls.',
+    specUrl: 'https://www.nassauelectrical.com/products/14-awg-2c-nm-b-pcs-duo-control-signal-copper-conductors-600v-white?variant=42497383006271#pdf',
+    description: '14/2 Power + 16/2 Control (NM-B-PCS)',
+    notes: 'CORE STRATEGY: "Code Hack" for NEC. Bundles Class 1 (120V) + Class 2 (0-10V/DALI) in one cable. Saves dual pulls. 14 AWG adequate for lighting circuits.',
     location: 'Infra'
   },
   {
@@ -787,16 +788,16 @@ export const INITIAL_MODULES: HardwareModule[] = [
   },
   {
     id: 'cable-knx',
-    name: 'Syston 18/4 Solid Shielded FPLR',
-    manufacturer: 'Syston Cable',
+    name: '18/4 Solid Shielded FPLR',
+    manufacturer: 'Generic Fire Alarm Cable',
     type: ModuleType.ACCESSORY,
     mountType: MountType.NA,
     size: 0,
-    cost: 203.00,
+    cost: 280.00, // 1000ft spool
     powerWatts: 0,
-    quantity: 1, // 500ft roll
+    quantity: 1, // 1000ft roll
     systemIds: ['infra', 'lighting', 'hvac', 'irrigation'],
-    url: 'https://www.walmart.com/ip/Syston-Fire-Alarm-Cable-Security-Burglar-Station-Wire-18-4-500-ft-100-Solid-Copper-Shielded-FPLP-CL3P-FT6-CMP-Plenum-Rated-UL-and-or-ETL-Listed-18-Ga/10245316771',
+    url: 'https://cables4sure.com/fire-alarm-cables-18-awg/9383-56057-fire-alarm-cable-riser-18-4-shielded-1000ft-spool.html#/340-color-blue',
     linkStatus: 'PREFERRED',
     backupUrl: 'https://www.google.com/search?q=Southwire+F40567-1A+18/4+Shielded+FPLR',
     description: '18 AWG 4-Conductor Solid Core Shielded Fire Alarm Cable (FPLR Rated)',

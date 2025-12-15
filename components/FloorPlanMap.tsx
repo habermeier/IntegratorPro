@@ -749,11 +749,13 @@ const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, 
                                                             labelX: avgX,
                                                             labelY: avgY,
                                                             labelRotation: 0,
+                                                            fillColor: roomPreviewFillColor || generateRoomColor(),
                                                             visible: true
                                                         };
 
                                                         setRooms(prev => [...prev, newRoom]);
                                                         setRoomDrawing(null);
+                                                        setRoomPreviewFillColor(null);
                                                         setRoomNameInput('');
                                                         setShowRoomNameModal(false);
                                                         showHudMessage(`Room "${newRoom.name}" created`, 3000);
@@ -763,6 +765,7 @@ const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, 
                                                     setShowRoomNameModal(false);
                                                     setRoomNameInput('');
                                                     setRoomDrawing(null);
+                                                    setRoomPreviewFillColor(null);
                                                 }
                                             }}
                                             className="w-full bg-black text-white px-3 py-2 rounded mb-3"
@@ -783,11 +786,13 @@ const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, 
                                                             labelX: avgX,
                                                             labelY: avgY,
                                                             labelRotation: 0,
+                                                            fillColor: roomPreviewFillColor || generateRoomColor(),
                                                             visible: true
                                                         };
 
                                                         setRooms(prev => [...prev, newRoom]);
                                                         setRoomDrawing(null);
+                                                        setRoomPreviewFillColor(null);
                                                         setRoomNameInput('');
                                                         setShowRoomNameModal(false);
                                                         showHudMessage(`Room "${newRoom.name}" created`, 3000);
@@ -802,6 +807,7 @@ const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, 
                                                     setShowRoomNameModal(false);
                                                     setRoomNameInput('');
                                                     setRoomDrawing(null);
+                                                    setRoomPreviewFillColor(null);
                                                 }}
                                                 className="flex-1 bg-red-900 hover:bg-red-800 text-white px-3 py-2 rounded"
                                             >
@@ -1092,16 +1098,17 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     // Layer state
     const [layers, setLayers] = useState({
         base: { visible: true, opacity: 100 },
+        rooms: { visible: true },
         electrical: { visible: false, opacity: 70 },
         annotations: { visible: true },
     });
     // Unified activation system - only one thing can be active at a time
-    const [activeMode, setActiveMode] = useState<'base' | 'base-masks' | 'base-rooms' | 'electrical' | 'annotations'>('annotations');
+    const [activeMode, setActiveMode] = useState<'base' | 'base-masks' | 'rooms' | 'electrical' | 'annotations'>('annotations');
 
     // Derived values for convenience
-    const activeLayer = activeMode.startsWith('base') ? 'base' : activeMode as 'electrical' | 'annotations';
+    const activeLayer = activeMode.startsWith('base') ? 'base' : activeMode as 'rooms' | 'electrical' | 'annotations';
     const maskEditingActive = activeMode === 'base-masks';
-    const roomDrawingActive = activeMode === 'base-rooms';
+    const roomDrawingActive = activeMode === 'rooms';
 
     // Electrical overlay transform state
     const [electricalOverlay, setElectricalOverlay] = useState({
@@ -1145,14 +1152,100 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
         labelX: number;
         labelY: number;
         labelRotation: number;
+        fillColor: string; // Random light color with alpha
         visible: boolean;
     }
     const [rooms, setRooms] = useState<Room[]>([]);
     const [roomDrawing, setRoomDrawing] = useState<{ x: number, y: number }[] | null>(null);
+    const [roomPreviewFillColor, setRoomPreviewFillColor] = useState<string | null>(null);
     const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
     const [roomLabelsVisible, setRoomLabelsVisible] = useState(true);
     const [roomNameInput, setRoomNameInput] = useState('');
     const [showRoomNameModal, setShowRoomNameModal] = useState(false);
+    const [draggingCorner, setDraggingCorner] = useState<{ roomId: string, pointIndex: number } | null>(null);
+    const roomsMountedRef = useRef(false);
+
+    // Generate random light color for room fills
+    const generateRoomColor = () => {
+        const hue = Math.floor(Math.random() * 360);
+        const saturation = 60 + Math.floor(Math.random() * 20); // 60-80%
+        const lightness = 75 + Math.floor(Math.random() * 15); // 75-90% (light colors)
+        return `hsla(${hue}, ${saturation}%, ${lightness}%, 0.3)`;
+    };
+
+    // Point-in-polygon test using ray-casting algorithm
+    const isPointInPolygon = (point: { x: number, y: number }, polygon: { x: number, y: number }[]): boolean => {
+        let inside = false;
+        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+            const xi = polygon[i].x, yi = polygon[i].y;
+            const xj = polygon[j].x, yj = polygon[j].y;
+
+            const intersect = ((yi > point.y) !== (yj > point.y))
+                && (point.x < (xj - xi) * (point.y - yi) / (yj - yi) + xi);
+            if (intersect) inside = !inside;
+        }
+        return inside;
+    };
+
+    // Room snapping state
+    const [snapPoint, setSnapPoint] = useState<{ x: number, y: number, type: 'vertex' | 'edge' } | null>(null);
+
+    // Find nearest vertex from existing rooms for snapping
+    const findNearestVertex = (x: number, y: number, threshold: number = 20): { x: number, y: number } | null => {
+        let nearestPoint: { x: number, y: number } | null = null;
+        let minDistance = threshold;
+
+        rooms.forEach(room => {
+            room.path.forEach(point => {
+                const dx = x - point.x;
+                const dy = y - point.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearestPoint = point;
+                }
+            });
+        });
+
+        return nearestPoint;
+    };
+
+    // Find nearest edge from existing rooms for snapping
+    const findNearestEdge = (x: number, y: number, threshold: number = 15): { x: number, y: number } | null => {
+        let nearestPoint: { x: number, y: number } | null = null;
+        let minDistance = threshold;
+
+        rooms.forEach(room => {
+            for (let i = 0; i < room.path.length; i++) {
+                const p1 = room.path[i];
+                const p2 = room.path[(i + 1) % room.path.length];
+
+                // Calculate distance from point to line segment
+                const dx = p2.x - p1.x;
+                const dy = p2.y - p1.y;
+                const lengthSquared = dx * dx + dy * dy;
+
+                if (lengthSquared === 0) continue; // p1 and p2 are the same point
+
+                // Project point onto line segment
+                const t = Math.max(0, Math.min(1, ((x - p1.x) * dx + (y - p1.y) * dy) / lengthSquared));
+                const projX = p1.x + t * dx;
+                const projY = p1.y + t * dy;
+
+                const distX = x - projX;
+                const distY = y - projY;
+                const distance = Math.sqrt(distX * distX + distY * distY);
+
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearestPoint = { x: projX, y: projY };
+                }
+            }
+        });
+
+        return nearestPoint;
+    };
 
     // HUD message state
     const [hudMessage, setHudMessage] = useState<string | null>('Pan: Click + Drag  •  Zoom: Mouse Wheel');
@@ -1306,7 +1399,8 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
             }
 
             // Mask rotation controls (R key for 45° increments, arrow keys for fine-tuning)
-            if (selectedMaskId && !isTyping) {
+            // Skip if currently drawing a room - drawing takes priority
+            if (selectedMaskId && !isTyping && !roomDrawingActive) {
                 let handled = false;
 
                 // R key: Rotate by 45°
@@ -1358,7 +1452,8 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
             }
 
             // Room label rotation controls (same as masks)
-            if (selectedRoomId && !isTyping) {
+            // Skip if currently drawing a room - drawing takes priority
+            if (selectedRoomId && !isTyping && roomDrawing === null) {
                 let handled = false;
 
                 // R key: Rotate by 45°
@@ -1413,8 +1508,47 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                 e.preventDefault();
                 setIsSpacePressed(true);
             }
+
+            // Enter key during room drawing - auto-complete room by closing to first point
+            if (e.code === 'Enter' && roomDrawingActive && roomDrawing && roomDrawing.length >= 3 && !isTyping) {
+                e.preventDefault();
+                // Generate fill color for preview
+                setRoomPreviewFillColor(generateRoomColor());
+                setShowRoomNameModal(true);
+                return;
+            }
+
+            // Room drawing undo - Esc/Backspace/Delete removes last point
+            if ((e.code === 'Escape' || e.code === 'Backspace' || e.code === 'Delete') && !isTyping) {
+                if (roomDrawingActive && roomDrawing && roomDrawing.length > 0 && !showRoomNameModal) {
+                    e.preventDefault();
+                    const newPath = roomDrawing.slice(0, -1);
+                    if (newPath.length === 0) {
+                        // No points left, exit room drawing mode
+                        setRoomDrawing(null);
+                        setRoomPreviewFillColor(null);
+                        setActiveMode('base');
+                        showHudMessage('Room drawing cancelled', 2000);
+                    } else {
+                        setRoomDrawing(newPath);
+                        // Clear preview fill if we now have less than 3 points
+                        if (newPath.length < 3) {
+                            setRoomPreviewFillColor(null);
+                        }
+                        showHudMessage(`Point removed (${newPath.length} point${newPath.length !== 1 ? 's' : ''} remaining)`, 2000);
+                    }
+                    return;
+                }
+            }
+
             if (e.code === 'Escape') {
                 e.preventDefault();
+
+                // Deselect room if active
+                if (selectedRoomId) {
+                    setSelectedRoomId(null);
+                    return;
+                }
 
                 // Deselect mask if active
                 if (selectedMaskId) {
@@ -1476,7 +1610,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
         };
-    }, [activeTool, activeOverlayControl, electricalOverlay.locked, selectedMaskId]);
+    }, [activeTool, activeOverlayControl, electricalOverlay.locked, selectedMaskId, roomDrawingActive, roomDrawing, showRoomNameModal, roomPreviewFillColor, selectedRoomId, maskEditingActive, maskTool]);
 
     // Load saved scale factor from server on mount
     useEffect(() => {
@@ -1520,6 +1654,21 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
             })
             .catch(err => {
                 console.error('Failed to load base masks:', err);
+            });
+    }, []);
+
+    // Load rooms from server on mount
+    useEffect(() => {
+        fetch('/api/rooms')
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.rooms) {
+                    setRooms(data.rooms);
+                    console.log('Loaded rooms from server:', data);
+                }
+            })
+            .catch(err => {
+                console.error('Failed to load rooms:', err);
             });
     }, []);
 
@@ -1584,7 +1733,18 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
 
     // Save rooms to server (debounced)
     useEffect(() => {
+        console.log('Save useEffect triggered, rooms:', rooms, 'mounted:', roomsMountedRef.current);
+
+        // Skip save on initial mount
+        if (!roomsMountedRef.current) {
+            console.log('Skipping save on initial mount');
+            roomsMountedRef.current = true;
+            return;
+        }
+
+        console.log('Setting timer to save rooms in 500ms');
         const timer = setTimeout(() => {
+            console.log('Timer fired! Saving rooms to server:', rooms);
             fetch('/api/rooms', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1592,8 +1752,9 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
             })
             .then(res => res.json())
             .then(data => {
+                console.log('Save response:', data);
                 if (data.success) {
-                    console.log('Rooms saved to server');
+                    console.log('Rooms saved to server successfully');
                 }
             })
             .catch(err => {
@@ -1601,7 +1762,10 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
             });
         }, 500); // 500ms debounce
 
-        return () => clearTimeout(timer);
+        return () => {
+            console.log('Cleaning up timer');
+            clearTimeout(timer);
+        };
     }, [rooms]);
 
     // Cleanup on unmount
@@ -1727,12 +1891,18 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
         e.preventDefault();
 
         // Room drawing mode (click to add points)
-        if (roomDrawingActive && !isSpacePressed) {
+        // Stop accepting points if room is closed (has fill color) or modal is showing
+        if (roomDrawingActive && roomDrawing !== null && !isSpacePressed && !showRoomNameModal && !roomPreviewFillColor) {
             if (containerRef.current) {
                 const rect = containerRef.current.getBoundingClientRect();
                 const containerX = e.clientX - rect.left;
                 const containerY = e.clientY - rect.top;
-                const clickCoords = containerPosToImageCoords(containerX, containerY);
+                let clickCoords = containerPosToImageCoords(containerX, containerY);
+
+                // Use snapped position if available
+                if (snapPoint) {
+                    clickCoords = { x: snapPoint.x, y: snapPoint.y };
+                }
 
                 // Check if clicking near first point to close the path
                 if (roomDrawing.length >= 3) {
@@ -1743,7 +1913,10 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
 
                     if (distance < 20) {
                         // Close the path and prompt for room name
+                        // Generate fill color for preview
+                        setRoomPreviewFillColor(generateRoomColor());
                         setShowRoomNameModal(true);
+                        setSnapPoint(null); // Clear snap point
                         return;
                     }
                 }
@@ -1753,6 +1926,37 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                 return;
             }
             return;
+        }
+
+        // Room selection mode (click to select room)
+        if (roomDrawingActive && roomDrawing === null && !isSpacePressed) {
+            if (containerRef.current) {
+                const rect = containerRef.current.getBoundingClientRect();
+                const containerX = e.clientX - rect.left;
+                const containerY = e.clientY - rect.top;
+                const clickCoords = containerPosToImageCoords(containerX, containerY);
+
+                // Check if clicking inside any room using point-in-polygon test
+                let clickedRoomId: string | null = null;
+                for (const room of rooms) {
+                    if (room.visible && isPointInPolygon(clickCoords, room.path)) {
+                        clickedRoomId = room.id;
+                        break;
+                    }
+                }
+
+                if (clickedRoomId) {
+                    // Clicked on a room - select it and prevent pan
+                    setSelectedRoomId(clickedRoomId);
+                    const room = rooms.find(r => r.id === clickedRoomId);
+                    showHudMessage(`Room "${room?.name}" selected  •  R: rotate label  •  Del: delete`, 3000);
+                    return;
+                } else {
+                    // Clicked outside all rooms - deselect and allow pan to start
+                    setSelectedRoomId(null);
+                    // Don't return - let pan logic run below
+                }
+            }
         }
 
         // Mask drawing mode (only if not panning with Space)
@@ -1823,6 +2027,34 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     };
 
     const handlePointerMove = (e: React.PointerEvent) => {
+        // Handle room corner dragging
+        if (draggingCorner && containerRef.current) {
+            const rect = containerRef.current.getBoundingClientRect();
+            const containerX = e.clientX - rect.left;
+            const containerY = e.clientY - rect.top;
+            const newCoords = containerPosToImageCoords(containerX, containerY);
+
+            setRooms(prev => prev.map(room => {
+                if (room.id === draggingCorner.roomId) {
+                    const newPath = [...room.path];
+                    newPath[draggingCorner.pointIndex] = newCoords;
+
+                    // Recalculate centroid for label position
+                    const avgX = newPath.reduce((sum, p) => sum + p.x, 0) / newPath.length;
+                    const avgY = newPath.reduce((sum, p) => sum + p.y, 0) / newPath.length;
+
+                    return {
+                        ...room,
+                        path: newPath,
+                        labelX: avgX,
+                        labelY: avgY
+                    };
+                }
+                return room;
+            }));
+            return;
+        }
+
         // Handle mask dragging (move or resize)
         if (dragMode && maskDragRef.current && selectedMaskId && containerRef.current) {
             const dx = e.clientX - maskDragRef.current.startMouseX;
@@ -1932,6 +2164,44 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
             }
         }
 
+        // Track mouse position for room drawing with snapping
+        if (roomDrawingActive && roomDrawing !== null && containerRef.current) {
+            const rect = containerRef.current.getBoundingClientRect();
+            const relX = e.clientX - rect.left;
+            const relY = e.clientY - rect.top;
+            setMousePos({ x: relX, y: relY });
+
+            // Apply snapping to existing room vertices and edges
+            const coords = containerPosToImageCoords(relX, relY);
+
+            // Check snap to first point of current room (if 3+ points to allow closing)
+            if (roomDrawing && roomDrawing.length >= 3) {
+                const firstPoint = roomDrawing[0];
+                const dx = coords.x - firstPoint.x;
+                const dy = coords.y - firstPoint.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < 20) {
+                    setSnapPoint({ x: firstPoint.x, y: firstPoint.y, type: 'vertex' });
+                    return; // Early return - snap to first point takes priority
+                }
+            }
+
+            // Try vertex snapping to existing rooms (higher priority)
+            const nearestVertex = findNearestVertex(coords.x, coords.y);
+            if (nearestVertex) {
+                setSnapPoint({ ...nearestVertex, type: 'vertex' });
+            } else {
+                // Try edge snapping
+                const nearestEdge = findNearestEdge(coords.x, coords.y);
+                if (nearestEdge) {
+                    setSnapPoint({ ...nearestEdge, type: 'edge' });
+                } else {
+                    setSnapPoint(null);
+                }
+            }
+        }
+
         // Always track mouse position for mask editing cursor preview
         if (masksVisible && layers.base.visible && activeTool !== 'scale' && containerRef.current) {
             const rect = containerRef.current.getBoundingClientRect();
@@ -1955,6 +2225,12 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     };
 
     const handlePointerUp = (e: React.PointerEvent) => {
+        // Complete room corner dragging
+        if (draggingCorner) {
+            setDraggingCorner(null);
+            return;
+        }
+
         // Complete mask dragging
         if (dragMode) {
             setDragMode(null);
@@ -2065,6 +2341,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                             <input
                                 type="checkbox"
                                 checked={layers.base.visible}
+                                onClick={(e) => e.stopPropagation()}
                                 onChange={(e) => {
                                     e.stopPropagation();
                                     setLayers(prev => ({ ...prev, base: { ...prev.base, visible: e.target.checked } }));
@@ -2155,44 +2432,89 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                                     )}
                                 </div>
 
-                                {/* BASE LAYER ROOMS */}
-                                <div
-                                    className={`ml-6 p-2 rounded border space-y-2 text-[10px] cursor-pointer ${
-                                        activeMode === 'base-rooms' ? 'bg-slate-800 border-slate-600' : 'bg-slate-900/50 border-slate-700/50 hover:bg-slate-800/50'
-                                    }`}
-                                    onClick={() => {
-                                        const newMode = activeMode === 'base-rooms' ? 'base' : 'base-rooms';
-                                        setActiveMode(newMode);
-                                        if (newMode === 'base-rooms') {
-                                            setRoomDrawing([]);
-                                            showHudMessage('Click to start room outline  •  Click first point to close', 5000);
-                                        } else {
+                            </>
+                        )}
+                    </div>
+
+                    {/* Rooms Layer */}
+                    <div className="space-y-1">
+                        <div
+                            className={`flex items-center gap-2 text-xs p-1.5 rounded cursor-pointer ${activeMode === 'rooms' ? 'bg-slate-800' : 'hover:bg-slate-800/50'}`}
+                            onClick={() => {
+                                const newMode = activeMode === 'rooms' ? 'annotations' : 'rooms';
+                                setActiveMode(newMode);
+                                if (newMode === 'rooms') {
+                                    setRoomDrawing(null); // null = select mode, not drawing mode
+                                    setRoomPreviewFillColor(null);
+                                    setSelectedRoomId(null);
+                                    setSelectedMaskId(null);
+                                    setSnapPoint(null);
+                                    showHudMessage('Select a room to edit  •  Or click "Draw New Room"', 4000);
+                                } else {
+                                    setRoomDrawing(null);
+                                    setRoomPreviewFillColor(null);
+                                    setSnapPoint(null);
+                                    setSelectedRoomId(null);
+                                }
+                            }}
+                        >
+                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activeMode === 'rooms' ? 'bg-blue-500' : 'bg-slate-600'}`} />
+                            <input
+                                type="checkbox"
+                                checked={layers.rooms.visible}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={(e) => {
+                                    e.stopPropagation();
+                                    setLayers(prev => ({ ...prev, rooms: { ...prev.rooms, visible: e.target.checked } }));
+                                }}
+                                className="rounded flex-shrink-0"
+                            />
+                            <span className="text-slate-300 flex-1">Rooms</span>
+                            {rooms.length > 0 && (
+                                <span className="text-slate-500 text-[10px]">{rooms.length} room{rooms.length !== 1 ? 's' : ''}</span>
+                            )}
+                        </div>
+                        {activeMode === 'rooms' && (
+                            <div className="ml-6 text-[9px] text-slate-400 space-y-1">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (roomDrawing !== null) {
+                                            // Exit drawing mode
                                             setRoomDrawing(null);
+                                            setRoomPreviewFillColor(null);
+                                            setSnapPoint(null);
+                                            showHudMessage('Drawing cancelled', 2000);
+                                        } else {
+                                            // Enter drawing mode
+                                            setRoomDrawing([]);
+                                            setRoomPreviewFillColor(null);
+                                            setSelectedRoomId(null);
+                                            setSnapPoint(null);
+                                            showHudMessage('Click to start room outline  •  Click first point to close', 5000);
                                         }
                                     }}
+                                    className={`px-2 py-1 rounded text-[9px] ${roomDrawing !== null ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-300'}`}
                                 >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activeMode === 'base-rooms' ? 'bg-blue-500' : 'bg-slate-600'}`} />
-                                            <span className="text-slate-300">Rooms</span>
-                                        </div>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setRoomLabelsVisible(!roomLabelsVisible);
-                                            }}
-                                            className={`px-2 py-0.5 rounded text-[9px] ${roomLabelsVisible ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-300'}`}
-                                        >
-                                            {roomLabelsVisible ? 'Labels On' : 'Labels Off'}
-                                        </button>
-                                    </div>
-                                    {activeMode === 'base-rooms' && rooms.length > 0 && (
-                                        <div className="text-slate-500 text-[8px] pt-1">
-                                            {rooms.length} room{rooms.length !== 1 ? 's' : ''} defined
-                                        </div>
+                                    {roomDrawing !== null ? 'Stop Drawing' : 'Draw New Room'}
+                                </button>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setRoomLabelsVisible(!roomLabelsVisible);
+                                    }}
+                                    className={`px-2 py-1 rounded text-[9px] ${roomLabelsVisible ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'}`}
+                                >
+                                    {roomLabelsVisible ? 'Labels On' : 'Labels Off'}
+                                </button>
+                                <div className="text-slate-500 text-[8px] pt-1">
+                                    {roomDrawing !== null ? (
+                                        <>Enter: close • Esc: undo point</>
+                                    ) : (
+                                        <>Click room to select • Del: delete</>
                                     )}
                                 </div>
-                            </>
+                            </div>
                         )}
                     </div>
 
@@ -2206,13 +2528,29 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                             <input
                                 type="checkbox"
                                 checked={layers.electrical.visible}
+                                onClick={(e) => e.stopPropagation()}
                                 onChange={(e) => {
                                     e.stopPropagation();
                                     setLayers(prev => ({ ...prev, electrical: { ...prev.electrical, visible: e.target.checked } }));
                                 }}
                                 className="rounded flex-shrink-0"
                             />
-                            <span className="text-slate-300 flex-1">Electrical Overlay</span>
+                            <span className="text-slate-300">Electrical Overlay</span>
+                            <input
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.01"
+                                value={electricalOverlay.opacity}
+                                onChange={(e) => {
+                                    e.stopPropagation();
+                                    setElectricalOverlay(prev => ({ ...prev, opacity: parseFloat(e.target.value) }));
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-20 h-1 bg-slate-700 rounded appearance-none cursor-pointer flex-shrink-0"
+                                title={`Opacity: ${Math.round(electricalOverlay.opacity * 100)}%`}
+                            />
+                            <span className="text-slate-400 text-[9px] flex-shrink-0">{Math.round(electricalOverlay.opacity * 100)}%</span>
                         </div>
 
                         {/* ELECTRICAL OVERLAY TRANSFORM CONTROLS */}
@@ -2232,19 +2570,6 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
 
                                 {!electricalOverlay.locked && (
                                     <>
-                                        <div>
-                                            <label className="text-slate-400">Opacity: {Math.round(electricalOverlay.opacity * 100)}%</label>
-                                            <input
-                                                type="range"
-                                                min="0"
-                                                max="1"
-                                                step="0.01"
-                                                value={electricalOverlay.opacity}
-                                                onChange={(e) => setElectricalOverlay(prev => ({ ...prev, opacity: parseFloat(e.target.value) }))}
-                                                className="w-full h-1 bg-slate-700 rounded appearance-none cursor-pointer"
-                                            />
-                                        </div>
-
                                         <div className="space-y-1">
                                             <div className="text-slate-500 text-[9px]">Arrow Keys (Shift=10x faster):</div>
 
@@ -2309,6 +2634,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                         <input
                             type="checkbox"
                             checked={layers.annotations.visible}
+                            onClick={(e) => e.stopPropagation()}
                             onChange={(e) => {
                                 e.stopPropagation();
                                 setLayers(prev => ({ ...prev, annotations: { ...prev.annotations, visible: e.target.checked } }));
@@ -2380,7 +2706,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
             )}
 
             {/* Magnified Cursor Preview (Room Drawing) */}
-            {roomDrawingActive && mousePos && activeTool !== 'scale' && (
+            {roomDrawingActive && roomDrawing !== null && mousePos && activeTool !== 'scale' && !roomPreviewFillColor && (
                 <MagnifiedCursor
                     mousePos={mousePos}
                     containerRef={containerRef}
@@ -2455,7 +2781,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
             <div
                 ref={containerRef}
                 className={`flex-1 relative overflow-hidden bg-black ${
-                    (activeTool === 'scale' && scalePoints.length < 2) || (maskEditingActive && maskTool === 'draw') || roomDrawingActive ? 'cursor-none' : (isPanning ? 'cursor-grabbing' : 'cursor-grab')
+                    (activeTool === 'scale' && scalePoints.length < 2) || (maskEditingActive && maskTool === 'draw') || (roomDrawingActive && roomDrawing !== null && !roomPreviewFillColor) ? 'cursor-none' : (isPanning ? 'cursor-grabbing' : 'cursor-grab')
                 }`}
                 onWheel={handleWheel}
                 onPointerDown={handlePointerDown}
@@ -2640,7 +2966,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                     )}
 
                     {/* Room Boundaries and Labels */}
-                    {layers.base.visible && activeLayer === 'base' && imgRef.current && (
+                    {layers.rooms.visible && imgRef.current && (
                         <svg
                             className="absolute inset-0"
                             viewBox={`0 0 ${imgRef.current.naturalWidth} ${imgRef.current.naturalHeight}`}
@@ -2651,17 +2977,33 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                                 pointerEvents: 'none',
                             }}
                         >
+                            {/* Drop shadow filter for room lines */}
+                            <defs>
+                                <filter id="roomLineShadow" x="-50%" y="-50%" width="200%" height="200%">
+                                    <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+                                    <feOffset dx="0" dy="0" result="offsetblur"/>
+                                    <feFlood floodColor="#000000" floodOpacity="0.9"/>
+                                    <feComposite in2="offsetblur" operator="in"/>
+                                    <feMerge>
+                                        <feMergeNode/>
+                                        <feMergeNode in="SourceGraphic"/>
+                                    </feMerge>
+                                </filter>
+                            </defs>
+
                             {/* Render completed rooms */}
                             {rooms.filter(r => r.visible).map(room => {
                                 const pathStr = room.path.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
+                                const isSelected = room.id === selectedRoomId;
                                 return (
                                     <g key={room.id}>
                                         <path
                                             d={pathStr}
-                                            fill="none"
-                                            stroke="#3b82f6"
-                                            strokeWidth={2}
-                                            strokeDasharray="5,5"
+                                            fill={room.fillColor}
+                                            stroke={isSelected ? "#22c55e" : "#3b82f6"}
+                                            strokeWidth={isSelected ? 4 : 2}
+                                            strokeDasharray={isSelected ? "none" : "5,5"}
+                                            filter="url(#roomLineShadow)"
                                         />
                                         {roomLabelsVisible && (
                                             <text
@@ -2686,6 +3028,23 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                                                 {room.name}
                                             </text>
                                         )}
+                                        {/* Corner handles when selected */}
+                                        {isSelected && room.path.map((point, idx) => (
+                                            <circle
+                                                key={idx}
+                                                cx={point.x}
+                                                cy={point.y}
+                                                r={8}
+                                                fill="#22c55e"
+                                                stroke="#ffffff"
+                                                strokeWidth={2}
+                                                style={{ pointerEvents: 'auto', cursor: 'move' }}
+                                                onPointerDown={(e) => {
+                                                    e.stopPropagation();
+                                                    setDraggingCorner({ roomId: room.id, pointIndex: idx });
+                                                }}
+                                            />
+                                        ))}
                                     </g>
                                 );
                             })}
@@ -2693,12 +3052,26 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                             {/* Preview room while drawing */}
                             {roomDrawing && roomDrawing.length > 0 && (
                                 <>
-                                    <polyline
-                                        points={roomDrawing.map(p => `${p.x},${p.y}`).join(' ')}
-                                        fill="none"
-                                        stroke="#22c55e"
-                                        strokeWidth={2}
-                                    />
+                                    {/* Show filled polygon when room is closed */}
+                                    {roomPreviewFillColor && roomDrawing.length >= 3 && (
+                                        <polygon
+                                            points={roomDrawing.map(p => `${p.x},${p.y}`).join(' ')}
+                                            fill={roomPreviewFillColor}
+                                            stroke="#22c55e"
+                                            strokeWidth={2}
+                                            filter="url(#roomLineShadow)"
+                                        />
+                                    )}
+                                    {/* Show outline when room is not yet closed */}
+                                    {!roomPreviewFillColor && (
+                                        <polyline
+                                            points={roomDrawing.map(p => `${p.x},${p.y}`).join(' ')}
+                                            fill="none"
+                                            stroke="#22c55e"
+                                            strokeWidth={2}
+                                            filter="url(#roomLineShadow)"
+                                        />
+                                    )}
                                     {roomDrawing.map((point, i) => (
                                         <circle
                                             key={i}
@@ -2708,11 +3081,19 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                                             fill={i === 0 ? '#22c55e' : '#3b82f6'}
                                             stroke="#ffffff"
                                             strokeWidth={2}
+                                            filter="url(#roomLineShadow)"
                                         />
                                     ))}
-                                    {mousePos && (() => {
+                                    {/* Preview line from last point to cursor - only show when room not closed */}
+                                    {mousePos && !roomPreviewFillColor && (() => {
                                         const lastPoint = roomDrawing[roomDrawing.length - 1];
-                                        const mouseCoords = containerPosToImageCoords(mousePos.x, mousePos.y);
+                                        let mouseCoords = containerPosToImageCoords(mousePos.x, mousePos.y);
+
+                                        // Use snap point if available
+                                        if (snapPoint) {
+                                            mouseCoords = { x: snapPoint.x, y: snapPoint.y };
+                                        }
+
                                         return (
                                             <line
                                                 x1={lastPoint.x}
@@ -2722,9 +3103,40 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                                                 stroke="#22c55e"
                                                 strokeWidth={2}
                                                 strokeDasharray="3,3"
+                                                filter="url(#roomLineShadow)"
                                             />
                                         );
                                     })()}
+                                </>
+                            )}
+
+                            {/* Snap point visual feedback - only show when room not closed */}
+                            {snapPoint && roomDrawingActive && roomDrawing !== null && !roomPreviewFillColor && (
+                                <>
+                                    {/* Crosshair indicator */}
+                                    <circle
+                                        cx={snapPoint.x}
+                                        cy={snapPoint.y}
+                                        r={10}
+                                        fill="none"
+                                        stroke={snapPoint.type === 'vertex' ? '#fbbf24' : '#60a5fa'}
+                                        strokeWidth={2}
+                                    />
+                                    <circle
+                                        cx={snapPoint.x}
+                                        cy={snapPoint.y}
+                                        r={6}
+                                        fill="none"
+                                        stroke={snapPoint.type === 'vertex' ? '#fbbf24' : '#60a5fa'}
+                                        strokeWidth={2}
+                                    />
+                                    {/* Center dot */}
+                                    <circle
+                                        cx={snapPoint.x}
+                                        cy={snapPoint.y}
+                                        r={3}
+                                        fill={snapPoint.type === 'vertex' ? '#fbbf24' : '#60a5fa'}
+                                    />
                                 </>
                             )}
                         </svg>
@@ -2815,6 +3227,101 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                                 />
                             ))}
                         </svg>
+                    )}
+
+                    {/* Room Name Modal */}
+                    {showRoomNameModal && (
+                        <div className="absolute inset-0 z-[250] flex items-center justify-center bg-black/50" style={{ pointerEvents: 'all' }}>
+                            <div className="bg-slate-900 border border-slate-600 p-4 rounded-lg w-80" onClick={(e) => e.stopPropagation()}>
+                                <div className="text-white text-sm mb-3">Name this room:</div>
+                                <input
+                                    type="text"
+                                    value={roomNameInput}
+                                    autoFocus
+                                    onChange={(e) => setRoomNameInput(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && roomNameInput.trim() && roomDrawing && roomDrawing.length >= 3) {
+                                            const avgX = roomDrawing.reduce((sum, p) => sum + p.x, 0) / roomDrawing.length;
+                                            const avgY = roomDrawing.reduce((sum, p) => sum + p.y, 0) / roomDrawing.length;
+                                            const newRoom: Room = {
+                                                id: `room-${Date.now()}`,
+                                                path: roomDrawing,
+                                                name: roomNameInput.trim(),
+                                                labelX: avgX,
+                                                labelY: avgY,
+                                                labelRotation: 0,
+                                                fillColor: roomPreviewFillColor || generateRoomColor(),
+                                                visible: true
+                                            };
+                                            console.log('Creating room:', newRoom);
+                                            setRooms(prev => {
+                                                const updated = [...prev, newRoom];
+                                                console.log('Rooms state updated to:', updated);
+                                                return updated;
+                                            });
+                                            setRoomDrawing(null);
+                                            setRoomPreviewFillColor(null);
+                                            setRoomNameInput('');
+                                            setShowRoomNameModal(false);
+                                            showHudMessage(`Room "${newRoom.name}" created`, 3000);
+                                        }
+                                        if (e.key === 'Escape') {
+                                            setShowRoomNameModal(false);
+                                            setRoomNameInput('');
+                                            setRoomDrawing(null);
+                                            setRoomPreviewFillColor(null);
+                                        }
+                                    }}
+                                    className="w-full bg-black text-white px-3 py-2 rounded mb-3"
+                                    placeholder="e.g., Living Room"
+                                />
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => {
+                                            if (roomNameInput.trim() && roomDrawing && roomDrawing.length >= 3) {
+                                                const avgX = roomDrawing.reduce((sum, p) => sum + p.x, 0) / roomDrawing.length;
+                                                const avgY = roomDrawing.reduce((sum, p) => sum + p.y, 0) / roomDrawing.length;
+                                                const newRoom: Room = {
+                                                    id: `room-${Date.now()}`,
+                                                    path: roomDrawing,
+                                                    name: roomNameInput.trim(),
+                                                    labelX: avgX,
+                                                    labelY: avgY,
+                                                    labelRotation: 0,
+                                                    fillColor: roomPreviewFillColor || generateRoomColor(),
+                                                    visible: true
+                                                };
+                                                console.log('Creating room (button):', newRoom);
+                                                setRooms(prev => {
+                                                    const updated = [...prev, newRoom];
+                                                    console.log('Rooms state updated to:', updated);
+                                                    return updated;
+                                                });
+                                                setRoomDrawing(null);
+                                                setRoomPreviewFillColor(null);
+                                                setRoomNameInput('');
+                                                setShowRoomNameModal(false);
+                                                showHudMessage(`Room "${newRoom.name}" created`, 3000);
+                                            }
+                                        }}
+                                        className="flex-1 bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded"
+                                    >
+                                        Create Room
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setShowRoomNameModal(false);
+                                            setRoomNameInput('');
+                                            setRoomDrawing(null);
+                                            setRoomPreviewFillColor(null);
+                                        }}
+                                        className="flex-1 bg-red-900 hover:bg-red-800 text-white px-3 py-2 rounded"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     )}
                 </div>
             </div>
