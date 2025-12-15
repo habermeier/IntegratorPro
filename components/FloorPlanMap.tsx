@@ -2174,14 +2174,41 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
             // Apply snapping to existing room vertices and edges
             const coords = containerPosToImageCoords(relX, relY);
 
-            // Check snap to first point of current room (if 3+ points to allow closing)
+            // Priority 1: Snap to vertices of ALL rooms (existing + current drawing)
+            let vertexSnap = findNearestVertex(coords.x, coords.y, 25);
+
+            // Priority 2: Check snap to first point of current room (if 3+ points to allow closing)
+            if (!vertexSnap && roomDrawing && roomDrawing.length >= 3) {
+                const firstPoint = roomDrawing[0];
+                const dx = coords.x - firstPoint.x;
+                const dy = coords.y - firstPoint.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < 25) {
+                    vertexSnap = firstPoint;
+                }
+            }
+
+            // Priority 3: Snap to edges of existing rooms
+            const edgeSnap = !vertexSnap ? findNearestEdge(coords.x, coords.y, 20) : null;
+
+            // Apply snap (vertex takes priority over edge)
+            if (vertexSnap) {
+                setSnapPoint({ x: vertexSnap.x, y: vertexSnap.y, type: 'vertex' });
+            } else if (edgeSnap) {
+                setSnapPoint({ x: edgeSnap.x, y: edgeSnap.y, type: 'edge' });
+            } else {
+                setSnapPoint(null);
+            }
+
+            // Old code for closing room - keeping for compatibility
             if (roomDrawing && roomDrawing.length >= 3) {
                 const firstPoint = roomDrawing[0];
                 const dx = coords.x - firstPoint.x;
                 const dy = coords.y - firstPoint.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
 
-                if (distance < 20) {
+                if (distance < 25) {
                     setSnapPoint({ x: firstPoint.x, y: firstPoint.y, type: 'vertex' });
                     return; // Early return - snap to first point takes priority
                 }
@@ -2688,6 +2715,22 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                     mode="mask"
                     containerPosToImageCoords={containerPosToImageCoords}
                 >
+                    {/* Rooms in magnified view (if visible) */}
+                    {layers.rooms.visible && rooms.filter(r => r.visible).map(room => {
+                        const pathStr = room.path.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
+                        return (
+                            <path
+                                key={room.id}
+                                d={pathStr}
+                                fill={room.fillColor}
+                                stroke="#3b82f6"
+                                strokeWidth={1}
+                                strokeDasharray="3,3"
+                                opacity={0.3}
+                            />
+                        );
+                    })}
+
                     {/* Overlay mask outlines in preview */}
                     {overlayMasks.filter(m => m.visible).map(mask => (
                         <rect
@@ -2697,11 +2740,37 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                             width={mask.width}
                             height={mask.height}
                             fill="none"
-                            stroke={maskTool === 'select' && maskEditingActive ? (selectedMaskId === mask.id ? '#3b82f6' : '#666') : 'none'}
-                            strokeWidth={maskTool === 'select' && maskEditingActive ? 2 : 0}
+                            stroke="#ff0000"
+                            strokeWidth={1}
+                            strokeDasharray="2,2"
                             transform={`rotate(${mask.rotation}, ${mask.x}, ${mask.y})`}
+                            opacity={0.5}
                         />
                     ))}
+
+                    {/* Placement indicator for mask start point */}
+                    {(() => {
+                        const coords = containerPosToImageCoords(mousePos.x, mousePos.y);
+                        return (
+                            <>
+                                <circle
+                                    cx={coords.x}
+                                    cy={coords.y}
+                                    r={6}
+                                    fill="none"
+                                    stroke="#ff0000"
+                                    strokeWidth={2}
+                                />
+                                <circle
+                                    cx={coords.x}
+                                    cy={coords.y}
+                                    r={3}
+                                    fill="#ff0000"
+                                    opacity={0.7}
+                                />
+                            </>
+                        );
+                    })()}
                 </MagnifiedCursor>
             )}
 
@@ -2716,14 +2785,43 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                     mode="room"
                     containerPosToImageCoords={containerPosToImageCoords}
                 >
-                    {/* Room path preview in magnified view */}
+                    {/* Existing room boundaries in magnified view */}
+                    {rooms.filter(r => r.visible).map(room => {
+                        const pathStr = room.path.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
+                        return (
+                            <g key={room.id}>
+                                <path
+                                    d={pathStr}
+                                    fill="none"
+                                    stroke="#3b82f6"
+                                    strokeWidth={1}
+                                    strokeDasharray="3,3"
+                                    opacity={0.5}
+                                />
+                                {/* Vertex snap indicators */}
+                                {room.path.map((point, idx) => (
+                                    <circle
+                                        key={idx}
+                                        cx={point.x}
+                                        cy={point.y}
+                                        r={3}
+                                        fill="#fbbf24"
+                                        stroke="#ffffff"
+                                        strokeWidth={1}
+                                    />
+                                ))}
+                            </g>
+                        );
+                    })}
+
+                    {/* Current room path being drawn */}
                     {roomDrawing.length > 0 && (
                         <>
                             <polyline
                                 points={roomDrawing.map(p => `${p.x},${p.y}`).join(' ')}
                                 fill="none"
                                 stroke="#22c55e"
-                                strokeWidth={1.5}
+                                strokeWidth={2}
                             />
                             {roomDrawing.map((point, i) => (
                                 <circle
@@ -2738,6 +2836,39 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                             ))}
                         </>
                     )}
+
+                    {/* Placement indicator - shows where next point will go */}
+                    {(() => {
+                        const coords = containerPosToImageCoords(mousePos.x, mousePos.y);
+                        let placementCoords = coords;
+
+                        // Use snap point if available
+                        if (snapPoint) {
+                            placementCoords = snapPoint;
+                        }
+
+                        return (
+                            <>
+                                {/* Outer circle */}
+                                <circle
+                                    cx={placementCoords.x}
+                                    cy={placementCoords.y}
+                                    r={8}
+                                    fill="none"
+                                    stroke={snapPoint ? (snapPoint.type === 'vertex' ? '#fbbf24' : '#60a5fa') : '#22c55e'}
+                                    strokeWidth={2}
+                                />
+                                {/* Inner fill */}
+                                <circle
+                                    cx={placementCoords.x}
+                                    cy={placementCoords.y}
+                                    r={4}
+                                    fill={snapPoint ? (snapPoint.type === 'vertex' ? '#fbbf24' : '#60a5fa') : '#22c55e'}
+                                    opacity={0.7}
+                                />
+                            </>
+                        );
+                    })()}
                 </MagnifiedCursor>
             )}
 
@@ -3006,30 +3137,53 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                                             filter="url(#roomLineShadow)"
                                         />
                                         {roomLabelsVisible && (
-                                            <text
-                                                x={room.labelX}
-                                                y={room.labelY}
-                                                fill="#3b82f6"
-                                                fontSize="16"
-                                                fontWeight="bold"
-                                                textAnchor="middle"
-                                                dominantBaseline="middle"
-                                                transform={`rotate(${room.labelRotation}, ${room.labelX}, ${room.labelY})`}
-                                                style={{
-                                                    pointerEvents: 'auto',
-                                                    cursor: 'pointer',
-                                                    textShadow: '0 0 4px black, 0 0 4px black, 0 0 4px black'
-                                                }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setSelectedRoomId(room.id);
-                                                }}
-                                            >
-                                                {room.name}
-                                            </text>
+                                            <g>
+                                                {/* Text background stroke for visibility */}
+                                                <text
+                                                    x={room.labelX}
+                                                    y={room.labelY}
+                                                    fontSize="32"
+                                                    fontWeight="bold"
+                                                    fontFamily="Arial, sans-serif"
+                                                    textAnchor="middle"
+                                                    dominantBaseline="middle"
+                                                    transform={`rotate(${room.labelRotation}, ${room.labelX}, ${room.labelY})`}
+                                                    fill="none"
+                                                    stroke="#000000"
+                                                    strokeWidth="6"
+                                                    strokeLinejoin="round"
+                                                    style={{
+                                                        pointerEvents: 'none',
+                                                    }}
+                                                >
+                                                    {room.name}
+                                                </text>
+                                                {/* Text foreground */}
+                                                <text
+                                                    x={room.labelX}
+                                                    y={room.labelY}
+                                                    fill="#3b82f6"
+                                                    fontSize="32"
+                                                    fontWeight="bold"
+                                                    fontFamily="Arial, sans-serif"
+                                                    textAnchor="middle"
+                                                    dominantBaseline="middle"
+                                                    transform={`rotate(${room.labelRotation}, ${room.labelX}, ${room.labelY})`}
+                                                    style={{
+                                                        pointerEvents: 'auto',
+                                                        cursor: 'pointer',
+                                                    }}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedRoomId(room.id);
+                                                    }}
+                                                >
+                                                    {room.name}
+                                                </text>
+                                            </g>
                                         )}
                                         {/* Corner handles when selected */}
-                                        {isSelected && room.path.map((point, idx) => (
+                                        {isSelected && roomDrawing === null && room.path.map((point, idx) => (
                                             <circle
                                                 key={idx}
                                                 cx={point.x}
@@ -3043,6 +3197,19 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                                                     e.stopPropagation();
                                                     setDraggingCorner({ roomId: room.id, pointIndex: idx });
                                                 }}
+                                            />
+                                        ))}
+                                        {/* Vertex snap indicators when in drawing mode */}
+                                        {roomDrawing !== null && room.path.map((point, idx) => (
+                                            <circle
+                                                key={`snap-${idx}`}
+                                                cx={point.x}
+                                                cy={point.y}
+                                                r={6}
+                                                fill="#fbbf24"
+                                                stroke="#ffffff"
+                                                strokeWidth={2}
+                                                style={{ pointerEvents: 'none' }}
                                             />
                                         ))}
                                     </g>
