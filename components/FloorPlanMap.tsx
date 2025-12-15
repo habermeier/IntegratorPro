@@ -1092,19 +1092,34 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     const imgRef = useRef<HTMLImageElement>(null);
 
     // Transform state: scale and position
-    // Start at scale 1 - CSS object-fit will handle initial sizing
-    const [transform, setTransform] = useState({ scale: 1, x: 0, y: 0 });
+    // Load from localStorage or use defaults
+    const loadFromLocalStorage = <T,>(key: string, defaultValue: T): T => {
+        try {
+            const saved = localStorage.getItem(key);
+            return saved ? JSON.parse(saved) : defaultValue;
+        } catch {
+            return defaultValue;
+        }
+    };
+
+    const [transform, setTransform] = useState(() =>
+        loadFromLocalStorage('floorplan-transform', { scale: 1, x: 0, y: 0 })
+    );
 
     // Layer state
-    const [layers, setLayers] = useState({
-        base: { visible: true, opacity: 100 },
-        rooms: { visible: true },
-        dali: { visible: true },
-        electrical: { visible: false, opacity: 70 },
-        annotations: { visible: true },
-    });
+    const [layers, setLayers] = useState(() =>
+        loadFromLocalStorage('floorplan-layers', {
+            base: { visible: true, opacity: 100 },
+            rooms: { visible: true },
+            dali: { visible: true },
+            electrical: { visible: false, opacity: 70 },
+            annotations: { visible: true },
+        })
+    );
     // Unified activation system - only one thing can be active at a time
-    const [activeMode, setActiveMode] = useState<'base' | 'base-masks' | 'rooms' | 'dali' | 'electrical' | 'annotations'>('annotations');
+    const [activeMode, setActiveMode] = useState<'base' | 'base-masks' | 'rooms' | 'dali' | 'electrical' | 'annotations'>(() =>
+        loadFromLocalStorage('floorplan-activeMode', 'annotations')
+    );
 
     // Derived values for convenience
     const activeLayer = activeMode.startsWith('base') ? 'base' : activeMode as 'rooms' | 'electrical' | 'annotations';
@@ -1112,14 +1127,16 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     const roomDrawingActive = activeMode === 'rooms';
 
     // Electrical overlay transform state
-    const [electricalOverlay, setElectricalOverlay] = useState({
-        scale: 1,
-        rotation: 0,
-        x: 0,
-        y: 0,
-        opacity: 0.7,
-        locked: false
-    });
+    const [electricalOverlay, setElectricalOverlay] = useState(() =>
+        loadFromLocalStorage('floorplan-electricalOverlay', {
+            scale: 1,
+            rotation: 0,
+            x: 0,
+            y: 0,
+            opacity: 0.7,
+            locked: false
+        })
+    );
 
     // Active control for keyboard adjustment
     type OverlayControl = 'position' | 'rotation' | 'scale' | null;
@@ -1142,7 +1159,9 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     const [maskTool, setMaskTool] = useState<'draw' | 'select'>('select');
     const [dragMode, setDragMode] = useState<'move' | 'resize' | null>(null);
     const [dragCorner, setDragCorner] = useState<'nw' | 'ne' | 'sw' | 'se' | null>(null);
-    const [masksVisible, setMasksVisible] = useState(true);
+    const [masksVisible, setMasksVisible] = useState(() =>
+        loadFromLocalStorage('floorplan-masksVisible', true)
+    );
     const [showRotationDegrees, setShowRotationDegrees] = useState<number | null>(null);
 
     // Room definition state
@@ -1160,7 +1179,9 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     const [roomDrawing, setRoomDrawing] = useState<{ x: number, y: number }[] | null>(null);
     const [roomPreviewFillColor, setRoomPreviewFillColor] = useState<string | null>(null);
     const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
-    const [roomLabelsVisible, setRoomLabelsVisible] = useState(true);
+    const [roomLabelsVisible, setRoomLabelsVisible] = useState(() =>
+        loadFromLocalStorage('floorplan-roomLabelsVisible', true)
+    );
     const [roomNameInput, setRoomNameInput] = useState('');
     const [showRoomNameModal, setShowRoomNameModal] = useState(false);
     const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
@@ -1184,35 +1205,125 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
         exteriorSconce: number; // feet
         bendSlack: number; // feet per bend
     }
-    const [heightSettings, setHeightSettings] = useState<HeightSettings>({
-        ceiling: 10,
-        switch: 4, // 48 inches
-        exteriorSconce: 6,
-        bendSlack: 0.5 // 6 inches per bend
-    });
+    const [heightSettings, setHeightSettings] = useState<HeightSettings>(() =>
+        loadFromLocalStorage('floorplan-heightSettings', {
+            ceiling: 10,
+            switch: 4, // 48 inches
+            exteriorSconce: 6,
+            bendSlack: 0.5 // 6 inches per bend
+        })
+    );
     const [showSettingsModal, setShowSettingsModal] = useState(false);
+    const [showToolsPanel, setShowToolsPanel] = useState(() =>
+        loadFromLocalStorage('floorplan-showToolsPanel', true)
+    );
 
-    // DALI device types and state
+    // Device placement topology and state
+    type Topology = 'DALI' | 'KNX' | 'DATA' | 'LED' | 'Door Access' | 'Window Shutters' | 'Skylights';
     type MountingHeight = 'ceiling' | 'switch' | 'exterior-sconce' | 'custom';
-    interface DaliDevice {
+
+    interface Device {
         id: string; // Semantic ID: dt-downlight-bedroom-2:1
-        deviceType: string; // Abstract type: dt-downlight, dt-junction-box
+        topology: Topology;
+        deviceType: string; // Abstract type: dt-downlight, dt-junction-box, etc.
         x: number;
         y: number;
         mountingHeight: MountingHeight;
         customHeight?: number; // If mountingHeight is 'custom'
-        universe: string; // lcp-1:1, lcp-1:2, lcp-2:1, lcp-2:2
+        network: string; // Universe/subnet/network ID (e.g., lcp-1:1, knx-lcp-1, data-tech)
         roomId?: string;
         roomName?: string;
         connections: string[]; // IDs of connected devices for daisy-chain
     }
-    const [daliDevices, setDaliDevices] = useState<DaliDevice[]>([]);
-    const [selectedDaliDeviceType, setSelectedDaliDeviceType] = useState<string>('dt-downlight');
-    const [selectedMountingHeight, setSelectedMountingHeight] = useState<MountingHeight>('ceiling');
-    const [selectedUniverse, setSelectedUniverse] = useState<string>('lcp-1:1');
-    const [selectedDaliDeviceId, setSelectedDaliDeviceId] = useState<string | null>(null);
-    const [daliRoutingMode, setDaliRoutingMode] = useState<boolean>(false); // true when routing cables
-    const [daliRoutingPath, setDaliRoutingPath] = useState<string[]>([]); // Device IDs in routing path
+
+    const [daliDevices, setDaliDevices] = useState<Device[]>([]);
+    const [selectedTopology, setSelectedTopology] = useState<Topology>(() =>
+        loadFromLocalStorage('floorplan-selectedTopology', 'DALI')
+    );
+    const [selectedDeviceType, setSelectedDeviceType] = useState<string>(() =>
+        loadFromLocalStorage('floorplan-selectedDeviceType', 'dt-downlight')
+    );
+    const [selectedMountingHeight, setSelectedMountingHeight] = useState<MountingHeight>(() =>
+        loadFromLocalStorage('floorplan-selectedMountingHeight', 'ceiling')
+    );
+    const [selectedNetwork, setSelectedNetwork] = useState<string>(() =>
+        loadFromLocalStorage('floorplan-selectedNetwork', 'lcp-1:1')
+    );
+    const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
+    const [routingMode, setRoutingMode] = useState<boolean>(() =>
+        loadFromLocalStorage('floorplan-routingMode', false)
+    );
+    const [routingPath, setRoutingPath] = useState<string[]>([]); // Device IDs in routing path
+
+    // Component catalog filtered by topology
+    const getComponentsByTopology = (topology: Topology): { value: string, label: string }[] => {
+        switch (topology) {
+            case 'DALI':
+                return [
+                    { value: 'dt-downlight', label: 'Downlight' },
+                    { value: 'dt-junction-box', label: 'Junction Box' },
+                ];
+            case 'KNX':
+                return [
+                    { value: 'dt-switch', label: 'Switch' },
+                    { value: 'dt-sensor', label: 'Sensor' },
+                    { value: 'dt-actuator', label: 'Actuator' },
+                    { value: 'dt-junction-box', label: 'Junction Box' },
+                ];
+            case 'DATA':
+                return [
+                    { value: 'dt-ethernet-jack', label: 'Ethernet Jack' },
+                    { value: 'dt-ap', label: 'Access Point' },
+                    { value: 'dt-camera', label: 'Camera' },
+                ];
+            case 'LED':
+                return [
+                    { value: 'dt-led-strip', label: 'LED Strip' },
+                    { value: 'dt-led-driver', label: 'LED Driver' },
+                ];
+            case 'Door Access':
+                return [
+                    { value: 'dt-electric-strike', label: 'Electric Strike' },
+                    { value: 'dt-intercom', label: 'Intercom' },
+                    { value: 'dt-door-sensor', label: 'Door Sensor' },
+                ];
+            case 'Window Shutters':
+                return [
+                    { value: 'dt-shutter-motor', label: 'Shutter Motor (Placeholder)' },
+                ];
+            case 'Skylights':
+                return [
+                    { value: 'dt-skylight-actuator', label: 'Skylight Actuator (Placeholder)' },
+                ];
+            default:
+                return [];
+        }
+    };
+
+    // Network options filtered by topology
+    const getNetworksByTopology = (topology: Topology): { value: string, label: string }[] => {
+        switch (topology) {
+            case 'DALI':
+                return [
+                    { value: 'lcp-1:1', label: 'LCP-1:1' },
+                    { value: 'lcp-1:2', label: 'LCP-1:2' },
+                    { value: 'lcp-2:1', label: 'LCP-2:1' },
+                    { value: 'lcp-2:2', label: 'LCP-2:2' },
+                ];
+            case 'KNX':
+                return [
+                    { value: 'knx-lcp-1', label: 'KNX LCP-1' },
+                    { value: 'knx-lcp-2', label: 'KNX LCP-2' },
+                ];
+            case 'DATA':
+                return [
+                    { value: 'data-tech', label: 'Data - Tech' },
+                    { value: 'data-office', label: 'Data - Office' },
+                ];
+            default:
+                return [{ value: 'default', label: 'Default' }];
+        }
+    };
 
     // Point-in-polygon test using ray-casting algorithm
     const isPointInPolygon = (point: { x: number, y: number }, polygon: { x: number, y: number }[]): boolean => {
@@ -1294,7 +1405,9 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
 
     // Tool state
     type Tool = 'select' | 'scale' | 'measure';
-    const [activeTool, setActiveTool] = useState<Tool>('select');
+    const [activeTool, setActiveTool] = useState<Tool>(() =>
+        loadFromLocalStorage('floorplan-activeTool', 'select')
+    );
 
     // Scale tool state
     const [scalePoints, setScalePoints] = useState<{ x: number, y: number }[]>([]);
@@ -1325,6 +1438,63 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
 
     // Scale limits
     const scaleRef = useRef({ min: 0.1, max: 10, fit: 1 });
+
+    // Persist all UI state to localStorage
+    useEffect(() => {
+        localStorage.setItem('floorplan-transform', JSON.stringify(transform));
+    }, [transform]);
+
+    useEffect(() => {
+        localStorage.setItem('floorplan-layers', JSON.stringify(layers));
+    }, [layers]);
+
+    useEffect(() => {
+        localStorage.setItem('floorplan-activeMode', JSON.stringify(activeMode));
+    }, [activeMode]);
+
+    useEffect(() => {
+        localStorage.setItem('floorplan-electricalOverlay', JSON.stringify(electricalOverlay));
+    }, [electricalOverlay]);
+
+    useEffect(() => {
+        localStorage.setItem('floorplan-masksVisible', JSON.stringify(masksVisible));
+    }, [masksVisible]);
+
+    useEffect(() => {
+        localStorage.setItem('floorplan-roomLabelsVisible', JSON.stringify(roomLabelsVisible));
+    }, [roomLabelsVisible]);
+
+    useEffect(() => {
+        localStorage.setItem('floorplan-heightSettings', JSON.stringify(heightSettings));
+    }, [heightSettings]);
+
+    useEffect(() => {
+        localStorage.setItem('floorplan-showToolsPanel', JSON.stringify(showToolsPanel));
+    }, [showToolsPanel]);
+
+    useEffect(() => {
+        localStorage.setItem('floorplan-selectedTopology', JSON.stringify(selectedTopology));
+    }, [selectedTopology]);
+
+    useEffect(() => {
+        localStorage.setItem('floorplan-selectedDeviceType', JSON.stringify(selectedDeviceType));
+    }, [selectedDeviceType]);
+
+    useEffect(() => {
+        localStorage.setItem('floorplan-selectedMountingHeight', JSON.stringify(selectedMountingHeight));
+    }, [selectedMountingHeight]);
+
+    useEffect(() => {
+        localStorage.setItem('floorplan-selectedNetwork', JSON.stringify(selectedNetwork));
+    }, [selectedNetwork]);
+
+    useEffect(() => {
+        localStorage.setItem('floorplan-routingMode', JSON.stringify(routingMode));
+    }, [routingMode]);
+
+    useEffect(() => {
+        localStorage.setItem('floorplan-activeTool', JSON.stringify(activeTool));
+    }, [activeTool]);
 
     //Set scale limits when image loads
     const handleImageLoad = () => {
@@ -2398,9 +2568,19 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
 
     return (
         <div className="h-full flex overflow-hidden bg-slate-950 relative">
-            {/* Tool Palette - Left Side (Desktop Only) */}
-            <div className="hidden md:flex flex-col gap-2 absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-slate-900/90 backdrop-blur-sm rounded-lg p-3 border border-slate-700">
-                <div className="text-slate-400 text-xs mb-1">Tools</div>
+            {/* Tools Panel Toggle Button */}
+            <button
+                onClick={() => setShowToolsPanel(!showToolsPanel)}
+                className="absolute left-4 top-4 z-30 bg-slate-900/90 backdrop-blur-sm rounded-lg p-2 border border-slate-700 hover:bg-slate-800 transition-colors"
+                title={showToolsPanel ? 'Hide Tools' : 'Show Tools'}
+            >
+                <Layers className="w-4 h-4 text-slate-300" />
+            </button>
+
+            {/* Tool Palette - Left Side (Desktop Only) - Wider panel */}
+            {showToolsPanel && (
+                <div className="hidden md:flex flex-col gap-2 absolute left-4 top-16 z-20 bg-slate-900/90 backdrop-blur-sm rounded-lg p-4 border border-slate-700 w-64 max-h-[calc(100vh-120px)] overflow-y-auto">
+                    <div className="text-slate-400 text-sm font-medium mb-2">Tools</div>
 
                 {/* Select Tool */}
                 <button
@@ -2456,6 +2636,105 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
 
                 <div className="border-t border-slate-700 my-2"></div>
 
+                {/* Device Placement Section */}
+                <div className="space-y-2">
+                    <div className="text-slate-400 text-xs">Device Placement</div>
+
+                    {/* Topology Selection */}
+                    <div>
+                        <label className="text-slate-500 text-[10px] block mb-1">Topology:</label>
+                        <select
+                            value={selectedTopology}
+                            onChange={(e) => {
+                                const newTopology = e.target.value as Topology;
+                                setSelectedTopology(newTopology);
+                                // Reset to first component and network for new topology
+                                const components = getComponentsByTopology(newTopology);
+                                const networks = getNetworksByTopology(newTopology);
+                                setSelectedDeviceType(components[0]?.value || '');
+                                setSelectedNetwork(networks[0]?.value || '');
+                            }}
+                            className="w-full bg-slate-800 text-slate-300 px-2 py-1 rounded text-xs"
+                        >
+                            <option value="DALI">DALI</option>
+                            <option value="KNX">KNX</option>
+                            <option value="DATA">DATA</option>
+                            <option value="LED">LED</option>
+                            <option value="Door Access">Door Access</option>
+                            <option value="Window Shutters">Window Shutters</option>
+                            <option value="Skylights">Skylights</option>
+                        </select>
+                    </div>
+
+                    {/* Component Type Selection (Filtered by Topology) */}
+                    <div>
+                        <label className="text-slate-500 text-[10px] block mb-1">Component:</label>
+                        <select
+                            value={selectedDeviceType}
+                            onChange={(e) => setSelectedDeviceType(e.target.value)}
+                            className="w-full bg-slate-800 text-slate-300 px-2 py-1 rounded text-xs"
+                        >
+                            {getComponentsByTopology(selectedTopology).map(comp => (
+                                <option key={comp.value} value={comp.value}>{comp.label}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Mounting Height Selection */}
+                    <div>
+                        <label className="text-slate-500 text-[10px] block mb-1">Height:</label>
+                        <select
+                            value={selectedMountingHeight}
+                            onChange={(e) => setSelectedMountingHeight(e.target.value as MountingHeight)}
+                            className="w-full bg-slate-800 text-slate-300 px-2 py-1 rounded text-xs"
+                        >
+                            <option value="ceiling">Ceiling ({heightSettings.ceiling}ft)</option>
+                            <option value="switch">Switch ({heightSettings.switch}ft)</option>
+                            <option value="exterior-sconce">Exterior Sconce ({heightSettings.exteriorSconce}ft)</option>
+                            <option value="custom">Custom...</option>
+                        </select>
+                    </div>
+
+                    {/* Network/Universe Selection (Context-sensitive) */}
+                    <div>
+                        <label className="text-slate-500 text-[10px] block mb-1">Network:</label>
+                        <select
+                            value={selectedNetwork}
+                            onChange={(e) => setSelectedNetwork(e.target.value)}
+                            className="w-full bg-slate-800 text-slate-300 px-2 py-1 rounded text-xs"
+                        >
+                            {getNetworksByTopology(selectedTopology).map(net => (
+                                <option key={net.value} value={net.value}>{net.label}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Routing Mode Toggle */}
+                    <button
+                        onClick={() => {
+                            setRoutingMode(!routingMode);
+                            setRoutingPath([]);
+                        }}
+                        className={`w-full px-2 py-1 rounded text-xs transition-colors ${
+                            routingMode
+                                ? 'bg-green-600 text-white'
+                                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                        }`}
+                    >
+                        {routingMode ? 'Routing: ON' : 'Routing: OFF'}
+                    </button>
+
+                    <div className="text-slate-500 text-[9px]">
+                        {routingMode ? (
+                            <>Click devices to daisy-chain</>
+                        ) : (
+                            <>Click to place device</>
+                        )}
+                    </div>
+                </div>
+
+                <div className="border-t border-slate-700 my-2"></div>
+
                 {/* Settings Button */}
                 <button
                     onClick={() => setShowSettingsModal(true)}
@@ -2464,7 +2743,8 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                     <Settings className="w-4 h-4 inline mr-1" />
                     Settings
                 </button>
-            </div>
+                </div>
+            )}
 
             {/* Layer Control - Right Side (All Devices) */}
             <div className="absolute right-4 top-4 z-30 bg-slate-900/90 backdrop-blur-sm rounded-lg border border-slate-700 w-56">
@@ -2659,23 +2939,12 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
 
                     {/* DALI Layer */}
                     <div className="space-y-1">
-                        <div
-                            className={`flex items-center gap-2 text-xs p-1.5 rounded cursor-pointer ${activeMode === 'dali' ? 'bg-slate-800' : 'hover:bg-slate-800/50'}`}
-                            onClick={() => {
-                                const newMode = activeMode === 'dali' ? 'annotations' : 'dali';
-                                setActiveMode(newMode);
-                                if (newMode === 'dali') {
-                                    showHudMessage('DALI Layer  •  Select device type and universe, then click to place', 5000);
-                                }
-                            }}
-                        >
-                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activeMode === 'dali' ? 'bg-blue-500' : 'bg-slate-600'}`} />
+                        <div className="flex items-center gap-2 text-xs p-1.5 rounded">
+                            <div className="w-2 h-2 rounded-full flex-shrink-0 bg-slate-600" />
                             <input
                                 type="checkbox"
                                 checked={layers.dali.visible}
-                                onClick={(e) => e.stopPropagation()}
                                 onChange={(e) => {
-                                    e.stopPropagation();
                                     setLayers(prev => ({ ...prev, dali: { ...prev.dali, visible: e.target.checked } }));
                                 }}
                                 className="rounded flex-shrink-0"
@@ -2685,84 +2954,6 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
                                 <span className="text-slate-500 text-[10px]">{daliDevices.length} device{daliDevices.length !== 1 ? 's' : ''}</span>
                             )}
                         </div>
-                        {activeMode === 'dali' && (
-                            <div className="ml-6 text-[9px] text-slate-400 space-y-2">
-                                {/* Universe Selection */}
-                                <div>
-                                    <label className="text-slate-400 text-[9px] block mb-1">Universe:</label>
-                                    <select
-                                        value={selectedUniverse}
-                                        onChange={(e) => {
-                                            e.stopPropagation();
-                                            setSelectedUniverse(e.target.value);
-                                        }}
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="w-full bg-slate-800 text-slate-300 px-2 py-1 rounded text-[10px]"
-                                    >
-                                        <option value="lcp-1:1">LCP-1:1</option>
-                                        <option value="lcp-1:2">LCP-1:2</option>
-                                        <option value="lcp-2:1">LCP-2:1</option>
-                                        <option value="lcp-2:2">LCP-2:2</option>
-                                    </select>
-                                </div>
-
-                                {/* Device Type Selection */}
-                                <div>
-                                    <label className="text-slate-400 text-[9px] block mb-1">Device Type:</label>
-                                    <select
-                                        value={selectedDaliDeviceType}
-                                        onChange={(e) => {
-                                            e.stopPropagation();
-                                            setSelectedDaliDeviceType(e.target.value);
-                                        }}
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="w-full bg-slate-800 text-slate-300 px-2 py-1 rounded text-[10px]"
-                                    >
-                                        <option value="dt-downlight">Downlight</option>
-                                        <option value="dt-junction-box">Junction Box</option>
-                                    </select>
-                                </div>
-
-                                {/* Mounting Height Selection */}
-                                <div>
-                                    <label className="text-slate-400 text-[9px] block mb-1">Mounting Height:</label>
-                                    <select
-                                        value={selectedMountingHeight}
-                                        onChange={(e) => {
-                                            e.stopPropagation();
-                                            setSelectedMountingHeight(e.target.value as MountingHeight);
-                                        }}
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="w-full bg-slate-800 text-slate-300 px-2 py-1 rounded text-[10px]"
-                                    >
-                                        <option value="ceiling">Ceiling ({heightSettings.ceiling}ft)</option>
-                                        <option value="switch">Switch ({heightSettings.switch}ft)</option>
-                                        <option value="exterior-sconce">Exterior Sconce ({heightSettings.exteriorSconce}ft)</option>
-                                        <option value="custom">Custom...</option>
-                                    </select>
-                                </div>
-
-                                {/* Cable Routing Mode Toggle */}
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setDaliRoutingMode(!daliRoutingMode);
-                                        setDaliRoutingPath([]);
-                                    }}
-                                    className={`w-full px-2 py-1 rounded text-[9px] ${daliRoutingMode ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-300'}`}
-                                >
-                                    {daliRoutingMode ? 'Routing Mode: ON' : 'Routing Mode: OFF'}
-                                </button>
-
-                                <div className="text-slate-500 text-[8px] pt-1">
-                                    {daliRoutingMode ? (
-                                        <>Click devices to daisy-chain • ESC to finish</>
-                                    ) : (
-                                        <>Click to place device • Del: delete</>
-                                    )}
-                                </div>
-                            </div>
-                        )}
                     </div>
 
                     {/* Electrical Overlay */}
