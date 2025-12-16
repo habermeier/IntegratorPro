@@ -2137,9 +2137,18 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
     // Load DALI devices from server on mount
     useEffect(() => {
         fetch('/api/dali-devices')
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) {
+                    if (res.status === 404) {
+                        console.log('DALI devices endpoint not found - skipping load');
+                        return null;
+                    }
+                    throw new Error(`HTTP ${res.status}`);
+                }
+                return res.json();
+            })
             .then(data => {
-                if (data.devices && Array.isArray(data.devices)) {
+                if (data && data.devices && Array.isArray(data.devices)) {
                     setDaliDevices(data.devices);
                     console.log('DALI devices loaded from server:', data.devices.length);
                 }
@@ -2157,14 +2166,26 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ devices: daliDevices }),
             })
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) {
+                        if (res.status === 404) {
+                            // Endpoint not implemented yet - silently skip
+                            return null;
+                        }
+                        throw new Error(`HTTP ${res.status}`);
+                    }
+                    return res.json();
+                })
                 .then(data => {
-                    if (data.success) {
+                    if (data && data.success) {
                         console.log('DALI devices saved to server successfully');
                     }
                 })
                 .catch(err => {
-                    console.error('Failed to save DALI devices:', err);
+                    // Only log non-404 errors
+                    if (!err.message?.includes('404')) {
+                        console.error('Failed to save DALI devices:', err);
+                    }
                 });
         }, 500); // 500ms debounce
 

@@ -231,6 +231,11 @@ const ROOMS_FILE = path.join(__dirname, 'rooms.json');
 const ROOMS_OVERRIDE_FILE = path.join(__dirname, 'rooms.local.json');
 createDataEndpoints('/api/rooms', ROOMS_FILE, ROOMS_OVERRIDE_FILE, 'rooms', 'Rooms');
 
+// DALI Devices endpoints
+const DALI_DEVICES_FILE = path.join(__dirname, 'daliDevices.json');
+const DALI_DEVICES_OVERRIDE_FILE = path.join(__dirname, 'daliDevices.local.json');
+createDataEndpoints('/api/dali-devices', DALI_DEVICES_FILE, DALI_DEVICES_OVERRIDE_FILE, 'devices', 'DALI devices');
+
 // POST debug log
 const LOG_FILE = path.join(__dirname, 'client_debug.log');
 app.post('/api/debug-log', (req, res) => {
