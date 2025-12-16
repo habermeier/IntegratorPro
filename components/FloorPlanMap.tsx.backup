@@ -9,7 +9,7 @@ import { MousePointer2, Move, Activity, Layers, Wand2, ScanLine, Trash2, Lock, U
 import { extractMapSymbols } from '../services/geminiService';
 import { MapSymbols } from './MapSymbols';
 import { parseDistanceInput, formatDistance, CM_PER_INCH } from '../utils/measurementUtils';
-import { toPng } from 'html-to-image';
+import { MagnifiedCursor } from './MagnifiedCursor';
 
 const USE_BASELINE_VIEW = true; // Temporary: isolates minimal pan/zoom for performance baseline.
 
@@ -82,10 +82,6 @@ const MapController = ({ activeLayer, setFitFn }: { activeLayer: string, setFitF
 };
 
 const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, onLocate, highlightedModuleId }) => {
-    // --- REFS ---
-    const imgRef = useRef<HTMLImageElement>(null);
-    const offscreenImgRef = useRef<HTMLImageElement>(null); // Separate ref for offscreen capture
-
     // --- LAYERS STATE ---
     const [layerState, setLayerState] = useState({
         showBasePlan: true, // The electrical image
@@ -156,13 +152,6 @@ const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, 
 
     const inputRef = useRef<HTMLInputElement>(null);
     const [hudMessage, setHudMessage] = useState<string>("Ready");
-
-    const showHudMessage = (message: string, duration?: number) => {
-        setHudMessage(message);
-        if (duration) {
-            setTimeout(() => setHudMessage("Ready"), duration);
-        }
-    };
 
     // Cable Tool State
     type CableType = 'KNX' | 'DALI' | 'FIBER' | 'GENERIC';
@@ -737,13 +726,98 @@ const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, 
                                 </div>
                             )}
 
-                            {/* Room Name Modal - COMMENTED OUT DUE TO MISSING STATE IN LEGACY COMPONENT
+                            {/* Room Name Modal */}
                             {showRoomNameModal && (
                                 <div className="absolute inset-0 z-[250] flex items-center justify-center bg-black/50">
-                                   ...
+                                    <div className="bg-slate-900 border border-slate-600 p-4 rounded-lg w-80">
+                                        <div className="text-white text-sm mb-3">Name this room:</div>
+                                        <input
+                                            type="text"
+                                            value={roomNameInput}
+                                            onChange={(e) => setRoomNameInput(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' && roomNameInput.trim()) {
+                                                    // Create the room
+                                                    if (roomDrawing && roomDrawing.length >= 3) {
+                                                        // Calculate center of path for label placement
+                                                        const avgX = roomDrawing.reduce((sum, p) => sum + p.x, 0) / roomDrawing.length;
+                                                        const avgY = roomDrawing.reduce((sum, p) => sum + p.y, 0) / roomDrawing.length;
+
+                                                        const newRoom: Room = {
+                                                            id: `room-${Date.now()}`,
+                                                            path: roomDrawing,
+                                                            name: roomNameInput.trim(),
+                                                            labelX: avgX,
+                                                            labelY: avgY,
+                                                            labelRotation: 0,
+                                                            fillColor: roomPreviewFillColor || generateRoomColor(),
+                                                            visible: true
+                                                        };
+
+                                                        setRooms(prev => [...prev, newRoom]);
+                                                        setRoomDrawing(null);
+                                                        setRoomPreviewFillColor(null);
+                                                        setRoomNameInput('');
+                                                        setShowRoomNameModal(false);
+                                                        showHudMessage(`Room "${newRoom.name}" created`, 3000);
+                                                    }
+                                                }
+                                                if (e.key === 'Escape') {
+                                                    setShowRoomNameModal(false);
+                                                    setRoomNameInput('');
+                                                    setRoomDrawing(null);
+                                                    setRoomPreviewFillColor(null);
+                                                }
+                                            }}
+                                            className="w-full bg-black text-white px-3 py-2 rounded mb-3"
+                                            placeholder="e.g., Living Room"
+                                            autoFocus
+                                        />
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    if (roomNameInput.trim() && roomDrawing && roomDrawing.length >= 3) {
+                                                        const avgX = roomDrawing.reduce((sum, p) => sum + p.x, 0) / roomDrawing.length;
+                                                        const avgY = roomDrawing.reduce((sum, p) => sum + p.y, 0) / roomDrawing.length;
+
+                                                        const newRoom: Room = {
+                                                            id: `room-${Date.now()}`,
+                                                            path: roomDrawing,
+                                                            name: roomNameInput.trim(),
+                                                            labelX: avgX,
+                                                            labelY: avgY,
+                                                            labelRotation: 0,
+                                                            fillColor: roomPreviewFillColor || generateRoomColor(),
+                                                            visible: true
+                                                        };
+
+                                                        setRooms(prev => [...prev, newRoom]);
+                                                        setRoomDrawing(null);
+                                                        setRoomPreviewFillColor(null);
+                                                        setRoomNameInput('');
+                                                        setShowRoomNameModal(false);
+                                                        showHudMessage(`Room "${newRoom.name}" created`, 3000);
+                                                    }
+                                                }}
+                                                className="flex-1 bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded"
+                                            >
+                                                Create Room
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setShowRoomNameModal(false);
+                                                    setRoomNameInput('');
+                                                    setRoomDrawing(null);
+                                                    setRoomPreviewFillColor(null);
+                                                }}
+                                                className="flex-1 bg-red-900 hover:bg-red-800 text-white px-3 py-2 rounded"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
-                            */}
 
                             {toolMode === 'CABLE' && (
                                 <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[200] bg-slate-900 p-2 rounded-xl flex gap-2">
@@ -759,13 +833,12 @@ const LegacyFloorPlanMap: React.FC<FloorPlanMapProps> = ({ modules, setModules, 
                                 {hudMessage}
                             </div>
 
-                            {/* Rotation Degree Display - COMMENTED OUT DUE TO MISSING STATE
+                            {/* Rotation Degree Display */}
                             {showRotationDegrees !== null && (
                                 <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[150] bg-blue-900/90 text-white px-4 py-2 rounded-lg border border-blue-600 font-mono text-lg">
                                     {showRotationDegrees.toFixed(0)}°
                                 </div>
                             )}
-                            */}
 
                             <div className="absolute top-4 right-4 z-50 flex flex-col items-end gap-2">
                                 <button onClick={() => setIsControlsOpen(!isControlsOpen)} className="p-2 bg-slate-900 rounded-lg border border-slate-700 text-slate-400">
@@ -1015,10 +1088,12 @@ const MemoizedVectorOverlay = React.memo(({ lines }: { lines: number[][][] }) =>
     );
 });
 
-const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
+const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {
     const containerRef = useRef<HTMLDivElement>(null);
     const imgRef = useRef<HTMLImageElement>(null);
-    const offscreenImgRef = useRef<HTMLImageElement>(null); // Separate ref for offscreen capture to avoid conflicting with main interaction logic
+
+    // Transform state: scale and position
+    // Load from localStorage or use defaults
     const loadFromLocalStorage = <T,>(key: string, defaultValue: T): T => {
         try {
             const saved = localStorage.getItem(key);
@@ -1427,17 +1502,9 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
     );
     const [isMouseOverFloorPlan, setIsMouseOverFloorPlan] = useState<boolean>(false);
 
-    // DEBUG: Toggle to compare FloorPlanContent vs normal rendering
-    const [showDebugComparison, setShowDebugComparison] = useState(false);
-
-    // Offscreen rendering for cursor using html2canvas
-    const offscreenDivRef = useRef<HTMLDivElement | null>(null);
-    const canvasRef = useRef<HTMLCanvasElement | null>(null);
-    const [canvasReady, setCanvasReady] = useState(false);
-
-    // Canvas resolution multiplier: Controls quality vs performance
-    // 1.0 = display resolution, 2.0 = 2x display resolution, etc.
-    const CANVAS_RESOLUTION_MULTIPLIER = 2.0;
+    // DEBUG: Toggle between normal view and zoomed view
+    const [debugZoomMode, setDebugZoomMode] = useState(false);
+    const [debugZoomFactor, setDebugZoomFactor] = useState(1.0); // 1.0 = no zoom (identical to main), 2.0 = 2x zoom, etc.
 
     // Scale tool state
     const [scalePoints, setScalePoints] = useState<{ x: number, y: number }[]>([]);
@@ -1467,7 +1534,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
     } | null>(null);
 
     // Scale limits
-    const scaleRef = useRef({ min: 0.1, max: 10, step: 0.1, fit: 1 });
+    const scaleRef = useRef({ min: 0.1, max: 10, fit: 1 });
 
     // Persist all UI state to localStorage
     useEffect(() => {
@@ -1526,91 +1593,25 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
         localStorage.setItem('floorplan-activeTool', JSON.stringify(activeTool));
     }, [activeTool]);
 
-    const [imageLoaded, setImageLoaded] = useState(false);
-
-    // Capture offscreen rendering to canvas using html-to-image
-    useEffect(() => {
-        const captureToCanvas = async () => {
-            if (!offscreenDivRef.current || !imgRef.current) return;
-
-            const naturalWidth = imgRef.current.naturalWidth;
-            const naturalHeight = imgRef.current.naturalHeight;
-
-            // Only capture if we have valid dimensions
-            if (!naturalWidth || !naturalHeight) return;
-
-            console.log('🎨 Capturing FloorPlanContent at FULL natural resolution...');
-
-            try {
-                // Check what size the offscreen div actually rendered at
-                const actualWidth = offscreenDivRef.current.offsetWidth;
-                const actualHeight = offscreenDivRef.current.offsetHeight;
-
-                console.log(`📐 Offscreen div actual size: ${actualWidth}×${actualHeight}`);
-                console.log(`📐 Target natural size: ${naturalWidth}×${naturalHeight}`);
-
-                // Capture without specifying width/height - let it use the actual element size
-                // Capture with opacity forced back to 1 for the clone
-                console.log('🖼️  Starting toPng capture...');
-                const dataUrl = await toPng(offscreenDivRef.current, {
-                    pixelRatio: 1,
-                    style: {
-                        opacity: '1',
-                        visibility: 'visible',
-                        zIndex: '9999',
-                        backgroundColor: '#ffffff', // Ensure white background for transparent layers
-                    }
-                });
-                console.log(`📦 PNG data URL size: ${(dataUrl.length / 1024 / 1024).toFixed(2)} MB`);
-
-                // Convert PNG data URL to canvas
-                const img = new Image();
-                img.onload = () => {
-                    console.log(`🖼️  Image loaded: ${img.width}×${img.height}`);
-                    const canvas = document.createElement('canvas');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    const ctx = canvas.getContext('2d');
-                    if (ctx) {
-                        ctx.drawImage(img, 0, 0);
-                        canvasRef.current = canvas;
-                        setCanvasReady(true);
-                        console.log(`✅ Canvas captured: ${canvas.width}×${canvas.height}`);
-                    }
-                };
-                img.onerror = (err) => {
-                    console.error('❌ Image load failed:', err);
-                    setCanvasReady(false);
-                };
-                img.src = dataUrl;
-            } catch (err) {
-                console.error('Failed to capture canvas:', err);
-                setCanvasReady(false);
-            }
-        };
-
-        // Debounce canvas capture (wait longer to ensure images are loaded)
-        // Depends on imageLoaded state to ensure we capture after the image is ready
-        const timeoutId = setTimeout(captureToCanvas, 500);
-        return () => clearTimeout(timeoutId);
-    }, [layers, overlayMasks, masksVisible, rooms, daliDevices, electricalOverlay, imageLoaded]);
-
-    // Helper to showHudMessage (with optional auto-dismiss)
-    const showHudMessage = (message: string, duration?: number) => {
-        setHudMessage(message);
-        if (duration) {
-            setTimeout(() => setHudMessage(null), duration);
-        }
-    };
-
+    //Set scale limits when image loads
     const handleImageLoad = () => {
         scaleRef.current = {
             min: 1, // CSS object-fit handles the fit, so min scale is 1 (no zoom out)
             max: 10,
-            step: 0.1,
             fit: 1
         };
-        setImageLoaded(true);
+    };
+
+    // Helper to show HUD messages (with optional auto-dismiss)
+    const showHudMessage = (message: string, duration?: number) => {
+        setHudMessage(message);
+        if (hudTimeoutRef.current) clearTimeout(hudTimeoutRef.current);
+        if (duration) {
+            hudTimeoutRef.current = window.setTimeout(() => {
+                setHudMessage(null);
+                hudTimeoutRef.current = null;
+            }, duration);
+        }
     };
 
     // Calculate scale factor from distance input
@@ -2006,15 +2007,15 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(electricalOverlay),
             })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        console.log('Electrical overlay saved to server');
-                    }
-                })
-                .catch(err => {
-                    console.error('Failed to save electrical overlay:', err);
-                });
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Electrical overlay saved to server');
+                }
+            })
+            .catch(err => {
+                console.error('Failed to save electrical overlay:', err);
+            });
         }, 500); // 500ms debounce
 
         return () => clearTimeout(timer);
@@ -2028,15 +2029,15 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ masks: overlayMasks }),
             })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        console.log('Base masks saved to server');
-                    }
-                })
-                .catch(err => {
-                    console.error('Failed to save base masks:', err);
-                });
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Base masks saved to server');
+                }
+            })
+            .catch(err => {
+                console.error('Failed to save base masks:', err);
+            });
         }, 500); // 500ms debounce
 
         return () => clearTimeout(timer);
@@ -2076,16 +2077,16 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ rooms }),
             })
-                .then(res => res.json())
-                .then(data => {
-                    console.log('Save response:', data);
-                    if (data.success) {
-                        console.log('Rooms saved to server successfully');
-                    }
-                })
-                .catch(err => {
-                    console.error('Failed to save rooms:', err);
-                });
+            .then(res => res.json())
+            .then(data => {
+                console.log('Save response:', data);
+                if (data.success) {
+                    console.log('Rooms saved to server successfully');
+                }
+            })
+            .catch(err => {
+                console.error('Failed to save rooms:', err);
+            });
         }, 500); // 500ms debounce
 
         return () => {
@@ -2860,205 +2861,237 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
 
             {/* Tool Palette - Left Side (Desktop Only) - Wider panel */}
             {showToolsPanel && (
-                <div className="hidden md:flex flex-col gap-2 absolute left-4 top-16 z-50 bg-slate-900/90 backdrop-blur-sm rounded-lg p-4 border border-slate-700 w-64 max-h-[calc(100vh-120px)] overflow-y-auto">
+                <div className="hidden md:flex flex-col gap-2 absolute left-4 top-16 z-20 bg-slate-900/90 backdrop-blur-sm rounded-lg p-4 border border-slate-700 w-64 max-h-[calc(100vh-120px)] overflow-y-auto">
                     <div className="text-slate-400 text-sm font-medium mb-2">Tools</div>
 
-                    {/* Select Tool */}
-                    <button
-                        onClick={() => {
-                            setActiveTool('select');
-                            setScalePoints([]);
-                            setDistanceInput('');
-                            setEditingPointIndex(null);
-                            setSelectedDeviceId(null);
-                            setDraggingDeviceId(null);
-                            setRoutingMode(false);
-                            showHudMessage('Pan: Click + Drag  •  Zoom: Mouse Wheel');
-                        }}
-                        className={`px-3 py-2 rounded text-sm transition-colors ${activeTool === 'select'
+                {/* Select Tool */}
+                <button
+                    onClick={() => {
+                        setActiveTool('select');
+                        setScalePoints([]);
+                        setDistanceInput('');
+                        setEditingPointIndex(null);
+                        setSelectedDeviceId(null);
+                        setDraggingDeviceId(null);
+                        setRoutingMode(false);
+                        showHudMessage('Pan: Click + Drag  •  Zoom: Mouse Wheel');
+                    }}
+                    className={`px-3 py-2 rounded text-sm transition-colors ${
+                        activeTool === 'select'
                             ? 'bg-blue-600 text-white'
                             : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                            }`}
-                    >
-                        Select
-                    </button>
+                    }`}
+                >
+                    Select
+                </button>
 
-                    {/* Scale Tool */}
-                    <button
-                        onClick={() => {
-                            setActiveTool('scale');
-                            setScalePoints([]);
-                            setDistanceInput('');
-                            setEditingPointIndex(null);
-                            setSelectedDeviceId(null);
-                            setDraggingDeviceId(null);
-                            setRoutingMode(false);
-                            showHudMessage('Click first point  •  Hold Space to pan');
-                        }}
-                        className={`px-3 py-2 rounded text-sm transition-colors ${activeTool === 'scale'
+                {/* Scale Tool */}
+                <button
+                    onClick={() => {
+                        setActiveTool('scale');
+                        setScalePoints([]);
+                        setDistanceInput('');
+                        setEditingPointIndex(null);
+                        setSelectedDeviceId(null);
+                        setDraggingDeviceId(null);
+                        setRoutingMode(false);
+                        showHudMessage('Click first point  •  Hold Space to pan');
+                    }}
+                    className={`px-3 py-2 rounded text-sm transition-colors ${
+                        activeTool === 'scale'
                             ? 'bg-blue-600 text-white'
                             : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                            }`}
-                    >
-                        Scale
-                    </button>
+                    }`}
+                >
+                    Scale
+                </button>
 
-                    {/* Measure Tool */}
-                    <button
-                        onClick={() => {
-                            setActiveTool('measure');
-                            setMeasurePoints([]);
-                            setSelectedDeviceId(null);
-                            setDraggingDeviceId(null);
-                            setRoutingMode(false);
-                            showHudMessage('Click first point  •  Hold Space to pan  •  ESC to cancel');
-                        }}
-                        className={`px-3 py-2 rounded text-sm transition-colors ${activeTool === 'measure'
+                {/* Measure Tool */}
+                <button
+                    onClick={() => {
+                        setActiveTool('measure');
+                        setMeasurePoints([]);
+                        setSelectedDeviceId(null);
+                        setDraggingDeviceId(null);
+                        setRoutingMode(false);
+                        showHudMessage('Click first point  •  Hold Space to pan  •  ESC to cancel');
+                    }}
+                    className={`px-3 py-2 rounded text-sm transition-colors ${
+                        activeTool === 'measure'
                             ? 'bg-blue-600 text-white'
                             : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                            }`}
-                    >
-                        Measure
-                    </button>
+                    }`}
+                >
+                    Measure
+                </button>
 
-                    {/* Topology Tool */}
-                    <button
-                        onClick={() => {
-                            setActiveTool('topology');
-                            setSelectedDeviceId(null);
-                            setDraggingDeviceId(null);
-                            setRoutingMode(false);
-                            showHudMessage('Click to place device  •  Click device to select  •  Hold Space to pan  •  ESC to exit');
-                        }}
-                        className={`px-3 py-2 rounded text-sm transition-colors ${activeTool === 'topology'
+                {/* Topology Tool */}
+                <button
+                    onClick={() => {
+                        setActiveTool('topology');
+                        setSelectedDeviceId(null);
+                        setDraggingDeviceId(null);
+                        setRoutingMode(false);
+                        showHudMessage('Click to place device  •  Click device to select  •  Hold Space to pan  •  ESC to exit');
+                    }}
+                    className={`px-3 py-2 rounded text-sm transition-colors ${
+                        activeTool === 'topology'
                             ? 'bg-blue-600 text-white'
                             : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                            }`}
-                    >
-                        Topology
-                    </button>
+                    }`}
+                >
+                    Topology
+                </button>
 
-                    {/* DEBUG: Compare FloorPlanContent vs Normal */}
-                    <button
-                        onClick={() => setShowDebugComparison(!showDebugComparison)}
-                        className={`px-3 py-2 rounded text-sm transition-colors ${showDebugComparison
-                            ? 'bg-yellow-600 text-white'
+                {/* DEBUG: Toggle Zoom Mode */}
+                <button
+                    onClick={() => setDebugZoomMode(!debugZoomMode)}
+                    className={`px-3 py-2 rounded text-sm transition-colors ${
+                        debugZoomMode
+                            ? 'bg-red-600 text-white'
                             : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                            }`}
-                    >
-                        {showDebugComparison ? '⚠️ DEBUG' : 'Debug Compare'}
-                    </button>
+                    }`}
+                >
+                    {debugZoomMode ? '✅ DEBUG ON' : 'DEBUG: Toggle View'}
+                </button>
 
-                    <div className="border-t border-slate-700 my-2"></div>
+                {/* Zoom Factor Controls - Only show when debug mode is on */}
+                {debugZoomMode && (
+                    <div className="flex items-center gap-2 text-xs text-slate-300">
+                        <span>Zoom:</span>
+                        <button
+                            onClick={() => setDebugZoomFactor(Math.max(0.5, debugZoomFactor - 0.5))}
+                            className="px-2 py-1 bg-slate-700 hover:bg-slate-600 rounded"
+                        >
+                            −
+                        </button>
+                        <span className="font-mono w-12 text-center">{debugZoomFactor.toFixed(1)}x</span>
+                        <button
+                            onClick={() => setDebugZoomFactor(Math.min(5.0, debugZoomFactor + 0.5))}
+                            className="px-2 py-1 bg-slate-700 hover:bg-slate-600 rounded"
+                        >
+                            +
+                        </button>
+                        <button
+                            onClick={() => setDebugZoomFactor(1.0)}
+                            className="px-2 py-1 bg-slate-700 hover:bg-slate-600 rounded text-[10px]"
+                        >
+                            Reset
+                        </button>
+                    </div>
+                )}
 
-                    {/* Device Placement Section - Only visible in Topology mode */}
-                    {activeTool === 'topology' && (
-                        <div className="space-y-2">
-                            <div className="text-slate-400 text-xs">Device Placement</div>
+                <div className="border-t border-slate-700 my-2"></div>
 
-                            {/* Topology Selection */}
-                            <div>
-                                <label className="text-slate-500 text-[10px] block mb-1">Topology:</label>
-                                <select
-                                    value={selectedTopology}
-                                    onChange={(e) => {
-                                        const newTopology = e.target.value as Topology;
-                                        setSelectedTopology(newTopology);
-                                        // Reset to first component and network for new topology
-                                        const components = getComponentsByTopology(newTopology);
-                                        const networks = getNetworksByTopology(newTopology);
-                                        setSelectedDeviceType(components[0]?.value || '');
-                                        setSelectedNetwork(networks[0]?.value || '');
-                                    }}
-                                    className="w-full bg-slate-800 text-slate-300 px-2 py-1 rounded text-xs"
-                                >
-                                    <option value="DALI">DALI</option>
-                                    <option value="KNX">KNX</option>
-                                    <option value="DATA">DATA</option>
-                                    <option value="LED">LED</option>
-                                    <option value="Door Access">Door Access</option>
-                                    <option value="Window Shutters">Window Shutters</option>
-                                    <option value="Skylights">Skylights</option>
-                                </select>
-                            </div>
+                {/* Device Placement Section - Only visible in Topology mode */}
+                {activeTool === 'topology' && (
+                <div className="space-y-2">
+                    <div className="text-slate-400 text-xs">Device Placement</div>
 
-                            {/* Component Type Selection (Filtered by Topology) */}
-                            <div>
-                                <label className="text-slate-500 text-[10px] block mb-1">Component:</label>
-                                <select
-                                    value={selectedDeviceType}
-                                    onChange={(e) => setSelectedDeviceType(e.target.value)}
-                                    className="w-full bg-slate-800 text-slate-300 px-2 py-1 rounded text-xs"
-                                >
-                                    {getComponentsByTopology(selectedTopology).map(comp => (
-                                        <option key={comp.value} value={comp.value}>{comp.label}</option>
-                                    ))}
-                                </select>
-                            </div>
+                    {/* Topology Selection */}
+                    <div>
+                        <label className="text-slate-500 text-[10px] block mb-1">Topology:</label>
+                        <select
+                            value={selectedTopology}
+                            onChange={(e) => {
+                                const newTopology = e.target.value as Topology;
+                                setSelectedTopology(newTopology);
+                                // Reset to first component and network for new topology
+                                const components = getComponentsByTopology(newTopology);
+                                const networks = getNetworksByTopology(newTopology);
+                                setSelectedDeviceType(components[0]?.value || '');
+                                setSelectedNetwork(networks[0]?.value || '');
+                            }}
+                            className="w-full bg-slate-800 text-slate-300 px-2 py-1 rounded text-xs"
+                        >
+                            <option value="DALI">DALI</option>
+                            <option value="KNX">KNX</option>
+                            <option value="DATA">DATA</option>
+                            <option value="LED">LED</option>
+                            <option value="Door Access">Door Access</option>
+                            <option value="Window Shutters">Window Shutters</option>
+                            <option value="Skylights">Skylights</option>
+                        </select>
+                    </div>
 
-                            {/* Mounting Height Selection */}
-                            <div>
-                                <label className="text-slate-500 text-[10px] block mb-1">Height:</label>
-                                <select
-                                    value={selectedMountingHeight}
-                                    onChange={(e) => setSelectedMountingHeight(e.target.value as MountingHeight)}
-                                    className="w-full bg-slate-800 text-slate-300 px-2 py-1 rounded text-xs"
-                                >
-                                    <option value="ceiling">Ceiling ({heightSettings.ceiling}ft)</option>
-                                    <option value="switch">Switch ({heightSettings.switch}ft)</option>
-                                    <option value="exterior-sconce">Exterior Sconce ({heightSettings.exteriorSconce}ft)</option>
-                                    <option value="custom">Custom...</option>
-                                </select>
-                            </div>
+                    {/* Component Type Selection (Filtered by Topology) */}
+                    <div>
+                        <label className="text-slate-500 text-[10px] block mb-1">Component:</label>
+                        <select
+                            value={selectedDeviceType}
+                            onChange={(e) => setSelectedDeviceType(e.target.value)}
+                            className="w-full bg-slate-800 text-slate-300 px-2 py-1 rounded text-xs"
+                        >
+                            {getComponentsByTopology(selectedTopology).map(comp => (
+                                <option key={comp.value} value={comp.value}>{comp.label}</option>
+                            ))}
+                        </select>
+                    </div>
 
-                            {/* Network/Universe Selection (Context-sensitive) */}
-                            <div>
-                                <label className="text-slate-500 text-[10px] block mb-1">Network:</label>
-                                <select
-                                    value={selectedNetwork}
-                                    onChange={(e) => setSelectedNetwork(e.target.value)}
-                                    className="w-full bg-slate-800 text-slate-300 px-2 py-1 rounded text-xs"
-                                >
-                                    {getNetworksByTopology(selectedTopology).map(net => (
-                                        <option key={net.value} value={net.value}>{net.label}</option>
-                                    ))}
-                                </select>
-                            </div>
+                    {/* Mounting Height Selection */}
+                    <div>
+                        <label className="text-slate-500 text-[10px] block mb-1">Height:</label>
+                        <select
+                            value={selectedMountingHeight}
+                            onChange={(e) => setSelectedMountingHeight(e.target.value as MountingHeight)}
+                            className="w-full bg-slate-800 text-slate-300 px-2 py-1 rounded text-xs"
+                        >
+                            <option value="ceiling">Ceiling ({heightSettings.ceiling}ft)</option>
+                            <option value="switch">Switch ({heightSettings.switch}ft)</option>
+                            <option value="exterior-sconce">Exterior Sconce ({heightSettings.exteriorSconce}ft)</option>
+                            <option value="custom">Custom...</option>
+                        </select>
+                    </div>
 
-                            {/* Routing Mode Toggle */}
-                            <button
-                                onClick={() => {
-                                    setRoutingMode(!routingMode);
-                                    setRoutingPath([]);
-                                }}
-                                className={`w-full px-2 py-1 rounded text-xs transition-colors ${routingMode
-                                    ? 'bg-green-600 text-white'
-                                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                                    }`}
-                            >
-                                {routingMode ? 'Routing: ON' : 'Routing: OFF'}
-                            </button>
+                    {/* Network/Universe Selection (Context-sensitive) */}
+                    <div>
+                        <label className="text-slate-500 text-[10px] block mb-1">Network:</label>
+                        <select
+                            value={selectedNetwork}
+                            onChange={(e) => setSelectedNetwork(e.target.value)}
+                            className="w-full bg-slate-800 text-slate-300 px-2 py-1 rounded text-xs"
+                        >
+                            {getNetworksByTopology(selectedTopology).map(net => (
+                                <option key={net.value} value={net.value}>{net.label}</option>
+                            ))}
+                        </select>
+                    </div>
 
-                            <div className="text-slate-500 text-[9px]">
-                                {routingMode ? (
-                                    <>Click devices to daisy-chain</>
-                                ) : (
-                                    <>Click to place device</>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="border-t border-slate-700 my-2"></div>
-
-                    {/* Settings Button */}
+                    {/* Routing Mode Toggle */}
                     <button
-                        onClick={() => setShowSettingsModal(true)}
-                        className="px-3 py-2 rounded text-sm transition-colors bg-slate-800 text-slate-300 hover:bg-slate-700"
+                        onClick={() => {
+                            setRoutingMode(!routingMode);
+                            setRoutingPath([]);
+                        }}
+                        className={`w-full px-2 py-1 rounded text-xs transition-colors ${
+                            routingMode
+                                ? 'bg-green-600 text-white'
+                                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                        }`}
                     >
-                        <Settings className="w-4 h-4 inline mr-1" />
-                        Settings
+                        {routingMode ? 'Routing: ON' : 'Routing: OFF'}
                     </button>
+
+                    <div className="text-slate-500 text-[9px]">
+                        {routingMode ? (
+                            <>Click devices to daisy-chain</>
+                        ) : (
+                            <>Click to place device</>
+                        )}
+                    </div>
+                </div>
+                )}
+
+                <div className="border-t border-slate-700 my-2"></div>
+
+                {/* Settings Button */}
+                <button
+                    onClick={() => setShowSettingsModal(true)}
+                    className="px-3 py-2 rounded text-sm transition-colors bg-slate-800 text-slate-300 hover:bg-slate-700"
+                >
+                    <Settings className="w-4 h-4 inline mr-1" />
+                    Settings
+                </button>
                 </div>
             )}
 
@@ -3241,10 +3274,11 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
                                             e.stopPropagation();
                                             setMaskTool('select');
                                         }}
-                                        className={`flex-1 px-2 py-1 rounded text-[10px] ${maskTool === 'select'
-                                            ? 'bg-blue-600 text-white'
-                                            : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
-                                            }`}
+                                        className={`flex-1 px-2 py-1 rounded text-[10px] ${
+                                            maskTool === 'select'
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                                        }`}
                                     >
                                         Select
                                     </button>
@@ -3253,10 +3287,11 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
                                             e.stopPropagation();
                                             setMaskTool('draw');
                                         }}
-                                        className={`flex-1 px-2 py-1 rounded text-[10px] ${maskTool === 'draw'
-                                            ? 'bg-blue-600 text-white'
-                                            : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
-                                            }`}
+                                        className={`flex-1 px-2 py-1 rounded text-[10px] ${
+                                            maskTool === 'draw'
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                                        }`}
                                     >
                                         Draw
                                     </button>
@@ -3426,10 +3461,11 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
 
                                             <button
                                                 onClick={() => setActiveOverlayControl(activeOverlayControl === 'position' ? null : 'position')}
-                                                className={`w-full px-2 py-1 rounded text-left flex items-center justify-between ${activeOverlayControl === 'position'
-                                                    ? 'bg-blue-600 text-white'
-                                                    : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
-                                                    }`}
+                                                className={`w-full px-2 py-1 rounded text-left flex items-center justify-between ${
+                                                    activeOverlayControl === 'position'
+                                                        ? 'bg-blue-600 text-white'
+                                                        : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                                                }`}
                                             >
                                                 <span>Position</span>
                                                 <span className="text-[9px]">X:{electricalOverlay.x} Y:{electricalOverlay.y}</span>
@@ -3437,10 +3473,11 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
 
                                             <button
                                                 onClick={() => setActiveOverlayControl(activeOverlayControl === 'rotation' ? null : 'rotation')}
-                                                className={`w-full px-2 py-1 rounded text-left flex items-center justify-between ${activeOverlayControl === 'rotation'
-                                                    ? 'bg-blue-600 text-white'
-                                                    : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
-                                                    }`}
+                                                className={`w-full px-2 py-1 rounded text-left flex items-center justify-between ${
+                                                    activeOverlayControl === 'rotation'
+                                                        ? 'bg-blue-600 text-white'
+                                                        : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                                                }`}
                                             >
                                                 <span>Rotation</span>
                                                 <span className="text-[9px]">{electricalOverlay.rotation.toFixed(1)}°</span>
@@ -3448,10 +3485,11 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
 
                                             <button
                                                 onClick={() => setActiveOverlayControl(activeOverlayControl === 'scale' ? null : 'scale')}
-                                                className={`w-full px-2 py-1 rounded text-left flex items-center justify-between ${activeOverlayControl === 'scale'
-                                                    ? 'bg-blue-600 text-white'
-                                                    : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
-                                                    }`}
+                                                className={`w-full px-2 py-1 rounded text-left flex items-center justify-between ${
+                                                    activeOverlayControl === 'scale'
+                                                        ? 'bg-blue-600 text-white'
+                                                        : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                                                }`}
                                             >
                                                 <span>Scale</span>
                                                 <span className="text-[9px]">{electricalOverlay.scale.toFixed(3)}x</span>
@@ -3512,8 +3550,149 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
                 </div>
             )}
 
-            {/* OLD: Unified Magnified Cursor - Disabled in favor of canvas-based cursor below */}
-            {/* This old implementation used FloorPlanLayers with CSS transforms, which had rendering bugs */}
+            {/* Unified Magnified Cursor - Configuration-driven approach */}
+            {(() => {
+                if (!mousePos || !isMouseOverFloorPlan) return null;
+
+                // Cursor configuration registry - each mode defines its own behavior
+                const cursorConfigs = [
+                    {
+                        id: 'scale',
+                        shouldShow: () => activeTool === 'scale' && scalePoints.length < 2,
+                        mode: 'scale' as const,
+                        renderOverlay: () => null,
+                    },
+                    {
+                        id: 'measure',
+                        shouldShow: () => activeTool === 'measure' && measurePoints.length < 2,
+                        mode: 'measure' as const,
+                        renderOverlay: () => null,
+                    },
+                    {
+                        id: 'topology',
+                        shouldShow: () => activeTool === 'topology' && !routingMode && !draggingDeviceId,
+                        mode: 'room' as const,
+                        renderOverlay: () => {
+                            const coords = containerPosToImageCoords(mousePos.x, mousePos.y);
+                            const roomInfo = detectRoomForPoint(coords);
+                            return (
+                                <>
+                                    {daliDevices.map(device => renderDeviceIcon(device.deviceType, device.x, device.y, device.id === selectedDeviceId))}
+                                    {rooms.filter(r => r.visible).map(room => {
+                                        const pathStr = room.path.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
+                                        return <g key={room.id}><path d={pathStr} fill="none" stroke="#3b82f6" strokeWidth={1} strokeDasharray="3,3" opacity={0.3} /></g>;
+                                    })}
+                                    <g opacity={roomInfo ? 0.7 : 0.3}>
+                                        {renderDeviceIcon(selectedDeviceType, coords.x, coords.y, false)}
+                                    </g>
+                                </>
+                            );
+                        },
+                    },
+                    {
+                        id: 'mask',
+                        shouldShow: () => maskEditingActive && maskTool === 'draw',
+                        mode: 'mask' as const,
+                        renderOverlay: () => {
+                            const coords = containerPosToImageCoords(mousePos.x, mousePos.y);
+                            return (
+                                <>
+                                    {layers.rooms.visible && rooms.filter(r => r.visible).map(room => {
+                                        const pathStr = room.path.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
+                                        return <g key={room.id}><path d={pathStr} fill="none" stroke="#3b82f6" strokeWidth={1} strokeDasharray="3,3" opacity={0.5} /></g>;
+                                    })}
+                                    {overlayMasks.map(mask => (
+                                        <g key={mask.id}>
+                                            <rect
+                                                x={mask.x - mask.width / 2} y={mask.y - mask.height / 2}
+                                                width={mask.width} height={mask.height}
+                                                fill="black" opacity={0.3} stroke="#ffffff" strokeWidth={1} strokeDasharray="2,2"
+                                                transform={`rotate(${mask.rotation}, ${mask.x}, ${mask.y})`}
+                                            />
+                                        </g>
+                                    ))}
+                                    <circle cx={coords.x} cy={coords.y} r={8} fill="none" stroke="#22c55e" strokeWidth={2} />
+                                    <circle cx={coords.x} cy={coords.y} r={4} fill="#22c55e" opacity={0.7} />
+                                </>
+                            );
+                        },
+                    },
+                    {
+                        id: 'room',
+                        shouldShow: () => roomDrawingActive && roomDrawing !== null && !roomPreviewFillColor,
+                        mode: 'room' as const,
+                        renderOverlay: () => {
+                            const coords = containerPosToImageCoords(mousePos.x, mousePos.y);
+                            const placementCoords = snapPoint || coords;
+                            return (
+                                <>
+                                    {rooms.filter(r => r.visible).map(room => {
+                                        const pathStr = room.path.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
+                                        return (
+                                            <g key={room.id}>
+                                                <path d={pathStr} fill="none" stroke="#3b82f6" strokeWidth={1} strokeDasharray="3,3" opacity={0.5} />
+                                                {room.path.map((point, idx) => (
+                                                    <circle key={idx} cx={point.x} cy={point.y} r={3} fill="#fbbf24" stroke="#ffffff" strokeWidth={1} />
+                                                ))}
+                                            </g>
+                                        );
+                                    })}
+                                    {roomDrawing.length > 0 && (
+                                        <>
+                                            <polyline points={roomDrawing.map(p => `${p.x},${p.y}`).join(' ')} fill="none" stroke="#22c55e" strokeWidth={2} />
+                                            {roomDrawing.map((point, i) => (
+                                                <circle key={i} cx={point.x} cy={point.y} r={i === 0 ? 4 : 2.5} fill={i === 0 ? '#22c55e' : '#3b82f6'} stroke="#ffffff" strokeWidth={1} />
+                                            ))}
+                                        </>
+                                    )}
+                                    <circle cx={placementCoords.x} cy={placementCoords.y} r={8} fill="none" stroke={snapPoint ? (snapPoint.type === 'vertex' ? '#fbbf24' : '#60a5fa') : '#22c55e'} strokeWidth={2} />
+                                    <circle cx={placementCoords.x} cy={placementCoords.y} r={4} fill={snapPoint ? (snapPoint.type === 'vertex' ? '#fbbf24' : '#60a5fa') : '#22c55e'} opacity={0.7} />
+                                </>
+                            );
+                        },
+                    },
+                ];
+
+                // Find active configuration
+                const activeConfig = cursorConfigs.find(config => config.shouldShow());
+                if (!activeConfig) return null;
+
+                // Render cursor with active config
+                // Build layer configuration for composite rendering
+                const cursorLayers = {
+                    base: {
+                        visible: layers.base.visible,
+                        opacity: layers.base.opacity,
+                        imageUrl: CLEAN_IMAGE,
+                    },
+                    electrical: {
+                        visible: layers.electrical.visible,
+                        opacity: electricalOverlay.opacity, // Already in 0-1 range
+                        imageUrl: ELECTRICAL_IMAGE,
+                        transform: {
+                            x: electricalOverlay.x,
+                            y: electricalOverlay.y,
+                            scale: electricalOverlay.scale,
+                            rotation: electricalOverlay.rotation,
+                        },
+                    },
+                    masks: masksVisible ? overlayMasks : [],
+                };
+
+                return (
+                    <MagnifiedCursor
+                        mousePos={mousePos}
+                        containerRef={containerRef}
+                        imgRef={imgRef}
+                        layers={cursorLayers}
+                        isSpacePressed={isSpacePressed}
+                        mode={activeConfig.mode}
+                        containerPosToImageCoords={containerPosToImageCoords}
+                    >
+                        {activeConfig.renderOverlay()}
+                    </MagnifiedCursor>
+                );
+            })()}
 
             {/* Context Input - Bottom Center (When Needed) */}
             {scalePoints.length === 2 && (
@@ -3554,8 +3733,9 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
             {/* Main Floor Plan View */}
             <div
                 ref={containerRef}
-                className={`flex-1 relative overflow-hidden bg-black ${((activeTool === 'scale' && scalePoints.length < 2) || (activeTool === 'measure' && measurePoints.length < 2) || (activeTool === 'topology') || (maskEditingActive && maskTool === 'draw') || (roomDrawingActive && roomDrawing !== null && !roomPreviewFillColor)) ? 'cursor-none' : (isPanning ? 'cursor-grabbing' : 'cursor-grab')
-                    }`}
+                className={`flex-1 relative overflow-hidden bg-black ${
+                    ((activeTool === 'scale' && scalePoints.length < 2) || (activeTool === 'measure' && measurePoints.length < 2) || (activeTool === 'topology') || (maskEditingActive && maskTool === 'draw') || (roomDrawingActive && roomDrawing !== null && !roomPreviewFillColor)) ? 'cursor-none' : (isPanning ? 'cursor-grabbing' : 'cursor-grab')
+                }`}
                 onWheel={handleWheel}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
@@ -3579,26 +3759,577 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
                         position: 'relative',
                     }}
                 >
+                    {/* DEBUG: Zoomed view using FloorPlanLayers */}
+                    {debugZoomMode && imgRef.current && containerRef.current && (() => {
+                        // SIMPLIFIED: Just show the entire image for now to test rendering
+                        const container = containerRef.current;
+                        const img = imgRef.current;
 
-                    {/* Main view - all layers rendered via shared FloorPlanContent component */}
-                    <FloorPlanContent
-                        imgRef={imgRef}
-                        layers={layers}
-                        baseImageUrl={CLEAN_IMAGE}
-                        electricalImageUrl={ELECTRICAL_IMAGE}
-                        overlayMasks={overlayMasks}
-                        masksVisible={masksVisible}
-                        rooms={rooms}
-                        daliDevices={daliDevices}
-                        electricalOverlay={electricalOverlay}
-                        naturalWidth={imgRef.current?.naturalWidth}
-                        naturalHeight={imgRef.current?.naturalHeight}
-                        renderDeviceIcon={renderDeviceIcon}
-                        selectedDeviceId={selectedDeviceId}
-                        routingPath={routingPath}
-                        activeTool={activeTool}
-                        onImageLoad={handleImageLoad}
-                    />
+                        if (!container || !img || !img.naturalWidth || !img.naturalHeight) {
+                            return null;
+                        }
+
+                        const containerWidth = container.clientWidth;
+                        const containerHeight = container.clientHeight;
+
+                        const naturalWidth = img.naturalWidth;
+                        const naturalHeight = img.naturalHeight;
+
+                        // Show full image centered
+                        const debugViewportWidth = naturalWidth / debugZoomFactor;
+                        const debugViewportHeight = naturalHeight / debugZoomFactor;
+                        const debugViewportX = (naturalWidth - debugViewportWidth) / 2;
+                        const debugViewportY = (naturalHeight - debugViewportHeight) / 2;
+
+                        return (
+                            <div
+                                className="absolute inset-0 bg-slate-900 z-50"
+                                style={{ pointerEvents: 'none' }}
+                            >
+                                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-red-600 text-white px-6 py-3 rounded-lg text-xl font-bold shadow-lg">
+                                    🔍 DEBUG MODE - Zoom: {debugZoomFactor.toFixed(1)}x
+                                </div>
+                                <FloorPlanLayers
+                                    viewport={{
+                                        x: debugViewportX,
+                                        y: debugViewportY,
+                                        width: debugViewportWidth,
+                                        height: debugViewportHeight,
+                                    }}
+                                    containerSize={{
+                                        width: containerWidth,
+                                        height: containerHeight,
+                                    }}
+                                    layers={{
+                                        base: { visible: layers.base.visible, opacity: layers.base.opacity },
+                                        electrical: { visible: layers.electrical.visible },
+                                    }}
+                                    baseImageUrl={CLEAN_IMAGE}
+                                    electricalImageUrl={ELECTRICAL_IMAGE}
+                                    masks={masksVisible ? overlayMasks : []}
+                                    masksVisible={masksVisible}
+                                    electricalTransform={{
+                                        x: electricalOverlay.x,
+                                        y: electricalOverlay.y,
+                                        scale: electricalOverlay.scale,
+                                        rotation: electricalOverlay.rotation,
+                                        opacity: electricalOverlay.opacity,
+                                    }}
+                                    naturalWidth={imgRef.current.naturalWidth}
+                                    naturalHeight={imgRef.current.naturalHeight}
+                                />
+                            </div>
+                        );
+                    })()}
+
+                    {/* Normal view - Keep mounted for imgRef but hide when debug mode is on */}
+                    <div style={{
+                        opacity: debugZoomMode ? 0 : 1,
+                        pointerEvents: debugZoomMode ? 'none' : 'auto',
+                        position: 'absolute',
+                        inset: 0,
+                    }}>
+                    {/* Base Floor Plan Layer */}
+                    {layers.base.visible && (
+                        <img
+                            ref={imgRef}
+                            src={CLEAN_IMAGE}
+                            alt="Floor Plan (Clean)"
+                            draggable={false}
+                            className="block pointer-events-none select-none absolute inset-0"
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'contain',
+                                opacity: layers.base.opacity / 100,
+                            }}
+                            onLoad={handleImageLoad}
+                        />
+                    )}
+
+                    {/* Base Layer Overlay Masks */}
+                    {layers.base.visible && masksVisible && imgRef.current && (
+                        <svg
+                            className="absolute inset-0"
+                            viewBox={`0 0 ${imgRef.current.naturalWidth} ${imgRef.current.naturalHeight}`}
+                            preserveAspectRatio="xMidYMid meet"
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                pointerEvents: 'none',
+                            }}
+                        >
+                            {/* Render existing masks */}
+                            {overlayMasks.filter(m => m.visible).map(mask => (
+                                <rect
+                                    key={mask.id}
+                                    x={mask.x - mask.width / 2}
+                                    y={mask.y - mask.height / 2}
+                                    width={mask.width}
+                                    height={mask.height}
+                                    fill={mask.color}
+                                    fillOpacity={0.95}
+                                    stroke={maskTool === 'select' && maskEditingActive ? (selectedMaskId === mask.id ? '#3b82f6' : '#666') : 'none'}
+                                    strokeWidth={maskTool === 'select' && maskEditingActive ? (selectedMaskId === mask.id ? 4 : 2) : 0}
+                                    transform={`rotate(${mask.rotation}, ${mask.x}, ${mask.y})`}
+                                    style={{
+                                        pointerEvents: maskTool === 'select' && maskEditingActive ? 'auto' : 'none',
+                                        cursor: maskTool === 'select' && maskEditingActive ? 'pointer' : 'default'
+                                    }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (maskTool === 'select' && maskEditingActive) {
+                                            setSelectedMaskId(mask.id);
+                                        }
+                                    }}
+                                />
+                            ))}
+
+                            {/* Preview mask while drawing */}
+                            {maskDrawing && mousePos && (() => {
+                                const endCoords = containerPosToImageCoords(mousePos.x, mousePos.y);
+                                const width = Math.abs(endCoords.x - maskDrawing.startX);
+                                const height = Math.abs(endCoords.y - maskDrawing.startY);
+                                const centerX = (maskDrawing.startX + endCoords.x) / 2;
+                                const centerY = (maskDrawing.startY + endCoords.y) / 2;
+
+                                return (
+                                    <rect
+                                        x={centerX - width / 2}
+                                        y={centerY - height / 2}
+                                        width={width}
+                                        height={height}
+                                        fill="#ffffff"
+                                        fillOpacity={0.5}
+                                        stroke="#3b82f6"
+                                        strokeWidth={2}
+                                        strokeDasharray="5,5"
+                                    />
+                                );
+                            })()}
+
+                            {/* Corner handles for selected mask */}
+                            {selectedMaskId && (() => {
+                                const selectedMask = overlayMasks.find(m => m.id === selectedMaskId);
+                                if (!selectedMask) return null;
+
+                                const { x: cx, y: cy, width, height, rotation } = selectedMask;
+                                const rad = (rotation * Math.PI) / 180;
+                                const cos = Math.cos(rad);
+                                const sin = Math.sin(rad);
+                                const handleSize = 12;
+
+                                // Calculate rotated corner positions
+                                const corners = [
+                                    { dx: -width / 2, dy: -height / 2, corner: 'nw' }, // Top-left
+                                    { dx: width / 2, dy: -height / 2, corner: 'ne' },  // Top-right
+                                    { dx: -width / 2, dy: height / 2, corner: 'sw' },  // Bottom-left
+                                    { dx: width / 2, dy: height / 2, corner: 'se' },   // Bottom-right
+                                ].map(({ dx, dy, corner }) => {
+                                    const rotatedX = dx * cos - dy * sin;
+                                    const rotatedY = dx * sin + dy * cos;
+                                    return {
+                                        x: cx + rotatedX,
+                                        y: cy + rotatedY,
+                                        corner,
+                                    };
+                                });
+
+                                return (
+                                    <>
+                                        {corners.map(({ x, y, corner }) => (
+                                            <circle
+                                                key={corner}
+                                                cx={x}
+                                                cy={y}
+                                                r={handleSize}
+                                                fill="#3b82f6"
+                                                stroke="#ffffff"
+                                                strokeWidth={2}
+                                                style={{
+                                                    pointerEvents: 'auto',
+                                                    cursor: 'nwse-resize'
+                                                }}
+                                                onPointerDown={(e) => {
+                                                    e.stopPropagation();
+                                                    e.preventDefault();
+                                                    setDragMode('resize');
+                                                    setDragCorner(corner as 'nw' | 'ne' | 'sw' | 'se');
+                                                    maskDragRef.current = {
+                                                        startMouseX: e.clientX,
+                                                        startMouseY: e.clientY,
+                                                        initialMask: { ...selectedMask }
+                                                    };
+                                                }}
+                                            />
+                                        ))}
+
+                                        {/* Center handle for moving */}
+                                        <circle
+                                            cx={cx}
+                                            cy={cy}
+                                            r={handleSize * 0.8}
+                                            fill="#22c55e"
+                                            stroke="#ffffff"
+                                            strokeWidth={2}
+                                            style={{
+                                                pointerEvents: 'auto',
+                                                cursor: 'move'
+                                            }}
+                                            onPointerDown={(e) => {
+                                                e.stopPropagation();
+                                                e.preventDefault();
+                                                setDragMode('move');
+                                                maskDragRef.current = {
+                                                    startMouseX: e.clientX,
+                                                    startMouseY: e.clientY,
+                                                    initialMask: { ...selectedMask }
+                                                };
+                                            }}
+                                        />
+                                    </>
+                                );
+                            })()}
+                        </svg>
+                    )}
+
+                    {/* Room Boundaries and Labels */}
+                    {layers.rooms.visible && imgRef.current && (
+                        <svg
+                            className="absolute inset-0"
+                            viewBox={`0 0 ${imgRef.current.naturalWidth} ${imgRef.current.naturalHeight}`}
+                            preserveAspectRatio="xMidYMid meet"
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                pointerEvents: 'none',
+                            }}
+                        >
+                            {/* Drop shadow filter for room lines */}
+                            <defs>
+                                <filter id="roomLineShadow" x="-50%" y="-50%" width="200%" height="200%">
+                                    <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+                                    <feOffset dx="0" dy="0" result="offsetblur"/>
+                                    <feFlood floodColor="#000000" floodOpacity="0.9"/>
+                                    <feComposite in2="offsetblur" operator="in"/>
+                                    <feMerge>
+                                        <feMergeNode/>
+                                        <feMergeNode in="SourceGraphic"/>
+                                    </feMerge>
+                                </filter>
+                            </defs>
+
+                            {/* Render completed rooms */}
+                            {rooms.filter(r => r.visible).map(room => {
+                                const pathStr = room.path.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
+                                const isSelected = room.id === selectedRoomId;
+                                return (
+                                    <g key={room.id}>
+                                        <path
+                                            d={pathStr}
+                                            fill={room.fillColor}
+                                            stroke={isSelected ? "#22c55e" : "#3b82f6"}
+                                            strokeWidth={isSelected ? 4 : 2}
+                                            strokeDasharray={isSelected ? "none" : "5,5"}
+                                            filter="url(#roomLineShadow)"
+                                        />
+                                        {roomLabelsVisible && (
+                                            <g>
+                                                {/* Text background stroke for visibility */}
+                                                <text
+                                                    x={room.labelX}
+                                                    y={room.labelY}
+                                                    fontSize="32"
+                                                    fontWeight="bold"
+                                                    fontFamily="Arial, sans-serif"
+                                                    textAnchor="middle"
+                                                    dominantBaseline="middle"
+                                                    transform={`rotate(${room.labelRotation}, ${room.labelX}, ${room.labelY})`}
+                                                    fill="none"
+                                                    stroke="#000000"
+                                                    strokeWidth="6"
+                                                    strokeLinejoin="round"
+                                                    style={{
+                                                        pointerEvents: 'none',
+                                                    }}
+                                                >
+                                                    {room.name}
+                                                </text>
+                                                {/* Text foreground */}
+                                                <text
+                                                    x={room.labelX}
+                                                    y={room.labelY}
+                                                    fill="#3b82f6"
+                                                    fontSize="32"
+                                                    fontWeight="bold"
+                                                    fontFamily="Arial, sans-serif"
+                                                    textAnchor="middle"
+                                                    dominantBaseline="middle"
+                                                    transform={`rotate(${room.labelRotation}, ${room.labelX}, ${room.labelY})`}
+                                                    style={{
+                                                        pointerEvents: 'auto',
+                                                        cursor: 'pointer',
+                                                    }}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedRoomId(room.id);
+                                                    }}
+                                                    onDoubleClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setEditingRoomId(room.id);
+                                                        setRoomNameInput(room.name);
+                                                        setShowRoomNameModal(true);
+                                                    }}
+                                                >
+                                                    {room.name}
+                                                </text>
+                                            </g>
+                                        )}
+                                        {/* Corner handles when selected */}
+                                        {isSelected && roomDrawing === null && room.path.map((point, idx) => (
+                                            <circle
+                                                key={idx}
+                                                cx={point.x}
+                                                cy={point.y}
+                                                r={8}
+                                                fill="#22c55e"
+                                                stroke="#ffffff"
+                                                strokeWidth={2}
+                                                style={{ pointerEvents: 'auto', cursor: 'move' }}
+                                                onPointerDown={(e) => {
+                                                    e.stopPropagation();
+                                                    setDraggingCorner({ roomId: room.id, pointIndex: idx });
+                                                }}
+                                            />
+                                        ))}
+                                        {/* Vertex snap indicators when in drawing mode */}
+                                        {roomDrawing !== null && room.path.map((point, idx) => (
+                                            <circle
+                                                key={`snap-${idx}`}
+                                                cx={point.x}
+                                                cy={point.y}
+                                                r={6}
+                                                fill="#fbbf24"
+                                                stroke="#ffffff"
+                                                strokeWidth={2}
+                                                style={{ pointerEvents: 'none' }}
+                                            />
+                                        ))}
+                                    </g>
+                                );
+                            })}
+
+                            {/* Render cable connections between devices */}
+                            {(layers.dali.visible || activeTool === 'topology') && daliDevices.map(device => {
+                                return device.connections.map(connectedId => {
+                                    const connectedDevice = daliDevices.find(d => d.id === connectedId);
+                                    if (!connectedDevice) return null;
+
+                                    // Only render each connection once (from device with lower ID to avoid duplicates)
+                                    if (device.id > connectedId) return null;
+
+                                    const cableLength = calculateCableLength(device, connectedDevice);
+                                    const midX = (device.x + connectedDevice.x) / 2;
+                                    const midY = (device.y + connectedDevice.y) / 2;
+
+                                    // Highlight if in active routing path
+                                    const isInPath = routingPath.includes(device.id) && routingPath.includes(connectedId);
+
+                                    return (
+                                        <g key={`cable-${device.id}-${connectedId}`}>
+                                            {/* Cable line */}
+                                            <line
+                                                x1={device.x}
+                                                y1={device.y}
+                                                x2={connectedDevice.x}
+                                                y2={connectedDevice.y}
+                                                stroke={isInPath ? '#22c55e' : '#60a5fa'}
+                                                strokeWidth={isInPath ? 3 : 2}
+                                                strokeDasharray={isInPath ? 'none' : '5,5'}
+                                                opacity={0.7}
+                                            />
+                                            {/* Cable length label */}
+                                            {scaleFactor && (
+                                                <text
+                                                    x={midX}
+                                                    y={midY}
+                                                    fill="#ffffff"
+                                                    fontSize="12"
+                                                    fontWeight="bold"
+                                                    textAnchor="middle"
+                                                    dominantBaseline="middle"
+                                                    style={{ pointerEvents: 'none' }}
+                                                >
+                                                    <tspan fill="#000" stroke="#000" strokeWidth="3">{cableLength.toFixed(1)}ft</tspan>
+                                                    <tspan fill="#fff" x={midX} dy="0">{cableLength.toFixed(1)}ft</tspan>
+                                                </text>
+                                            )}
+                                        </g>
+                                    );
+                                });
+                            })}
+
+                            {/* Render active routing path (preview) */}
+                            {routingMode && routingPath.length > 1 && routingPath.map((deviceId, i) => {
+                                if (i === 0) return null;
+                                const device1 = daliDevices.find(d => d.id === routingPath[i - 1]);
+                                const device2 = daliDevices.find(d => d.id === deviceId);
+                                if (!device1 || !device2) return null;
+
+                                return (
+                                    <line
+                                        key={`routing-${i}`}
+                                        x1={device1.x}
+                                        y1={device1.y}
+                                        x2={device2.x}
+                                        y2={device2.y}
+                                        stroke="#22c55e"
+                                        strokeWidth={3}
+                                        opacity={0.9}
+                                    />
+                                );
+                            })}
+
+                            {/* Render DALI devices */}
+                            {(layers.dali.visible || activeTool === 'topology') && daliDevices.map(device => {
+                                const isSelected = device.id === selectedDeviceId;
+                                const isInRoutingPath = routingPath.includes(device.id);
+                                return (
+                                    <g key={device.id}>
+                                        {renderDeviceIcon(device.deviceType, device.x, device.y, isSelected || isInRoutingPath)}
+                                        {/* Show device number in routing path */}
+                                        {isInRoutingPath && (
+                                            <text
+                                                x={device.x}
+                                                y={device.y - 15}
+                                                fill="#22c55e"
+                                                fontSize="14"
+                                                fontWeight="bold"
+                                                textAnchor="middle"
+                                                style={{ pointerEvents: 'none' }}
+                                            >
+                                                {routingPath.indexOf(device.id) + 1}
+                                            </text>
+                                        )}
+                                    </g>
+                                );
+                            })}
+
+                            {/* Preview room while drawing */}
+                            {roomDrawing && roomDrawing.length > 0 && (
+                                <>
+                                    {/* Show filled polygon when room is closed */}
+                                    {roomPreviewFillColor && roomDrawing.length >= 3 && (
+                                        <polygon
+                                            points={roomDrawing.map(p => `${p.x},${p.y}`).join(' ')}
+                                            fill={roomPreviewFillColor}
+                                            stroke="#22c55e"
+                                            strokeWidth={2}
+                                            filter="url(#roomLineShadow)"
+                                        />
+                                    )}
+                                    {/* Show outline when room is not yet closed */}
+                                    {!roomPreviewFillColor && (
+                                        <polyline
+                                            points={roomDrawing.map(p => `${p.x},${p.y}`).join(' ')}
+                                            fill="none"
+                                            stroke="#22c55e"
+                                            strokeWidth={2}
+                                            filter="url(#roomLineShadow)"
+                                        />
+                                    )}
+                                    {roomDrawing.map((point, i) => (
+                                        <circle
+                                            key={i}
+                                            cx={point.x}
+                                            cy={point.y}
+                                            r={i === 0 ? 8 : 5}
+                                            fill={i === 0 ? '#22c55e' : '#3b82f6'}
+                                            stroke="#ffffff"
+                                            strokeWidth={2}
+                                            filter="url(#roomLineShadow)"
+                                        />
+                                    ))}
+                                    {/* Preview line from last point to cursor - only show when room not closed */}
+                                    {mousePos && !roomPreviewFillColor && (() => {
+                                        const lastPoint = roomDrawing[roomDrawing.length - 1];
+                                        let mouseCoords = containerPosToImageCoords(mousePos.x, mousePos.y);
+
+                                        // Use snap point if available
+                                        if (snapPoint) {
+                                            mouseCoords = { x: snapPoint.x, y: snapPoint.y };
+                                        }
+
+                                        return (
+                                            <line
+                                                x1={lastPoint.x}
+                                                y1={lastPoint.y}
+                                                x2={mouseCoords.x}
+                                                y2={mouseCoords.y}
+                                                stroke="#22c55e"
+                                                strokeWidth={2}
+                                                strokeDasharray="3,3"
+                                                filter="url(#roomLineShadow)"
+                                            />
+                                        );
+                                    })()}
+                                </>
+                            )}
+
+                            {/* Snap point visual feedback - only show when room not closed */}
+                            {snapPoint && roomDrawingActive && roomDrawing !== null && !roomPreviewFillColor && (
+                                <>
+                                    {/* Crosshair indicator */}
+                                    <circle
+                                        cx={snapPoint.x}
+                                        cy={snapPoint.y}
+                                        r={10}
+                                        fill="none"
+                                        stroke={snapPoint.type === 'vertex' ? '#fbbf24' : '#60a5fa'}
+                                        strokeWidth={2}
+                                    />
+                                    <circle
+                                        cx={snapPoint.x}
+                                        cy={snapPoint.y}
+                                        r={6}
+                                        fill="none"
+                                        stroke={snapPoint.type === 'vertex' ? '#fbbf24' : '#60a5fa'}
+                                        strokeWidth={2}
+                                    />
+                                    {/* Center dot */}
+                                    <circle
+                                        cx={snapPoint.x}
+                                        cy={snapPoint.y}
+                                        r={3}
+                                        fill={snapPoint.type === 'vertex' ? '#fbbf24' : '#60a5fa'}
+                                    />
+                                </>
+                            )}
+                        </svg>
+                    )}
+
+                    {/* Electrical Overlay Layer */}
+                    {layers.electrical.visible && (
+                        <img
+                            src={ELECTRICAL_IMAGE}
+                            alt="Electrical Plan"
+                            draggable={false}
+                            className="block pointer-events-none select-none absolute inset-0"
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'contain',
+                                opacity: electricalOverlay.opacity,
+                                transform: `
+                                    translate(${electricalOverlay.x}px, ${electricalOverlay.y}px)
+                                    scale(${electricalOverlay.scale})
+                                    rotate(${electricalOverlay.rotation}deg)
+                                `,
+                                transformOrigin: 'center',
+                                transition: electricalOverlay.locked ? 'none' : 'transform 0.1s ease-out',
+                            }}
+                        />
+                    )}
 
                     {/* Scale Tool Overlay */}
                     {activeTool === 'scale' && scalePoints.length > 0 && imgRef.current && (
@@ -3613,7 +4344,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
                         >
                             <defs>
                                 <filter id="line-shadow" x="-50%" y="-50%" width="200%" height="200%">
-                                    <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="black" floodOpacity="0.8" />
+                                    <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="black" floodOpacity="0.8"/>
                                 </filter>
                             </defs>
 
@@ -3677,7 +4408,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
                         >
                             <defs>
                                 <filter id="measure-shadow" x="-50%" y="-50%" width="200%" height="200%">
-                                    <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="black" floodOpacity="0.8" />
+                                    <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="black" floodOpacity="0.8"/>
                                 </filter>
                             </defs>
 
@@ -3775,210 +4506,11 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
                             ))}
                         </svg>
                     )}
+                    </div>
+                    {/* End of normal view */}
 
                 </div>
             </div>
-
-            {/* DEBUG: Full-screen FloorPlanContent overlay for comparison */}
-            {showDebugComparison && containerRef.current && (
-                <div className="absolute inset-0 z-40 bg-white">
-                    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-yellow-600 text-white px-6 py-3 rounded-lg text-xl font-bold shadow-lg">
-                        ⚠️ DEBUG: FloorPlanContent Rendering (Toggle off to see normal view)
-                    </div>
-                    <div
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
-                            transformOrigin: 'center center',
-                            position: 'relative',
-                        }}
-                    >
-                        <FloorPlanContent
-                            imgRef={imgRef}
-                            layers={layers}
-                            baseImageUrl={CLEAN_IMAGE}
-                            electricalImageUrl={ELECTRICAL_IMAGE}
-                            overlayMasks={overlayMasks}
-                            masksVisible={masksVisible}
-                            rooms={rooms}
-                            daliDevices={daliDevices}
-                            electricalOverlay={electricalOverlay}
-                            naturalWidth={imgRef.current?.naturalWidth}
-                            naturalHeight={imgRef.current?.naturalHeight}
-                            renderDeviceIcon={renderDeviceIcon}
-                            selectedDeviceId={selectedDeviceId}
-                            routingPath={routingPath}
-                            activeTool={activeTool}
-                        />
-                    </div>
-                </div>
-            )}
-
-            {/* Magnified Cursor - Canvas sampling based (supports all modes) */}
-            {(() => {
-                if (!mousePos || !isMouseOverFloorPlan) return null;
-
-                // Determine which mode should show cursor
-                const shouldShowCursor =
-                    (activeTool === 'scale' && scalePoints.length < 2) ||
-                    (activeTool === 'measure' && measurePoints.length < 2) ||
-                    (activeTool === 'topology' && !routingMode && !draggingDeviceId) ||
-                    (maskEditingActive && maskTool === 'draw') ||
-                    (roomDrawingActive && roomDrawing !== null && !roomPreviewFillColor);
-
-                if (!shouldShowCursor) return null;
-                if (!canvasReady || !canvasRef.current || !imgRef.current || !containerRef.current) return null;
-
-                const CURSOR_SIZE = 200;
-                // Constants for mapping
-                const naturalWidth = imgRef.current.naturalWidth;
-                const naturalHeight = imgRef.current.naturalHeight;
-                const containerRect = containerRef.current.getBoundingClientRect();
-                const containerWidth = containerRect.width;
-                const containerHeight = containerRect.height;
-
-                // Canvas is at full natural resolution (8000×5333 or similar)
-                const canvasWidth = canvasRef.current.width;
-                const canvasHeight = canvasRef.current.height;
-
-                // 1. Get Natural Image Coordinates
-                // containerPosToImageCoords ALREADY handles object-fit logic and returns natural coords
-                const naturalCoords = containerPosToImageCoords(mousePos.x, mousePos.y);
-
-                const naturalX = naturalCoords.x;
-                const naturalY = naturalCoords.y;
-
-                // 2. Calculate scaling factors for Sample Size (Magnification Level)
-                // We still need fitScale to determine how "zoomed out" the image is by default
-                const scaleX = containerWidth / naturalWidth;
-                const scaleY = containerHeight / naturalHeight;
-                const fitScale = Math.min(scaleX, scaleY);
-
-                const drawnWidth = naturalWidth * fitScale;
-                const drawnHeight = naturalHeight * fitScale;
-
-                const offsetX = (containerWidth - drawnWidth) / 2;
-                const offsetY = (containerHeight - drawnHeight) / 2;
-
-                // 3. Calculate sampling region
-                // We want 2x magnification relative to the current SCREEN view.
-                const relativeMagnification = 2;
-                const effectiveMag = Math.max(0.1, transform.scale * relativeMagnification);
-
-                // sampleSize is in NATURAL pixels
-                // If we want 200px on screen to represent 100px on screen (2x),
-                // and 100px on screen = 100 / fitScale / transform.scale NATURAL pixels...
-                // Wait. 
-                // Target: On screen cursor is 200px.
-                // We want it to show content that would cover 100px on screen (2x zoom).
-                // 100px on screen corresponds to:
-                // 100 / transform.scale (viewport pixels)
-                // (100 / transform.scale) / fitScale (natural pixels)
-
-                const screenCoverage = CURSOR_SIZE / relativeMagnification; // 100px
-                const sampleSize = (screenCoverage / transform.scale) / fitScale;
-
-                const halfSample = sampleSize / 2;
-
-                // Sample centered on the natural coordinates
-                // Clamp to valid canvas bounds
-                const sampleX = Math.max(0, Math.min(canvasWidth - sampleSize, naturalX - halfSample));
-                const sampleY = Math.max(0, Math.min(canvasHeight - sampleSize, naturalY - halfSample));
-
-                console.debug('🔍 Cursor coords:', {
-                    mouse: mousePos,
-                    naturalCoords,
-                    fitScale,
-                    offset: { x: offsetX, y: offsetY },
-                    sampleSize,
-                    sample: { x: sampleX, y: sampleY }
-                });
-
-                // Create a temporary canvas for the magnified view
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = CURSOR_SIZE;
-                tempCanvas.height = CURSOR_SIZE;
-                const tempCtx = tempCanvas.getContext('2d');
-                if (!tempCtx) return null;
-
-                // Sample from the main canvas and draw magnified
-                tempCtx.imageSmoothingEnabled = true; // Smooth scaling for better quality
-                tempCtx.drawImage(
-                    canvasRef.current,
-                    sampleX, sampleY, sampleSize, sampleSize,  // Source rect in canvas coords
-                    0, 0, CURSOR_SIZE, CURSOR_SIZE             // Dest rect (magnified)
-                );
-
-                // Convert to data URL for display
-                const dataUrl = tempCanvas.toDataURL();
-
-                // Determine border color and label based on mode
-                let borderColor = '#ef4444'; // red default
-                let modeLabel = '';
-
-                if (activeTool === 'scale') {
-                    borderColor = '#ef4444';
-                    modeLabel = 'SCALE';
-                } else if (activeTool === 'measure') {
-                    borderColor = '#ef4444';
-                    modeLabel = 'MEASURE';
-                } else if (activeTool === 'topology') {
-                    borderColor = '#ef4444';
-                    modeLabel = 'PLACE';
-                } else if (maskEditingActive) {
-                    borderColor = '#ef4444';
-                    modeLabel = 'DRAW';
-                } else if (roomDrawingActive) {
-                    borderColor = '#22c55e';
-                    modeLabel = 'ROOM';
-                }
-
-                return (
-                    <div
-                        className="absolute z-50 pointer-events-none"
-                        style={{
-                            left: mousePos.x - (CURSOR_SIZE / 2),
-                            top: mousePos.y - (CURSOR_SIZE / 2),
-                            width: CURSOR_SIZE,
-                            height: CURSOR_SIZE,
-                            overflow: 'hidden',
-                            border: `3px solid ${borderColor}`,
-                            borderRadius: '8px',
-                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3)',
-                            backgroundColor: '#000',
-                        }}
-                    >
-                        {/* Magnified content from canvas */}
-                        <img
-                            src={dataUrl}
-                            alt="Magnified view"
-                            style={{
-                                width: '100%',
-                                height: '100%',
-                                imageRendering: 'pixelated', // Keep it crisp
-                            }}
-                        />
-
-                        {/* Center crosshair */}
-                        <div
-                            className="absolute w-2 h-2 bg-red-500 rounded-full"
-                            style={{
-                                left: '50%',
-                                top: '50%',
-                                transform: 'translate(-50%, -50%)',
-                            }}
-                        />
-
-                        {/* Mode label */}
-                        {modeLabel && (
-                            <div className="absolute bottom-1 right-1 text-white text-[10px] font-bold bg-black/50 px-1 rounded">
-                                [{modeLabel}]
-                            </div>
-                        )}
-                    </div>
-                );
-            })()}
 
             {/* Room Name Modal - Outside transformed container to avoid zoom scaling */}
             {showRoomNameModal && (
@@ -4292,113 +4824,6 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
                     })()}
                 </div>
             )}
-            {/* DEBUG: Visualize captured canvas */}
-            {/* DEBUG: Visualize captured canvas and coordinates */}
-            {showDebugComparison && (
-                <div className="absolute bottom-20 left-4 z-50 flex flex-col gap-2 pointer-events-none">
-                    <div className="bg-black/80 border border-red-500 p-2 text-red-500 font-mono text-xs">
-                        <div>Mouse: {mousePos?.x.toFixed(0)}, {mousePos?.y.toFixed(0)}</div>
-                        <div>Transform: x={transform.x.toFixed(0)} y={transform.y.toFixed(0)} s={transform.scale.toFixed(2)}</div>
-                        {mousePos && (() => {
-                            const natural = containerPosToImageCoords(mousePos.x, mousePos.y);
-                            const relativeMagnification = 2;
-                            const effectiveMag = Math.max(0.1, transform.scale * relativeMagnification);
-                            const sampleSize = 200 / effectiveMag;
-                            return (
-                                <>
-                                    <div>Natural: {natural.x.toFixed(0)}, {natural.y.toFixed(0)}</div>
-                                    <div>Sample Size: {sampleSize.toFixed(1)}</div>
-                                    <div>Canvas: {canvasRef.current?.width}x{canvasRef.current?.height}</div>
-                                </>
-                            );
-                        })()}
-                    </div>
-                    {canvasRef.current && (
-                        <div className="border-2 border-red-500 bg-black">
-                            <div className="bg-red-500 text-white text-xs px-1">Captured Canvas Debug</div>
-                            <img
-                                src={canvasRef.current.toDataURL()}
-                                style={{ width: '300px', height: 'auto' }}
-                                alt="Debug Capture"
-                            />
-                        </div>
-                    )}
-                </div>
-            )}
-
-
-            {/* Offscreen div for html-to-image capture - renders at FULL natural resolution */}
-            {/* Uses clip-path to hide visually while still rendering for capture */}
-            <div
-                ref={offscreenDivRef}
-                style={{
-                    position: 'fixed',
-                    left: 0,
-                    top: 0,
-                    width: imgRef.current ? imgRef.current.naturalWidth : 8000,
-                    height: imgRef.current ? imgRef.current.naturalHeight : 5333,
-                    opacity: 0,           // Invisible to user
-                    zIndex: -9999,        // Bury it deep
-                    pointerEvents: 'none',
-                }}
-            >
-                {/* Note: We use the SAME imgRef here? No, we should use a separate ref for the offscreen image */}
-                {/* The main 'imgRef' should be bound to the ON-SCREEN image for getBoundingClientRect logic to work */}
-                {/* We create a throwaway ref for the offscreen one if needed, or share if safe, but sharing breaks reference */}
-                {/* FIX: We passed 'imgRef' to both before, causing the race condition. */}
-                {/* Now using 'offscreenImgRef' which is defined */}
-                {imgRef.current && containerRef.current && (() => {
-                    // SCALE THE OVERLAY TRANSLATION
-                    // The user aligns the overlay in SCREEN pixels (e.g. translate 50px).
-                    // This is applied to an image that is scaled by object-fit: contain.
-                    // To replicate this offset on the natural-resolution offscreen image:
-                    // 1. Determine the 'fitScale' (how much the natural image is scaled down to fit screen)
-                    // 2. Multiply translation by (1 / fitScale) to get back to natural pixels.
-
-                    const naturalW = imgRef.current.naturalWidth || 1;
-                    const naturalH = imgRef.current.naturalHeight || 1;
-
-                    // Use getBoundingClientRect for subpixel precision
-                    const rect = containerRef.current.getBoundingClientRect();
-                    const viewportW = rect.width || 1;
-                    const viewportH = rect.height || 1;
-
-                    // Calculate fitScale behavior of object-fit: contain
-                    const scaleX = viewportW / naturalW;
-                    const scaleY = viewportH / naturalH;
-                    const fitScale = Math.min(scaleX, scaleY);
-
-                    // The uniform scaling factor (how many natural pixels = 1 viewport pixel)
-                    const uniformScale = 1 / fitScale;
-
-                    const scaledElectricalOverlay = {
-                        ...electricalOverlay,
-                        x: Math.round(electricalOverlay.x * uniformScale),
-                        y: Math.round(electricalOverlay.y * uniformScale),
-                        // Scale and rotation are relative/invariant, so they stay the same
-                    };
-
-                    return (
-                        <FloorPlanContent
-                            imgRef={offscreenImgRef}
-                            layers={layers}
-                            baseImageUrl={CLEAN_IMAGE}
-                            electricalImageUrl={ELECTRICAL_IMAGE}
-                            overlayMasks={overlayMasks}
-                            masksVisible={masksVisible}
-                            rooms={rooms}
-                            daliDevices={daliDevices}
-                            electricalOverlay={scaledElectricalOverlay}
-                            naturalWidth={naturalW}
-                            naturalHeight={naturalH}
-                            renderDeviceIcon={renderDeviceIcon}
-                            selectedDeviceId={selectedDeviceId}
-                            routingPath={routingPath}
-                            activeTool={activeTool}
-                        />
-                    );
-                })()}
-            </div>
         </div>
     );
 };
