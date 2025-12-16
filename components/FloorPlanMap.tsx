@@ -4,6 +4,7 @@ import ELECTRICAL_IMAGE from '../images/electric-plan-plain-full-clean-2025-12-1
 // Clean plan is primary background; electrical is overlay candidate.
 import { HardwareModule, ModuleType } from '../types';
 import { FloorPlanContent } from './FloorPlanContent';
+import { MagnifiedCursor } from './MagnifiedCursor';
 import { TransformWrapper, TransformComponent, useControls } from "react-zoom-pan-pinch";
 import { MousePointer2, Move, Activity, Layers, Wand2, ScanLine, Trash2, Lock, Unlock, Settings, Eye, EyeOff, Zap } from 'lucide-react';
 import { extractMapSymbols } from '../services/geminiService';
@@ -12,6 +13,10 @@ import { parseDistanceInput, formatDistance, CM_PER_INCH } from '../utils/measur
 import { toPng } from 'html-to-image';
 
 const USE_BASELINE_VIEW = true; // Temporary: isolates minimal pan/zoom for performance baseline.
+
+// Zoom cursor configuration - global constants
+const ZOOM_CURSOR_SIZE = 75;       // Cursor size in pixels
+const ZOOM_MAGNIFICATION = 2;      // Magnification level (2x zoom)
 
 // @ts-ignore
 // Data loaded via runtime fetch
@@ -1469,6 +1474,34 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
     // Scale limits
     const scaleRef = useRef({ min: 0.1, max: 10, step: 0.1, fit: 1 });
 
+    // Single source of truth for when to show zoom cursor
+    const showZoomCursor = useMemo(() =>
+        (activeTool === 'scale' && scalePoints.length < 2) ||
+        (activeTool === 'measure' && measurePoints.length < 2) ||
+        (activeTool === 'topology' && !routingMode && !draggingDeviceId) ||
+        (maskEditingActive && maskTool === 'draw') ||
+        (roomDrawingActive && roomDrawing !== null && !roomPreviewFillColor),
+        [activeTool, scalePoints.length, measurePoints.length, routingMode,
+         draggingDeviceId, maskEditingActive, maskTool, roomDrawingActive,
+         roomDrawing, roomPreviewFillColor]
+    );
+
+    // Determine cursor mode label based on active tool
+    const cursorModeLabel = useMemo(() => {
+        if (activeTool === 'scale') return 'SCALE';
+        if (activeTool === 'measure') return 'MEASURE';
+        if (activeTool === 'topology') return 'PLACE';
+        if (maskEditingActive) return 'DRAW';
+        if (roomDrawingActive) return 'ROOM';
+        return '';
+    }, [activeTool, maskEditingActive, roomDrawingActive]);
+
+    // Determine cursor border color
+    const cursorBorderColor = useMemo(() => {
+        if (roomDrawingActive) return '#22c55e'; // Green for room drawing
+        return '#ef4444'; // Red for all other modes
+    }, [roomDrawingActive]);
+
     // Persist all UI state to localStorage
     useEffect(() => {
         localStorage.setItem('floorplan-transform', JSON.stringify(transform));
@@ -1663,6 +1696,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
     // Keyboard event handlers for Space, ESC, and Arrow keys
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+
             // Don't capture keys if user is typing in an input field
             const isTyping = (e.target as HTMLElement)?.tagName === 'INPUT';
 
@@ -1814,10 +1848,17 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
                 }
             }
 
-            if (e.code === 'Space' && (activeTool === 'scale' || activeTool === 'measure' || activeTool === 'topology' || maskEditingActive || roomDrawingActive) && !isTyping) {
+            // Device deletion (Delete/Backspace key)
+            if (selectedDeviceId && !isTyping && (e.code === 'Delete' || e.code === 'Backspace')) {
                 e.preventDefault();
-                setIsSpacePressed(true);
+                setDaliDevices(prev => prev.filter(device => device.id !== selectedDeviceId));
+                setSelectedDeviceId(null);
+                setDraggingDeviceId(null);
+                showHudMessage('Device deleted', 2000);
+                return;
             }
+
+            // Note: Spacebar handling is now managed by MagnifiedCursor component
 
             // Enter key during room drawing - auto-complete room by closing to first point
             if (e.code === 'Enter' && roomDrawingActive && roomDrawing && roomDrawing.length >= 3 && !isTyping) {
@@ -1925,18 +1966,17 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
             }
         };
         const handleKeyUp = (e: KeyboardEvent) => {
-            if (e.code === 'Space') {
-                e.preventDefault();
-                setIsSpacePressed(false);
-            }
+            // Spacebar keyup is now handled by MagnifiedCursor component
         };
+
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
+
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
         };
-    }, [activeTool, activeOverlayControl, electricalOverlay.locked, selectedMaskId, roomDrawingActive, roomDrawing, showRoomNameModal, roomPreviewFillColor, selectedRoomId, maskEditingActive, maskTool]);
+    }, [activeTool, activeOverlayControl, electricalOverlay.locked, selectedMaskId, roomDrawingActive, roomDrawing, showRoomNameModal, roomPreviewFillColor, selectedRoomId, maskEditingActive, maskTool, selectedDeviceId, draggingDeviceId]);
 
     // Load saved scale factor from server on mount
     useEffect(() => {
@@ -2093,6 +2133,43 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
             clearTimeout(timer);
         };
     }, [rooms]);
+
+    // Load DALI devices from server on mount
+    useEffect(() => {
+        fetch('/api/dali-devices')
+            .then(res => res.json())
+            .then(data => {
+                if (data.devices && Array.isArray(data.devices)) {
+                    setDaliDevices(data.devices);
+                    console.log('DALI devices loaded from server:', data.devices.length);
+                }
+            })
+            .catch(err => {
+                console.error('Failed to load DALI devices:', err);
+            });
+    }, []);
+
+    // Auto-save DALI devices to server when they change (with debouncing)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetch('/api/dali-devices', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ devices: daliDevices }),
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('DALI devices saved to server successfully');
+                    }
+                })
+                .catch(err => {
+                    console.error('Failed to save DALI devices:', err);
+                });
+        }, 500); // 500ms debounce
+
+        return () => clearTimeout(timer);
+    }, [daliDevices]);
 
     // Cleanup on unmount
     useEffect(() => {
@@ -3554,8 +3631,7 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
             {/* Main Floor Plan View */}
             <div
                 ref={containerRef}
-                className={`flex-1 relative overflow-hidden bg-black ${((activeTool === 'scale' && scalePoints.length < 2) || (activeTool === 'measure' && measurePoints.length < 2) || (activeTool === 'topology') || (maskEditingActive && maskTool === 'draw') || (roomDrawingActive && roomDrawing !== null && !roomPreviewFillColor)) ? 'cursor-none' : (isPanning ? 'cursor-grabbing' : 'cursor-grab')
-                    }`}
+                className={`flex-1 relative overflow-hidden bg-black ${showZoomCursor ? 'cursor-none' : (isPanning ? 'cursor-grabbing' : 'cursor-grab')}`}
                 onWheel={handleWheel}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
@@ -3816,169 +3892,20 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
             )}
 
             {/* Magnified Cursor - Canvas sampling based (supports all modes) */}
-            {(() => {
-                if (!mousePos || !isMouseOverFloorPlan) return null;
-
-                // Determine which mode should show cursor
-                const shouldShowCursor =
-                    (activeTool === 'scale' && scalePoints.length < 2) ||
-                    (activeTool === 'measure' && measurePoints.length < 2) ||
-                    (activeTool === 'topology' && !routingMode && !draggingDeviceId) ||
-                    (maskEditingActive && maskTool === 'draw') ||
-                    (roomDrawingActive && roomDrawing !== null && !roomPreviewFillColor);
-
-                if (!shouldShowCursor) return null;
-                if (!canvasReady || !canvasRef.current || !imgRef.current || !containerRef.current) return null;
-
-                const CURSOR_SIZE = 200;
-                // Constants for mapping
-                const naturalWidth = imgRef.current.naturalWidth;
-                const naturalHeight = imgRef.current.naturalHeight;
-                const containerRect = containerRef.current.getBoundingClientRect();
-                const containerWidth = containerRect.width;
-                const containerHeight = containerRect.height;
-
-                // Canvas is at full natural resolution (8000×5333 or similar)
-                const canvasWidth = canvasRef.current.width;
-                const canvasHeight = canvasRef.current.height;
-
-                // 1. Get Natural Image Coordinates
-                // containerPosToImageCoords ALREADY handles object-fit logic and returns natural coords
-                const naturalCoords = containerPosToImageCoords(mousePos.x, mousePos.y);
-
-                const naturalX = naturalCoords.x;
-                const naturalY = naturalCoords.y;
-
-                // 2. Calculate scaling factors for Sample Size (Magnification Level)
-                // We still need fitScale to determine how "zoomed out" the image is by default
-                const scaleX = containerWidth / naturalWidth;
-                const scaleY = containerHeight / naturalHeight;
-                const fitScale = Math.min(scaleX, scaleY);
-
-                const drawnWidth = naturalWidth * fitScale;
-                const drawnHeight = naturalHeight * fitScale;
-
-                const offsetX = (containerWidth - drawnWidth) / 2;
-                const offsetY = (containerHeight - drawnHeight) / 2;
-
-                // 3. Calculate sampling region
-                // We want 2x magnification relative to the current SCREEN view.
-                const relativeMagnification = 2;
-                const effectiveMag = Math.max(0.1, transform.scale * relativeMagnification);
-
-                // sampleSize is in NATURAL pixels
-                // If we want 200px on screen to represent 100px on screen (2x),
-                // and 100px on screen = 100 / fitScale / transform.scale NATURAL pixels...
-                // Wait. 
-                // Target: On screen cursor is 200px.
-                // We want it to show content that would cover 100px on screen (2x zoom).
-                // 100px on screen corresponds to:
-                // 100 / transform.scale (viewport pixels)
-                // (100 / transform.scale) / fitScale (natural pixels)
-
-                const screenCoverage = CURSOR_SIZE / relativeMagnification; // 100px
-                const sampleSize = (screenCoverage / transform.scale) / fitScale;
-
-                const halfSample = sampleSize / 2;
-
-                // Sample centered on the natural coordinates
-                // Clamp to valid canvas bounds
-                const sampleX = Math.max(0, Math.min(canvasWidth - sampleSize, naturalX - halfSample));
-                const sampleY = Math.max(0, Math.min(canvasHeight - sampleSize, naturalY - halfSample));
-
-                console.debug('🔍 Cursor coords:', {
-                    mouse: mousePos,
-                    naturalCoords,
-                    fitScale,
-                    offset: { x: offsetX, y: offsetY },
-                    sampleSize,
-                    sample: { x: sampleX, y: sampleY }
-                });
-
-                // Create a temporary canvas for the magnified view
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = CURSOR_SIZE;
-                tempCanvas.height = CURSOR_SIZE;
-                const tempCtx = tempCanvas.getContext('2d');
-                if (!tempCtx) return null;
-
-                // Sample from the main canvas and draw magnified
-                tempCtx.imageSmoothingEnabled = true; // Smooth scaling for better quality
-                tempCtx.drawImage(
-                    canvasRef.current,
-                    sampleX, sampleY, sampleSize, sampleSize,  // Source rect in canvas coords
-                    0, 0, CURSOR_SIZE, CURSOR_SIZE             // Dest rect (magnified)
-                );
-
-                // Convert to data URL for display
-                const dataUrl = tempCanvas.toDataURL();
-
-                // Determine border color and label based on mode
-                let borderColor = '#ef4444'; // red default
-                let modeLabel = '';
-
-                if (activeTool === 'scale') {
-                    borderColor = '#ef4444';
-                    modeLabel = 'SCALE';
-                } else if (activeTool === 'measure') {
-                    borderColor = '#ef4444';
-                    modeLabel = 'MEASURE';
-                } else if (activeTool === 'topology') {
-                    borderColor = '#ef4444';
-                    modeLabel = 'PLACE';
-                } else if (maskEditingActive) {
-                    borderColor = '#ef4444';
-                    modeLabel = 'DRAW';
-                } else if (roomDrawingActive) {
-                    borderColor = '#22c55e';
-                    modeLabel = 'ROOM';
-                }
-
-                return (
-                    <div
-                        className="absolute z-50 pointer-events-none"
-                        style={{
-                            left: mousePos.x - (CURSOR_SIZE / 2),
-                            top: mousePos.y - (CURSOR_SIZE / 2),
-                            width: CURSOR_SIZE,
-                            height: CURSOR_SIZE,
-                            overflow: 'hidden',
-                            border: `3px solid ${borderColor}`,
-                            borderRadius: '8px',
-                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3)',
-                            backgroundColor: '#000',
-                        }}
-                    >
-                        {/* Magnified content from canvas */}
-                        <img
-                            src={dataUrl}
-                            alt="Magnified view"
-                            style={{
-                                width: '100%',
-                                height: '100%',
-                                imageRendering: 'pixelated', // Keep it crisp
-                            }}
-                        />
-
-                        {/* Center crosshair */}
-                        <div
-                            className="absolute w-2 h-2 bg-red-500 rounded-full"
-                            style={{
-                                left: '50%',
-                                top: '50%',
-                                transform: 'translate(-50%, -50%)',
-                            }}
-                        />
-
-                        {/* Mode label */}
-                        {modeLabel && (
-                            <div className="absolute bottom-1 right-1 text-white text-[10px] font-bold bg-black/50 px-1 rounded">
-                                [{modeLabel}]
-                            </div>
-                        )}
-                    </div>
-                );
-            })()}
+            <MagnifiedCursor
+                baseMode={cursorModeLabel}
+                borderColor={cursorBorderColor}
+                canvasRef={canvasRef}
+                canvasReady={canvasReady}
+                mousePos={mousePos}
+                isMouseOverFloorPlan={isMouseOverFloorPlan}
+                transform={transform}
+                containerPosToImageCoords={containerPosToImageCoords}
+                imgRef={imgRef}
+                containerRef={containerRef}
+                enabled={showZoomCursor}
+                onPanStateChange={setIsSpacePressed}
+            />
 
             {/* Room Name Modal - Outside transformed container to avoid zoom scaling */}
             {showRoomNameModal && (
@@ -4301,9 +4228,8 @@ const BaselineFloorPlan: React.FC<FloorPlanMapProps> = () => {    // Refs
                         <div>Transform: x={transform.x.toFixed(0)} y={transform.y.toFixed(0)} s={transform.scale.toFixed(2)}</div>
                         {mousePos && (() => {
                             const natural = containerPosToImageCoords(mousePos.x, mousePos.y);
-                            const relativeMagnification = 2;
-                            const effectiveMag = Math.max(0.1, transform.scale * relativeMagnification);
-                            const sampleSize = 200 / effectiveMag;
+                            const effectiveMag = Math.max(0.1, transform.scale * ZOOM_MAGNIFICATION);
+                            const sampleSize = ZOOM_CURSOR_SIZE / effectiveMag;
                             return (
                                 <>
                                     <div>Natural: {natural.x.toFixed(0)}, {natural.y.toFixed(0)}</div>
