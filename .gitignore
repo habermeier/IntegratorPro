@@ -127,6 +127,7 @@ cableRuns.local.json
 electricalOverlay.local.json
 baseMasks.local.json
 rooms.local.json
+daliDevices.local.json
 bom.snapshot.json
 client_debug.log
 .DS_Store

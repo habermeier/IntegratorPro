@@ -86,6 +86,9 @@ interface FloorPlanContentProps {
 
     // Optional: onLoad handler for base image
     onImageLoad?: () => void;
+
+    // Optional: ID prefix for checking ID conflicts (e.g. "zoom-lens-")
+    idPrefix?: string;
 }
 
 export const FloorPlanContent: React.FC<FloorPlanContentProps> = ({
@@ -106,10 +109,14 @@ export const FloorPlanContent: React.FC<FloorPlanContentProps> = ({
     activeTool,
     children,
     onImageLoad,
+    idPrefix = '',
 }) => {
     // Use provided dimensions or fall back to imgRef (or default to avoid errors)
     const naturalWidth = providedNaturalWidth || imgRef.current?.naturalWidth || 8000;
     const naturalHeight = providedNaturalHeight || imgRef.current?.naturalHeight || 5333;
+
+    // Helper to scope IDs
+    const scopeId = (id: string) => `${idPrefix}${id}`;
 
     return (
         <>
@@ -169,8 +176,8 @@ export const FloorPlanContent: React.FC<FloorPlanContentProps> = ({
                     }}
                 >
                     <defs>
-                        <filter id="roomShadow" x="-50%" y="-50%" width="200%" height="200%">
-                            <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.3"/>
+                        <filter id={scopeId("roomShadow")} x="-50%" y="-50%" width="200%" height="200%">
+                            <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.3" />
                         </filter>
                     </defs>
                     {rooms.filter(r => r.visible).map(room => (
@@ -180,7 +187,7 @@ export const FloorPlanContent: React.FC<FloorPlanContentProps> = ({
                                 fill={room.fillColor}
                                 stroke="rgba(255, 255, 255, 0.3)"
                                 strokeWidth={2}
-                                filter="url(#roomShadow)"
+                                filter={`url(#${scopeId("roomShadow")})`}
                             />
                             <text
                                 x={room.labelX}
@@ -214,6 +221,11 @@ export const FloorPlanContent: React.FC<FloorPlanContentProps> = ({
                         height: '100%',
                     }}
                 >
+                    <defs>
+                        <filter id={scopeId("device-shadow")} x="-50%" y="-50%" width="200%" height="200%">
+                            <feDropShadow dx="0" dy="2" stdDeviation="4" floodOpacity="0.5" />
+                        </filter>
+                    </defs>
                     {/* Render devices */}
                     {daliDevices.map(device => {
                         const isSelected = device.id === selectedDeviceId;

@@ -11,6 +11,11 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 3001;
+
+// Environment Detection: DEV = localhost, PROD = everything else
+const IS_DEV = process.env.NODE_ENV !== 'production';
+console.log(`🔧 Server mode: ${IS_DEV ? 'DEVELOPMENT (saves to base files, commits to git)' : 'PRODUCTION (saves to .local files)'}`);
+
 const DATA_FILE = path.join(__dirname, 'layout.json');
 const OVERRIDE_FILE = path.join(__dirname, 'layout.local.json');
 const SCALE_FILE = path.join(__dirname, 'scale.json');
@@ -71,7 +76,7 @@ function createDataEndpoints(apiPath, baseFile, overrideFile, dataKey, displayNa
         }
     });
 
-    // POST endpoint - Always Write to Override
+    // POST endpoint - Write to base file in DEV, override file in PROD
     app.post(apiPath, (req, res) => {
         try {
             const data = req.body[dataKey];
@@ -79,10 +84,14 @@ function createDataEndpoints(apiPath, baseFile, overrideFile, dataKey, displayNa
                 [dataKey]: Array.isArray(data) ? data : []
             };
 
-            // Always write to the override file to prevent changing committed default
-            fs.writeFileSync(overrideFile, JSON.stringify(fileData, null, 2));
-            console.log(`${displayName} saved to ${path.basename(overrideFile)}`);
-            res.json({ success: true, ...fileData, savedTo: 'local' });
+            // DEV: Write to base file (gets committed to git)
+            // PROD: Write to override file (gitignored)
+            const targetFile = IS_DEV ? baseFile : overrideFile;
+            const targetType = IS_DEV ? 'base (committed)' : 'local (gitignored)';
+
+            fs.writeFileSync(targetFile, JSON.stringify(fileData, null, 2));
+            console.log(`✅ ${displayName} saved to ${path.basename(targetFile)} [${targetType}]`);
+            res.json({ success: true, ...fileData, savedTo: targetType, file: path.basename(targetFile) });
         } catch (err) {
             console.error(`Error writing ${displayName} data:`, err);
             res.status(500).json({ error: `Failed to save ${displayName} data` });

@@ -9,9 +9,10 @@ import SystemsOverview from './components/SystemsOverview';
 import Visualizer from './components/Visualizer';
 import WiringDiagram from './components/WiringDiagram';
 import GeminiAdvisor from './components/GeminiAdvisor';
-import FloorPlanMap from './components/FloorPlanMap';
+// import FloorPlanMap from './components/FloorPlanMap'; // Temporarily disabled during Three.js migration
 import CoverSheet from './components/CoverSheet';
 import RoughInGuide from './components/RoughInGuide';
+import FloorPlanRenderer from './components/FloorPlanRenderer';
 
 // Icons
 import { LayoutDashboard, Activity, Cpu, Map, FileText, Hammer, Menu } from 'lucide-react';
@@ -167,10 +168,10 @@ const App = () => {
                 </div>
               } />
 
-              {/* 4. Floor Plan (Full Screen) */}
+              {/* 4. Floor Plan (Full Screen) - Using new Three.js Editor */}
               <Route path="/floorplan" element={
                 <div className="absolute inset-0 w-full h-full">
-                  <FloorPlanMap modules={flatModules} setModules={setProducts} onLocate={(id) => handleNavigate('VISUALIZER', id)} highlightedModuleId={null} />
+                  <FloorPlanRenderer />
                 </div>
               } />
 
