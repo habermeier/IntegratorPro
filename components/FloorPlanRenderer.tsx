@@ -209,8 +209,7 @@ export const FloorPlanRenderer: React.FC = () => {
         editorInstance.on('cursor-move', ({ x, y }: { x: number, y: number }) => {
             if (zoomCursorRef.current) {
                 zoomCursorRef.current.style.display = x > 0 ? 'block' : 'none';
-                zoomCursorRef.current.style.left = `${x - 62.5}px`;
-                zoomCursorRef.current.style.top = `${y - 62.5}px`;
+                zoomCursorRef.current.style.transform = `translate3d(${x - 62.5}px, ${y - 62.5}px, 0)`;
             }
             if (coordsRef.current) {
                 coordsRef.current.textContent = x > 0 ? `X: ${x.toFixed(0)} Y: ${y.toFixed(0)} ` : '---';

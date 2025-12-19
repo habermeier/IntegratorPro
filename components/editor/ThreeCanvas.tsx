@@ -38,7 +38,7 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = React.memo(({ onMount, is
                 {/* Crosshairs & Guide */}
                 <div className="absolute inset-0 flex items-center justify-center">
                     {/* Inner Rectangle */}
-                    <div className="w-[30px] h-[30px] border border-red-500/50 relative">
+                    <div className="w-[30px] h-[30px] border border-red-500 bg-transparent relative box-border">
                         {/* Tick Marks (Perpendicular center ticks) */}
                         <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-[1px] h-4 bg-red-500" /> {/* Top tick */}
                         <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-[1px] h-4 bg-red-500" /> {/* Bottom tick */}
@@ -48,10 +48,6 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = React.memo(({ onMount, is
 
                     {/* Center Point (Single red pixel dot) */}
                     <div className="absolute w-[2px] h-[2px] bg-red-600 rounded-full" />
-                </div>
-
-                <div className="absolute -top-5 left-0 bg-red-600 text-white text-[9px] px-2 py-0.5 rounded-t-sm font-black uppercase tracking-tighter">
-                    Precision Zoom
                 </div>
             </div>
         </div>

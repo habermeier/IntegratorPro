@@ -491,7 +491,7 @@ export class FloorPlanEditor {
             return;
         }
 
-        el.style.cursor = 'default';
+        el.style.cursor = 'none';
     }
 
     public on(event: string, callback: Function): void {
