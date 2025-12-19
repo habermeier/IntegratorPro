@@ -9,7 +9,8 @@ import { CommandManager } from './systems/CommandManager';
 import { SelectionSystem } from './systems/SelectionSystem';
 import { OpacityCommand } from './commands/OpacityCommand';
 import { TransformLayerCommand } from './commands/TransformLayerCommand';
-
+import { PolygonTool } from './tools/PolygonTool';
+import { PlaceSymbolTool } from './tools/PlaceSymbolTool';
 export class FloorPlanEditor {
     public scene: THREE.Scene;
     private renderer: THREE.WebGLRenderer;
@@ -28,6 +29,12 @@ export class FloorPlanEditor {
 
     private animationFrameId: number | null = null;
     private eventListeners: Map<string, Function[]> = new Map();
+    private preMaskVisibility: Map<string, boolean> = new Map();
+    private STORAGE_KEY = 'integrator-pro-editor-state';
+
+    public get editMode(): boolean {
+        return this.isEditMode;
+    }
 
     constructor(container: HTMLElement) {
         const editorId = Math.random().toString(36).substring(7);
@@ -40,12 +47,14 @@ export class FloorPlanEditor {
 
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x0f172a); // slate-900
+        this.scene.userData.editor = this; // Link for systems polling
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         this.renderer.setSize(width, height);
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.autoClear = false;
 
+        this.renderer.domElement.tabIndex = 0; // Make focusable
         container.appendChild(this.renderer.domElement);
 
         // Initialize Systems
@@ -58,10 +67,65 @@ export class FloorPlanEditor {
         // Register Tools
         this.toolSystem.registerTool(new ScaleCalibrateTool(this));
         this.toolSystem.registerTool(new SelectTool(this));
+        this.toolSystem.registerTool(new PolygonTool(this, 'draw-room'));
+        this.toolSystem.registerTool(new PolygonTool(this, 'draw-mask'));
+        this.toolSystem.registerTool(new PlaceSymbolTool(this));
         this.toolSystem.setActiveTool('select');
 
         this.setupEventListeners();
         this.startRenderLoop();
+    }
+
+    public savePersistentState(): void {
+        const visibility: Record<string, boolean> = {};
+        this.layerSystem.getAllLayers().forEach(l => {
+            visibility[l.id] = l.visible;
+        });
+
+        const state = {
+            activeTool: this.toolSystem.getActiveToolType(),
+            activeLayerId: this.activeLayerId,
+            isEditMode: this.isEditMode,
+            visibility,
+            preMaskVisibility: Object.fromEntries(this.preMaskVisibility)
+        };
+
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(state));
+    }
+
+    public loadPersistentState(): void {
+        const saved = localStorage.getItem(this.STORAGE_KEY);
+        if (!saved) return;
+
+        try {
+            const state = JSON.parse(saved);
+
+            // 1. Restore Visibility
+            if (state.visibility) {
+                Object.entries(state.visibility as Record<string, boolean>).forEach(([id, visible]) => {
+                    this.layerSystem.setLayerVisible(id, visible);
+                });
+            }
+
+            // 2. Restore Pre-Mask Visibility Map
+            if (state.preMaskVisibility) {
+                this.preMaskVisibility = new Map(Object.entries(state.preMaskVisibility));
+            }
+
+            // 3. Restore Metadata
+            this.isEditMode = !!state.isEditMode;
+            this.activeLayerId = state.activeLayerId || null;
+
+            // 4. Restore Tool (Triggers side effects)
+            if (state.activeTool) {
+                this.setActiveTool(state.activeTool as ToolType);
+            }
+
+            this.emit('layers-changed', this.layerSystem.getAllLayers());
+            this.emit('edit-mode-changed', { isEditMode: this.isEditMode, activeLayerId: this.activeLayerId });
+        } catch (err) {
+            console.error('[FloorPlanEditor] Failed to load persistent state:', err);
+        }
     }
 
     private handleKeyDown = (e: KeyboardEvent) => {
@@ -130,6 +194,20 @@ export class FloorPlanEditor {
             this.setDirty();
         }
 
+        // Tool Shortcuts
+        const key = e.key.toLowerCase();
+        if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+            switch (key) {
+                case 'v': this.setActiveTool('select'); break;
+                case 'r': this.setActiveTool('draw-room'); break;
+                case 'm': this.setActiveTool('draw-mask'); break;
+                case 'p': this.setActiveTool('place-symbol'); break;
+                case 's': this.setActiveTool('scale-calibrate'); break;
+                case 'd': this.setActiveTool('measure'); break;
+            }
+        }
+
+        this.toolSystem.handleKeyDown(e.key, e);
         this.emit('keydown', e.key);
     };
 
@@ -235,6 +313,12 @@ export class FloorPlanEditor {
     private startRenderLoop(): void {
         const animate = () => {
             this.animationFrameId = requestAnimationFrame(animate);
+
+            // Continuous Pulse for selections
+            if (this.selectionSystem.getSelectedIds().length > 0) {
+                this.needsRender = true;
+            }
+
             if (this.needsRender) {
                 this.update();
                 this.render();
@@ -263,20 +347,25 @@ export class FloorPlanEditor {
     }
 
     public toggleEditMode(): void {
-        this.isEditMode = !this.isEditMode;
+        this.setEditMode(!this.isEditMode);
+    }
+
+    public setEditMode(enabled: boolean): void {
+        if (this.isEditMode === enabled) return;
+        this.isEditMode = enabled;
 
         if (this.isEditMode) {
-            this.container.focus(); // Try to grab focus
+            this.container.focus();
+            this.renderer.domElement.focus();
         }
 
         if (this.activeLayerId) {
-            // Unlock/Lock the active layer
             this.layerSystem.setLayerLocked(this.activeLayerId, !this.isEditMode);
-
-            // Apply visual feedback
-            // (Removed red tint as it was overkill - relying on canvas border)
         }
 
+        this.updateMaskEditMode();
+        this.savePersistentState();
+        this.emit('mode-changed', this.isEditMode);
         this.emit('edit-mode-changed', { isEditMode: this.isEditMode, activeLayerId: this.activeLayerId });
         this.setDirty();
     }
@@ -295,6 +384,8 @@ export class FloorPlanEditor {
             this.layerSystem.setLayerLocked(id, false);
         }
 
+        this.updateMaskEditMode();
+        this.savePersistentState();
         this.emit('edit-mode-changed', { isEditMode: this.isEditMode, activeLayerId: this.activeLayerId });
         this.setDirty();
     }
@@ -307,6 +398,7 @@ export class FloorPlanEditor {
 
     public setLayerVisible(id: string, visible: boolean): void {
         this.layerSystem.setLayerVisible(id, visible);
+        this.savePersistentState();
         this.emit('layers-changed', this.layerSystem.getAllLayers());
         this.setDirty();
     }
@@ -336,9 +428,49 @@ export class FloorPlanEditor {
 
     public setActiveTool(type: ToolType): void {
         this.toolSystem.setActiveTool(type);
+        this.updateMaskEditMode();
+        this.savePersistentState();
         this.emit('tool-changed', type);
         this.updateCursor();
         this.setDirty();
+    }
+
+    private updateMaskEditMode(): void {
+        const isMaskTool = this.toolSystem.getActiveToolType() === 'draw-mask';
+        const isMaskLayerActive = this.activeLayerId === 'mask' && this.isEditMode;
+        const inMaskMode = isMaskTool || isMaskLayerActive;
+
+        const wasMaskMode = this.layerSystem.getMaskEditMode();
+        this.layerSystem.setMaskEditMode(inMaskMode);
+
+        if (inMaskMode && !wasMaskMode) {
+            // ENTERING Mask Mode: Store current visibility ONLY IF NOT ALREADY IN MASK MODE
+            // and ONLY IF we don't have a saved pre-mask state (prevents overwriting on reload)
+            if (this.preMaskVisibility.size === 0) {
+                this.layerSystem.getAllLayers().forEach(l => {
+                    this.preMaskVisibility.set(l.id, l.visible);
+                });
+            }
+
+            // Apply rules
+            this.layerSystem.setLayerVisible('base', true);
+            this.layerSystem.setLayerVisible('mask', true);
+            this.layerSystem.setLayerVisible('electrical', false);
+            this.layerSystem.setLayerVisible('room', false);
+
+            this.savePersistentState();
+        } else if (!inMaskMode && wasMaskMode) {
+            // EXITING Mask Mode: Restore visibility
+            if (this.preMaskVisibility.size > 0) {
+                this.preMaskVisibility.forEach((visible, id) => {
+                    this.layerSystem.setLayerVisible(id, visible);
+                });
+                this.preMaskVisibility.clear();
+            }
+            this.savePersistentState();
+        }
+
+        this.emit('layers-changed', this.layerSystem.getAllLayers());
     }
 
     private updateCursor(): void {
@@ -369,6 +501,13 @@ export class FloorPlanEditor {
         this.eventListeners.get(event)?.push(callback);
     }
 
+    public off(event: string, callback: Function): void {
+        const listeners = this.eventListeners.get(event);
+        if (listeners) {
+            this.eventListeners.set(event, listeners.filter(cb => cb !== callback));
+        }
+    }
+
     public emit(event: string, data: any): void {
         this.eventListeners.get(event)?.forEach(cb => cb(data));
     }
@@ -380,6 +519,8 @@ export class FloorPlanEditor {
         window.removeEventListener('resize', this.handleResize);
         window.removeEventListener('keydown', this.handleKeyDown);
         window.removeEventListener('keyup', this.handleKeyUp);
+
+        console.log(`[FloorPlanEditor] Disposing instance. Listeners removed.`);
 
         this.renderer.dispose();
         if (this.container.contains(this.renderer.domElement)) {

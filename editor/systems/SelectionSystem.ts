@@ -16,41 +16,44 @@ export class SelectionSystem {
 
     public selectAt(screenX: number, screenY: number, multiSelect: boolean = false): string[] {
         const worldPos = this.cameraSystem.screenToWorld(screenX, screenY);
-
-        // Convert world center to NDC for Three.js raycaster
-        // Orthographic camera NDC calculation:
-        // x = (worldX - (left+right)/2) / ((right-left)/2)
-        // y = (worldY - (top+bottom)/2) / ((top-bottom)/2)
         const cam = this.cameraSystem.mainCamera;
+
         const ndcX = (worldPos.x - (cam.left + cam.right) / 2) / ((cam.right - cam.left) / 2);
         const ndcY = (worldPos.y - (cam.top + cam.bottom) / 2) / ((cam.top - cam.bottom) / 2);
 
         this.raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), cam);
 
         const layers = this.layerSystem.getAllLayers();
-        const hits: string[] = [];
+        const hits: { id: string, zIndex: number }[] = [];
 
-        // Check each layer's container
         for (const layer of layers) {
             if (!layer.visible) continue;
 
             const intersects = this.raycaster.intersectObject(layer.container, true);
-            if (intersects.length > 0) {
-                hits.push(layer.id);
+            for (const intersect of intersects) {
+                // Symbols use nested groups, we want the top-most object with userData.id
+                let obj = intersect.object;
+                while (obj && !obj.userData.id && obj.parent !== layer.container) {
+                    obj = obj.parent as any;
+                }
+
+                if (obj && obj.userData.id) {
+                    hits.push({
+                        id: obj.userData.id,
+                        zIndex: layer.zIndex
+                    });
+                    break; // Only take the first hit per layer for efficiency, or could take all
+                }
             }
         }
 
-        if (!multiSelect) {
-            this.selectedIds.clear();
-        }
-
         if (hits.length > 0) {
-            // Pick the topmost hit (highest zIndex)
-            const topHit = hits.sort((a, b) => {
-                const layerA = this.layerSystem.getLayer(a);
-                const layerB = this.layerSystem.getLayer(b);
-                return (layerB?.zIndex || 0) - (layerA?.zIndex || 0);
-            })[0];
+            // Pick the hit from the highest zIndex layer
+            const topHit = hits.sort((a, b) => b.zIndex - a.zIndex)[0].id;
+
+            if (!multiSelect) {
+                this.selectedIds.clear();
+            }
 
             if (this.selectedIds.has(topHit) && multiSelect) {
                 this.selectedIds.delete(topHit);

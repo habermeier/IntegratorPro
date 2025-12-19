@@ -18,6 +18,10 @@ export class ToolSystem {
         this.tools.set(tool.type, tool);
     }
 
+    public getTool<T extends Tool>(type: ToolType): T | undefined {
+        return this.tools.get(type) as T;
+    }
+
     public setActiveTool(type: ToolType): void {
         if (this.activeTool?.type === type) return;
 

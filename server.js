@@ -240,6 +240,11 @@ const ROOMS_FILE = path.join(__dirname, 'rooms.json');
 const ROOMS_OVERRIDE_FILE = path.join(__dirname, 'rooms.local.json');
 createDataEndpoints('/api/rooms', ROOMS_FILE, ROOMS_OVERRIDE_FILE, 'rooms', 'Rooms');
 
+// Unified Polygons endpoint
+const POLYGONS_FILE = path.join(__dirname, 'polygons.json');
+const POLYGONS_OVERRIDE_FILE = path.join(__dirname, 'polygons.local.json');
+createDataEndpoints('/api/polygons', POLYGONS_FILE, POLYGONS_OVERRIDE_FILE, 'polygons', 'Polygons');
+
 // DALI Devices endpoints
 const DALI_DEVICES_FILE = path.join(__dirname, 'daliDevices.json');
 const DALI_DEVICES_OVERRIDE_FILE = path.join(__dirname, 'daliDevices.local.json');
@@ -439,13 +444,13 @@ app.use((req, res, next) => {
         // Enhanced logging: identify specific agent type for monitoring
         const agentType =
             /GoogleOther/i.test(ua) ? 'Gemini-Live' :
-            /Gemini-Deep-Research/i.test(ua) ? 'Gemini-Research' :
-            /Google-InspectionTool/i.test(ua) ? 'Search-Console' :
-            /googlebot/i.test(ua) ? 'Googlebot-Search' :
-            /GPTBot/i.test(ua) ? 'OpenAI-GPT' :
-            /ClaudeBot/i.test(ua) ? 'Anthropic-Claude' :
-            /curl|wget/i.test(ua) ? 'CLI-Tool' :
-            'Other-Bot';
+                /Gemini-Deep-Research/i.test(ua) ? 'Gemini-Research' :
+                    /Google-InspectionTool/i.test(ua) ? 'Search-Console' :
+                        /googlebot/i.test(ua) ? 'Googlebot-Search' :
+                            /GPTBot/i.test(ua) ? 'OpenAI-GPT' :
+                                /ClaudeBot/i.test(ua) ? 'Anthropic-Claude' :
+                                    /curl|wget/i.test(ua) ? 'CLI-Tool' :
+                                        'Other-Bot';
 
         // Log with agent type and truncated UA string
         console.log(`[BOT:${agentType}] ${ua.substring(0, 80)}${ua.length > 80 ? '...' : ''}`);

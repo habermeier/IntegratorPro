@@ -19,7 +19,7 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = React.memo(({ onMount, is
         <div
             ref={containerRef}
             tabIndex={0}
-            className={`flex-1 relative overflow-hidden bg-slate-900 outline-none transition-all ${isEditMode ? 'shadow-[0_0_50px_rgba(220,38,38,0.4)_inset]' : ''
+            className={`flex-1 relative overflow-hidden bg-slate-900 outline-none transition-all cursor-none ${isEditMode ? 'shadow-[0_0_50px_rgba(220,38,38,0.4)_inset]' : ''
                 }`}
         >
             {/* Zoom Cursor Border */}
@@ -27,16 +27,31 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = React.memo(({ onMount, is
                 ref={zoomCursorRef}
                 className="absolute pointer-events-none rounded-sm bg-transparent"
                 style={{
-                    width: '250px',
-                    height: '250px',
-                    border: '2px solid #ff00ff',
-                    boxShadow: '0 0 20px rgba(255, 0, 255, 0.4)',
+                    width: '125px',
+                    height: '125px',
+                    border: '1px solid #ef4444',
+                    boxShadow: '0 0 15px rgba(239, 68, 68, 0.3)',
                     zIndex: 100,
                     display: 'none'
                 }}
             >
-                <div className="absolute -top-6 left-0 bg-fuchsia-600 text-white text-[10px] px-2 py-0.5 rounded-t-sm font-bold uppercase tracking-wider">
-                    Magnified View
+                {/* Crosshairs & Guide */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                    {/* Inner Rectangle */}
+                    <div className="w-[30px] h-[30px] border border-red-500/50 relative">
+                        {/* Tick Marks (Perpendicular center ticks) */}
+                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-[1px] h-4 bg-red-500" /> {/* Top tick */}
+                        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-[1px] h-4 bg-red-500" /> {/* Bottom tick */}
+                        <div className="absolute top-1/2 -left-2 -translate-y-1/2 w-4 h-[1px] bg-red-500" /> {/* Left tick */}
+                        <div className="absolute top-1/2 -right-2 -translate-y-1/2 w-4 h-[1px] bg-red-500" /> {/* Right tick */}
+                    </div>
+
+                    {/* Center Point (Single red pixel dot) */}
+                    <div className="absolute w-[2px] h-[2px] bg-red-600 rounded-full" />
+                </div>
+
+                <div className="absolute -top-5 left-0 bg-red-600 text-white text-[9px] px-2 py-0.5 rounded-t-sm font-black uppercase tracking-tighter">
+                    Precision Zoom
                 </div>
             </div>
         </div>

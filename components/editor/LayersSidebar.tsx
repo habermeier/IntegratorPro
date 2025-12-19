@@ -1,6 +1,9 @@
 import React from 'react';
 import { Layer, ToolType } from '../../editor/models/types';
 import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
+import { SYMBOL_CATEGORIES } from '../../editor/models/symbolLibrary';
+import { SymbolPalette } from './SymbolPalette';
+import { PlaceSymbolTool } from '../../editor/tools/PlaceSymbolTool';
 
 interface LayersSidebarProps {
     editor: FloorPlanEditor | null;
@@ -21,6 +24,18 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
     setSelectedIds,
     activeTool
 }) => {
+    const [expandedCategory, setExpandedCategory] = React.useState<string | null>(null);
+    const [selectedSymbolType, setSelectedSymbolType] = React.useState<string | null>(null);
+
+    const handleSelectSymbol = (type: string) => {
+        setSelectedSymbolType(type);
+        if (editor) {
+            editor.setActiveTool('place-symbol');
+            const tool = editor.toolSystem.getTool<PlaceSymbolTool>('place-symbol');
+            tool?.setSymbolType(type);
+        }
+    };
+
     return (
         <div className="w-80 bg-slate-900 border-l border-slate-800 flex flex-col z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.3)]">
             <div className="p-4 border-b border-slate-800 flex justify-between items-center">
@@ -129,6 +144,47 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                                         }}
                                     />
                                 </div>
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+
+            {/* Symbol Placement Section */}
+            <div className="flex-1 overflow-y-auto p-2 space-y-2 border-t border-slate-800">
+                <div className="px-2 py-1 flex justify-between items-center">
+                    <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Symbol Placement</h3>
+                    <span className="text-[10px] text-slate-700 font-mono">Select Category</span>
+                </div>
+
+                {SYMBOL_CATEGORIES.map(category => (
+                    <div key={category.id} className="space-y-1">
+                        <button
+                            onClick={() => setExpandedCategory(expandedCategory === category.id ? null : category.id)}
+                            className={`w-full flex items-center p-2 rounded-lg transition-all border ${expandedCategory === category.id
+                                    ? 'bg-slate-800 border-slate-700 shadow-md'
+                                    : 'bg-transparent border-transparent hover:bg-slate-800/30'
+                                }`}
+                        >
+                            <div
+                                className="w-3 h-3 rounded-full mr-3 shadow-[0_0_8px_rgba(0,0,0,0.5)]"
+                                style={{ backgroundColor: `#${category.color.toString(16).padStart(6, '0')}` }}
+                            />
+                            <span className={`flex-1 text-left text-xs font-semibold ${expandedCategory === category.id ? 'text-slate-100' : 'text-slate-400'}`}>
+                                {category.name}
+                            </span>
+                            <span className="text-[10px] text-slate-600">
+                                {expandedCategory === category.id ? '▼' : '▶'}
+                            </span>
+                        </button>
+
+                        {expandedCategory === category.id && (
+                            <div className="pl-6 pr-2">
+                                <SymbolPalette
+                                    activeCategory={category.id}
+                                    selectedSymbolType={selectedSymbolType}
+                                    onSelectSymbol={handleSelectSymbol}
+                                />
                             </div>
                         )}
                     </div>

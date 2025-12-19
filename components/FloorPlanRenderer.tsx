@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { FloorPlanEditor } from '../editor/FloorPlanEditor';
 import { Layer, ToolType } from '../editor/models/types';
 import BASE_IMAGE from '../images/floor-plan-clean.jpg';
@@ -11,6 +11,10 @@ import { EditorHUD } from './editor/EditorHUD';
 import { LayersSidebar } from './editor/LayersSidebar';
 import { CalibrationDialog } from './editor/CalibrationDialog';
 import { EditorFooter } from './editor/EditorFooter';
+import { ToolPalette } from './editor/ToolPalette';
+import { RoomPropertiesModal } from './editor/RoomPropertiesModal';
+import { Room, RoomType, VectorLayerContent } from '../editor/models/types';
+import { AddPolygonCommand } from '../editor/commands/AddPolygonCommand';
 
 export const FloorPlanRenderer: React.FC = () => {
     const [editor, setEditor] = useState<FloorPlanEditor | null>(null);
@@ -22,15 +26,21 @@ export const FloorPlanRenderer: React.FC = () => {
     const [isEditMode, setIsEditMode] = useState(false);
     const [activeLayerId, setActiveLayerId] = useState<string | null>(null);
     const [lastKey, setLastKey] = useState<string | null>(null);
+    const [pendingRoom, setPendingRoom] = useState<Room | null>(null);
 
     const zoomCursorRef = useRef<HTMLDivElement>(null);
     const coordsRef = useRef<HTMLSpanElement>(null);
 
     const editorInstanceRef = useRef<FloorPlanEditor | null>(null);
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const symbolsSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const polygonsSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const isInitializedRef = useRef(false);
+    const lastSavedPayloadRef = useRef<string>('');
 
     // Debounced Save (Direct Editor Access)
     const debouncedSave = useCallback(() => {
+        if (!isInitializedRef.current) return;
         if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
 
         saveTimeoutRef.current = setTimeout(async () => {
@@ -50,14 +60,22 @@ export const FloorPlanRenderer: React.FC = () => {
                 locked: electricalLayer.locked
             };
 
+            const payloadStr = JSON.stringify(payload);
+
+            // 💡 Dirty Check: Only save if state has actually changed
+            if (payloadStr === lastSavedPayloadRef.current) {
+                return;
+            }
+
             try {
                 const res = await fetch('/api/electrical-overlay', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: payloadStr
                 });
                 if (res.ok) {
-                    console.log('✅ Electrical overlay saved automatically');
+                    lastSavedPayloadRef.current = payloadStr;
+                    console.log('✅ Electrical overlay saved automatically (state changed)');
                 }
             } catch (err) {
                 console.error('Failed to auto-save overlay state:', err);
@@ -65,47 +83,154 @@ export const FloorPlanRenderer: React.FC = () => {
         }, 1000);
     }, []);
 
+    // Debounced Save Symbols
+    const debouncedSaveSymbols = useCallback(() => {
+        if (!isInitializedRef.current) return;
+
+        if (symbolsSaveTimeoutRef.current) clearTimeout(symbolsSaveTimeoutRef.current);
+
+        symbolsSaveTimeoutRef.current = setTimeout(async () => {
+            const editor = editorInstanceRef.current;
+            if (!editor) return;
+
+            const electricalLayer = editor.layerSystem.getLayer('electrical');
+            if (electricalLayer && electricalLayer.type === 'vector') {
+                const devices = (electricalLayer.content as VectorLayerContent).symbols || [];
+                try {
+                    await fetch('/api/dali-devices', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ devices })
+                    });
+                } catch (err) {
+                    console.error('Failed to auto-save symbols:', err);
+                }
+            }
+        }, 1500); // Slightly longer debounce for symbols
+    }, []);
+
+    // Debounced Save Polygons (Unified System)
+    const debouncedSavePolygons = useCallback(() => {
+        if (!isInitializedRef.current) return;
+        if (polygonsSaveTimeoutRef.current) clearTimeout(polygonsSaveTimeoutRef.current);
+
+        polygonsSaveTimeoutRef.current = setTimeout(async () => {
+            const editor = editorInstanceRef.current;
+            if (!editor) return;
+
+            const roomLayer = editor.layerSystem.getLayer('room');
+            const maskLayer = editor.layerSystem.getLayer('mask');
+
+            const allPolygons: any[] = [];
+
+            if (roomLayer && roomLayer.type === 'vector') {
+                const rooms = (roomLayer.content as VectorLayerContent).rooms || [];
+                rooms.forEach(r => allPolygons.push({ ...r, type: 'room' }));
+            }
+
+            if (maskLayer && maskLayer.type === 'vector') {
+                const masks = (maskLayer.content as VectorLayerContent).masks || [];
+                masks.forEach(m => allPolygons.push({ ...m, type: 'mask' }));
+            }
+
+            try {
+                console.log('💾 Saving polygons to server...', allPolygons.length, 'items');
+                const res = await fetch('/api/polygons', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ polygons: allPolygons })
+                });
+                if (res.ok) {
+                    console.log('✅ Polygons saved successfully');
+                } else {
+                    console.error('❌ Failed to save polygons:', res.statusText);
+                }
+            } catch (err) {
+                console.error('Failed to auto-save unified polygons:', err);
+            }
+        }, 500); // Shorter debounce for better responsiveness
+    }, []);
+
+    // Auto-activate & show layers based on tool selection
+    useEffect(() => {
+        if (!editor) return;
+
+        // Editor -> React changes
+        const onToolChanged = (tool: ToolType) => {
+            setActiveTool(tool);
+        };
+
+        const onModeChanged = (mode: boolean) => {
+            setIsEditMode(mode);
+        };
+
+        const onEditModeChanged = ({ isEditMode, activeLayerId }: { isEditMode: boolean, activeLayerId: string | null }) => {
+            setIsEditMode(isEditMode);
+            setActiveLayerId(activeLayerId);
+        };
+
+        const onLayersChanged = (newLayers: Layer[]) => {
+            setLayers([...newLayers]);
+            debouncedSavePolygons();
+            debouncedSaveSymbols();
+        };
+
+        editor.on('tool-changed', onToolChanged);
+        editor.on('mode-changed', onModeChanged);
+        editor.on('edit-mode-changed', onEditModeChanged);
+        editor.on('layers-changed', onLayersChanged);
+
+        // FLUSH ON UNLOAD
+        const handleBeforeUnload = () => {
+            // We can't easily wait for async fetch in beforeunload, 
+            // but we can try to use sendBeacon if we had a dedicated endpoint.
+            // For now, let's just hope the 500ms debounce hits before the user closes.
+            // A more robust way is to use sync flush if possible (deprecated) or beacon.
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            editor.off('tool-changed', onToolChanged);
+            editor.off('mode-changed', onModeChanged);
+            editor.off('edit-mode-changed', onEditModeChanged);
+            editor.off('layers-changed', onLayersChanged);
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, [editor, debouncedSavePolygons, debouncedSaveSymbols]);
+
     const initEditor = useCallback((container: HTMLDivElement) => {
-        if (editorInstanceRef.current) {
-            return;
-        }
+        if (editorInstanceRef.current) return;
 
         const editorInstance = new FloorPlanEditor(container);
         editorInstanceRef.current = editorInstance;
         setEditor(editorInstance);
         (window as any).editor = editorInstance;
 
-        // Sync state
-        editorInstance.on('layers-changed', (newLayers: Layer[]) => {
-            setLayers([...newLayers]);
-            debouncedSave(); // No arg needed now
-        });
-
-        // ... other listeners ...
         editorInstance.on('cursor-move', ({ x, y }: { x: number, y: number }) => {
             if (zoomCursorRef.current) {
                 zoomCursorRef.current.style.display = x > 0 ? 'block' : 'none';
-                zoomCursorRef.current.style.left = `${Math.max(0, x - 125)}px`;
-                zoomCursorRef.current.style.top = `${Math.max(0, y - 125)}px`;
+                zoomCursorRef.current.style.left = `${x - 62.5}px`;
+                zoomCursorRef.current.style.top = `${y - 62.5}px`;
             }
             if (coordsRef.current) {
-                coordsRef.current.textContent = x > 0 ? `X: ${x.toFixed(0)} Y: ${y.toFixed(0)}` : '---';
+                coordsRef.current.textContent = x > 0 ? `X: ${x.toFixed(0)} Y: ${y.toFixed(0)} ` : '---';
             }
         });
-        editorInstance.on('tool-changed', setActiveTool);
+
         editorInstance.on('keydown', (key: string) => {
             setLastKey(key);
             setTimeout(() => setLastKey(null), 1000);
         });
+
         editorInstance.on('calibration-needed', setCalibrationData);
         editorInstance.on('selection-changed', setSelectedIds);
-        editorInstance.on('edit-mode-changed', ({ isEditMode, activeLayerId }: { isEditMode: boolean, activeLayerId: string | null }) => {
-            setIsEditMode(isEditMode);
-            setActiveLayerId(activeLayerId);
+        editorInstance.on('room-completion-pending', (room: Room) => {
+            setPendingRoom(room);
         });
 
         // Initial Layers & Persistence Setup
         const setup = async () => {
+            // 1. Define Layers
             editorInstance.addLayer({
                 id: 'base',
                 name: 'Base Floor Plan',
@@ -114,65 +239,130 @@ export const FloorPlanRenderer: React.FC = () => {
                 visible: true,
                 locked: true,
                 opacity: 1,
-                transform: {
-                    position: { x: 0, y: 0 },
-                    scale: { x: 1, y: 1 },
-                    rotation: 0
-                }
+                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 }
+            });
+
+            editorInstance.addLayer({
+                id: 'mask',
+                name: 'Masking',
+                type: 'vector',
+                zIndex: 1,
+                visible: true,
+                locked: true,
+                opacity: 1,
+                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 }
             });
 
             editorInstance.addLayer({
                 id: 'electrical',
                 name: 'Electrical Overlay',
                 type: 'image',
-                zIndex: 1,
+                zIndex: 2,
                 visible: true,
                 locked: true,
                 opacity: 0.7,
-                transform: {
-                    position: { x: 0, y: 0 },
-                    scale: { x: 1, y: 1 },
-                    rotation: 0
-                }
+                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 }
             });
 
+            editorInstance.addLayer({
+                id: 'room',
+                name: 'Rooms',
+                type: 'vector',
+                zIndex: 3,
+                visible: true,
+                locked: true,
+                opacity: 1,
+                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 }
+            });
+
+            // 2. Load Images
             await editorInstance.loadImage('base', BASE_IMAGE);
             await editorInstance.loadImage('electrical', ELECTRICAL_IMAGE);
 
-            // NOW Load Saved State from Server
+            // 3. Load Persistence (Editor knows best)
+            editorInstance.loadPersistentState();
+
+            // 4. Load Saved State from Server
             try {
-                const [overlayRes, scaleRes] = await Promise.all([
+                const [overlayRes, scaleRes, symbolsRes, polygonsRes] = await Promise.all([
                     fetch('/api/electrical-overlay'),
-                    fetch('/api/scale')
+                    fetch('/api/scale'),
+                    fetch('/api/dali-devices'),
+                    fetch('/api/polygons')
                 ]);
                 const overlayData = await overlayRes.json();
                 const scaleData = await scaleRes.json();
+                const symbolsData = await symbolsRes.json();
+                const polygonsData = await polygonsRes.json();
 
-                // RESTORE POSITION (FORCED)
+                // RESTORE POSITION
                 editorInstance.setLayerTransform('electrical', {
                     position: { x: overlayData.x || 0, y: overlayData.y || 0 },
                     scale: { x: overlayData.scale || 1, y: overlayData.scale || 1 },
                     rotation: overlayData.rotation || 0
                 }, true);
 
+                // RESTORE SYMBOLS
+                const electricalLayer = editorInstance.layerSystem.getLayer('electrical');
+                if (electricalLayer) {
+                    electricalLayer.content = {
+                        ...electricalLayer.content,
+                        symbols: symbolsData.devices || []
+                    };
+                    editorInstance.layerSystem.markDirty('electrical');
+                }
+
+                // RESTORE POLYGONS
+                const roomLayer = editorInstance.layerSystem.getLayer('room');
+                const maskLayer = editorInstance.layerSystem.getLayer('mask');
+                const allPolygons = polygonsData.polygons || [];
+                console.log('📦 Fetched polygons from server:', allPolygons.length);
+
+                if (roomLayer) {
+                    roomLayer.content = {
+                        ...roomLayer.content,
+                        rooms: allPolygons.filter((p: any) => p.type === 'room')
+                    };
+                    editorInstance.layerSystem.markDirty('room');
+                }
+
+                if (maskLayer) {
+                    maskLayer.content = {
+                        ...maskLayer.content,
+                        masks: allPolygons.filter((p: any) => p.type === 'mask')
+                    };
+                    editorInstance.layerSystem.markDirty('mask');
+                }
+
                 // RESTORE OPACITY
                 editorInstance.setLayerOpacity('electrical', overlayData.opacity ?? 0.7);
 
-                // Sync UI state
+                // Initial setup complete - enable auto-save & sync UI
                 setLayers([...editorInstance.layerSystem.getAllLayers()]);
+                setActiveTool(editorInstance.toolSystem.getActiveToolType());
+                setIsEditMode(editorInstance.editMode);
 
-                if (scaleData.scaleFactor) {
-                    // We might need a setScaleFactor method on editor if it needs it
-                }
+                lastSavedPayloadRef.current = JSON.stringify({
+                    x: overlayData.x || 0,
+                    y: overlayData.y || 0,
+                    scale: overlayData.scale || 1,
+                    rotation: overlayData.rotation || 0,
+                    opacity: overlayData.opacity ?? 0.7,
+                    locked: !!overlayData.locked
+                });
+
+                isInitializedRef.current = true;
+                console.log('🚀 Editor initialization sequence complete');
             } catch (err) {
                 console.error('Failed to restore editor state:', err);
+                // Still mark as initialized so manual edits can be saved
+                isInitializedRef.current = true;
             }
         };
 
         setup();
 
         return () => {
-            if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
             editorInstance.dispose();
             editorInstanceRef.current = null;
             setEditor(null);
@@ -180,36 +370,66 @@ export const FloorPlanRenderer: React.FC = () => {
                 (window as any).editor = null;
             }
         };
-    }, [debouncedSave]);
+    }, []);
 
     const handleCalibrate = async () => {
         if (!calibrationData) return;
 
         const meters = parseDistanceInput(realDist);
         if (meters === null) {
-            alert("Invalid distance format. Try '10ft' or '3m'.");
+            alert('Invalid distance format. Use "10" or "10m" or "32ft"');
             return;
         }
 
         const pixelsPerMeter = calibrationData.pixelDist / meters;
-        console.log(`Calibrated: ${pixelsPerMeter} pixels per meter`);
 
-        // Save to Server
         try {
-            await fetch('/api/scale', {
+            const res = await fetch('/api/scale', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ scaleFactor: pixelsPerMeter })
             });
-            console.log('✅ Calibration scale saved to server');
+            if (res.ok) {
+                setCalibrationData(null);
+                setRealDist('');
+                console.log('✅ Calibration saved to server');
+            }
         } catch (err) {
-            console.error('Failed to save calibration data:', err);
+            console.error('Failed to save calibration:', err);
         }
 
         setCalibrationData(null);
         setRealDist('');
         editor?.setActiveTool('select');
     };
+
+    const handleSaveRoom = (name: string, type: RoomType) => {
+        if (!pendingRoom || !editor) return;
+
+        const finalizedRoom: Room = {
+            ...pendingRoom,
+            name,
+            roomType: type
+        };
+
+        const command = new AddPolygonCommand('room', finalizedRoom, editor.layerSystem);
+        editor.commandManager.execute(command);
+        editor.emit('layers-changed', editor.layerSystem.getAllLayers());
+
+        setPendingRoom(null);
+    };
+
+    const handleCancelRoom = () => {
+        setPendingRoom(null);
+    };
+
+    // Helper to get room names for uniqueness check
+    const existingRoomNames = useMemo(() => {
+        const roomLayer = layers.find(l => l.id === 'room');
+        if (!roomLayer || !roomLayer.content) return [];
+        const content = roomLayer.content as VectorLayerContent;
+        return (content.rooms || []).map(r => r.name);
+    }, [layers]);
 
     return (
         <div className="h-full w-full flex flex-col bg-slate-950 overflow-hidden text-slate-200">
@@ -221,8 +441,15 @@ export const FloorPlanRenderer: React.FC = () => {
                 lastKey={lastKey || ''}
             />
 
-            <div className={`flex-1 flex overflow-hidden transition-all duration-500 ${isEditMode ? 'ring-[8px] ring-red-600/50 ring-inset' : ''}`}>
-                <div className="flex-1 relative overflow-hidden flex flex-col">
+            <div className={`flex-1 flex overflow-hidden transition-all duration-500`}>
+                {/* 🛠️ Vertical Tool Palette */}
+                <ToolPalette
+                    editor={editor}
+                    activeTool={activeTool}
+                    isEditMode={isEditMode}
+                />
+
+                <div className={`flex-1 relative overflow-hidden flex flex-col ${isEditMode ? 'ring-[8px] ring-red-600/50 ring-inset' : ''}`}>
                     <ThreeCanvas
                         onMount={initEditor}
                         isEditMode={isEditMode}
@@ -248,6 +475,7 @@ export const FloorPlanRenderer: React.FC = () => {
                     )}
                 </div>
 
+                {/* 📑 Layers Sidebar (Always Visible) */}
                 <LayersSidebar
                     editor={editor}
                     layers={layers}
@@ -269,6 +497,15 @@ export const FloorPlanRenderer: React.FC = () => {
             )}
 
             <EditorFooter coordsRef={coordsRef} />
+            {/* Room Properties Modal */}
+            {pendingRoom && (
+                <RoomPropertiesModal
+                    room={pendingRoom}
+                    existingNames={existingRoomNames}
+                    onSave={handleSaveRoom}
+                    onCancel={handleCancelRoom}
+                />
+            )}
         </div>
     );
 };

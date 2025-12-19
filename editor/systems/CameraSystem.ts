@@ -14,7 +14,7 @@ export class CameraSystem {
         zoom: 1,
         zoomCursorEnabled: true,
         zoomCursorMagnification: 2,
-        zoomCursorSize: 250
+        zoomCursorSize: 125
     };
 
     private lastMousePos: Vector2 = { x: 0, y: 0 };
