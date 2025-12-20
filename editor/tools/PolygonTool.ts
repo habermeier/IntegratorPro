@@ -51,24 +51,47 @@ export class PolygonTool implements Tool {
         const glowTexture = loader.load('/assets/glow-circle.png');
 
         this.lineGeometry = new THREE.BufferGeometry();
-        this.lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1.0 });
+        // User requested "thicker and red". LineWidth doesn't work well in GL, so we depend on color and the shadow hack.
+        this.lineMaterial = new THREE.LineBasicMaterial({
+            color: 0xff0000,
+            transparent: true,
+            opacity: 1.0,
+            depthTest: false // Ensure visible on top
+        });
         this.lineMesh = new THREE.Line(this.lineGeometry, this.lineMaterial);
         this.lineMesh.position.z = 100.6;
+        this.lineMesh.renderOrder = 9999;
+        this.lineMesh.frustumCulled = false;
+        this.lineMesh.layers.enable(31); // Visible in Zoom magnifier
 
         this.shadowLineGeometry = new THREE.BufferGeometry();
-        this.shadowLineMaterial = new THREE.LineBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.2 }); // Softer
+        // Use Red shadow with higher opacity to create a "thick" look
+        this.shadowLineMaterial = new THREE.LineBasicMaterial({
+            color: 0xff0000,
+            transparent: true,
+            opacity: 0.4,
+            depthTest: false // Ensure visible on top
+        });
 
         this.shadowLineMeshes = [];
-        const offsets = [{ x: 2, y: 0 }, { x: -2, y: 0 }, { x: 0, y: 2 }, { x: 0, y: -2 }, { x: 1.4, y: 1.4 }, { x: -1.4, y: -1.4 }, { x: 0, y: 0 }];
+        const offsets = [
+            { x: 3, y: 0 }, { x: -3, y: 0 }, { x: 0, y: 3 }, { x: 0, y: -3 },
+            { x: 2, y: 2 }, { x: -2, y: -2 }, { x: 2, y: -2 }, { x: -2, y: 2 },
+            { x: 1.5, y: 0 }, { x: -1.5, y: 0 }, { x: 0, y: 1.5 }, { x: 0, y: -1.5 },
+            { x: 0, y: 0 }
+        ];
         offsets.forEach(() => {
             const mesh = new THREE.Line(this.shadowLineGeometry, this.shadowLineMaterial);
             mesh.position.z = 100.4;
+            mesh.renderOrder = 9998;
+            mesh.frustumCulled = false;
+            mesh.layers.enable(31); // Visible in Zoom magnifier
             this.shadowLineMeshes.push(mesh);
         });
 
-        this.vertexMaterial = new THREE.SpriteMaterial({ map: glowTexture, color: 0xffffff, transparent: true, opacity: 1.0 });
-        this.firstVertexMaterial = new THREE.SpriteMaterial({ map: glowTexture, color: 0x22c55e, transparent: true, opacity: 1.0 });
-        this.shadowVertexMaterial = new THREE.SpriteMaterial({ map: glowTexture, color: 0x000000, transparent: true, opacity: 0.5 });
+        this.vertexMaterial = new THREE.SpriteMaterial({ map: glowTexture, color: 0x1e40af, transparent: true, opacity: 1.0, depthTest: false });
+        this.firstVertexMaterial = new THREE.SpriteMaterial({ map: glowTexture, color: 0x22c55e, transparent: true, opacity: 1.0, depthTest: false });
+        this.shadowVertexMaterial = new THREE.SpriteMaterial({ map: glowTexture, color: 0x000000, transparent: true, opacity: 0.5, depthTest: false });
     }
 
     public activate(): void {
@@ -176,11 +199,21 @@ export class PolygonTool implements Tool {
             return;
         }
 
+        // 2. Alt-Selection: Exclusive selection mode (skip vertex placement)
+        if (event.altKey) {
+            const isMulti = event.shiftKey || event.ctrlKey || event.metaKey;
+            const selectedIds = this.editor.selectionSystem.selectAt(x, y, isMulti);
+            if (selectedIds.length > 0) {
+                this.editor.emit('selection-changed', selectedIds);
+            }
+            return;
+        }
+
         const worldPos = this.editor.cameraSystem.screenToWorld(x, y);
         let targetPos = worldPos;
         let activeSnap: SnapInfo | null = null;
 
-        // 2. Snapping (Unless Ctrl pressed)
+        // 3. Snapping (Unless Ctrl pressed)
         // Taking precedence over Selection as requested
         if (!event.ctrlKey) {
             activeSnap = this.getClosestSnapPoint(worldPos.x, worldPos.y);
@@ -196,20 +229,23 @@ export class PolygonTool implements Tool {
 
         // 3. Auto-Trace completion logic
         if (this.points.length > 0 && activeSnap && this.startSnap && activeSnap.polyId === this.startSnap.polyId) {
-            // First, add the point we just clicked
-            this.points.push(targetPos);
+            // Guard: Don't auto-trace if we just clicked the exact same start point (trivial loop of length 0)
+            if (activeSnap.index === this.startSnap.index && activeSnap.pos.x === this.startSnap.pos.x && activeSnap.pos.y === this.startSnap.pos.y) {
+                // Do nothing, just wait for more points. Or treat as regular point add.
+            } else {
+                // First, add the point we just clicked
+                this.points.push(targetPos);
 
-            // AUTO-TRACE: Calculate path from CURRENT (End) back to START
-            // This ensures points are added in the correct winding order to close the loop.
-            const tracePoints = this.calculateTracePoints(activeSnap, this.startSnap);
+                // AUTO-TRACE: Calculate path from CURRENT (End) back to START
+                const tracePoints = this.calculateTracePoints(activeSnap, this.startSnap);
 
-            if (tracePoints.length > 0) {
-                this.points.push(...tracePoints);
+                if (tracePoints.length > 0) {
+                    this.points.push(...tracePoints);
+                }
+
+                this.finishPolygon();
+                return;
             }
-
-            // Allow finishing even if trace was empty (e.g. direct line connection)
-            this.finishPolygon();
-            return;
         }
 
         // 4. Manual Closing (First Point Snap)
@@ -407,7 +443,12 @@ export class PolygonTool implements Tool {
             this.shadowLineGeometry.setAttribute('position', new THREE.BufferAttribute(shadowPositions, 3));
 
             this.previewGroup.add(this.lineMesh);
-            const offsets = [{ x: 2, y: 0 }, { x: -2, y: 0 }, { x: 0, y: 2 }, { x: 0, y: -2 }, { x: 1.4, y: 1.4 }, { x: -1.4, y: -1.4 }, { x: 0, y: 0 }];
+            const offsets = [
+                { x: 3, y: 0 }, { x: -3, y: 0 }, { x: 0, y: 3 }, { x: 0, y: -3 },
+                { x: 2, y: 2 }, { x: -2, y: -2 }, { x: 2, y: -2 }, { x: -2, y: 2 },
+                { x: 1.5, y: 0 }, { x: -1.5, y: 0 }, { x: 0, y: 1.5 }, { x: 0, y: -1.5 },
+                { x: 0, y: 0 }
+            ];
             this.shadowLineMeshes.forEach((mesh, idx) => {
                 if (offsets[idx]) {
                     mesh.position.set(offsets[idx].x, offsets[idx].y, 100.4);
@@ -417,27 +458,22 @@ export class PolygonTool implements Tool {
         }
 
         // 2. Update Vertices (using pool)
-        // 2. Update Vertices (using pool)
         allPoints.forEach((p, i) => {
             // Fix: Always show first vertex as Green (Start) regardless of polygon state
             const isFirst = i === 0;
-
-            // Determine if this is the active cursor vertex (to hide from Zoom)
-            const isCursorVertex = i === allPoints.length - 1 && this.currentMousePos !== null;
-            const layer = isCursorVertex ? 31 : 0;
 
             // Get or create vertex sprite
             let vertex = this.vertexPool[i];
             if (!vertex) {
                 vertex = new THREE.Sprite(this.vertexMaterial);
+                vertex.layers.set(31); // Ensure visible in Zoom magnifier
                 this.vertexPool[i] = vertex;
             }
             vertex.material = isFirst ? this.firstVertexMaterial : this.vertexMaterial;
             vertex.scale.set(isFirst ? 20 : 12, isFirst ? 20 : 12, 1);
             vertex.position.set(p.x, p.y, 101);
-
-            // Apply visibility layer logic
-            vertex.layers.set(layer);
+            vertex.frustumCulled = false;
+            vertex.layers.set(31); // Force enable for zoom
 
             this.previewGroup.add(vertex);
 
@@ -445,13 +481,13 @@ export class PolygonTool implements Tool {
             let shadowVertex = this.shadowVertexPool[i];
             if (!shadowVertex) {
                 shadowVertex = new THREE.Sprite(this.shadowVertexMaterial);
+                shadowVertex.layers.set(31); // Ensure visible in Zoom magnifier
                 this.shadowVertexPool[i] = shadowVertex;
             }
             shadowVertex.scale.set(isFirst ? 24 : 16, isFirst ? 24 : 16, 1);
-            shadowVertex.position.set(p.x, p.y, 100.5); // Centered
-
-            // Fix: Shadow must ALSO be hidden from Zoom if the main vertex is hidden
-            shadowVertex.layers.set(layer);
+            shadowVertex.position.set(p.x, p.y, 100.8);
+            shadowVertex.frustumCulled = false;
+            shadowVertex.layers.set(31); // Force enable for zoom
 
             this.previewGroup.add(shadowVertex);
         });
@@ -460,6 +496,19 @@ export class PolygonTool implements Tool {
     }
 
     private finishPolygon(): void {
+        // Validation: Polygon must have at least 3 points
+        // Remove duplicates/proximity points
+        const uniquePoints = this.points.filter((p, i) => {
+            if (i === 0) return true;
+            const prev = this.points[i - 1];
+            return Math.abs(p.x - prev.x) > 1 || Math.abs(p.y - prev.y) > 1;
+        });
+
+        if (uniquePoints.length < 3) {
+            console.warn('[PolygonTool] Cannot finish polygon: < 3 unique points');
+            return;
+        }
+
         const id = Math.random().toString(36).substring(7);
         const layerId = this.type === 'draw-room' ? 'room' : 'mask';
 
@@ -468,7 +517,7 @@ export class PolygonTool implements Tool {
         if (this.type === 'draw-room') {
             poly = {
                 id,
-                points: [...this.points],
+                points: [...uniquePoints],
                 name: '',
                 roomType: 'other'
             } as Room;
@@ -478,7 +527,7 @@ export class PolygonTool implements Tool {
         } else {
             poly = {
                 id,
-                points: [...this.points]
+                points: [...uniquePoints]
             } as Mask;
 
             const command = new AddPolygonCommand(layerId, poly, this.editor.layerSystem);

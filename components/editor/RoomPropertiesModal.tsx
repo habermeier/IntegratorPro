@@ -14,15 +14,21 @@ export const RoomPropertiesModal: React.FC<RoomPropertiesModalProps> = ({
     onSave,
     onCancel
 }) => {
-    const [name, setName] = useState('');
-    const [roomType, setRoomType] = useState<RoomType>('other');
+    const [name, setName] = useState(room.name || '');
+    const [roomType, setRoomType] = useState<RoomType>(room.roomType || 'other');
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        setName(room.name || '');
+        setRoomType(room.roomType || 'other');
+    }, [room]);
 
     const roomTypes: { value: RoomType, label: string }[] = [
         { value: 'hallway', label: 'Hallway' },
         { value: 'closet', label: 'Closet' },
         { value: 'bedroom', label: 'Bedroom' },
         { value: 'bathroom', label: 'Bathroom' },
+        { value: 'garage', label: 'Garage' },
         { value: 'open', label: 'Open (Living/Kitchen/etc)' },
         { value: 'other', label: 'Other' },
     ];

@@ -223,8 +223,10 @@ export class LayerSystem {
             let group = this.meshCache.get(cacheKey) as THREE.Group;
             const isMask = poly.polyType === 'mask';
 
-            // 1. Check if points have changed (simple hash)
-            const pointsHash = poly.points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join('|');
+            // 1. Check if points OR attributes have changed (hash)
+            // We include name, color, type in hash to force re-render if they change
+            const pointsHash = poly.points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join('|') +
+                `|${(poly as any).name || ''}|${(poly as any).roomType || ''}|${poly.color || ''}`;
 
             if (!group) {
                 group = new THREE.Group();
@@ -307,7 +309,12 @@ export class LayerSystem {
 
                 poly.points.forEach((p, idx) => {
                     const sprite = new THREE.Sprite(this.vertexMaterial!.clone());
-                    sprite.material.color.set(isMask ? 0xf8fafc : 0xffffff);
+                    // User requested mid-dark blue for vertices "when placing", applying to all for consistency
+                    // Masks: keep light or use blue? Blue might be hard to see on dark mask if mask is dark.
+                    // But user asked for mid dark blue. Let's try uniform blue for consistency, or keep masks unique.
+                    // Default logic was: isMask ? 0xf8fafc : 0xffffff
+                    // New logic: isMask ? 0xf8fafc : 0x1e40af
+                    sprite.material.color.set(isMask ? 0x1e40af : 0x1e40af);
                     sprite.position.set(p.x, p.y, 0.2);
                     sprite.scale.set(12, 12, 1); // Soft glow size
                     sprite.name = `vertex-${idx}`;
@@ -553,7 +560,11 @@ export class LayerSystem {
         const sprite = new THREE.Sprite(material);
 
         const scale = 0.5;
-        sprite.scale.set(canvas.width * scale, canvas.height * scale, 1);
+        const initialX = canvas.width * scale;
+        const initialY = canvas.height * scale;
+
+        sprite.scale.set(initialX, initialY, 1);
+        sprite.userData = { baseScale: { x: initialX, y: initialY } };
 
         return sprite;
     }
@@ -565,14 +576,38 @@ export class LayerSystem {
             'closet': 'Closet',
             'bedroom': 'Bedroom',
             'bathroom': 'Bathroom',
+            'garage': 'Garage',
             'open': 'Open Area',
             'other': 'Room'
         };
-        // If exact match found, return it. Else capitalize first letter?
-        // Or if user enters custom type? Ideally logic lives in Modal but we display stored 'type' key here.
-        // Wait, modal saves 'type' as enum key ('hallway', 'closet').
-        // So we format it here.
         return map[type] || (type.charAt(0).toUpperCase() + type.slice(1));
+    }
+
+    public updateLabelScales(zoom: number): void {
+        const factor = 0.5; // Adjustable: 0 = fixed world size, 1 = fixed screen size
+        // We want something in between. 0.6 means closer to fixed screen size but still shrinks a bit.
+        // Formula: scale = baseScale * (1 / zoom) ^ factor
+
+        // Clamp the effective zoom multiplier to avoid labels becoming seemingly infinite scale
+        const effectiveZoom = Math.max(0.05, zoom);
+        // Inverse zoom power for "partial screen locking"
+        const scaler = Math.pow(1 / effectiveZoom, factor);
+
+        this.layers.forEach(layer => {
+            if (layer.type !== 'vector') return;
+
+            layer.container.children.forEach(group => {
+                const label = group.getObjectByName('label') as THREE.Sprite;
+                if (label && label.userData.baseScale) {
+                    const base = label.userData.baseScale;
+                    label.scale.set(
+                        base.x * scaler,
+                        base.y * scaler,
+                        1
+                    );
+                }
+            });
+        });
     }
 
     private applyTransform(layer: Layer): void {

@@ -5,6 +5,7 @@ export interface Tool {
     onMouseDown?(x: number, y: number, event: MouseEvent): void;
     onMouseMove?(x: number, y: number, event: MouseEvent): void;
     onMouseUp?(x: number, y: number, event: MouseEvent): void;
+    onDoubleClick?(x: number, y: number, event: MouseEvent): void;
     onKeyDown?(key: string, event: KeyboardEvent): void;
     activate?(): void;
     deactivate?(): void;
@@ -49,6 +50,10 @@ export class ToolSystem {
 
     public handleMouseUp(x: number, y: number, event: MouseEvent): void {
         this.activeTool?.onMouseUp?.(x, y, event);
+    }
+
+    public handleDoubleClick(x: number, y: number, event: MouseEvent): void {
+        this.activeTool?.onDoubleClick?.(x, y, event);
     }
 
     public handleKeyDown(key: string, event: KeyboardEvent): void {

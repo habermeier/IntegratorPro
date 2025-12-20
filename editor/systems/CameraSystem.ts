@@ -41,6 +41,7 @@ export class CameraSystem {
             0.1, 1000
         );
         this.zoomCamera.position.z = 500;
+        this.zoomCamera.layers.enable(31); // See active drawing elements in magnifier
     }
 
     public resize(width: number, height: number): void {
@@ -144,6 +145,35 @@ export class CameraSystem {
             x: normalizedX * this.viewportWidth,
             y: normalizedY * this.viewportHeight
         };
+    }
+
+    public getState(): { x: number, y: number, zoom: number } {
+        const cx = (this.mainCamera.left + this.mainCamera.right) / 2;
+        const cy = (this.mainCamera.top + this.mainCamera.bottom) / 2;
+        return { x: cx, y: cy, zoom: this.state.zoom };
+    }
+
+    public setState(state: { x: number, y: number, zoom: number }): void {
+        if (!state) return;
+
+        // Restore Zoom
+        this.state.zoom = state.zoom || 1;
+
+        // Restore Position (Center)
+        const cx = state.x || 0;
+        const cy = state.y || 0;
+
+        // Recalculate frustum based on viewport and zoom
+        const halfWidth = (this.viewportWidth / this.state.zoom) / 2;
+        const halfHeight = (this.viewportHeight / this.state.zoom) / 2;
+
+        this.mainCamera.left = cx - halfWidth;
+        this.mainCamera.right = cx + halfWidth;
+        this.mainCamera.top = cy + halfHeight;
+        this.mainCamera.bottom = cy - halfHeight;
+
+        this.mainCamera.updateProjectionMatrix();
+        this.updateZoomCamera();
     }
 
     public render(renderer: THREE.WebGLRenderer, scene: THREE.Scene): void {

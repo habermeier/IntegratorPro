@@ -24,12 +24,12 @@ export interface LayerConfig {
     transform: Transform;
 }
 
-export type RoomType = 'hallway' | 'closet' | 'bedroom' | 'bathroom' | 'open' | 'other';
+export type RoomType = 'hallway' | 'closet' | 'bedroom' | 'bathroom' | 'open' | 'other' | 'garage';
 
 export interface Polygon {
     id: string;
     points: Vector2[];
-    color?: string;
+    color?: number;
 }
 
 export interface Room extends Polygon {

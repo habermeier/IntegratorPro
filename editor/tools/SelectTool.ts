@@ -108,6 +108,17 @@ export class SelectTool implements Tool {
         }
     }
 
+    public onDoubleClick(x: number, y: number, event: MouseEvent): void {
+        console.log('[SelectTool] onDoubleClick triggered at', x, y);
+        const room = this.editor.selectionSystem.getRoomAt(x, y, false); // false = Allow Body
+        if (room) {
+            console.log('[SelectTool] Double Click: Edit Room', room.name);
+            this.editor.emit('room-edit-requested', room);
+        } else {
+            console.log('[SelectTool] Double Click: No room hit');
+        }
+    }
+
     public onKeyDown(key: string, event: KeyboardEvent): void {
         if (key === 'Escape') {
             this.editor.selectionSystem.clearSelection();

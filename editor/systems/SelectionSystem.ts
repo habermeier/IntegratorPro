@@ -76,4 +76,56 @@ export class SelectionSystem {
     public clearSelection(): void {
         this.selectedIds.clear();
     }
+
+    public getRoomAt(screenX: number, screenY: number, onlyLabels: boolean = false): any | null {
+        // 1. Check Labels (Screen Space Raycast)
+        const cam = this.cameraSystem.mainCamera;
+        const renderer = (this.layerSystem.scene.userData.editor as any).renderer as THREE.WebGLRenderer;
+
+        if (renderer) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            const ndcX = ((screenX) / rect.width) * 2 - 1;
+            const ndcY = -((screenY) / rect.height) * 2 + 1;
+
+            this.raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), cam);
+
+            const roomLayer = this.layerSystem.getLayer('room');
+            if (roomLayer && roomLayer.visible) {
+                const labels: THREE.Object3D[] = [];
+                roomLayer.container.traverse(obj => {
+                    if (obj.name === 'label') labels.push(obj);
+                });
+
+                const intersects = this.raycaster.intersectObjects(labels, false);
+                if (intersects.length > 0) {
+                    const hit = intersects[0].object;
+                    const group = hit.parent;
+                    if (group && group.userData && group.userData.id) {
+                        // Find room object
+                        const content = roomLayer.content as any;
+                        const room = (content.rooms || []).find((r: any) => r.id === group.userData.id);
+                        if (room) return room;
+                    }
+                }
+            }
+        }
+
+        if (onlyLabels) return null;
+
+        // 2. Check Room Bodies (Standard Select)
+        const hitIds = this.selectAt(screenX, screenY, false);
+        if (hitIds.length === 1) {
+            const roomId = hitIds[0];
+            const layers = this.layerSystem.getAllLayers();
+            for (const layer of layers) {
+                if (layer.id === 'room' && layer.type === 'vector') {
+                    const content = layer.content as any;
+                    const room = (content.rooms || []).find((r: any) => r.id === roomId);
+                    if (room) return room;
+                }
+            }
+        }
+
+        return null;
+    }
 }

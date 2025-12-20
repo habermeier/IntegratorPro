@@ -25,7 +25,15 @@ export class FloorPlanEditor {
     private isEditMode: boolean = false;
     private activeLayerId: string | null = null;
     private isSpacePressed: boolean = false;
+    private isAltPressed: boolean = false;
     private needsRender: boolean = true;
+
+    // Panning State
+    private isDragging: boolean = false;
+    // private dragStartX: number = 0;
+    // private dragStartY: number = 0;
+    private lastX: number = 0;
+    private lastY: number = 0;
 
     private animationFrameId: number | null = null;
     private eventListeners: Map<string, Function[]> = new Map();
@@ -99,7 +107,8 @@ export class FloorPlanEditor {
             activeLayerId: this.activeLayerId,
             isEditMode: this.isEditMode,
             visibility,
-            preMaskVisibility: Object.fromEntries(this.preMaskVisibility)
+            preMaskVisibility: Object.fromEntries(this.preMaskVisibility),
+            camera: this.cameraSystem.getState()
         };
 
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(state));
@@ -131,6 +140,12 @@ export class FloorPlanEditor {
             // 4. Restore Tool (Triggers side effects)
             if (state.activeTool) {
                 this.setActiveTool(state.activeTool as ToolType);
+            }
+
+            // 5. Restore Camera State
+            if (state.camera) {
+                this.cameraSystem.setState(state.camera);
+                this.layerSystem.updateLabelScales(state.camera.zoom);
             }
 
             this.emit('layers-changed', this.layerSystem.getAllLayers());
@@ -220,6 +235,12 @@ export class FloorPlanEditor {
             }
         }
 
+        // Alt Key tracking
+        if (e.altKey && !this.isAltPressed) {
+            this.isAltPressed = true;
+            this.emit('modifier-changed', { isAltPressed: true });
+        }
+
         this.toolSystem.handleKeyDown(e.key, e);
         this.emit('keydown', e.key);
     };
@@ -229,6 +250,11 @@ export class FloorPlanEditor {
             this.isSpacePressed = false;
             this.updateCursor();
             this.emit('panning-changed', false);
+        }
+
+        if (!e.altKey && this.isAltPressed) {
+            this.isAltPressed = false;
+            this.emit('modifier-changed', { isAltPressed: false });
         }
     };
 
@@ -309,50 +335,128 @@ export class FloorPlanEditor {
             isDragging = false;
             el.style.cursor = 'default';
         });
-
-        el.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const rect = el.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            this.cameraSystem.zoom(e.deltaY, x, y);
-            this.setDirty();
-        }, { passive: false });
-
-        window.addEventListener('resize', this.handleResize);
+        this.container.addEventListener('mousedown', this.handleMouseDown);
+        window.addEventListener('mousemove', this.handleMouseMove);
+        window.addEventListener('mouseup', this.handleMouseUp);
+        this.container.addEventListener('dblclick', this.handleDoubleClick);
         window.addEventListener('keydown', this.handleKeyDown);
         window.addEventListener('keyup', this.handleKeyUp);
+        this.container.addEventListener('wheel', this.handleWheel, { passive: false });
+        window.addEventListener('resize', this.handleResize);
+
+        // Prevent context menu
+        this.container.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        // Resize observer? Already handled via resize() method typically called by React
     }
 
-    private startRenderLoop(): void {
-        const animate = () => {
-            this.animationFrameId = requestAnimationFrame(animate);
-
-            // Continuous Pulse for selections
-            if (this.selectionSystem.getSelectedIds().length > 0) {
-                this.needsRender = true;
-            }
-
-            if (this.needsRender) {
-                this.update();
-                this.render();
-                this.needsRender = false;
-            }
+    private getMouseCoords(event: MouseEvent): { x: number, y: number } {
+        const rect = this.container.getBoundingClientRect();
+        return {
+            x: event.clientX - rect.left,
+            y: event.clientY - rect.top
         };
-        animate();
     }
 
-    public setDirty(): void {
-        this.needsRender = true;
-    }
+    private handleMouseDown = (e: MouseEvent) => {
+        const { x, y } = this.getMouseCoords(e);
 
-    private update(): void {
-        this.layerSystem.update();
-    }
+        const isPanInput = e.button === 1 || (e.button === 0 && (e.shiftKey || this.isSpacePressed));
 
-    private render(): void {
-        this.cameraSystem.render(this.renderer, this.scene);
-    }
+        if (isPanInput) {
+            this.isDragging = true;
+            this.lastX = e.clientX;
+            this.lastY = e.clientY;
+            this.updateCursor();
+            this.setDirty();
+        } else {
+            this.toolSystem.handleMouseDown(x, y, e);
+            this.setDirty();
+        }
+    };
+
+    private handleMouseMove = (e: MouseEvent) => {
+        // We need coords relative to container even if mouse is outside (for drag)
+        // ensure rect is valid
+        if (!this.container) return;
+        const { x, y } = this.getMouseCoords(e);
+
+        if (this.isDragging) {
+            const deltaX = e.clientX - this.lastX;
+            const deltaY = e.clientY - this.lastY;
+            this.cameraSystem.pan(deltaX, deltaY);
+            this.lastX = e.clientX;
+            this.lastY = e.clientY;
+            this.setDirty();
+        } else {
+            this.toolSystem.handleMouseMove(x, y, e);
+            // Mouse move tool handles might need render
+            if (this.toolSystem.getActiveToolType() === 'scale-calibrate') {
+                this.setDirty();
+            }
+        }
+
+        // Update Spacebar Panning cursor
+        if (this.isSpacePressed) {
+            // ...
+        }
+
+        this.cameraSystem.updateZoomCursor(x, y);
+        this.setDirty(); // Zoom cursor follows mouse, must re-render
+        this.emit('cursor-move', { x, y });
+    };
+
+    private handleMouseUp = (e: MouseEvent) => {
+        const { x, y } = this.getMouseCoords(e);
+
+        if (this.isDragging) {
+            this.isDragging = false;
+            this.updateCursor();
+            this.savePersistentState(); // Save after Pan
+            this.setDirty();
+        } else {
+            this.toolSystem.handleMouseUp(x, y, e);
+            this.setDirty();
+        }
+    };
+
+    private handleDoubleClick = (e: MouseEvent) => {
+        const { x, y } = this.getMouseCoords(e);
+        const handled = this.toolSystem.handleDoubleClick(x, y, e);
+
+        // Fallback: If tool didn't handle it, try to find a room to edit
+        // Global rule: Only allow double-click editing if clicking the LABEL.
+        // This prevents accidental vertex clicks from triggering edits.
+
+        // We allow SelectTool to override this (it calls getRoomAt with false),
+        // but for the global fallback (Draw modes etc), we enforce labels only.
+
+        if (this.toolSystem.getActiveToolType() !== 'select') {
+            const room = this.selectionSystem.getRoomAt(x, y, true); // true = Only Labels
+            if (room) {
+                console.log(`[FloorPlanEditor] Fallback Double Click: Edit Room via Label`, room.name);
+                this.emit('room-edit-requested', room);
+            }
+        }
+    };
+
+    private saveTimeout: number | undefined;
+
+    private handleWheel = (e: WheelEvent) => {
+        e.preventDefault();
+        const { x, y } = this.getMouseCoords(e);
+        this.cameraSystem.zoom(e.deltaY, x, y);
+
+        // Update label scales dynamically
+        const newZoom = this.cameraSystem.getState().zoom;
+        this.layerSystem.updateLabelScales(newZoom);
+
+        this.setDirty();
+
+        // Debounce save for zoom
+        window.clearTimeout(this.saveTimeout);
+        this.saveTimeout = window.setTimeout(() => this.savePersistentState(), 500);
+    };
 
     // Public API
     public async loadImage(id: string, url: string): Promise<void> {
@@ -506,9 +610,38 @@ export class FloorPlanEditor {
                 this.layerSystem.setLayerLocked(layer.id, true);
             });
         }
-
         this.savePersistentState();
         this.emit('layers-changed', this.layerSystem.getAllLayers());
+    }
+
+    private startRenderLoop(): void {
+        const animate = () => {
+            this.animationFrameId = requestAnimationFrame(animate);
+
+            // Continuous Pulse for selections
+            if (this.selectionSystem.getSelectedIds().length > 0) {
+                this.needsRender = true;
+            }
+
+            if (this.needsRender) {
+                this.update();
+                this.render();
+                this.needsRender = false;
+            }
+        };
+        animate();
+    }
+
+    public setDirty(): void {
+        this.needsRender = true;
+    }
+
+    private update(): void {
+        this.layerSystem.update();
+    }
+
+    private render(): void {
+        this.cameraSystem.render(this.renderer, this.scene);
     }
 
     private updateCursor(): void {
@@ -551,17 +684,19 @@ export class FloorPlanEditor {
     }
 
     public dispose(): void {
-        if (this.animationFrameId !== null) {
-            cancelAnimationFrame(this.animationFrameId);
-        }
-        window.removeEventListener('resize', this.handleResize);
+        this.container.removeEventListener('mousedown', this.handleMouseDown);
+        window.removeEventListener('mousemove', this.handleMouseMove);
+        window.removeEventListener('mouseup', this.handleMouseUp);
         window.removeEventListener('keydown', this.handleKeyDown);
         window.removeEventListener('keyup', this.handleKeyUp);
 
-        console.log(`[FloorPlanEditor] Disposing instance. Listeners removed.`);
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+        }
 
         this.renderer.dispose();
-        if (this.container.contains(this.renderer.domElement)) {
+        // remove dom element
+        if (this.container && this.renderer.domElement.parentElement === this.container) {
             this.container.removeChild(this.renderer.domElement);
         }
     }
