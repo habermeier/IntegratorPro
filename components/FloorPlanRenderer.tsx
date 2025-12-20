@@ -515,7 +515,13 @@ export const FloorPlanRenderer: React.FC = () => {
             {pendingRoom && (
                 <RoomPropertiesModal
                     room={pendingRoom}
-                    existingNames={existingRoomNames}
+                    existingRooms={
+                        // Derive existing rooms for uniqueness validation
+                        layers
+                            .filter(l => l.type === 'vector' && l.id === 'room')
+                            .flatMap(l => (l.content as VectorLayerContent).rooms || [])
+                            .map(r => ({ name: r.name || '', type: r.roomType || 'other' }))
+                    }
                     onSave={handleSaveRoom}
                     onCancel={handleCancelRoom}
                 />

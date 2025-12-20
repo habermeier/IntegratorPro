@@ -28,6 +28,8 @@ export class SelectionSystem {
 
         for (const layer of layers) {
             if (!layer.visible) continue;
+            // Interaction Lock: Ignore Mask layer if not in Mask Edit Mode
+            if (layer.id === 'mask' && !this.layerSystem.getMaskEditMode()) continue;
 
             const intersects = this.raycaster.intersectObject(layer.container, true);
             for (const intersect of intersects) {

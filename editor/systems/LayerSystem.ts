@@ -314,6 +314,29 @@ export class LayerSystem {
                     group.add(sprite);
                 });
 
+                // Room Label
+                if (poly.polyType === 'room' && (poly as any).name) {
+                    const roomName = (poly as any).name;
+                    const roomType = (poly as any).roomType || 'other';
+                    const displayType = this.formatRoomType(roomType);
+
+                    const labelSprite = this.createLabel(roomName, displayType);
+                    labelSprite.name = 'label';
+
+                    // Calculate Centroid
+                    let cx = 0, cy = 0;
+                    poly.points.forEach(p => { cx += p.x; cy += p.y; });
+                    cx /= poly.points.length;
+                    cy /= poly.points.length;
+
+                    labelSprite.position.set(cx, cy, 0.5); // On top of fill/border
+                    group.add(labelSprite);
+
+                    // Cache name to avoid recreation
+                    group.userData.labelName = roomName;
+                    group.userData.labelType = roomType;
+                }
+
                 group.userData = { id, type: poly.polyType, lastHash: pointsHash };
                 layer.container.add(group);
                 this.meshCache.set(cacheKey, group);
@@ -321,7 +344,7 @@ export class LayerSystem {
                 // Update Geometries only if hash changed
                 const fill = group.getObjectByName('fill') as THREE.Mesh;
                 const border = group.getObjectByName('border') as THREE.Line;
-                const glow = group.getObjectByName('glow') as THREE.Mesh;
+                const label = group.getObjectByName('label') as THREE.Sprite;
 
                 if (fill) {
                     const shape = new THREE.Shape();
@@ -355,6 +378,43 @@ export class LayerSystem {
                     if (v) v.position.set(p.x, p.y, 0.2);
                 });
 
+                // Update Label Position
+                if (label) {
+                    let cx = 0, cy = 0;
+                    poly.points.forEach(p => { cx += p.x; cy += p.y; });
+                    cx /= poly.points.length;
+                    cy /= poly.points.length;
+                    label.position.set(cx, cy, 0.5);
+                }
+
+                // Check if name or type changed (rare but possible via edit props)
+                if (poly.polyType === 'room' && (poly as any).name) {
+                    const rName = (poly as any).name;
+                    const rType = (poly as any).roomType || 'other';
+
+                    if (group.userData.labelName !== rName || group.userData.labelType !== rType) {
+                        const oldLabel = group.getObjectByName('label') as THREE.Sprite;
+                        if (oldLabel) {
+                            oldLabel.geometry.dispose();
+                            (oldLabel.material as THREE.Material).dispose();
+                            group.remove(oldLabel);
+                        }
+
+                        const displayType = this.formatRoomType(rType);
+                        const newLabel = this.createLabel(rName, displayType);
+                        newLabel.name = 'label';
+                        let cx = 0, cy = 0;
+                        poly.points.forEach(p => { cx += p.x; cy += p.y; });
+                        cx /= poly.points.length;
+                        cy /= poly.points.length;
+                        newLabel.position.set(cx, cy, 0.5);
+                        group.add(newLabel);
+
+                        group.userData.labelName = rName;
+                        group.userData.labelType = rType;
+                    }
+                }
+
                 group.userData.lastHash = pointsHash;
             }
 
@@ -384,6 +444,14 @@ export class LayerSystem {
                     border.material.transparent = true;
                 }
             }
+
+            // Sync Vertex/Glow Visibility for Masks
+            const showDetails = !isMask || this.isMaskEditMode;
+            group.children.forEach(child => {
+                if (child.name.startsWith('vertex-') || child.name.startsWith('glow-')) {
+                    child.visible = showDetails;
+                }
+            });
         });
 
         if (content.symbols) {
@@ -428,6 +496,83 @@ export class LayerSystem {
             layer.container.remove(child);
             this.meshCache.delete(`${layer.id}-${child.userData.id}`);
         });
+    }
+
+    private createLabel(name: string, type: string): THREE.Sprite {
+        const canvas = document.createElement('canvas');
+        const fontSize = 24;
+        const font = `bold ${fontSize}px Inter, sans-serif`;
+        const subFont = `normal ${fontSize * 0.8}px Inter, sans-serif`;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return new THREE.Sprite();
+
+        // 1. Measure dimensions
+        ctx.font = font;
+        const nameMetrics = ctx.measureText(name);
+
+        ctx.font = subFont;
+        const typeMetrics = ctx.measureText(type);
+
+        const textWidth = Math.max(nameMetrics.width, typeMetrics.width);
+        const lineHeight = fontSize * 1.2;
+        const totalHeight = lineHeight * 2; // 2 lines
+
+        // 2. Resize Canvas
+        canvas.width = textWidth + 40; // Padding
+        canvas.height = totalHeight + 40;
+
+        // 3. Render Text
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        ctx.shadowBlur = 4;
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'black';
+        ctx.fillStyle = 'white';
+
+        // Line 1: Name
+        ctx.font = font;
+        ctx.strokeText(name, centerX, centerY - lineHeight * 0.5);
+        ctx.fillText(name, centerX, centerY - lineHeight * 0.5);
+
+        // Line 2: Type (uppercase or title case?) -> User said "Mud Hallway" implies Title Case
+        // We will receive title case or format it before calling.
+        ctx.font = subFont;
+        ctx.strokeText(type, centerX, centerY + lineHeight * 0.6);
+        ctx.fillText(type, centerX, centerY + lineHeight * 0.6);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.minFilter = THREE.LinearFilter;
+
+        const material = new THREE.SpriteMaterial({ map: texture, depthTest: false });
+        const sprite = new THREE.Sprite(material);
+
+        const scale = 0.5;
+        sprite.scale.set(canvas.width * scale, canvas.height * scale, 1);
+
+        return sprite;
+    }
+
+    private formatRoomType(type: string): string {
+        // Simple mapping or capitalization
+        const map: { [key: string]: string } = {
+            'hallway': 'Hallway',
+            'closet': 'Closet',
+            'bedroom': 'Bedroom',
+            'bathroom': 'Bathroom',
+            'open': 'Open Area',
+            'other': 'Room'
+        };
+        // If exact match found, return it. Else capitalize first letter?
+        // Or if user enters custom type? Ideally logic lives in Modal but we display stored 'type' key here.
+        // Wait, modal saves 'type' as enum key ('hallway', 'closet').
+        // So we format it here.
+        return map[type] || (type.charAt(0).toUpperCase() + type.slice(1));
     }
 
     private applyTransform(layer: Layer): void {

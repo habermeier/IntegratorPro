@@ -3,14 +3,14 @@ import { Room, RoomType } from '../../editor/models/types';
 
 interface RoomPropertiesModalProps {
     room: Room;
-    existingNames: string[];
+    existingRooms: { name: string, type: string }[];
     onSave: (name: string, type: RoomType) => void;
     onCancel: () => void;
 }
 
 export const RoomPropertiesModal: React.FC<RoomPropertiesModalProps> = ({
     room,
-    existingNames,
+    existingRooms,
     onSave,
     onCancel
 }) => {
@@ -35,8 +35,20 @@ export const RoomPropertiesModal: React.FC<RoomPropertiesModalProps> = ({
             return;
         }
 
-        if (existingNames.includes(name.trim())) {
-            setError('Room name must be unique');
+        const normalizedName = name.trim().toLowerCase();
+        // Check uniqueness: Name + Type must be unique
+        // e.g. "Mud" + "Hallway" vs "Mud" + "Room" (allowed)
+        // vs "Mud" + "Hallway" (duplicate)
+
+        // Wait, user said "Mud" name + "Hallway" type -> "Mud Hallway" shown.
+        // "Name + Type must be unique in the system".
+
+        const isDuplicate = existingRooms.some(r =>
+            r.name.toLowerCase() === normalizedName && r.type === roomType
+        );
+
+        if (isDuplicate) {
+            setError(`Room "${name} ${roomType}" already exists`);
             return;
         }
 
@@ -44,7 +56,10 @@ export const RoomPropertiesModal: React.FC<RoomPropertiesModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+            onKeyDown={(e) => e.stopPropagation()}
+        >
             <div className="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
                 <div className="p-6 border-b border-slate-800 bg-slate-900">
                     <h2 className="text-xl font-bold text-white mb-1">Room Properties</h2>
@@ -75,8 +90,8 @@ export const RoomPropertiesModal: React.FC<RoomPropertiesModalProps> = ({
                                 <label
                                     key={t.value}
                                     className={`flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-all ${roomType === t.value
-                                            ? 'bg-blue-600/20 border-blue-500 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.1)]'
-                                            : 'bg-slate-950/50 border-slate-800 text-slate-500 hover:border-slate-700'
+                                        ? 'bg-blue-600/20 border-blue-500 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.1)]'
+                                        : 'bg-slate-950/50 border-slate-800 text-slate-500 hover:border-slate-700'
                                         }`}
                                 >
                                     <input

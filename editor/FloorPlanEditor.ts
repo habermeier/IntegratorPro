@@ -377,7 +377,7 @@ export class FloorPlanEditor {
             this.layerSystem.setLayerLocked(this.activeLayerId, !this.isEditMode);
         }
 
-        this.updateMaskEditMode();
+        this.updateFocusMode();
         this.savePersistentState();
         this.emit('mode-changed', this.isEditMode);
         this.emit('edit-mode-changed', { isEditMode: this.isEditMode, activeLayerId: this.activeLayerId });
@@ -398,7 +398,7 @@ export class FloorPlanEditor {
             this.layerSystem.setLayerLocked(id, false);
         }
 
-        this.updateMaskEditMode();
+        this.updateFocusMode();
         this.savePersistentState();
         this.emit('edit-mode-changed', { isEditMode: this.isEditMode, activeLayerId: this.activeLayerId });
         this.setDirty();
@@ -443,55 +443,71 @@ export class FloorPlanEditor {
     public setActiveTool(type: ToolType): void {
         this.toolSystem.setActiveTool(type);
 
-        // Auto-activate specific layers (Per user request for Mask)
+        // Auto-activate Focus Mode for specific tools
         if (type === 'draw-mask') {
             this.activeLayerId = 'mask';
-            this.isEditMode = true; // Ensure edit mode is on so masks are visible/editable
-            this.emit('edit-mode-changed', { isEditMode: this.isEditMode, activeLayerId: this.activeLayerId });
+            this.isEditMode = true;
+        } else if (type === 'draw-room') {
+            this.activeLayerId = 'room';
+            this.isEditMode = true;
         }
 
-        this.updateMaskEditMode();
+        this.updateFocusMode();
         this.savePersistentState();
         this.emit('tool-changed', type);
+        this.emit('edit-mode-changed', { isEditMode: this.isEditMode, activeLayerId: this.activeLayerId });
         this.updateCursor();
         this.setDirty();
     }
 
-    private updateMaskEditMode(): void {
-        const isMaskTool = this.toolSystem.getActiveToolType() === 'draw-mask';
-        const isMaskLayerActive = this.activeLayerId === 'mask' && this.isEditMode;
-        const inMaskMode = isMaskTool || isMaskLayerActive;
+    private updateFocusMode(): void {
+        // Focus Mode is active if we have an active layer AND are in Edit Mode
+        const isFocusActive = !!(this.activeLayerId && this.isEditMode);
 
-        const wasMaskMode = this.layerSystem.getMaskEditMode();
-        this.layerSystem.setMaskEditMode(inMaskMode);
+        // Update specific Mask Edit Mode flag for LayerSystem styling
+        const isMaskFocus = isFocusActive && this.activeLayerId === 'mask';
+        this.layerSystem.setMaskEditMode(isMaskFocus);
 
-        if (inMaskMode && !wasMaskMode) {
-            // ENTERING Mask Mode: Store current visibility ONLY IF NOT ALREADY IN MASK MODE
-            // and ONLY IF we don't have a saved pre-mask state (prevents overwriting on reload)
+        if (isFocusActive) {
+            // ENTERING Focus Mode
+            // 1. Snapshot current state if we haven't already (and aren't just switching focus layers)
             if (this.preMaskVisibility.size === 0) {
                 this.layerSystem.getAllLayers().forEach(l => {
                     this.preMaskVisibility.set(l.id, l.visible);
                 });
             }
 
-            // Apply rules
-            this.layerSystem.setLayerVisible('base', true);
-            this.layerSystem.setLayerVisible('mask', true);
-            this.layerSystem.setLayerVisible('electrical', false);
-            this.layerSystem.setLayerVisible('room', false);
+            // 2. Apply Isolation Rules
+            this.layerSystem.getAllLayers().forEach(layer => {
+                if (layer.id === 'base') {
+                    this.layerSystem.setLayerVisible(layer.id, true); // Always show base
+                } else if (layer.id === this.activeLayerId) {
+                    this.layerSystem.setLayerVisible(layer.id, true); // Show target
+                    this.layerSystem.setLayerLocked(layer.id, false); // Unlock target
+                } else {
+                    // Hide everything else (Room, Mask, Electrical, etc.)
+                    this.layerSystem.setLayerVisible(layer.id, false);
+                    this.layerSystem.setLayerLocked(layer.id, true);
+                }
+            });
 
-            this.savePersistentState();
-        } else if (!inMaskMode && wasMaskMode) {
-            // EXITING Mask Mode: Restore visibility
+        } else {
+            // EXITING Focus Mode
+            // Restore visibility from snapshot
             if (this.preMaskVisibility.size > 0) {
                 this.preMaskVisibility.forEach((visible, id) => {
                     this.layerSystem.setLayerVisible(id, visible);
                 });
                 this.preMaskVisibility.clear();
             }
-            this.savePersistentState();
+
+            // Re-lock all layers
+            this.layerSystem.getAllLayers().forEach(layer => {
+                this.layerSystem.setLayerLocked(layer.id, true);
+            });
         }
 
+        this.savePersistentState();
         this.emit('layers-changed', this.layerSystem.getAllLayers());
     }
 

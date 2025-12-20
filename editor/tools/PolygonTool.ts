@@ -6,12 +6,23 @@ import { AddPolygonCommand } from '../commands/AddPolygonCommand';
 import { DeletePolygonCommand } from '../commands/DeletePolygonCommand';
 import { ModifyPolygonCommand } from '../commands/ModifyPolygonCommand';
 
+interface SnapInfo {
+    pos: Vector2;
+    polyId: string;
+    index: number; // Index of the vertex OR the start vertex of the edge
+    isVertex: boolean;
+    t: number; // Position on segment [0, 1]
+}
+
 export class PolygonTool implements Tool {
     public type: ToolType;
     private editor: FloorPlanEditor;
     private points: Vector2[] = [];
     private previewGroup: THREE.Group;
     private currentMousePos: Vector2 | null = null;
+    private startSnap: SnapInfo | null = null;
+    private currentSnap: SnapInfo | null = null;
+    private draggingHandle: { polygonId: string, layerId: string, index: number, originalPoints: Vector2[] } | null = null;
 
     // Optimization: Reuse objects
     private lineGeometry: THREE.BufferGeometry;
@@ -73,63 +84,170 @@ export class PolygonTool implements Tool {
     private reset(): void {
         this.points = [];
         this.currentMousePos = null;
+        this.startSnap = null; // Reset start snap
+        this.currentSnap = null; // Reset current snap
         this.updatePreview();
+    }
+
+    // Snapping Logic
+    private getClosestSnapPoint(worldX: number, worldY: number, excludePolygonId?: string): SnapInfo | null {
+        // 1. Gather all candidate polygons from visible vector layers
+        const candidates: { poly: Polygon, layerId: string }[] = [];
+        const layers = this.editor.layerSystem.getAllLayers();
+
+        for (const layer of layers) {
+            if (!layer.visible || layer.type !== 'vector') continue;
+            // Only snap to relevant layers (usually Room and Mask, maybe Base?)
+            // User requested "follow neighbor constraint", implies Vector layers.
+            if (layer.id === 'electrical') continue; // Don't snap to devices usually
+
+            const content = layer.content as VectorLayerContent;
+            const polys = [...(content.rooms || []), ...(content.masks || [])];
+
+            polys.forEach(p => {
+                if (p.id !== excludePolygonId) {
+                    candidates.push({ poly: p, layerId: layer.id });
+                }
+            });
+        }
+
+        let bestSnap: SnapInfo | null = null;
+        let minDistSq = this.snapThreshold * this.snapThreshold;
+
+        // 2. Check Vertices (Priority 1)
+        for (const c of candidates) {
+            for (let i = 0; i < c.poly.points.length; i++) {
+                const p = c.poly.points[i];
+                const dx = p.x - worldX;
+                const dy = p.y - worldY;
+                const d2 = dx * dx + dy * dy;
+                if (d2 < minDistSq) {
+                    minDistSq = d2;
+                    bestSnap = { pos: { ...p }, polyId: c.poly.id, index: i, isVertex: true, t: 0 };
+                }
+            }
+        }
+
+        // If we found a vertex snap, return it (Vertices > Edges)
+        if (bestSnap) return bestSnap;
+
+        // 3. Check Edges (Priority 2)
+        // Only if we didn't find a vertex close enough
+        // Reset threshold for edge snap (can be same or different)
+        minDistSq = this.snapThreshold * this.snapThreshold;
+
+        for (const c of candidates) {
+            const points = c.poly.points;
+            for (let i = 0; i < points.length; i++) {
+                const p1 = points[i];
+                const p2 = points[(i + 1) % points.length]; // Closed loop
+
+                // Project point onto line segment
+                const l2 = (p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2;
+                if (l2 === 0) continue;
+
+                let t = ((worldX - p1.x) * (p2.x - p1.x) + (worldY - p1.y) * (p2.y - p1.y)) / l2;
+                t = Math.max(0.01, Math.min(0.99, t)); // Clamp and avoid vertex overlaps
+
+                const projX = p1.x + t * (p2.x - p1.x);
+                const projY = p1.y + t * (p2.y - p1.y);
+
+                const dx = worldX - projX;
+                const dy = worldY - projY;
+                const d2 = dx * dx + dy * dy;
+
+                if (d2 < minDistSq) {
+                    minDistSq = d2;
+                    bestSnap = { pos: { x: projX, y: projY }, polyId: c.poly.id, index: i, isVertex: false, t };
+                }
+            }
+        }
+
+        return bestSnap;
     }
 
     public onMouseDown(x: number, y: number, event: MouseEvent): void {
         if (event.button !== 0) return; // Left click only
 
-        // 1. Vertex Dragging: Check if hitting a handle on a selected polygon
+        // 1. Vertex Dragging: Hit test handles first (ALWAYS highest priority)
         const handleHit = this.hitTestHandles(x, y);
         if (handleHit) {
             this.draggingHandle = handleHit;
             return;
         }
 
-        // 2. Contextual Selection: If user clicks an existing polygon, select it instead of adding vertex
-        // We only do this if we haven't started drawing yet (or if drawing, maybe we still want to select?)
-        // User said "instead of adding anew vertex", implies even if drawing it might switch.
-        // But if drawing, normally clicks add vertices. Let's say if clicks in empty space -> add vertex.
-        // If clicks in polygon -> select.
+        const worldPos = this.editor.cameraSystem.screenToWorld(x, y);
+        let targetPos = worldPos;
+        let activeSnap: SnapInfo | null = null;
 
-        const isMulti = event.shiftKey || event.ctrlKey || event.metaKey;
-        const selectedIds = this.editor.selectionSystem.selectAt(x, y, isMulti);
-
-        if (selectedIds.length > 0) {
-            // Something was selected!
-            this.editor.emit('selection-changed', selectedIds);
-            // Mark vector layers dirty to update colors
-            // Auto-switch to Select Tool REMOVED per user request
-            // User wants to stay in Mask mode but still select/drag.
-            // We will implement dragging logic here instead.
-            // if (this.points.length === 0) {
-            //    this.editor.setActiveTool('select');
-            // }
-
-            return; // EXIT: Don't add vertex if we selected something
+        // 2. Snapping (Unless Ctrl pressed)
+        // Taking precedence over Selection as requested
+        if (!event.ctrlKey) {
+            activeSnap = this.getClosestSnapPoint(worldPos.x, worldPos.y);
+            if (activeSnap) {
+                targetPos = activeSnap.pos;
+            }
         }
 
-        const worldPos = this.editor.cameraSystem.screenToWorld(x, y);
+        // Store first point snap for trace logic
+        if (this.points.length === 0) {
+            this.startSnap = activeSnap;
+        }
 
-        // Check for snapping to first point (close polygon)
+        // 3. Auto-Trace completion logic
+        if (this.points.length > 0 && activeSnap && this.startSnap && activeSnap.polyId === this.startSnap.polyId) {
+            // First, add the point we just clicked
+            this.points.push(targetPos);
+
+            // AUTO-TRACE: Calculate path from CURRENT (End) back to START
+            // This ensures points are added in the correct winding order to close the loop.
+            const tracePoints = this.calculateTracePoints(activeSnap, this.startSnap);
+
+            if (tracePoints.length > 0) {
+                this.points.push(...tracePoints);
+            }
+
+            // Allow finishing even if trace was empty (e.g. direct line connection)
+            this.finishPolygon();
+            return;
+        }
+
+        // 4. Manual Closing (First Point Snap)
+        // We do this manually here or rely on the snapPoint matching the first point?
+        // Let's do explicit check for index 0 of current polygon to trigger 'finish'
         if (this.points.length >= 3) {
             const firstPoint = this.points[0];
-            const dist = Math.sqrt(Math.pow(worldPos.x - firstPoint.x, 2) + Math.pow(worldPos.y - firstPoint.y, 2));
-            if (dist < this.snapThreshold) {
+            const dx = targetPos.x - firstPoint.x;
+            const dy = targetPos.y - firstPoint.y;
+            // If strictly equal (snapped) or close enough
+            if (Math.abs(dx) < 1 && Math.abs(dy) < 1) { // Floating point tol
                 this.finishPolygon();
                 return;
             }
         }
 
-        this.points.push(worldPos);
+        // 5. Normal Selection / Add Vertex
+        // If we snapped to an edge, we intend to draw/connect, NOT select the polygon underneath.
+        // User: "This should take precedence over me selecting another polygon"
+        if (!activeSnap) {
+            const isMulti = event.shiftKey || event.ctrlKey || event.metaKey;
+            const selectedIds = this.editor.selectionSystem.selectAt(x, y, isMulti);
+            if (selectedIds.length > 0) {
+                this.editor.emit('selection-changed', selectedIds);
+                return; // Selected something -> Don't add vertex
+            }
+        }
+
+        this.points.push(targetPos);
         this.updatePreview();
     }
 
     public onMouseMove(x: number, y: number, event: MouseEvent): void {
-        const hoverHit = this.hitTestHandles(x, y);
         const el = (this.editor as any).renderer.domElement as HTMLElement;
 
+        // 1. Dragging
         if (this.draggingHandle) {
+            // ... existing drag logic ...
             el.style.cursor = 'grabbing';
             const worldPos = this.editor.cameraSystem.screenToWorld(x, y);
             const { polygonId, layerId, index } = this.draggingHandle;
@@ -143,19 +261,37 @@ export class PolygonTool implements Tool {
                 if (poly) {
                     poly.points[index] = { x: worldPos.x, y: worldPos.y };
                     this.editor.layerSystem.markDirty(layerId);
-                    // Note: We don't have explicit handle meshes here to update (unlike SelectTool),
-                    // but LayerSystem updates its own sprites when dirty.
                     this.editor.setDirty();
                 }
             }
             return;
-        } else if (hoverHit && this.points.length === 0) {
-            // Only show pointer if we are NOT in the middle of drawing (drawing takes precedence for clicks)
-            el.style.cursor = 'pointer';
         }
 
-        // Normal Drawing Preview update
-        this.currentMousePos = this.editor.cameraSystem.screenToWorld(x, y);
+        // 2. Hover Handles
+        const hoverHit = this.hitTestHandles(x, y);
+        if (hoverHit && this.points.length === 0) {
+            el.style.cursor = 'pointer';
+            return;
+        }
+
+        // 3. Update Preview with Snap
+        const worldPos = this.editor.cameraSystem.screenToWorld(x, y);
+        let targetPos = worldPos;
+
+        if (!event.ctrlKey) {
+            this.currentSnap = this.getClosestSnapPoint(worldPos.x, worldPos.y);
+            if (this.currentSnap) {
+                targetPos = this.currentSnap.pos;
+                el.style.cursor = 'crosshair'; // Visual feedback for snap
+            } else {
+                el.style.cursor = 'default';
+            }
+        } else {
+            this.currentSnap = null;
+            el.style.cursor = 'default';
+        }
+
+        this.currentMousePos = targetPos;
         this.updatePreview();
     }
 
@@ -354,19 +490,95 @@ export class PolygonTool implements Tool {
         console.timeEnd('[PolygonTool] finishPolygon');
     }
 
-    // Vertex Dragging Logic (Supports moving vertices without switching tools)
-    private draggingHandle: { polygonId: string, layerId: string, index: number, originalPoints: Vector2[] } | null = null;
+    private calculateTracePoints(from: SnapInfo, to: SnapInfo): Vector2[] {
+        // Find the polygon
+        let poly: Polygon | null = null;
+        this.editor.layerSystem.getAllLayers().forEach(l => {
+            if (l.type !== 'vector') return;
+            const content = l.content as VectorLayerContent;
+            const found = [...(content.rooms || []), ...(content.masks || [])].find(p => p.id === from.polyId);
+            if (found) poly = found;
+        });
+
+        if (!poly) return [];
+
+        const points = (poly as Polygon).points;
+        const n = points.length;
+
+        // Path A: Forward (Clockwise / Increasing Index)
+        // Start logic: Next vertex after 'from' (whether vertex or edge start)
+        const startIdxFwd = (from.index + 1) % n;
+
+        // End logic:
+        // - If Vertex(j): Stop AT j (Exclude j)
+        // - If Edge(j -> j+1): Stop AT j+1 (Include j)
+        const endIdxFwd = to.isVertex ? to.index : (to.index + 1) % n;
+
+        const pathForward: Vector2[] = [];
+        let distForward = 0;
+        let prevPos = from.pos;
+        let curr = startIdxFwd;
+        let safety = 0;
+
+        while (curr !== endIdxFwd && safety < n + 2) {
+            if (startIdxFwd === endIdxFwd) break;
+
+            const p = points[curr];
+            pathForward.push({ ...p });
+            distForward += Math.sqrt((p.x - prevPos.x) ** 2 + (p.y - prevPos.y) ** 2);
+            prevPos = p;
+
+            curr = (curr + 1) % n;
+            safety++;
+        }
+        distForward += Math.sqrt((to.pos.x - prevPos.x) ** 2 + (to.pos.y - prevPos.y) ** 2);
+
+
+        // Path B: Backward (Counter-Clockwise / Decreasing Index)
+        // Start logic:
+        // - If Vertex(i): Next is i-1
+        // - If Edge(i -> i+1): Next is i (Rewind to start of edge)
+        const startIdxBwd = from.isVertex ? (from.index - 1 + n) % n : from.index;
+
+        // End logic:
+        // - If Vertex(j): Stop AT j (Exclude j)
+        // - If Edge(j -> j+1): Stop AT j (Include j+1)
+        const endIdxBwd = to.isVertex ? to.index : to.index;
+
+        const pathBackward: Vector2[] = [];
+        let distBackward = 0;
+        prevPos = from.pos;
+        curr = startIdxBwd;
+        safety = 0;
+
+        while (curr !== endIdxBwd && safety < n + 2) {
+            if (startIdxBwd === endIdxBwd) break;
+
+            const p = points[curr];
+            pathBackward.push({ ...p });
+            distBackward += Math.sqrt((p.x - prevPos.x) ** 2 + (p.y - prevPos.y) ** 2);
+            prevPos = p;
+
+            curr = (curr - 1 + n) % n;
+            safety++;
+        }
+        distBackward += Math.sqrt((to.pos.x - prevPos.x) ** 2 + (to.pos.y - prevPos.y) ** 2);
+
+        console.log(`[AutoTrace] Fwd: ${pathForward.length} pts (${distForward.toFixed(1)}), Bwd: ${pathBackward.length} pts (${distBackward.toFixed(1)})`);
+        console.log(`[AutoTrace] Selected: ${distForward < distBackward ? 'Forward' : 'Backward'}`);
+
+        return distForward < distBackward ? pathForward : pathBackward;
+    }
 
     private hitTestHandles(screenX: number, screenY: number): { polygonId: string, layerId: string, index: number, originalPoints: Vector2[] } | null {
         const selectedIds = this.editor.selectionSystem.getSelectedIds();
         if (selectedIds.length === 0) return null;
 
         const camera = this.editor.cameraSystem.mainCamera;
-        // Cast to access renderer
         const renderer = (this.editor as any).renderer as THREE.WebGLRenderer;
         const width = renderer.domElement.clientWidth;
         const height = renderer.domElement.clientHeight;
-        const threshold = 15; // Hit radius
+        const threshold = 15;
 
         let closest: any = null;
         let minDistance = Infinity;
