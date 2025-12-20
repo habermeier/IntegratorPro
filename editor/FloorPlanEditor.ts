@@ -236,9 +236,12 @@ export class FloorPlanEditor {
         }
 
         // Alt Key tracking
-        if (e.altKey && !this.isAltPressed) {
-            this.isAltPressed = true;
-            this.emit('modifier-changed', { isAltPressed: true });
+        if (e.altKey) {
+            e.preventDefault(); // Suppress browser menu (Chrome/Linux/Windows)
+            if (!this.isAltPressed) {
+                this.isAltPressed = true;
+                this.emit('modifier-changed', { isAltPressed: true });
+            }
         }
 
         this.toolSystem.handleKeyDown(e.key, e);

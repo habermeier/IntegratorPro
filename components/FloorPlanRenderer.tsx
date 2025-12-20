@@ -609,7 +609,7 @@ export const FloorPlanRenderer: React.FC = () => {
         if (activeTool === 'measure') return 'MEASURE';
         if (activeTool === 'scale-calibrate') return 'CALIBRATE';
         return 'SELECT';
-    }, [activeTool, isPanning, activeSymbol]);
+    }, [activeTool, isPanning, activeSymbol, isAltPressed]);
 
     return (
         <div className="h-full w-full flex flex-col bg-slate-950 overflow-hidden text-slate-200">
