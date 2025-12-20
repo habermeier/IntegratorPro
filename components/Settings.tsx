@@ -18,42 +18,69 @@ export const Settings: React.FC = () => {
     const [units, setUnits] = useState<UnitSystem>(() => {
         return (localStorage.getItem('integrator-pro-units') as UnitSystem) || 'IMPERIAL';
     });
-    const [fastZoomMultiplier, setFastZoomMultiplier] = useState<number>(3);
+    const [fastZoomMultiplier, setFastZoomMultiplier] = useState<number>(() => {
+        const saved = localStorage.getItem('integrator-pro-fast-zoom-multiplier');
+        return saved ? parseFloat(saved) : 3;
+    });
     const [isLoading, setIsLoading] = useState(true);
+    const [isSyncing, setIsSyncing] = useState(true);
+    const [hasSyncError, setHasSyncError] = useState(false);
+    const [lastSyncTime, setLastSyncTime] = useState<number>(0);
 
-    // Initial Load from Server
+    // Initial Load from Server - Source of Truth
     useEffect(() => {
         const loadSettings = async () => {
             try {
+                setIsSyncing(true);
+                setHasSyncError(false);
                 const res = await fetch('/api/settings');
                 if (res.ok) {
                     const data = await res.json();
+
+                    // Prioritize Server Data
                     if (data.units) {
                         setUnits(data.units);
                         localStorage.setItem('integrator-pro-units', data.units);
-                        window.dispatchEvent(new Event('storage-units-changed'));
                     }
                     if (data.fastZoomMultiplier) {
                         setFastZoomMultiplier(data.fastZoomMultiplier);
                         localStorage.setItem('integrator-pro-fast-zoom-multiplier', data.fastZoomMultiplier.toString());
                     }
+
+                    // Dispatch events to sync other components
+                    window.dispatchEvent(new Event('storage-units-changed'));
+                    window.dispatchEvent(new Event('storage-settings-changed'));
+
+                    setLastSyncTime(Date.now());
+                } else {
+                    setHasSyncError(true);
                 }
             } catch (err) {
                 console.error('Failed to load settings from server:', err);
+                setHasSyncError(true);
             } finally {
                 setIsLoading(false);
+                setIsSyncing(false);
             }
         };
         loadSettings();
     }, []);
 
     const saveSettings = async (newUnits: UnitSystem, newMultiplier: number) => {
+        // Prevent saving if we haven't synced with server yet to avoid overwriting with stale local data
+        if (isSyncing) return;
+
         try {
             await fetch('/api/settings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ units: newUnits, fastZoomMultiplier: newMultiplier })
+                body: JSON.stringify({
+                    units: newUnits,
+                    fastZoomMultiplier: newMultiplier,
+                    lastUpdated: Date.now()
+                })
             });
+            console.log('Settings saved to server successfully.');
         } catch (err) {
             console.error('Failed to save settings to server:', err);
         }
@@ -63,7 +90,6 @@ export const Settings: React.FC = () => {
         setUnits(newUnits);
         localStorage.setItem('integrator-pro-units', newUnits);
         saveSettings(newUnits, fastZoomMultiplier);
-        // Dispatch a custom event to notify other components of the change
         window.dispatchEvent(new Event('storage-units-changed'));
     };
 
@@ -114,6 +140,22 @@ export const Settings: React.FC = () => {
                             </div>
                         ) : activeCategory === 'floorplan' && (
                             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                {hasSyncError && (
+                                    <div className="bg-amber-900/40 border border-amber-500/50 rounded-xl p-4 mb-6 flex items-start space-x-3 backdrop-blur-sm animate-in fade-in slide-in-from-top-2">
+                                        <div className="bg-amber-500 rounded-full p-1 mt-0.5">
+                                            <svg className="w-3 h-3 text-amber-950" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h5 className="text-sm font-bold text-amber-200">Sync Warning</h5>
+                                            <p className="text-xs text-amber-200/70 mt-0.5">
+                                                Could not connect to the server. Settings are being saved locally and will try to sync on the next move.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div>
                                     <h3 className="text-2xl font-bold text-white mb-2">Floorplan Settings</h3>
                                     <p className="text-slate-400 text-sm">Configure defaults and display preferences for the floorplan editor.</p>
