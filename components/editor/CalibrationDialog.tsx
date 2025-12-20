@@ -13,17 +13,22 @@ export const CalibrationDialog: React.FC<CalibrationDialogProps> = React.memo(({
     onCancel,
     onApply
 }) => {
+    const units = (localStorage.getItem('integrator-pro-units') || 'IMPERIAL') as 'IMPERIAL' | 'METRIC';
+    const isImperial = units === 'IMPERIAL';
+
     return (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-md">
             <div className="bg-slate-900 border border-slate-700 p-6 rounded-2xl shadow-2xl w-96 transform transition-all animate-in fade-in zoom-in duration-200">
                 <h3 className="text-xl font-bold text-white mb-2">Scale Calibration</h3>
                 <p className="text-sm text-slate-400 mb-6 leading-relaxed">
-                    How far apart are the two points you selected? Use natural units like <span className="text-blue-400">10ft 6in</span> or <span className="text-emerald-400">3.2m</span>.
+                    How far apart are the two points you selected? Use natural units like <span className={isImperial ? "text-blue-400" : "text-emerald-400"}>
+                        {isImperial ? "10ft 6in" : "3.2m"}
+                    </span>.
                 </p>
                 <input
                     autoFocus
                     type="text"
-                    placeholder={"e.g. 10' 6\" or 3.2m"}
+                    placeholder={isImperial ? "e.g. 10' 6\" or 12ft" : "e.g. 3.2m or 320cm"}
                     value={realDist}
                     onChange={(e) => setRealDist(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && onApply()}

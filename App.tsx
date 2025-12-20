@@ -13,9 +13,10 @@ import GeminiAdvisor from './components/GeminiAdvisor';
 import CoverSheet from './components/CoverSheet';
 import RoughInGuide from './components/RoughInGuide';
 import FloorPlanRenderer from './components/FloorPlanRenderer';
+import Settings from './components/Settings';
 
 // Icons
-import { LayoutDashboard, Activity, Cpu, Map, FileText, Hammer, Menu } from 'lucide-react';
+import { LayoutDashboard, Activity, Cpu, Map, FileText, Hammer, Menu, Settings as SettingsIcon } from 'lucide-react';
 
 import MobileNav from './components/MobileNav';
 
@@ -71,6 +72,7 @@ const App = () => {
     { path: '/floorplan', mode: 'FLOORPLAN', icon: Map, label: 'Floor Plan Map' },
     { path: '/bom', mode: 'BOM', icon: FileText, label: 'Bill of Materials' },
     { path: '/rough-in', mode: 'ROUGH_IN', icon: Hammer, label: 'Rough-in Guide' },
+    { path: '/settings', mode: 'SETTINGS', icon: SettingsIcon, label: 'Settings' },
   ];
 
   const NavItem = ({ path, icon: Icon, label }: { path: string; icon: any; label: string }) => (
@@ -196,6 +198,13 @@ const App = () => {
               <Route path="/advisor" element={
                 <div className="overflow-y-auto p-4 w-full h-full">
                   <GeminiAdvisor modules={flatModules} connections={connections} />
+                </div>
+              } />
+
+              {/* 8. Settings */}
+              <Route path="/settings" element={
+                <div className="absolute inset-0 w-full h-full">
+                  <Settings />
                 </div>
               } />
 

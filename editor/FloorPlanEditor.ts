@@ -277,6 +277,7 @@ export class FloorPlanEditor {
         const height = this.container.clientHeight;
         this.renderer.setSize(width, height);
         this.cameraSystem.resize(width, height);
+        this.emit('zoom-changed', this.cameraSystem.getState().zoom);
         this.setDirty();
     };
 
@@ -403,6 +404,7 @@ export class FloorPlanEditor {
         const newZoom = this.cameraSystem.getState().zoom;
         this.layerSystem.updateLabelScales(newZoom);
 
+        this.emit('zoom-changed', newZoom);
         this.setDirty();
 
         // Debounce save for zoom

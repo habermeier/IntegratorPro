@@ -18,21 +18,6 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
                     <h2 className="text-lg font-bold text-white leading-none">IntegratorPro Editor</h2>
                     <p className="text-[10px] uppercase tracking-widest text-blue-500 font-bold mt-1">System Planning Suite</p>
                 </div>
-
-                <div className="flex bg-slate-800 p-1 rounded-lg border border-slate-700">
-                    <button
-                        onClick={() => editor?.setActiveTool('select')}
-                        className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${activeTool === 'select' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
-                    >
-                        Select
-                    </button>
-                    <button
-                        onClick={() => editor?.setActiveTool('scale-calibrate')}
-                        className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${activeTool === 'scale-calibrate' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
-                    >
-                        Calibrate Scale
-                    </button>
-                </div>
             </div>
 
             <div className="flex items-center space-x-4">

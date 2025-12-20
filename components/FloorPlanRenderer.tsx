@@ -3,7 +3,7 @@ import { FloorPlanEditor } from '../editor/FloorPlanEditor';
 import { Layer, ToolType } from '../editor/models/types';
 import BASE_IMAGE from '../images/floor-plan-clean.jpg';
 import ELECTRICAL_IMAGE from '../images/electric-plan-plain-full-clean-2025-12-12.jpg';
-import { parseDistanceInput } from '../utils/measurementUtils';
+import { parseDistanceInput, formatDistance } from '../utils/measurementUtils';
 
 // Modular Components
 import { ThreeCanvas } from './editor/ThreeCanvas';
@@ -15,6 +15,7 @@ import { ToolPalette } from './editor/ToolPalette';
 import { RoomPropertiesModal } from './editor/RoomPropertiesModal';
 import { Room, RoomType, VectorLayerContent } from '../editor/models/types';
 import { AddPolygonCommand } from '../editor/commands/AddPolygonCommand';
+import { ScaleRuler } from './editor/ScaleRuler';
 
 export const FloorPlanRenderer: React.FC = () => {
     const [editor, setEditor] = useState<FloorPlanEditor | null>(null);
@@ -32,6 +33,9 @@ export const FloorPlanRenderer: React.FC = () => {
     const [activeSymbol, setActiveSymbol] = useState<string | null>(null);
     const [isPanning, setIsPanning] = useState(false);
     const [isAltPressed, setIsAltPressed] = useState(false);
+    const [unitPreference, setUnitPreference] = useState<'METRIC' | 'IMPERIAL'>(() => {
+        return (localStorage.getItem('integrator-pro-units') as 'METRIC' | 'IMPERIAL') || 'IMPERIAL';
+    });
 
     const zoomCursorRef = useRef<HTMLDivElement>(null);
     const coordsRef = useRef<HTMLSpanElement>(null);
@@ -189,6 +193,12 @@ export const FloorPlanRenderer: React.FC = () => {
         const onModifierChanged = ({ isAltPressed }: { isAltPressed: boolean }) => setIsAltPressed(isAltPressed);
         editor.on('modifier-changed', onModifierChanged);
 
+        // Sync units
+        const handleUnitsChanged = () => {
+            setUnitPreference((localStorage.getItem('integrator-pro-units') as 'METRIC' | 'IMPERIAL') || 'IMPERIAL');
+        };
+        window.addEventListener('storage-units-changed', handleUnitsChanged);
+
         // FLUSH ON UNLOAD
         const handleBeforeUnload = () => {
             // We can't easily wait for async fetch in beforeunload, 
@@ -204,6 +214,7 @@ export const FloorPlanRenderer: React.FC = () => {
             editor.off('edit-mode-changed', onEditModeChanged);
             editor.off('layers-changed', onLayersChanged);
             editor.off('modifier-changed', onModifierChanged);
+            window.removeEventListener('storage-units-changed', handleUnitsChanged);
             window.removeEventListener('beforeunload', handleBeforeUnload);
         };
     }, [editor, debouncedSavePolygons, debouncedSaveSymbols]);
@@ -667,14 +678,16 @@ export const FloorPlanRenderer: React.FC = () => {
                                 📏 Measuring Distance
                                 {measurement && (
                                     <span className="bg-white/20 px-2 py-0.5 rounded text-white active:scale-95 transition-transform">
-                                        {measurement.distance.toFixed(2)}m
-                                        <span className="text-[10px] ml-1 opacity-70">({(measurement.distance * 3.28084).toFixed(1)}ft)</span>
+                                        {formatDistance(measurement.distance, unitPreference)}
                                     </span>
                                 )}
                             </div>
                             <div className="text-[10px] opacity-80 mt-0.5">Click two points • Escape to undo</div>
                         </div>
                     )}
+
+                    {/* 📏 Dynamic Scale Ruler */}
+                    <ScaleRuler editor={editor} />
                 </div>
 
                 {/* 📑 Layers Sidebar (Always Visible) */}
