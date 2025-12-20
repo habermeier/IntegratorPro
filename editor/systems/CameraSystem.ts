@@ -30,6 +30,7 @@ export class CameraSystem {
             0.1, 1000
         );
         this.mainCamera.position.set(0, 0, 500);
+        this.mainCamera.layers.enable(31); // See background mesh (but Zoom Camera won't see it)
         this.mainCamera.updateProjectionMatrix();
 
         // Zoom Camera

@@ -46,7 +46,19 @@ export class FloorPlanEditor {
         const height = container.clientHeight;
 
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x0f172a); // slate-900
+        // this.scene.background = new THREE.Color(0x0f172a); // REMOVED: Replaced by Mesh for Zoom Transparency
+
+        // Background Mesh (Layer 31)
+        // This allows Main Camera to see it, but Zoom Camera to ignore it (via layers).
+        const bgGeo = new THREE.PlaneGeometry(100000, 100000); // Massive plane
+        const bgMat = new THREE.MeshBasicMaterial({ color: 0x0f172a, depthTest: false, depthWrite: false });
+        const bgMesh = new THREE.Mesh(bgGeo, bgMat);
+        bgMesh.position.z = -500; // Behind everything
+        bgMesh.renderOrder = -999;
+        bgMesh.layers.set(31); // Reserved for background
+        bgMesh.name = 'viewport-background';
+        this.scene.add(bgMesh);
+
         this.scene.userData.editor = this; // Link for systems polling
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });

@@ -4,6 +4,7 @@ import { ToolType, Vector2, Polygon, Room, Mask, VectorLayerContent } from '../m
 import { FloorPlanEditor } from '../FloorPlanEditor';
 import { AddPolygonCommand } from '../commands/AddPolygonCommand';
 import { DeletePolygonCommand } from '../commands/DeletePolygonCommand';
+import { ModifyPolygonCommand } from '../commands/ModifyPolygonCommand';
 
 export class PolygonTool implements Tool {
     public type: ToolType;
@@ -78,7 +79,14 @@ export class PolygonTool implements Tool {
     public onMouseDown(x: number, y: number, event: MouseEvent): void {
         if (event.button !== 0) return; // Left click only
 
-        // 1. Contextual Selection: If user clicks an existing polygon, select it instead of adding vertex
+        // 1. Vertex Dragging: Check if hitting a handle on a selected polygon
+        const handleHit = this.hitTestHandles(x, y);
+        if (handleHit) {
+            this.draggingHandle = handleHit;
+            return;
+        }
+
+        // 2. Contextual Selection: If user clicks an existing polygon, select it instead of adding vertex
         // We only do this if we haven't started drawing yet (or if drawing, maybe we still want to select?)
         // User said "instead of adding anew vertex", implies even if drawing it might switch.
         // But if drawing, normally clicks add vertices. Let's say if clicks in empty space -> add vertex.
@@ -91,15 +99,12 @@ export class PolygonTool implements Tool {
             // Something was selected!
             this.editor.emit('selection-changed', selectedIds);
             // Mark vector layers dirty to update colors
-            this.editor.layerSystem.markDirty('room');
-            this.editor.layerSystem.markDirty('mask');
-            this.editor.setDirty();
-
-            // Auto-switch to Select Tool to enable editing (dragging vertices)
-            // Only if we are not currently drawing a new polygon
-            if (this.points.length === 0) {
-                this.editor.setActiveTool('select');
-            }
+            // Auto-switch to Select Tool REMOVED per user request
+            // User wants to stay in Mask mode but still select/drag.
+            // We will implement dragging logic here instead.
+            // if (this.points.length === 0) {
+            //    this.editor.setActiveTool('select');
+            // }
 
             return; // EXIT: Don't add vertex if we selected something
         }
@@ -121,8 +126,60 @@ export class PolygonTool implements Tool {
     }
 
     public onMouseMove(x: number, y: number, event: MouseEvent): void {
+        const hoverHit = this.hitTestHandles(x, y);
+        const el = (this.editor as any).renderer.domElement as HTMLElement;
+
+        if (this.draggingHandle) {
+            el.style.cursor = 'grabbing';
+            const worldPos = this.editor.cameraSystem.screenToWorld(x, y);
+            const { polygonId, layerId, index } = this.draggingHandle;
+
+            const layer = this.editor.layerSystem.getLayer(layerId);
+            if (layer && layer.type === 'vector') {
+                const content = layer.content as VectorLayerContent;
+                const poly = (content.rooms || []).find(r => r.id === polygonId)
+                    || (content.masks || []).find(m => m.id === polygonId);
+
+                if (poly) {
+                    poly.points[index] = { x: worldPos.x, y: worldPos.y };
+                    this.editor.layerSystem.markDirty(layerId);
+                    // Note: We don't have explicit handle meshes here to update (unlike SelectTool),
+                    // but LayerSystem updates its own sprites when dirty.
+                    this.editor.setDirty();
+                }
+            }
+            return;
+        } else if (hoverHit && this.points.length === 0) {
+            // Only show pointer if we are NOT in the middle of drawing (drawing takes precedence for clicks)
+            el.style.cursor = 'pointer';
+        }
+
+        // Normal Drawing Preview update
         this.currentMousePos = this.editor.cameraSystem.screenToWorld(x, y);
         this.updatePreview();
+    }
+
+    public onMouseUp(x: number, y: number, event: MouseEvent): void {
+        if (this.draggingHandle) {
+            const { polygonId, layerId, originalPoints } = this.draggingHandle;
+            const layer = this.editor.layerSystem.getLayer(layerId);
+
+            if (layer && layer.type === 'vector') {
+                const content = layer.content as VectorLayerContent;
+                const poly = (content.rooms || []).find(r => r.id === polygonId)
+                    || (content.masks || []).find(m => m.id === polygonId);
+
+                if (poly) {
+                    const newPoints = [...poly.points.map(p => ({ ...p }))];
+                    const command = new ModifyPolygonCommand(layerId, polygonId, originalPoints, newPoints, this.editor.layerSystem);
+                    this.editor.commandManager.execute(command);
+                    this.editor.emit('layers-changed', this.editor.layerSystem.getAllLayers());
+                }
+            }
+            this.draggingHandle = null;
+            return;
+        }
+
     }
 
     public onKeyDown(key: string, event: KeyboardEvent): void {
@@ -224,8 +281,14 @@ export class PolygonTool implements Tool {
         }
 
         // 2. Update Vertices (using pool)
+        // 2. Update Vertices (using pool)
         allPoints.forEach((p, i) => {
-            const isFirst = i === 0 && this.points.length >= 3;
+            // Fix: Always show first vertex as Green (Start) regardless of polygon state
+            const isFirst = i === 0;
+
+            // Determine if this is the active cursor vertex (to hide from Zoom)
+            const isCursorVertex = i === allPoints.length - 1 && this.currentMousePos !== null;
+            const layer = isCursorVertex ? 31 : 0;
 
             // Get or create vertex sprite
             let vertex = this.vertexPool[i];
@@ -236,6 +299,10 @@ export class PolygonTool implements Tool {
             vertex.material = isFirst ? this.firstVertexMaterial : this.vertexMaterial;
             vertex.scale.set(isFirst ? 20 : 12, isFirst ? 20 : 12, 1);
             vertex.position.set(p.x, p.y, 101);
+
+            // Apply visibility layer logic
+            vertex.layers.set(layer);
+
             this.previewGroup.add(vertex);
 
             // Get or create shadow vertex sprite
@@ -246,6 +313,10 @@ export class PolygonTool implements Tool {
             }
             shadowVertex.scale.set(isFirst ? 24 : 16, isFirst ? 24 : 16, 1);
             shadowVertex.position.set(p.x, p.y, 100.5); // Centered
+
+            // Fix: Shadow must ALSO be hidden from Zoom if the main vertex is hidden
+            shadowVertex.layers.set(layer);
+
             this.previewGroup.add(shadowVertex);
         });
 
@@ -281,5 +352,49 @@ export class PolygonTool implements Tool {
 
         this.reset();
         console.timeEnd('[PolygonTool] finishPolygon');
+    }
+
+    // Vertex Dragging Logic (Supports moving vertices without switching tools)
+    private draggingHandle: { polygonId: string, layerId: string, index: number, originalPoints: Vector2[] } | null = null;
+
+    private hitTestHandles(screenX: number, screenY: number): { polygonId: string, layerId: string, index: number, originalPoints: Vector2[] } | null {
+        const selectedIds = this.editor.selectionSystem.getSelectedIds();
+        if (selectedIds.length === 0) return null;
+
+        const camera = this.editor.cameraSystem.mainCamera;
+        // Cast to access renderer
+        const renderer = (this.editor as any).renderer as THREE.WebGLRenderer;
+        const width = renderer.domElement.clientWidth;
+        const height = renderer.domElement.clientHeight;
+        const threshold = 15; // Hit radius
+
+        let closest: any = null;
+        let minDistance = Infinity;
+
+        selectedIds.forEach(id => {
+            const layers = this.editor.layerSystem.getAllLayers();
+            for (const layer of layers) {
+                if (layer.type !== 'vector') continue;
+                const content = layer.content as VectorLayerContent;
+                const poly = (content.rooms || []).find(r => r.id === id) || (content.masks || []).find(m => m.id === id);
+
+                if (poly) {
+                    poly.points.forEach((p, index) => {
+                        const vec = new THREE.Vector3(p.x, p.y, 10);
+                        vec.project(camera);
+                        const px = (vec.x * 0.5 + 0.5) * width;
+                        const py = (-(vec.y * 0.5) + 0.5) * height;
+                        const dist = Math.sqrt(Math.pow(px - screenX, 2) + Math.pow(py - screenY, 2));
+
+                        if (dist < threshold && dist < minDistance) {
+                            minDistance = dist;
+                            closest = { polygonId: poly.id, layerId: layer.id, index, originalPoints: [...poly.points.map(pt => ({ ...pt }))] };
+                        }
+                    });
+                }
+            }
+        });
+
+        return closest;
     }
 }
