@@ -33,8 +33,12 @@ export const FloorPlanRenderer: React.FC = () => {
     const [activeSymbol, setActiveSymbol] = useState<string | null>(null);
     const [isPanning, setIsPanning] = useState(false);
     const [isAltPressed, setIsAltPressed] = useState(false);
+    const [isShiftPressed, setIsShiftPressed] = useState(false);
     const [unitPreference, setUnitPreference] = useState<'METRIC' | 'IMPERIAL'>(() => {
         return (localStorage.getItem('integrator-pro-units') as 'METRIC' | 'IMPERIAL') || 'IMPERIAL';
+    });
+    const [fastZoomMultiplier, setFastZoomMultiplier] = useState<number>(() => {
+        return parseFloat(localStorage.getItem('integrator-pro-fast-zoom-multiplier') || '3');
     });
 
     const zoomCursorRef = useRef<HTMLDivElement>(null);
@@ -190,14 +194,26 @@ export const FloorPlanRenderer: React.FC = () => {
         editor.on('layers-changed', onLayersChanged);
         editor.on('active-symbol-changed', (type: string) => setActiveSymbol(type));
         editor.on('panning-changed', (panning: boolean) => setIsPanning(panning));
-        const onModifierChanged = ({ isAltPressed }: { isAltPressed: boolean }) => setIsAltPressed(isAltPressed);
+        const onModifierChanged = ({ isAltPressed, isShiftPressed }: { isAltPressed: boolean, isShiftPressed: boolean }) => {
+            setIsAltPressed(isAltPressed);
+            setIsShiftPressed(isShiftPressed);
+        };
         editor.on('modifier-changed', onModifierChanged);
 
-        // Sync units
+        // Sync units & settings
         const handleUnitsChanged = () => {
             setUnitPreference((localStorage.getItem('integrator-pro-units') as 'METRIC' | 'IMPERIAL') || 'IMPERIAL');
         };
+        const handleSettingsChanged = () => {
+            const multiplier = parseFloat(localStorage.getItem('integrator-pro-fast-zoom-multiplier') || '3');
+            setFastZoomMultiplier(multiplier);
+            if (editor) {
+                editor.fastZoomMultiplier = multiplier;
+            }
+        };
+
         window.addEventListener('storage-units-changed', handleUnitsChanged);
+        window.addEventListener('storage-settings-changed', handleSettingsChanged);
 
         // FLUSH ON UNLOAD
         const handleBeforeUnload = () => {
@@ -215,6 +231,7 @@ export const FloorPlanRenderer: React.FC = () => {
             editor.off('layers-changed', onLayersChanged);
             editor.off('modifier-changed', onModifierChanged);
             window.removeEventListener('storage-units-changed', handleUnitsChanged);
+            window.removeEventListener('storage-settings-changed', handleSettingsChanged);
             window.removeEventListener('beforeunload', handleBeforeUnload);
         };
     }, [editor, debouncedSavePolygons, debouncedSaveSymbols]);
@@ -379,6 +396,22 @@ export const FloorPlanRenderer: React.FC = () => {
 
                 isInitializedRef.current = true;
                 console.log('🚀 Editor initialization sequence complete');
+
+                // 5. Load App Settings (Multiplier, etc)
+                const settingsRes = await fetch('/api/settings');
+                if (settingsRes.ok) {
+                    const settings = await settingsRes.json();
+                    if (settings.fastZoomMultiplier) {
+                        setFastZoomMultiplier(settings.fastZoomMultiplier);
+                        editorInstance.fastZoomMultiplier = settings.fastZoomMultiplier;
+                        localStorage.setItem('integrator-pro-fast-zoom-multiplier', settings.fastZoomMultiplier.toString());
+                    }
+                    if (settings.units) {
+                        setUnitPreference(settings.units);
+                        localStorage.setItem('integrator-pro-units', settings.units);
+                        window.dispatchEvent(new Event('storage-units-changed'));
+                    }
+                }
             } catch (err) {
                 console.error('Failed to restore editor state:', err);
                 // Still mark as initialized so manual edits can be saved
@@ -652,6 +685,7 @@ export const FloorPlanRenderer: React.FC = () => {
                         isEditMode={isEditMode}
                         zoomCursorRef={zoomCursorRef}
                         cursorLabel={cursorLabel}
+                        isShiftPressed={isShiftPressed}
                     />
 
                     {/* Editor Overlays */}

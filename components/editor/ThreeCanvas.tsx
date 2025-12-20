@@ -5,9 +5,10 @@ interface ThreeCanvasProps {
     isEditMode: boolean;
     zoomCursorRef: React.RefObject<HTMLDivElement | null>;
     cursorLabel?: string;
+    isShiftPressed?: boolean;
 }
 
-export const ThreeCanvas: React.FC<ThreeCanvasProps> = React.memo(({ onMount, isEditMode, zoomCursorRef, cursorLabel }) => {
+export const ThreeCanvas: React.FC<ThreeCanvasProps> = React.memo(({ onMount, isEditMode, zoomCursorRef, cursorLabel, isShiftPressed }) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -57,6 +58,13 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = React.memo(({ onMount, is
                 {cursorLabel && (
                     <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[9px] px-2 py-0.5 rounded-sm font-black uppercase tracking-widest whitespace-nowrap shadow-md">
                         {cursorLabel}
+                    </div>
+                )}
+
+                {/* Fast Zoom Indicator */}
+                {isShiftPressed && (
+                    <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[9px] px-2 py-0.5 rounded-sm font-black uppercase tracking-widest whitespace-nowrap shadow-md animate-pulse">
+                        FAST ZOOM
                     </div>
                 )}
             </div>

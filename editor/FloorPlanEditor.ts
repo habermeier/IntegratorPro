@@ -27,8 +27,10 @@ export class FloorPlanEditor {
     private activeLayerId: string | null = null;
     private isSpacePressed: boolean = false;
     private isAltPressed: boolean = false;
+    private isShiftPressed: boolean = false;
     private needsRender: boolean = true;
     private pixelsPerMeter: number = 1;
+    public fastZoomMultiplier: number = 3;
 
     // Panning State
     private isDragging: boolean = false;
@@ -251,7 +253,15 @@ export class FloorPlanEditor {
             e.preventDefault(); // Suppress browser menu (Chrome/Linux/Windows)
             if (!this.isAltPressed) {
                 this.isAltPressed = true;
-                this.emit('modifier-changed', { isAltPressed: true });
+                this.emit('modifier-changed', { isAltPressed: true, isShiftPressed: this.isShiftPressed });
+            }
+        }
+
+        // Shift Key tracking
+        if (e.shiftKey) {
+            if (!this.isShiftPressed) {
+                this.isShiftPressed = true;
+                this.emit('modifier-changed', { isAltPressed: this.isAltPressed, isShiftPressed: true });
             }
         }
 
@@ -268,7 +278,12 @@ export class FloorPlanEditor {
 
         if (!e.altKey && this.isAltPressed) {
             this.isAltPressed = false;
-            this.emit('modifier-changed', { isAltPressed: false });
+            this.emit('modifier-changed', { isAltPressed: false, isShiftPressed: this.isShiftPressed });
+        }
+
+        if (!e.shiftKey && this.isShiftPressed) {
+            this.isShiftPressed = false;
+            this.emit('modifier-changed', { isAltPressed: this.isAltPressed, isShiftPressed: false });
         }
     };
 
@@ -398,7 +413,10 @@ export class FloorPlanEditor {
     private handleWheel = (e: WheelEvent) => {
         e.preventDefault();
         const { x, y } = this.getMouseCoords(e);
-        this.cameraSystem.zoom(e.deltaY, x, y);
+
+        // Multiplier: user-defined if Shift is held
+        const delta = e.shiftKey ? e.deltaY * this.fastZoomMultiplier : e.deltaY;
+        this.cameraSystem.zoom(delta, x, y);
 
         // Update label scales dynamically
         const newZoom = this.cameraSystem.getState().zoom;

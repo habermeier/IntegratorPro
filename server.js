@@ -249,6 +249,45 @@ const POLYGONS_FILE = path.join(__dirname, 'polygons.json');
 const POLYGONS_OVERRIDE_FILE = path.join(__dirname, 'polygons.local.json');
 createDataEndpoints('/api/polygons', POLYGONS_FILE, POLYGONS_OVERRIDE_FILE, 'polygons', 'Polygons');
 
+// Settings endpoints
+const SETTINGS_FILE = path.join(__dirname, 'settings.json');
+const SETTINGS_OVERRIDE_FILE = path.join(__dirname, 'settings.local.json');
+
+// Initialize settings.json if not exists
+if (!fs.existsSync(SETTINGS_FILE)) {
+    fs.writeFileSync(SETTINGS_FILE, JSON.stringify({
+        units: 'IMPERIAL',
+        fastZoomMultiplier: 3
+    }, null, 2));
+}
+
+// GET settings - Prefer Override
+app.get('/api/settings', (req, res) => {
+    try {
+        const targetFile = fs.existsSync(SETTINGS_OVERRIDE_FILE) ? SETTINGS_OVERRIDE_FILE : SETTINGS_FILE;
+        console.log(`Loading settings from: ${path.basename(targetFile)}`);
+        const data = fs.readFileSync(targetFile, 'utf8');
+        res.json(JSON.parse(data));
+    } catch (err) {
+        console.error('Error reading settings data:', err);
+        res.status(500).json({ error: 'Failed to read settings data' });
+    }
+});
+
+// POST settings - Always Write to Override
+app.post('/api/settings', (req, res) => {
+    try {
+        const newSettings = req.body;
+        // Always write to the override file to prevent changing committed Base
+        fs.writeFileSync(SETTINGS_OVERRIDE_FILE, JSON.stringify(newSettings, null, 2));
+        console.log('Settings saved successfully to settings.local.json');
+        res.json({ success: true, savedTo: 'local', settings: newSettings });
+    } catch (err) {
+        console.error('Error writing settings data:', err);
+        res.status(500).json({ error: 'Failed to save settings data' });
+    }
+});
+
 // DALI Devices endpoints
 const DALI_DEVICES_FILE = path.join(__dirname, 'daliDevices.json');
 const DALI_DEVICES_OVERRIDE_FILE = path.join(__dirname, 'daliDevices.local.json');
