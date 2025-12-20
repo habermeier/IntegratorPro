@@ -379,7 +379,9 @@ export class LayerSystem {
                     border.material.opacity = 1.0;
                 } else {
                     border.material.color.set(isMask ? 0xf8fafc : (poly.color || 0x60a5fa));
-                    border.material.opacity = 1.0;
+                    // Hide mask borders when not in edit mode
+                    border.material.opacity = (isMask && !this.isMaskEditMode) ? 0.0 : 1.0;
+                    border.material.transparent = true;
                 }
             }
         });

@@ -94,6 +94,13 @@ export class PolygonTool implements Tool {
             this.editor.layerSystem.markDirty('room');
             this.editor.layerSystem.markDirty('mask');
             this.editor.setDirty();
+
+            // Auto-switch to Select Tool to enable editing (dragging vertices)
+            // Only if we are not currently drawing a new polygon
+            if (this.points.length === 0) {
+                this.editor.setActiveTool('select');
+            }
+
             return; // EXIT: Don't add vertex if we selected something
         }
 
@@ -129,7 +136,9 @@ export class PolygonTool implements Tool {
             }
         } else if (key === 'Escape') {
             if (this.points.length > 0) {
-                this.reset();
+                // Escape: Undo last vertex
+                this.points.pop();
+                this.updatePreview();
             } else {
                 // Clear selection if not drawing
                 this.editor.selectionSystem.clearSelection();
@@ -140,8 +149,8 @@ export class PolygonTool implements Tool {
             }
         } else if (key === 'Backspace' || key === 'Delete') {
             if (this.points.length > 0) {
-                this.points.pop();
-                this.updatePreview();
+                // Delete: Cancel entire run
+                this.reset();
             } else {
                 // Delete selected polygons
                 this.deleteSelected();

@@ -9,8 +9,8 @@ export class SelectTool implements Tool {
     public type: ToolType = 'select';
     private editor: FloorPlanEditor;
     private handlesGroup: THREE.Group;
-
-    // Dragging state
+    private handlesPoints: THREE.Points | null = null;
+    private handleMetadata: any[] = [];
     private draggingHandle: { polygonId: string, layerId: string, index: number, originalPoints: Vector2[] } | null = null;
 
     constructor(editor: FloorPlanEditor) {
@@ -33,14 +33,14 @@ export class SelectTool implements Tool {
     public onMouseDown(x: number, y: number, event: MouseEvent): void {
         if (event.button !== 0) return; // Left click only
 
-        const worldPos = this.editor.cameraSystem.screenToWorld(x, y);
-
-        // 1. Check for handle hits first
-        const handleHit = this.hitTestHandles(worldPos);
+        // 1. Check for handle hits first (Screen Space)
+        const handleHit = this.hitTestHandles(x, y);
         if (handleHit) {
             this.draggingHandle = handleHit;
             return;
         }
+
+        const worldPos = this.editor.cameraSystem.screenToWorld(x, y);
 
         // 2. Otherwise do normal selection
         const isMulti = event.shiftKey || event.ctrlKey || event.metaKey;
@@ -55,7 +55,11 @@ export class SelectTool implements Tool {
     }
 
     public onMouseMove(x: number, y: number, event: MouseEvent): void {
+        const hoverHit = this.hitTestHandles(x, y);
+        const el = (this.editor as any).renderer.domElement as HTMLElement;
+
         if (this.draggingHandle) {
+            el.style.cursor = 'grabbing';
             const worldPos = this.editor.cameraSystem.screenToWorld(x, y);
             const { polygonId, layerId, index } = this.draggingHandle;
 
@@ -72,6 +76,14 @@ export class SelectTool implements Tool {
                     this.editor.setDirty();
                 }
             }
+        } else if (hoverHit) {
+            el.style.cursor = 'pointer';
+        } else {
+            // Restore default (which might be 'none' if custom cursor acts)
+            // Or 'default'. FloorPlanEditor sets none.
+            // If we set 'default', we show OS cursor.
+            // Be consistent: if hovering handle, show OS pointer. Else hide OS cursor.
+            el.style.cursor = 'none';
         }
     }
 
@@ -137,33 +149,63 @@ export class SelectTool implements Tool {
         });
     }
 
-    private hitTestHandles(worldPos: Vector2): { polygonId: string, layerId: string, index: number, originalPoints: Vector2[] } | null {
-        const handleRadius = 10 / this.editor.cameraSystem.mainCamera.zoom; // Scale handle hit area by zoom
+    private hitTestHandles(screenX: number, screenY: number): { polygonId: string, layerId: string, index: number, originalPoints: Vector2[] } | null {
+        if (!this.handlesPoints || this.handleMetadata.length === 0) return null;
 
-        for (const handle of this.handlesGroup.children) {
-            const dist = worldPos.x - handle.position.x;
-            const distY = worldPos.y - handle.position.y;
-            const dInput = Math.sqrt(dist * dist + distY * distY);
+        const positions = this.handlesPoints.geometry.attributes.position.array;
+        const camera = this.editor.cameraSystem.mainCamera;
+        // Use cast to access renderer for width/height logic
+        const renderer = (this.editor as any).renderer as THREE.WebGLRenderer;
+        const width = renderer.domElement.clientWidth;
+        const height = renderer.domElement.clientHeight;
+        const threshold = 15; // Increased pixel threshold
+        console.log(`[SelectTool] HitTest Handles: Screen(${screenX}, ${screenY}) Canvas(${width}x${height}) Points: ${this.handleMetadata.length}`);
 
-            if (dInput < handleRadius) {
-                const data = handle.userData;
-                return {
-                    polygonId: data.polygonId,
-                    layerId: data.layerId,
-                    index: data.index,
-                    originalPoints: data.originalPoints
-                };
+        let closestIndex = -1;
+        let minDistance = Infinity;
+
+        for (let i = 0; i < this.handleMetadata.length; i++) {
+            const x = positions[i * 3];
+            const y = positions[i * 3 + 1];
+            const z = positions[i * 3 + 2];
+
+            const vec = new THREE.Vector3(x, y, z);
+            vec.project(camera);
+
+            const px = (vec.x * 0.5 + 0.5) * width;
+            const py = (-(vec.y * 0.5) + 0.5) * height; // Invert Y for screen
+
+            const dx = px - screenX;
+            const dy = py - screenY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            // console.log(`[HitTest] Point ${i}: NDC(${vec.x.toFixed(2)},${vec.y.toFixed(2)}) Screen(${px.toFixed(0)},${py.toFixed(0)}) Dist: ${dist.toFixed(1)}`);
+
+            if (dist < threshold && dist < minDistance) {
+                minDistance = dist;
+                closestIndex = i;
             }
         }
+
+        if (closestIndex !== -1) {
+            console.log(`[SelectTool] Hit found: Index ${closestIndex} Dist ${minDistance}`);
+            return this.handleMetadata[closestIndex];
+        }
+
         return null;
     }
 
     private updateHandles(): void {
         this.handlesGroup.clear();
+        this.handleMetadata = [];
+        this.handlesPoints = null;
+
         const selectedIds = this.editor.selectionSystem.getSelectedIds();
         if (selectedIds.length === 0) return;
 
         const layers = this.editor.layerSystem.getAllLayers();
+        const vertices: number[] = [];
+
         selectedIds.forEach(id => {
             for (const layer of layers) {
                 if (layer.type !== 'vector') continue;
@@ -175,22 +217,45 @@ export class SelectTool implements Tool {
                 if (poly) {
                     const originalPoints = [...poly.points.map(p => ({ ...p }))];
                     poly.points.forEach((p, index) => {
-                        const geometry = new THREE.BoxGeometry(8, 8, 1);
-                        const material = new THREE.MeshBasicMaterial({ color: 0xffffff, depthTest: false });
-                        const mesh = new THREE.Mesh(geometry, material);
-                        mesh.position.set(p.x, p.y, 100);
-                        mesh.userData = { polygonId: poly.id, layerId: layer.id, index, originalPoints };
-                        this.handlesGroup.add(mesh);
-
-                        // Outline for handle
-                        const edges = new THREE.EdgesGeometry(geometry);
-                        const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xef4444, depthTest: false }));
-                        line.position.set(p.x, p.y, 100.1);
-                        this.handlesGroup.add(line);
+                        vertices.push(p.x, p.y, 10); // Z=10 to sit above
+                        this.handleMetadata.push({ polygonId: poly.id, layerId: layer.id, index, originalPoints });
                     });
                 }
             }
         });
+
+        if (vertices.length > 0) {
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+
+            const material = new THREE.PointsMaterial({
+                color: 0xffffff, // White handle
+                size: 10,
+                sizeAttenuation: false, // Constant screen size
+                depthTest: false,
+                transparent: true
+            });
+
+            this.handlesPoints = new THREE.Points(geometry, material);
+            this.handlesPoints.renderOrder = 999;
+            this.handlesGroup.add(this.handlesPoints);
+
+            // Add red border using a second Points with larger size?
+            // Simple approach: Just a border look via texture or just second simplified points behind?
+            // Actually, PointsMaterial squares are solid.
+            // A simple solid white square is fine for now. 
+            // If user wants border, I can add a second Points object behind with color red and size 10.
+            const borderMat = new THREE.PointsMaterial({
+                color: 0xef4444, // Red
+                size: 12,
+                sizeAttenuation: false,
+                depthTest: false
+            });
+            const borderPoints = new THREE.Points(geometry, borderMat);
+            borderPoints.renderOrder = 998;
+            this.handlesGroup.add(borderPoints);
+        }
+
         this.editor.setDirty();
     }
 }

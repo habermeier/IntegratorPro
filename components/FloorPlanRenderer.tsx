@@ -27,6 +27,8 @@ export const FloorPlanRenderer: React.FC = () => {
     const [activeLayerId, setActiveLayerId] = useState<string | null>(null);
     const [lastKey, setLastKey] = useState<string | null>(null);
     const [pendingRoom, setPendingRoom] = useState<Room | null>(null);
+    const [activeSymbol, setActiveSymbol] = useState<string | null>(null);
+    const [isPanning, setIsPanning] = useState(false);
 
     const zoomCursorRef = useRef<HTMLDivElement>(null);
     const coordsRef = useRef<HTMLSpanElement>(null);
@@ -179,6 +181,8 @@ export const FloorPlanRenderer: React.FC = () => {
         editor.on('mode-changed', onModeChanged);
         editor.on('edit-mode-changed', onEditModeChanged);
         editor.on('layers-changed', onLayersChanged);
+        editor.on('active-symbol-changed', (type: string) => setActiveSymbol(type));
+        editor.on('panning-changed', (panning: boolean) => setIsPanning(panning));
 
         // FLUSH ON UNLOAD
         const handleBeforeUnload = () => {
@@ -430,6 +434,16 @@ export const FloorPlanRenderer: React.FC = () => {
         return (content.rooms || []).map(r => r.name);
     }, [layers]);
 
+    const cursorLabel = React.useMemo(() => {
+        if (isPanning || activeTool === 'pan') return 'PAN';
+        if (activeTool === 'draw-mask') return 'SET MASK';
+        if (activeTool === 'draw-room') return 'SET ROOM';
+        if (activeTool === 'place-symbol') return activeSymbol ? `PLACING: ${activeSymbol.replace(/^.*?-/, '').replace(/_/g, ' ').toUpperCase()}` : 'PLACING SYMBOL';
+        if (activeTool === 'measure') return 'MEASURE';
+        if (activeTool === 'scale-calibrate') return 'CALIBRATE';
+        return 'SELECT';
+    }, [activeTool, isPanning, activeSymbol]);
+
     return (
         <div className="h-full w-full flex flex-col bg-slate-950 overflow-hidden text-slate-200">
             <EditorHUD
@@ -453,6 +467,7 @@ export const FloorPlanRenderer: React.FC = () => {
                         onMount={initEditor}
                         isEditMode={isEditMode}
                         zoomCursorRef={zoomCursorRef}
+                        cursorLabel={cursorLabel}
                     />
 
                     {/* Editor Overlays */}

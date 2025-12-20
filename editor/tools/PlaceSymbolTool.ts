@@ -34,6 +34,7 @@ export class PlaceSymbolTool implements Tool {
     public setSymbolType(type: string): void {
         this.symbolType = type;
         this.updatePreviewMesh();
+        this.editor.emit('active-symbol-changed', type);
     }
 
     private updatePreviewMesh(): void {

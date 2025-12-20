@@ -134,6 +134,7 @@ export class FloorPlanEditor {
             if (e.repeat) return;
             this.isSpacePressed = true;
             this.updateCursor();
+            this.emit('panning-changed', true);
             return;
         }
 
@@ -215,6 +216,7 @@ export class FloorPlanEditor {
         if (e.code === 'Space') {
             this.isSpacePressed = false;
             this.updateCursor();
+            this.emit('panning-changed', false);
         }
     };
 
@@ -428,6 +430,14 @@ export class FloorPlanEditor {
 
     public setActiveTool(type: ToolType): void {
         this.toolSystem.setActiveTool(type);
+
+        // Auto-activate specific layers (Per user request for Mask)
+        if (type === 'draw-mask') {
+            this.activeLayerId = 'mask';
+            this.isEditMode = true; // Ensure edit mode is on so masks are visible/editable
+            this.emit('edit-mode-changed', { isEditMode: this.isEditMode, activeLayerId: this.activeLayerId });
+        }
+
         this.updateMaskEditMode();
         this.savePersistentState();
         this.emit('tool-changed', type);

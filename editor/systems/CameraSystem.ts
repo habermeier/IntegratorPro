@@ -158,8 +158,8 @@ export class CameraSystem {
         // Zoom cursor viewport
         if (this.state.zoomCursorEnabled) {
             const size = this.state.zoomCursorSize;
-            const x = Math.max(0, Math.min(this.viewportWidth - size, this.lastMousePos.x - size / 2));
-            const y = Math.max(0, Math.min(this.viewportHeight - size, this.viewportHeight - this.lastMousePos.y - size / 2));
+            const x = this.lastMousePos.x - size / 2;
+            const y = this.viewportHeight - this.lastMousePos.y - size / 2;
 
             renderer.setViewport(x, y, size, size);
             renderer.setScissor(x, y, size, size);
