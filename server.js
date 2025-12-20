@@ -164,10 +164,14 @@ app.post('/api/scale', (req, res) => {
         if (typeof scaleFactor !== 'number' || scaleFactor <= 0) {
             return res.status(400).json({ error: 'Invalid scale factor' });
         }
-        // Always write to the override file to prevent changing committed default
-        fs.writeFileSync(SCALE_OVERRIDE_FILE, JSON.stringify({ scaleFactor }, null, 2));
-        console.log('Scale factor saved to scale.local.json:', scaleFactor);
-        res.json({ success: true, scaleFactor, savedTo: 'local' });
+        // DEV: Write to base file (committed)
+        // PROD: Write to override file (local)
+        const targetFile = IS_DEV ? SCALE_FILE : SCALE_OVERRIDE_FILE;
+        const targetType = IS_DEV ? 'base (committed)' : 'local (gitignored)';
+
+        fs.writeFileSync(targetFile, JSON.stringify({ scaleFactor }, null, 2));
+        console.log(`✅ Scale factor saved to ${path.basename(targetFile)} [${targetType}]:`, scaleFactor);
+        res.json({ success: true, scaleFactor, savedTo: targetType });
     } catch (err) {
         console.error('Error writing scale data:', err);
         res.status(500).json({ error: 'Failed to save scale data' });

@@ -11,6 +11,7 @@ import { OpacityCommand } from './commands/OpacityCommand';
 import { TransformLayerCommand } from './commands/TransformLayerCommand';
 import { PolygonTool } from './tools/PolygonTool';
 import { PlaceSymbolTool } from './tools/PlaceSymbolTool';
+import { MeasureTool } from './tools/MeasureTool';
 export class FloorPlanEditor {
     public scene: THREE.Scene;
     private renderer: THREE.WebGLRenderer;
@@ -27,6 +28,7 @@ export class FloorPlanEditor {
     private isSpacePressed: boolean = false;
     private isAltPressed: boolean = false;
     private needsRender: boolean = true;
+    private pixelsPerMeter: number = 1;
 
     // Panning State
     private isDragging: boolean = false;
@@ -42,6 +44,14 @@ export class FloorPlanEditor {
 
     public get editMode(): boolean {
         return this.isEditMode;
+    }
+
+    public get pixelsMeter(): number {
+        return this.pixelsPerMeter;
+    }
+
+    public set pixelsMeter(val: number) {
+        this.pixelsPerMeter = val;
     }
 
     constructor(container: HTMLElement) {
@@ -90,6 +100,7 @@ export class FloorPlanEditor {
         this.toolSystem.registerTool(new PolygonTool(this, 'draw-room'));
         this.toolSystem.registerTool(new PolygonTool(this, 'draw-mask'));
         this.toolSystem.registerTool(new PlaceSymbolTool(this));
+        this.toolSystem.registerTool(new MeasureTool(this));
         this.toolSystem.setActiveTool('select');
 
         this.setupEventListeners();
@@ -271,80 +282,18 @@ export class FloorPlanEditor {
 
     private setupEventListeners(): void {
         const el = this.renderer.domElement;
-        let isDragging = false;
-        let lastX = 0;
-        let lastY = 0;
-
-        el.addEventListener('mousedown', (e) => {
-            const rect = el.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            const isPanInput = e.button === 1 || (e.button === 0 && (e.shiftKey || this.isSpacePressed));
-
-            if (isPanInput) {
-                isDragging = true;
-                lastX = e.clientX;
-                lastY = e.clientY;
-                this.updateCursor();
-                this.setDirty();
-            } else {
-                this.toolSystem.handleMouseDown(x, y, e);
-                this.setDirty();
-            }
-        });
-
-        el.addEventListener('mousemove', (e) => {
-            const rect = el.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            if (isDragging) {
-                const deltaX = e.clientX - lastX;
-                const deltaY = e.clientY - lastY;
-                this.cameraSystem.pan(deltaX, deltaY);
-                lastX = e.clientX;
-                lastY = e.clientY;
-                this.setDirty();
-            } else {
-                this.toolSystem.handleMouseMove(x, y, e);
-                // Mouse move tool handles might need render
-                if (this.toolSystem.getActiveToolType() === 'scale-calibrate') {
-                    this.setDirty();
-                }
-            }
-
-            this.cameraSystem.updateZoomCursor(x, y);
-            this.setDirty(); // Zoom cursor follows mouse, must re-render
-            this.emit('cursor-move', { x, y });
-        });
-
-        el.addEventListener('mouseup', (e) => {
-            const rect = el.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            if (isDragging) {
-                isDragging = false;
-                this.updateCursor();
-                this.setDirty();
-            } else {
-                this.toolSystem.handleMouseUp(x, y, e);
-                this.setDirty();
-            }
-        });
 
         el.addEventListener('mouseleave', () => {
-            isDragging = false;
+            this.isDragging = false;
             el.style.cursor = 'default';
         });
-        this.container.addEventListener('mousedown', this.handleMouseDown);
-        window.addEventListener('mousemove', this.handleMouseMove);
-        window.addEventListener('mouseup', this.handleMouseUp);
-        this.container.addEventListener('dblclick', this.handleDoubleClick);
+        el.addEventListener('mousedown', this.handleMouseDown);
+        el.addEventListener('mousemove', this.handleMouseMove);
+        el.addEventListener('mouseup', this.handleMouseUp);
+        el.addEventListener('dblclick', this.handleDoubleClick);
         window.addEventListener('keydown', this.handleKeyDown);
         window.addEventListener('keyup', this.handleKeyUp);
-        this.container.addEventListener('wheel', this.handleWheel, { passive: false });
+        el.addEventListener('wheel', this.handleWheel, { passive: false });
         window.addEventListener('resize', this.handleResize);
 
         // Prevent context menu
@@ -557,6 +506,9 @@ export class FloorPlanEditor {
         } else if (type === 'draw-room') {
             this.activeLayerId = 'room';
             this.isEditMode = true;
+        } else if (type === 'scale-calibrate' || type === 'measure') {
+            this.activeLayerId = 'base';
+            this.isEditMode = false; // Hide banner, use explicit isolation in updateFocusMode
         }
 
         this.updateFocusMode();
@@ -568,8 +520,10 @@ export class FloorPlanEditor {
     }
 
     private updateFocusMode(): void {
-        // Focus Mode is active if we have an active layer AND are in Edit Mode
-        const isFocusActive = !!(this.activeLayerId && this.isEditMode);
+        const activeTool = this.toolSystem.getActiveToolType();
+        // Focus Mode is active if we have an active layer AND (are in Edit Mode OR are calibrating/measuring)
+        const isIsolationRequired = activeTool === 'draw-mask' || activeTool === 'draw-room' || activeTool === 'scale-calibrate' || activeTool === 'measure';
+        const isFocusActive = !!(this.activeLayerId && (this.isEditMode || isIsolationRequired));
 
         // Update specific Mask Edit Mode flag for LayerSystem styling
         const isMaskFocus = isFocusActive && this.activeLayerId === 'mask';
@@ -660,8 +614,10 @@ export class FloorPlanEditor {
             return;
         }
 
-        if (this.toolSystem.getActiveToolType() === 'scale-calibrate') {
-            el.style.cursor = 'crosshair';
+        const activeTool = this.toolSystem.getActiveToolType();
+        if (activeTool === 'scale-calibrate' || activeTool === 'measure') {
+            // No crosshair anymore per user request
+            el.style.cursor = 'none';
             return;
         }
 

@@ -23,10 +23,12 @@ export const FloorPlanRenderer: React.FC = () => {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [calibrationData, setCalibrationData] = useState<{ pixelDist: number } | null>(null);
     const [realDist, setRealDist] = useState('');
+    const [pendingRoom, setPendingRoom] = useState<Room | null>(null);
+    const [isRoomEdit, setIsRoomEdit] = useState<boolean>(false);
+    const [measurement, setMeasurement] = useState<{ distance: number, finalized: boolean } | null>(null);
     const [isEditMode, setIsEditMode] = useState(false);
     const [activeLayerId, setActiveLayerId] = useState<string | null>(null);
     const [lastKey, setLastKey] = useState<string | null>(null);
-    // Removed duplicate pendingRoom declaration
     const [activeSymbol, setActiveSymbol] = useState<string | null>(null);
     const [isPanning, setIsPanning] = useState(false);
     const [isAltPressed, setIsAltPressed] = useState(false);
@@ -231,6 +233,7 @@ export const FloorPlanRenderer: React.FC = () => {
 
         editorInstance.on('calibration-needed', setCalibrationData);
         editorInstance.on('selection-changed', setSelectedIds);
+        editorInstance.on('measure-changed', setMeasurement);
         editorInstance.on('room-completion-pending', (room: Room) => {
             setPendingRoom(room);
         });
@@ -301,6 +304,11 @@ export const FloorPlanRenderer: React.FC = () => {
                 const scaleData = await scaleRes.json();
                 const symbolsData = await symbolsRes.json();
                 const polygonsData = await polygonsRes.json();
+
+                if (scaleData && scaleData.scaleFactor) {
+                    editorInstance.pixelsMeter = scaleData.scaleFactor;
+                    console.log('📏 Restored scale from server:', scaleData.scaleFactor);
+                }
 
                 // RESTORE POSITION
                 editorInstance.setLayerTransform('electrical', {
@@ -379,9 +387,6 @@ export const FloorPlanRenderer: React.FC = () => {
         };
     }, []);
 
-    const [pendingRoom, setPendingRoom] = useState<Room | null>(null);
-    const [isRoomEdit, setIsRoomEdit] = useState<boolean>(false);
-
     useEffect(() => {
         if (!editor) return;
 
@@ -417,7 +422,8 @@ export const FloorPlanRenderer: React.FC = () => {
             if (res.ok) {
                 setCalibrationData(null);
                 setRealDist('');
-                console.log('✅ Calibration saved to server');
+                editor.pixelsMeter = pixelsPerMeter;
+                console.log('✅ Calibration saved to server and applied locally');
             }
         } catch (err) {
             console.error('Failed to save calibration:', err);
@@ -638,7 +644,7 @@ export const FloorPlanRenderer: React.FC = () => {
                     />
 
                     {/* Editor Overlays */}
-                    {isEditMode && (
+                    {isEditMode && activeTool !== 'scale-calibrate' && (
                         <div className="absolute top-6 left-1/2 -translate-x-1/2 flex flex-col items-center z-30 animate-pulse pointer-events-none">
                             <div className="bg-red-600 text-white px-8 py-2 rounded-full text-sm font-black uppercase tracking-[0.2em] shadow-[0_0_30px_rgba(220,38,38,1)] border-2 border-red-400">
                                 🛠️ Layer Editing Mode
@@ -650,8 +656,23 @@ export const FloorPlanRenderer: React.FC = () => {
                     )}
 
                     {activeTool === 'scale-calibrate' && (
-                        <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-6 py-2 rounded-full text-sm font-bold z-20 shadow-xl border border-blue-400/30 animate-bounce pointer-events-none">
-                            📏 Click two points to calibrate
+                        <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-6 py-2 rounded-full text-sm font-bold z-20 shadow-xl border border-emerald-400/30 pointer-events-none">
+                            📏 Click two points to calibrate Scale
+                        </div>
+                    )}
+
+                    {activeTool === 'measure' && (
+                        <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-6 py-2 rounded-full text-sm font-bold z-20 shadow-xl border border-blue-400/30 pointer-events-none flex flex-col items-center">
+                            <div className="flex items-center gap-2">
+                                📏 Measuring Distance
+                                {measurement && (
+                                    <span className="bg-white/20 px-2 py-0.5 rounded text-white active:scale-95 transition-transform">
+                                        {measurement.distance.toFixed(2)}m
+                                        <span className="text-[10px] ml-1 opacity-70">({(measurement.distance * 3.28084).toFixed(1)}ft)</span>
+                                    </span>
+                                )}
+                            </div>
+                            <div className="text-[10px] opacity-80 mt-0.5">Click two points • Escape to undo</div>
                         </div>
                     )}
                 </div>

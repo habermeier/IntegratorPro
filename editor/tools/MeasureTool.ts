@@ -3,8 +3,8 @@ import { Tool } from '../systems/ToolSystem';
 import { ToolType, Vector2 } from '../models/types';
 import { FloorPlanEditor } from '../FloorPlanEditor';
 
-export class ScaleCalibrateTool implements Tool {
-    public type: ToolType = 'scale-calibrate';
+export class MeasureTool implements Tool {
+    public type: ToolType = 'measure';
     private editor: FloorPlanEditor;
     private points: Vector2[] = [];
     private markerGroup: THREE.Group;
@@ -17,11 +17,11 @@ export class ScaleCalibrateTool implements Tool {
     constructor(editor: FloorPlanEditor) {
         this.editor = editor;
         this.markerGroup = new THREE.Group();
-        this.markerGroup.name = 'scale-calibrate-markers';
+        this.markerGroup.name = 'measure-markers';
         this.editor.scene.add(this.markerGroup);
 
         this.previewGroup = new THREE.Group();
-        this.previewGroup.name = 'scale-calibrate-preview';
+        this.previewGroup.name = 'measure-preview';
         this.editor.scene.add(this.previewGroup);
 
         const loader = new THREE.TextureLoader();
@@ -29,7 +29,7 @@ export class ScaleCalibrateTool implements Tool {
 
         this.lineGeometry = new THREE.BufferGeometry();
         this.lineMaterial = new THREE.LineBasicMaterial({
-            color: 0xff0000,
+            color: 0x3b82f6, // blue-500
             transparent: true,
             opacity: 1.0,
             depthTest: false
@@ -43,7 +43,7 @@ export class ScaleCalibrateTool implements Tool {
 
         this.vertexMaterial = new THREE.SpriteMaterial({
             map: glowTexture,
-            color: 0x22c55e, // emerald-500
+            color: 0x3b82f6,
             transparent: true,
             opacity: 1.0,
             depthTest: false
@@ -51,52 +51,66 @@ export class ScaleCalibrateTool implements Tool {
     }
 
     public activate(): void {
-        this.points = [];
-        this.markerGroup.clear();
+        this.reset();
         this.markerGroup.visible = true;
         this.previewGroup.visible = true;
-        this.lineMesh.visible = false;
     }
 
     public deactivate(): void {
+        this.reset();
         this.markerGroup.visible = false;
         this.previewGroup.visible = false;
+        this.editor.emit('measure-changed', null);
+    }
+
+    private reset(): void {
+        this.points = [];
+        this.markerGroup.clear();
         this.lineMesh.visible = false;
     }
 
     public onMouseDown(x: number, y: number, event: MouseEvent): void {
-        if (event.button !== 0) return; // Left click only
+        if (event.button !== 0) return;
 
         const worldPos = this.editor.cameraSystem.screenToWorld(x, y);
-        this.points.push(worldPos);
 
+        if (this.points.length === 2) {
+            this.reset();
+        }
+
+        this.points.push(worldPos);
         this.addPointMarker(worldPos);
 
         if (this.points.length === 2) {
-            this.finishCalibration();
+            this.updatePreview(worldPos);
+            const dist = this.calculateDistance(this.points[0], this.points[1]);
+            this.editor.emit('measure-changed', { distance: dist, finalized: true });
         } else {
             this.lineMesh.visible = true;
             this.updatePreview(worldPos);
+            this.editor.emit('measure-changed', { distance: 0, finalized: false });
         }
 
         this.editor.setDirty();
-    }
-
-    public onKeyDown(key: string, event: KeyboardEvent): void {
-        if (key === 'Escape' && this.points.length === 1) {
-            this.points = [];
-            this.markerGroup.clear();
-            this.lineMesh.visible = false;
-            this.editor.setDirty();
-            return;
-        }
     }
 
     public onMouseMove(x: number, y: number, event: MouseEvent): void {
         if (this.points.length === 1) {
             const worldPos = this.editor.cameraSystem.screenToWorld(x, y);
             this.updatePreview(worldPos);
+            const dist = this.calculateDistance(this.points[0], worldPos);
+            this.editor.emit('measure-changed', { distance: dist, finalized: false });
             this.editor.setDirty();
+        }
+    }
+
+    public onKeyDown(key: string, event: KeyboardEvent): void {
+        if (key === 'Escape') {
+            if (this.points.length > 0) {
+                this.reset();
+                this.editor.emit('measure-changed', null);
+                this.editor.setDirty();
+            }
         }
     }
 
@@ -122,16 +136,10 @@ export class ScaleCalibrateTool implements Tool {
         this.markerGroup.add(sprite);
     }
 
-    private finishCalibration(): void {
-        const p1 = this.points[0];
-        const p2 = this.points[1];
-        const pixelDist = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
-
-        console.log(`ScaleCalibrateTool: Emitting calibration-needed with pixelDist: ${pixelDist}`);
-        this.editor.emit('calibration-needed', { pixelDist });
-        this.points = [];
-        this.markerGroup.clear();
-        this.lineMesh.visible = false;
-        this.editor.setDirty();
+    private calculateDistance(p1: Vector2, p2: Vector2): number {
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
+        const pixelDist = Math.sqrt(dx * dx + dy * dy);
+        return pixelDist / this.editor.pixelsMeter;
     }
 }
