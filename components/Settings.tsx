@@ -228,6 +228,33 @@ export const Settings: React.FC = () => {
                                         </p>
                                     </div>
                                 </div>
+                                {/* Furniture Settings */}
+                                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <div>
+                                            <h4 className="text-lg font-semibold text-white">Furniture Placement</h4>
+                                            <p className="text-slate-400 text-sm mt-1">
+                                                Configure snapping and rotation defaults.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-sm font-medium text-slate-300">Snap Distance (Pixels)</label>
+                                            <div className="flex items-center space-x-3">
+                                                <input type="range" min="5" max="50" step="5" defaultValue="20" className="w-48 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+                                                <span className="w-12 text-center py-1 bg-slate-800 rounded-md text-blue-400 font-mono font-bold text-sm border border-slate-700">20px</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-sm font-medium text-slate-300">Rotation Step (Degrees)</label>
+                                            <div className="flex items-center space-x-3">
+                                                <input type="range" min="1" max="90" step="1" defaultValue="45" className="w-48 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+                                                <span className="w-12 text-center py-1 bg-slate-800 rounded-md text-blue-400 font-mono font-bold text-sm border border-slate-700">45°</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>

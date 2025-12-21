@@ -64,6 +64,7 @@ export interface VectorLayerContent {
     rooms?: Room[];
     masks?: Mask[];
     symbols?: PlacedSymbol[];
+    furniture?: Furniture[];
 }
 
 export interface Layer {
@@ -87,7 +88,16 @@ export type ToolType =
     | 'draw-cable'
     | 'place-symbol'
     | 'measure'
-    | 'scale-calibrate';
+    | 'scale-calibrate'
+    | 'place-furniture';
+
+export interface Furniture extends PlacedSymbol {
+    width: number;
+    length: number;
+    isBlocking: boolean;
+    color: number; // Hex
+}
+
 
 export interface CameraState {
     position: Vector2;

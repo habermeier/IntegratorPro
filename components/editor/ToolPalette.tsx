@@ -18,6 +18,7 @@ export const ToolPalette: React.FC<ToolPaletteProps> = ({
         { type: 'draw-room', icon: 'R', label: 'Room', shortcut: 'R' },
         { type: 'draw-mask', icon: 'M', label: 'Mask', shortcut: 'M' },
         { type: 'place-symbol', icon: 'P', label: 'Symbol', shortcut: 'P' },
+        { type: 'place-furniture', icon: 'F', label: 'Furniture', shortcut: 'F' },
         { type: 'scale-calibrate', icon: 'S', label: 'Calibrate', shortcut: 'S' },
         { type: 'measure', icon: 'D', label: 'Measure', shortcut: 'D' },
     ];

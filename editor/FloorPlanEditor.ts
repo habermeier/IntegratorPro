@@ -11,6 +11,7 @@ import { OpacityCommand } from './commands/OpacityCommand';
 import { TransformLayerCommand } from './commands/TransformLayerCommand';
 import { PolygonTool } from './tools/PolygonTool';
 import { PlaceSymbolTool } from './tools/PlaceSymbolTool';
+import { PlaceFurnitureTool } from './tools/PlaceFurnitureTool';
 import { MeasureTool } from './tools/MeasureTool';
 export class FloorPlanEditor {
     public scene: THREE.Scene;
@@ -102,6 +103,7 @@ export class FloorPlanEditor {
         this.toolSystem.registerTool(new PolygonTool(this, 'draw-room'));
         this.toolSystem.registerTool(new PolygonTool(this, 'draw-mask'));
         this.toolSystem.registerTool(new PlaceSymbolTool(this));
+        this.toolSystem.registerTool(new PlaceFurnitureTool(this));
         this.toolSystem.registerTool(new MeasureTool(this));
         this.toolSystem.setActiveTool('select');
 
@@ -243,6 +245,7 @@ export class FloorPlanEditor {
                 case 'r': this.setActiveTool('draw-room'); break;
                 case 'm': this.setActiveTool('draw-mask'); break;
                 case 'p': this.setActiveTool('place-symbol'); break;
+                case 'f': this.setActiveTool('place-furniture'); break;
                 case 's': this.setActiveTool('scale-calibrate'); break;
                 case 'd': this.setActiveTool('measure'); break;
             }

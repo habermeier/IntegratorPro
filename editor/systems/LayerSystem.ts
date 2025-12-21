@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Layer, LayerConfig, Transform, VectorLayerContent, Polygon, PlacedSymbol } from '../models/types';
+import { Layer, LayerConfig, Transform, VectorLayerContent, Polygon, PlacedSymbol, Furniture } from '../models/types';
 import { SYMBOL_LIBRARY } from '../models/symbolLibrary';
 
 export class LayerSystem {
@@ -488,6 +488,62 @@ export class LayerSystem {
                     group.position.set(symbolData.x, symbolData.y, 0.2);
                     group.rotation.z = (symbolData.rotation * Math.PI) / 180;
                     group.scale.set(symbolData.scale, symbolData.scale, 1);
+                }
+            });
+        }
+        if (content.furniture) {
+            content.furniture.forEach(item => {
+                activeItemIds.add(item.id);
+                const cacheKey = `${layer.id}-${item.id}`;
+                let group = this.meshCache.get(cacheKey) as THREE.Group;
+
+                if (!group) {
+                    group = new THREE.Group();
+                    group.name = `furniture-${item.id}`;
+
+                    // 1. Geometry (Dimensions from item)
+                    const geometry = new THREE.PlaneGeometry(item.width, item.length);
+                    const material = new THREE.MeshBasicMaterial({
+                        color: item.color,
+                        transparent: true,
+                        opacity: 0.6,
+                        side: THREE.DoubleSide
+                    });
+                    const mesh = new THREE.Mesh(geometry, material);
+                    mesh.name = 'fill';
+                    group.add(mesh);
+
+                    // 2. Border
+                    const borderGeo = new THREE.EdgesGeometry(geometry);
+                    const borderMat = new THREE.LineBasicMaterial({ color: 0x333333 });
+                    const border = new THREE.LineSegments(borderGeo, borderMat);
+                    border.name = 'border';
+                    group.add(border);
+
+                    // 3. Label
+                    if (item.label) {
+                        const labelSprite = this.createLabel(item.label, 'Furniture');
+                        labelSprite.name = 'label';
+                        labelSprite.position.z = 0.5;
+                        group.add(labelSprite);
+                    }
+
+                    // 4. Transform
+                    group.position.set(item.x, item.y, 0.2);
+                    group.rotation.z = (item.rotation * Math.PI) / 180;
+
+                    group.userData = {
+                        id: item.id,
+                        type: 'furniture',
+                        isBlocking: item.isBlocking
+                    };
+
+                    layer.container.add(group);
+                    this.meshCache.set(cacheKey, group);
+                } else {
+                    // Update transform only (assuming dims don't change frequently for now)
+                    group.position.set(item.x, item.y, 0.2);
+                    group.rotation.z = (item.rotation * Math.PI) / 180;
                 }
             });
         }

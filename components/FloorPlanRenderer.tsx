@@ -13,6 +13,7 @@ import { CalibrationDialog } from './editor/CalibrationDialog';
 import { EditorFooter } from './editor/EditorFooter';
 import { ToolPalette } from './editor/ToolPalette';
 import { RoomPropertiesModal } from './editor/RoomPropertiesModal';
+import { FurnitureSidebar } from './editor/FurnitureSidebar';
 import { Room, RoomType, VectorLayerContent } from '../editor/models/types';
 import { AddPolygonCommand } from '../editor/commands/AddPolygonCommand';
 import { ScaleRuler } from './editor/ScaleRuler';
@@ -725,15 +726,24 @@ export const FloorPlanRenderer: React.FC = () => {
                 </div>
 
                 {/* 📑 Layers Sidebar (Always Visible) */}
-                <LayersSidebar
-                    editor={editor}
-                    layers={layers}
-                    activeLayerId={activeLayerId}
-                    isEditMode={isEditMode}
-                    selectedIds={selectedIds}
-                    setSelectedIds={setSelectedIds}
-                    activeTool={activeTool}
-                />
+                {/* 📑 Layers Sidebar or Furniture Sidebar */}
+                {activeTool === 'place-furniture' ? (
+                    <FurnitureSidebar
+                        editor={editor}
+                        layers={layers}
+                        isEditMode={isEditMode}
+                    />
+                ) : (
+                    <LayersSidebar
+                        editor={editor}
+                        layers={layers}
+                        activeLayerId={activeLayerId}
+                        isEditMode={isEditMode}
+                        selectedIds={selectedIds}
+                        setSelectedIds={setSelectedIds}
+                        activeTool={activeTool}
+                    />
+                )}
             </div>
 
             {calibrationData && (
