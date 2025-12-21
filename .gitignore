@@ -131,3 +131,6 @@ daliDevices.local.json
 bom.snapshot.json
 client_debug.log
 .DS_Store
+
+# Auto-generated version history
+projects/**/.history/

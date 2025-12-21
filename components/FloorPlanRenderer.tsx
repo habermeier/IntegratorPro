@@ -4,6 +4,7 @@ import { Layer, ToolType } from '../editor/models/types';
 import BASE_IMAGE from '../images/floor-plan-clean.jpg';
 import ELECTRICAL_IMAGE from '../images/electric-plan-plain-full-clean-2025-12-12.jpg';
 import { parseDistanceInput, formatDistance } from '../utils/measurementUtils';
+import { dataService } from '../src/services/DataService';
 
 // Modular Components
 import { ThreeCanvas } from './editor/ThreeCanvas';
@@ -82,22 +83,16 @@ export const FloorPlanRenderer: React.FC = () => {
             }
 
             try {
-                const res = await fetch('/api/electrical-overlay', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: payloadStr
-                });
-                if (res.ok) {
-                    lastSavedPayloadRef.current = payloadStr;
-                    console.log('✅ Electrical overlay saved automatically (state changed)');
-                }
+                await dataService.updateElectricalOverlay(payload);
+                lastSavedPayloadRef.current = payloadStr;
+                console.log('✅ Electrical overlay saved automatically via DataService');
             } catch (err) {
                 console.error('Failed to auto-save overlay state:', err);
             }
         }, 1000);
     }, []);
 
-    // Debounced Save Symbols
+    // Debounced Save Symbols (using DataService)
     const debouncedSaveSymbols = useCallback(() => {
         if (!isInitializedRef.current) return;
 
@@ -111,11 +106,8 @@ export const FloorPlanRenderer: React.FC = () => {
             if (electricalLayer && electricalLayer.type === 'vector') {
                 const devices = (electricalLayer.content as VectorLayerContent).symbols || [];
                 try {
-                    await fetch('/api/dali-devices', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ devices })
-                    });
+                    await dataService.updateDevices(devices);
+                    console.log('✅ Devices saved via DataService');
                 } catch (err) {
                     console.error('Failed to auto-save symbols:', err);
                 }
@@ -148,17 +140,9 @@ export const FloorPlanRenderer: React.FC = () => {
             }
 
             try {
-                console.log('💾 Saving polygons to server...', allPolygons.length, 'items');
-                const res = await fetch('/api/polygons', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ polygons: allPolygons })
-                });
-                if (res.ok) {
-                    console.log('✅ Polygons saved successfully');
-                } else {
-                    console.error('❌ Failed to save polygons:', res.statusText);
-                }
+                console.log('💾 Saving polygons via DataService...', allPolygons.length, 'items');
+                await dataService.updatePolygons(allPolygons);
+                console.log('✅ Polygons saved successfully via DataService');
             } catch (err) {
                 console.error('Failed to auto-save unified polygons:', err);
             }
@@ -321,18 +305,17 @@ export const FloorPlanRenderer: React.FC = () => {
             // 3. Load Persistence (Editor knows best)
             editorInstance.loadPersistentState();
 
-            // 4. Load Saved State from Server
+            // 4. Load Saved State from Server (using DataService)
             try {
-                const [overlayRes, scaleRes, symbolsRes, polygonsRes] = await Promise.all([
-                    fetch('/api/electrical-overlay'),
-                    fetch('/api/scale'),
-                    fetch('/api/dali-devices'),
-                    fetch('/api/polygons')
-                ]);
-                const overlayData = await overlayRes.json();
-                const scaleData = await scaleRes.json();
-                const symbolsData = await symbolsRes.json();
-                const polygonsData = await polygonsRes.json();
+                const project = await dataService.loadProject();
+                console.log('📦 Loaded project data from DataService');
+
+                // Extract data from monolithic project structure
+                const overlayData = project.floorPlan.electricalOverlay;
+                const scaleData = project.floorPlan.scale;
+                const symbolsData = { devices: project.devices };
+                const polygonsData = { polygons: project.floorPlan.polygons };
+                const settingsData = project.settings;
 
                 if (scaleData && scaleData.scaleFactor) {
                     editorInstance.pixelsMeter = scaleData.scaleFactor;
@@ -398,18 +381,16 @@ export const FloorPlanRenderer: React.FC = () => {
                 isInitializedRef.current = true;
                 console.log('🚀 Editor initialization sequence complete');
 
-                // 5. Load App Settings (Multiplier, etc)
-                const settingsRes = await fetch('/api/settings');
-                if (settingsRes.ok) {
-                    const settings = await settingsRes.json();
-                    if (settings.fastZoomMultiplier) {
-                        setFastZoomMultiplier(settings.fastZoomMultiplier);
-                        editorInstance.fastZoomMultiplier = settings.fastZoomMultiplier;
-                        localStorage.setItem('integrator-pro-fast-zoom-multiplier', settings.fastZoomMultiplier.toString());
+                // 5. Load App Settings (from project data)
+                if (settingsData) {
+                    if (settingsData.fastZoomMultiplier) {
+                        setFastZoomMultiplier(settingsData.fastZoomMultiplier);
+                        editorInstance.fastZoomMultiplier = settingsData.fastZoomMultiplier;
+                        localStorage.setItem('integrator-pro-fast-zoom-multiplier', settingsData.fastZoomMultiplier.toString());
                     }
-                    if (settings.units) {
-                        setUnitPreference(settings.units);
-                        localStorage.setItem('integrator-pro-units', settings.units);
+                    if (settingsData.units) {
+                        setUnitPreference(settingsData.units);
+                        localStorage.setItem('integrator-pro-units', settingsData.units);
                         window.dispatchEvent(new Event('storage-units-changed'));
                     }
                 }
@@ -459,17 +440,11 @@ export const FloorPlanRenderer: React.FC = () => {
         const pixelsPerMeter = calibrationData.pixelDist / meters;
 
         try {
-            const res = await fetch('/api/scale', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ scaleFactor: pixelsPerMeter })
-            });
-            if (res.ok) {
-                setCalibrationData(null);
-                setRealDist('');
-                editor.pixelsMeter = pixelsPerMeter;
-                console.log('✅ Calibration saved to server and applied locally');
-            }
+            await dataService.updateScale(pixelsPerMeter);
+            setCalibrationData(null);
+            setRealDist('');
+            editor.pixelsMeter = pixelsPerMeter;
+            console.log('✅ Calibration saved via DataService and applied locally');
         } catch (err) {
             console.error('Failed to save calibration:', err);
         }

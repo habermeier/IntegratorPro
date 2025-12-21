@@ -293,6 +293,153 @@ const DALI_DEVICES_FILE = path.join(__dirname, 'daliDevices.json');
 const DALI_DEVICES_OVERRIDE_FILE = path.join(__dirname, 'daliDevices.local.json');
 createDataEndpoints('/api/dali-devices', DALI_DEVICES_FILE, DALI_DEVICES_OVERRIDE_FILE, 'devices', 'DALI devices');
 
+// ============================================================================
+// PROJECT DATA ENDPOINTS (Monolithic Pattern with Versioning)
+// ============================================================================
+
+// GET /api/project/:projectId - Load entire project
+app.get('/api/project/:projectId', (req, res) => {
+    try {
+        const projectId = req.params.projectId;
+        const projectFile = path.join(__dirname, 'projects', projectId, 'project.json');
+
+        if (!fs.existsSync(projectFile)) {
+            return res.status(404).json({ error: `Project ${projectId} not found` });
+        }
+
+        console.log(`Loading project: ${projectId}`);
+        const data = fs.readFileSync(projectFile, 'utf8');
+        res.json(JSON.parse(data));
+    } catch (err) {
+        console.error('Error reading project data:', err);
+        res.status(500).json({ error: 'Failed to read project data' });
+    }
+});
+
+// POST /api/project/:projectId - Save entire project with auto-versioning
+app.post('/api/project/:projectId', (req, res) => {
+    try {
+        const projectId = req.params.projectId;
+        const projectDir = path.join(__dirname, 'projects', projectId);
+        const projectFile = path.join(projectDir, 'project.json');
+        const historyDir = path.join(projectDir, '.history');
+
+        // Ensure directories exist
+        if (!fs.existsSync(projectDir)) {
+            fs.mkdirSync(projectDir, { recursive: true });
+        }
+        if (!fs.existsSync(historyDir)) {
+            fs.mkdirSync(historyDir, { recursive: true });
+        }
+
+        // Step 1: Save current version to history (if exists)
+        if (fs.existsSync(projectFile)) {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').replace(/\..+/, '');
+            const historyFile = path.join(historyDir, `project-${timestamp}.json`);
+            fs.copyFileSync(projectFile, historyFile);
+            console.log(`📦 Archived to: ${path.basename(historyFile)}`);
+        }
+
+        // Step 2: Write new project file
+        const projectData = {
+            ...req.body,
+            timestamp: new Date().toISOString()
+        };
+        fs.writeFileSync(projectFile, JSON.stringify(projectData, null, 2));
+        console.log(`✅ Project ${projectId} saved successfully`);
+
+        res.json({ success: true, savedTo: projectFile });
+    } catch (err) {
+        console.error('Error saving project data:', err);
+        res.status(500).json({ error: 'Failed to save project data' });
+    }
+});
+
+// GET /api/project/:projectId/history - List version history
+app.get('/api/project/:projectId/history', (req, res) => {
+    try {
+        const projectId = req.params.projectId;
+        const historyDir = path.join(__dirname, 'projects', projectId, '.history');
+
+        if (!fs.existsSync(historyDir)) {
+            return res.json({ versions: [] });
+        }
+
+        const files = fs.readdirSync(historyDir)
+            .filter(f => f.endsWith('.json'))
+            .map(f => {
+                const stats = fs.statSync(path.join(historyDir, f));
+                return {
+                    filename: f,
+                    timestamp: stats.mtime.toISOString(),
+                    size: stats.size
+                };
+            })
+            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+        res.json({ versions: files });
+    } catch (err) {
+        console.error('Error reading version history:', err);
+        res.status(500).json({ error: 'Failed to read version history' });
+    }
+});
+
+// GET /api/project/:projectId/history/:version - Load specific version
+app.get('/api/project/:projectId/history/:version', (req, res) => {
+    try {
+        const projectId = req.params.projectId;
+        const version = req.params.version;
+        const historyFile = path.join(__dirname, 'projects', projectId, '.history', version);
+
+        if (!fs.existsSync(historyFile)) {
+            return res.status(404).json({ error: `Version ${version} not found` });
+        }
+
+        const data = fs.readFileSync(historyFile, 'utf8');
+        res.json(JSON.parse(data));
+    } catch (err) {
+        console.error('Error reading version:', err);
+        res.status(500).json({ error: 'Failed to read version' });
+    }
+});
+
+// GET /api/projects - List all available projects
+app.get('/api/projects', (req, res) => {
+    try {
+        const projectsDir = path.join(__dirname, 'projects');
+
+        if (!fs.existsSync(projectsDir)) {
+            return res.json({ projects: [] });
+        }
+
+        const projects = fs.readdirSync(projectsDir)
+            .filter(dir => {
+                const projectFile = path.join(projectsDir, dir, 'project.json');
+                return fs.existsSync(projectFile);
+            })
+            .map(dir => {
+                const projectFile = path.join(projectsDir, dir, 'project.json');
+                const data = JSON.parse(fs.readFileSync(projectFile, 'utf8'));
+                return {
+                    id: dir,
+                    name: data.metadata?.name || dir,
+                    status: data.metadata?.status || 'Unknown',
+                    modified: data.timestamp || new Date(fs.statSync(projectFile).mtime).toISOString()
+                };
+            })
+            .sort((a, b) => new Date(b.modified).getTime() - new Date(a.modified).getTime());
+
+        res.json({ projects });
+    } catch (err) {
+        console.error('Error listing projects:', err);
+        res.status(500).json({ error: 'Failed to list projects' });
+    }
+});
+
+// ============================================================================
+// LEGACY ENDPOINTS (for debugging and backward compatibility)
+// ============================================================================
+
 // POST debug log
 const LOG_FILE = path.join(__dirname, 'client_debug.log');
 app.post('/api/debug-log', (req, res) => {

@@ -22,6 +22,10 @@ export const Settings: React.FC = () => {
         const saved = localStorage.getItem('integrator-pro-fast-zoom-multiplier');
         return saved ? parseFloat(saved) : 3;
     });
+    const [snapToWallEnabled, setSnapToWallEnabled] = useState<boolean>(() => {
+        const saved = localStorage.getItem('integrator-pro-snap-to-wall');
+        return saved ? saved === 'true' : true;
+    });
     const [isLoading, setIsLoading] = useState(true);
     const [isSyncing, setIsSyncing] = useState(true);
     const [hasSyncError, setHasSyncError] = useState(false);
@@ -46,6 +50,10 @@ export const Settings: React.FC = () => {
                         setFastZoomMultiplier(data.fastZoomMultiplier);
                         localStorage.setItem('integrator-pro-fast-zoom-multiplier', data.fastZoomMultiplier.toString());
                     }
+                    if (data.snapToWallEnabled !== undefined) {
+                        setSnapToWallEnabled(data.snapToWallEnabled);
+                        localStorage.setItem('integrator-pro-snap-to-wall', data.snapToWallEnabled.toString());
+                    }
 
                     // Dispatch events to sync other components
                     window.dispatchEvent(new Event('storage-units-changed'));
@@ -66,7 +74,7 @@ export const Settings: React.FC = () => {
         loadSettings();
     }, []);
 
-    const saveSettings = async (newUnits: UnitSystem, newMultiplier: number) => {
+    const saveSettings = async (newUnits: UnitSystem, newMultiplier: number, newSnapToWall: boolean) => {
         // Prevent saving if we haven't synced with server yet to avoid overwriting with stale local data
         if (isSyncing) return;
 
@@ -77,6 +85,7 @@ export const Settings: React.FC = () => {
                 body: JSON.stringify({
                     units: newUnits,
                     fastZoomMultiplier: newMultiplier,
+                    snapToWallEnabled: newSnapToWall,
                     lastUpdated: Date.now()
                 })
             });
@@ -89,14 +98,21 @@ export const Settings: React.FC = () => {
     const handleUnitChange = (newUnits: UnitSystem) => {
         setUnits(newUnits);
         localStorage.setItem('integrator-pro-units', newUnits);
-        saveSettings(newUnits, fastZoomMultiplier);
+        saveSettings(newUnits, fastZoomMultiplier, snapToWallEnabled);
         window.dispatchEvent(new Event('storage-units-changed'));
     };
 
     const handleMultiplierChange = (newMultiplier: number) => {
         setFastZoomMultiplier(newMultiplier);
         localStorage.setItem('integrator-pro-fast-zoom-multiplier', newMultiplier.toString());
-        saveSettings(units, newMultiplier);
+        saveSettings(units, newMultiplier, snapToWallEnabled);
+        window.dispatchEvent(new Event('storage-settings-changed'));
+    };
+
+    const handleSnapToWallChange = (enabled: boolean) => {
+        setSnapToWallEnabled(enabled);
+        localStorage.setItem('integrator-pro-snap-to-wall', enabled.toString());
+        saveSettings(units, fastZoomMultiplier, enabled);
         window.dispatchEvent(new Event('storage-settings-changed'));
     };
 
@@ -239,6 +255,20 @@ export const Settings: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-sm font-medium text-slate-300">Enable Snap-to-Wall</label>
+                                            <button
+                                                onClick={() => handleSnapToWallChange(!snapToWallEnabled)}
+                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${snapToWallEnabled ? 'bg-blue-600' : 'bg-slate-700'}`}
+                                            >
+                                                <span
+                                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${snapToWallEnabled ? 'translate-x-6' : 'translate-x-1'}`}
+                                                />
+                                            </button>
+                                        </div>
+                                        <p className="text-[10px] text-slate-500 italic">
+                                            When enabled, press 'W' to auto-align furniture parallel to the nearest wall.
+                                        </p>
                                         <div className="flex items-center justify-between">
                                             <label className="text-sm font-medium text-slate-300">Snap Distance (Pixels)</label>
                                             <div className="flex items-center space-x-3">
