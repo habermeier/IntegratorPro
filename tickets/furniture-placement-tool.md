@@ -105,4 +105,36 @@ Deliverables
 
 13. **Documentation**
     - Update relevant architecture docs with furniture layer and spatial utils
-    - Inline code comments for spatial algorithms
+
+## Implementation Status & Next Steps (2025-12-21)
+
+**Status**: Paused
+**Current Progress**:
+1.  **Core Tool Logic (`PlaceFurnitureTool.ts`)**:
+    -   Implemented furniture placement with mouse interactions.
+    -   Implemented rotation ('R' key) and basic snapping to walls/furniture.
+    -   **Collision Detection**: Visual feedback (Red preview) when colliding with walls or other blocking furniture.
+    -   **Distance Indicators**:
+        -   Solid Blue lines to nearest walls.
+        -   Dashed Green lines to nearest furniture items (< 200 units).
+
+2.  **UI Components**:
+    -   `FurnitureCreationDialog`: For defining new furniture specs (Width/Length/Blocking).
+    -   `FurnitureSidebar`: Lists placed furniture, allows selecting/focusing.
+    -   `ToolPalette`: Added furniture tool button.
+    -   `Settings`: Added furniture snap/rotation preferences.
+
+3.  **Utilities (`spatialUtils.ts`)**:
+    -   Added robust geometry helpers: `getKeyPoints`, `checkRectangleCollision`, `checkPolygonLineIntersection`, `getNearestFurniture`.
+
+**Next Steps / Where we left off**:
+1.  **Persistence (Save/Load)**:
+    -   **Current State**: Furniture items are stored in memory (`LayerSystem`) but **NOT saved** to the server.
+    -   **Action Item**: Implement `debouncedSaveFurniture` in `FloorPlanRenderer.tsx`.
+    -   **Endpoint**: Needs to POST to `/api/furniture` (or consistent endpoint). See `save_endpoints_documentation.md` for the proposed schema.
+    -   **Load Logic**: Update `FloorPlanRenderer` initialization to fetch from `/api/furniture` and populate the furniture layer.
+
+2.  **Refinements**:
+    -   "Snap to Wall" rotation (auto-align back of chair to wall).
+    -   Keyboard nudging (preview update was deferred).
+
