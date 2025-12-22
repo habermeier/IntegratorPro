@@ -206,6 +206,36 @@ export class FloorPlanEditor {
             this.setDirty();
         }
 
+        // Opacity Adjustment (+/- keys)
+        // Works on active layer when in edit mode, or any visible layer otherwise
+        if (e.key === '+' || e.key === '=' || e.code === 'NumpadAdd' || e.key === '-' || e.key === '_' || e.code === 'NumpadSubtract') {
+            e.preventDefault();
+
+            // Determine target layer: prefer activeLayerId, fallback to first visible layer
+            let targetLayerId = this.activeLayerId;
+            if (!targetLayerId) {
+                const visibleLayers = this.layerSystem.getAllLayers().filter(l => l.visible);
+                if (visibleLayers.length > 0) {
+                    targetLayerId = visibleLayers[0].id;
+                }
+            }
+
+            if (targetLayerId) {
+                const layer = this.layerSystem.getLayer(targetLayerId);
+                if (layer) {
+                    const opacityStep = 0.1;
+                    const isIncrease = e.key === '+' || e.key === '=' || e.code === 'NumpadAdd';
+                    const newOpacity = isIncrease
+                        ? Math.min(1, layer.opacity + opacityStep)
+                        : Math.max(0, layer.opacity - opacityStep);
+
+                    this.setLayerOpacity(targetLayerId, newOpacity);
+                    console.log(`[FloorPlanEditor] Adjusted ${layer.name} opacity: ${(newOpacity * 100).toFixed(0)}%`);
+                }
+            }
+            return;
+        }
+
         // Arrow Key Scooting / Scaling / Rotation
         if (this.isEditMode && this.activeLayerId) {
             const layer = this.layerSystem.getLayer(this.activeLayerId);
@@ -362,7 +392,8 @@ export class FloorPlanEditor {
         } else {
             this.toolSystem.handleMouseMove(x, y, e);
             // Mouse move tool handles might need render
-            if (this.toolSystem.getActiveToolType() === 'scale-calibrate') {
+            const activeTool = this.toolSystem.getActiveToolType();
+            if (activeTool === 'scale-calibrate' || activeTool === 'measure' || activeTool === 'place-symbol' || activeTool === 'place-furniture') {
                 this.setDirty();
             }
         }
@@ -373,7 +404,9 @@ export class FloorPlanEditor {
         }
 
         this.cameraSystem.updateZoomCursor(x, y);
-        this.setDirty(); // Zoom cursor follows mouse, must re-render
+        // Only trigger dirty if zoom cursor is visible or moving
+        // But since it's world-space attached, we usually need it.
+        // Let's at least emit move.
         this.emit('cursor-move', { x, y });
     };
 

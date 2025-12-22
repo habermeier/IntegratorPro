@@ -1,9 +1,6 @@
 import React from 'react';
 import { Layer, ToolType } from '../../editor/models/types';
 import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
-import { SYMBOL_CATEGORIES } from '../../editor/models/symbolLibrary';
-import { SymbolPalette } from './SymbolPalette';
-import { PlaceSymbolTool } from '../../editor/tools/PlaceSymbolTool';
 
 interface LayersSidebarProps {
     editor: FloorPlanEditor | null;
@@ -24,18 +21,6 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
     setSelectedIds,
     activeTool
 }) => {
-    const [expandedCategory, setExpandedCategory] = React.useState<string | null>(null);
-    const [selectedSymbolType, setSelectedSymbolType] = React.useState<string | null>(null);
-
-    const handleSelectSymbol = (type: string) => {
-        setSelectedSymbolType(type);
-        if (editor) {
-            editor.setActiveTool('place-symbol');
-            const tool = editor.toolSystem.getTool<PlaceSymbolTool>('place-symbol');
-            tool?.setSymbolType(type);
-        }
-    };
-
     return (
         <div className="w-80 bg-slate-900 border-l border-slate-800 flex flex-col z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.3)]">
             <div className="p-4 border-b border-slate-800 flex justify-between items-center">
@@ -56,31 +41,23 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                             }`}
                     >
                         <div className="flex items-center py-1 px-1.5 space-x-1">
-                            {/* Edit/Active Toggle Icon */}
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (l.allowLayerEditing === false) {
-                                        return; // Disabled, no action
-                                    }
-                                    editor?.setActiveLayer(activeLayerId === l.id ? null : l.id);
-                                }}
-                                className={`w-12 h-5 flex items-center justify-center rounded transition-all text-[8px] font-bold ${
-                                    l.allowLayerEditing === false
-                                        ? 'text-slate-700 cursor-not-allowed opacity-50'
-                                        : activeLayerId === l.id
+                            {/* Edit button - only for image layers */}
+                            {l.allowLayerEditing === true && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        editor?.setActiveLayer(activeLayerId === l.id ? null : l.id);
+                                    }}
+                                    className={`w-12 h-5 flex items-center justify-center rounded transition-all text-[8px] font-bold ${
+                                        activeLayerId === l.id
                                             ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
                                             : 'text-slate-600 hover:text-slate-400 hover:bg-slate-700'
-                                    }`}
-                                title={
-                                    l.allowLayerEditing === false
-                                        ? "Data layer - locked to base coordinates"
-                                        : activeLayerId === l.id ? "End Editing" : "Start Editing"
-                                }
-                                disabled={l.allowLayerEditing === false}
-                            >
-                                {l.allowLayerEditing === false ? 'LOCK' : activeLayerId === l.id ? 'ACTIVE' : 'EDIT'}
-                            </button>
+                                        }`}
+                                    title={activeLayerId === l.id ? "End Editing" : "Edit Layer Transform"}
+                                >
+                                    {activeLayerId === l.id ? 'ACTIVE' : 'EDIT'}
+                                </button>
+                            )}
 
                             <button
                                 onClick={(e) => {
@@ -106,10 +83,8 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                                 <div className={`text-[10px] font-bold truncate leading-tight ${l.visible ? (activeLayerId === l.id ? 'text-red-400' : 'text-slate-200') : 'text-slate-600'}`}>
                                     {l.name}
                                 </div>
-                                <div className="text-[8px] text-slate-500 font-mono uppercase tracking-tighter flex items-center space-x-1.5 leading-tight">
-                                    <span>{l.type} layer</span>
-                                    {l.allowLayerEditing === false && <span className="text-[7px] bg-slate-800 px-0.5 rounded text-slate-600 font-bold">LOCKED TO BASE</span>}
-                                    {l.allowLayerEditing === true && <span className="text-[7px] bg-emerald-900/30 px-0.5 rounded text-emerald-600 font-bold">EDITABLE</span>}
+                                <div className="text-[8px] text-slate-500 font-mono uppercase tracking-tighter leading-tight">
+                                    <span>opacity {(l.opacity * 100).toFixed(0)}%</span>
                                 </div>
                             </div>
 
@@ -121,30 +96,21 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                         {/* Expanded Controls for Selected Layer */}
                         {selectedIds.includes(l.id) && (
                             <div className="px-4 pb-4 pt-2 space-y-4 border-t border-slate-700/50 mt-1">
-                                {l.allowLayerEditing === false && (
-                                    <div className="bg-slate-800/50 border border-slate-700 rounded p-2 text-[10px] text-slate-400">
-                                        <div className="flex items-center gap-1 mb-1">
-                                            <span className="font-bold">Layer Locked to Base</span>
-                                        </div>
-                                        <div className="text-[9px] text-slate-500">
-                                            Data layers are always aligned to base coordinates. Only image layers can be adjusted for alignment.
-                                        </div>
+                                {/* Opacity - available for all layers */}
+                                <div className="space-y-1">
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase">Opacity</label>
+                                        <span className="text-[10px] text-blue-400 font-mono">{(l.opacity * 100).toFixed(0)}%</span>
                                     </div>
-                                )}
+                                    <input
+                                        type="range" min="0" max="1" step="0.01" value={l.opacity} className="w-full accent-blue-500 bg-slate-700 h-1 rounded-full appearance-none outline-none"
+                                        onChange={(e) => editor?.setLayerOpacity(l.id, parseFloat(e.target.value))}
+                                    />
+                                </div>
 
-                                {l.allowLayerEditing !== false && (
+                                {/* Scale & Rotation - only for image layers */}
+                                {l.allowLayerEditing === true && (
                                     <>
-                                        <div className="space-y-1">
-                                            <div className="flex justify-between items-center">
-                                                <label className="text-[10px] font-bold text-slate-500 uppercase">Opacity</label>
-                                                <span className="text-[10px] text-blue-400 font-mono">{(l.opacity * 100).toFixed(0)}%</span>
-                                            </div>
-                                            <input
-                                                type="range" min="0" max="1" step="0.01" value={l.opacity} className="w-full accent-blue-500 bg-slate-700 h-1 rounded-full appearance-none outline-none"
-                                                onChange={(e) => editor?.setLayerOpacity(l.id, parseFloat(e.target.value))}
-                                            />
-                                        </div>
-
                                         <div className="space-y-1">
                                             <div className="flex justify-between items-center">
                                                 <label className="text-[10px] font-bold text-slate-500 uppercase">Scale</label>
@@ -174,47 +140,6 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                                         </div>
                                     </>
                                 )}
-                            </div>
-                        )}
-                    </div>
-                ))}
-            </div>
-
-            {/* Symbol Placement Section */}
-            <div className="flex-1 overflow-y-auto p-2 space-y-2 border-t border-slate-800">
-                <div className="px-2 py-1 flex justify-between items-center">
-                    <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Symbol Placement</h3>
-                    <span className="text-[10px] text-slate-700 font-mono">Select Category</span>
-                </div>
-
-                {SYMBOL_CATEGORIES.map(category => (
-                    <div key={category.id} className="space-y-1">
-                        <button
-                            onClick={() => setExpandedCategory(expandedCategory === category.id ? null : category.id)}
-                            className={`w-full flex items-center p-2 rounded-lg transition-all border ${expandedCategory === category.id
-                                    ? 'bg-slate-800 border-slate-700 shadow-md'
-                                    : 'bg-transparent border-transparent hover:bg-slate-800/30'
-                                }`}
-                        >
-                            <div
-                                className="w-3 h-3 rounded-full mr-3 shadow-[0_0_8px_rgba(0,0,0,0.5)]"
-                                style={{ backgroundColor: `#${category.color.toString(16).padStart(6, '0')}` }}
-                            />
-                            <span className={`flex-1 text-left text-xs font-semibold ${expandedCategory === category.id ? 'text-slate-100' : 'text-slate-400'}`}>
-                                {category.name}
-                            </span>
-                            <span className="text-[10px] text-slate-600">
-                                {expandedCategory === category.id ? '▼' : '▶'}
-                            </span>
-                        </button>
-
-                        {expandedCategory === category.id && (
-                            <div className="pl-6 pr-2">
-                                <SymbolPalette
-                                    activeCategory={category.id}
-                                    selectedSymbolType={selectedSymbolType}
-                                    onSelectSymbol={handleSelectSymbol}
-                                />
                             </div>
                         )}
                     </div>

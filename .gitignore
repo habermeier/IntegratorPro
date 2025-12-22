@@ -134,3 +134,8 @@ client_debug.log
 
 # Auto-generated version history
 projects/**/.history/
+
+# Temporary worker assignments and performance profiles
+tmp/
+*.cpuprofile
+vite-profile-*.cpuprofile

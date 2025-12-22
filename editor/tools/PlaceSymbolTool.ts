@@ -12,6 +12,8 @@ export class PlaceSymbolTool implements Tool {
     private previewGroup: THREE.Group;
     private currentRotation: number = 0;
     private currentScale: number = 1.0;
+    private activeProductId: string = 'generic-product';
+    private activeDefaultHeight: number = 2.4;
 
     constructor(editor: FloorPlanEditor) {
         this.editor = editor;
@@ -35,6 +37,11 @@ export class PlaceSymbolTool implements Tool {
         this.symbolType = type;
         this.updatePreviewMesh();
         this.editor.emit('active-symbol-changed', type);
+    }
+
+    public setActiveAttributes(attrs: { productId: string; defaultHeight: number }): void {
+        this.activeProductId = attrs.productId;
+        this.activeDefaultHeight = attrs.defaultHeight;
     }
 
     private updatePreviewMesh(): void {
@@ -85,6 +92,8 @@ export class PlaceSymbolTool implements Tool {
             rotation: this.currentRotation,
             scale: this.currentScale,
             room: roomName,
+            productId: this.activeProductId,
+            installationHeight: this.activeDefaultHeight,
             createdAt: new Date().toISOString()
         };
 

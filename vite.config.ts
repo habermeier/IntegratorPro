@@ -10,7 +10,17 @@ export default defineConfig(({ mode }) => {
       port: 3002, // Avoid 3000/3001 conflicts
       strictPort: false, // Fallback if 3002 is taken
       watch: {
-        usePolling: true,
+        // Use native inotify on Linux (much faster than polling)
+        usePolling: false,
+        // Ignore non-source directories to reduce file watching overhead
+        ignored: [
+          '**/node_modules/**',
+          '**/dist/**',
+          '**/tmp/**',
+          '**/.git/**',
+          '**/*.cpuprofile',
+          '**/vite-profile-*.cpuprofile'
+        ]
       },
       proxy: {
         '/api': {
