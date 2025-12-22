@@ -50,8 +50,12 @@ export const FloorPlanRenderer: React.FC = () => {
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const symbolsSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const polygonsSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const furnitureSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const isInitializedRef = useRef(false);
     const lastSavedPayloadRef = useRef<string>('');
+    const lastSavedSymbolsRef = useRef<string>('');
+    const lastSavedPolygonsRef = useRef<string>('');
+    const lastSavedFurnitureRef = useRef<string>('');
 
     // Debounced Save (Direct Editor Access)
     const debouncedSave = useCallback(() => {
@@ -105,14 +109,58 @@ export const FloorPlanRenderer: React.FC = () => {
             const electricalLayer = editor.layerSystem.getLayer('electrical');
             if (electricalLayer && electricalLayer.type === 'vector') {
                 const devices = (electricalLayer.content as VectorLayerContent).symbols || [];
+                const devicesStr = JSON.stringify(devices);
+
+                // 💡 Dirty Check: Only save if symbols have actually changed
+                if (devicesStr === lastSavedSymbolsRef.current) {
+                    return;
+                }
+
                 try {
-                    await dataService.updateDevices(devices);
+                    await dataService.updateDevices(devices as any[]);
+                    lastSavedSymbolsRef.current = devicesStr;
                     console.log('✅ Devices saved via DataService');
                 } catch (err) {
                     console.error('Failed to auto-save symbols:', err);
                 }
             }
         }, 1500); // Slightly longer debounce for symbols
+    }, []);
+
+    // Debounced Save Furniture (using DataService)
+    const debouncedSaveFurniture = useCallback(() => {
+        if (!isInitializedRef.current) return;
+        if (furnitureSaveTimeoutRef.current) clearTimeout(furnitureSaveTimeoutRef.current);
+
+        furnitureSaveTimeoutRef.current = setTimeout(async () => {
+            const editor = editorInstanceRef.current;
+            if (!editor) return;
+
+            const furnitureLayer = editor.layerSystem.getLayer('furniture');
+            if (furnitureLayer && furnitureLayer.type === 'vector') {
+                const furniture = (furnitureLayer.content as VectorLayerContent).furniture || [];
+                const furnitureStr = JSON.stringify(furniture);
+
+                // 💡 Dirty Check
+                if (furnitureStr === lastSavedFurnitureRef.current) {
+                    return;
+                }
+
+                try {
+                    // Map editor furniture to DataService structure
+                    const mappedFurniture = furniture.map(f => ({
+                        ...f,
+                        position: { x: f.x, y: f.y }
+                    })) as any[];
+
+                    await dataService.updateFurniture(mappedFurniture);
+                    lastSavedFurnitureRef.current = furnitureStr;
+                    console.log('✅ Furniture saved via DataService');
+                } catch (err) {
+                    console.error('Failed to auto-save furniture:', err);
+                }
+            }
+        }, 1200);
     }, []);
 
     // Debounced Save Polygons (Unified System)
@@ -139,9 +187,17 @@ export const FloorPlanRenderer: React.FC = () => {
                 masks.forEach(m => allPolygons.push({ ...m, type: 'mask' }));
             }
 
+            const polygonsStr = JSON.stringify(allPolygons);
+
+            // 💡 Dirty Check: Only save if polygons have actually changed
+            if (polygonsStr === lastSavedPolygonsRef.current) {
+                return;
+            }
+
             try {
                 console.log('💾 Saving polygons via DataService...', allPolygons.length, 'items');
                 await dataService.updatePolygons(allPolygons);
+                lastSavedPolygonsRef.current = polygonsStr;
                 console.log('✅ Polygons saved successfully via DataService');
             } catch (err) {
                 console.error('Failed to auto-save unified polygons:', err);
@@ -171,6 +227,7 @@ export const FloorPlanRenderer: React.FC = () => {
             setLayers([...newLayers]);
             debouncedSavePolygons();
             debouncedSaveSymbols();
+            debouncedSaveFurniture();
         };
 
         editor.on('tool-changed', onToolChanged);
@@ -298,6 +355,17 @@ export const FloorPlanRenderer: React.FC = () => {
                 transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 }
             });
 
+            editorInstance.addLayer({
+                id: 'furniture',
+                name: 'Furniture',
+                type: 'vector',
+                zIndex: 4,
+                visible: true,
+                locked: true,
+                opacity: 1,
+                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 }
+            });
+
             // 2. Load Images
             await editorInstance.loadImage('base', BASE_IMAGE);
             await editorInstance.loadImage('electrical', ELECTRICAL_IMAGE);
@@ -361,6 +429,17 @@ export const FloorPlanRenderer: React.FC = () => {
                     editorInstance.layerSystem.markDirty('mask');
                 }
 
+                // RESTORE FURNITURE
+                const furnitureLayer = editorInstance.layerSystem.getLayer('furniture');
+                const furnitureData = project.furniture || [];
+                if (furnitureLayer) {
+                    furnitureLayer.content = {
+                        ...furnitureLayer.content,
+                        furniture: furnitureData
+                    };
+                    editorInstance.layerSystem.markDirty('furniture');
+                }
+
                 // RESTORE OPACITY
                 editorInstance.setLayerOpacity('electrical', overlayData.opacity ?? 0.7);
 
@@ -377,6 +456,10 @@ export const FloorPlanRenderer: React.FC = () => {
                     opacity: overlayData.opacity ?? 0.7,
                     locked: !!overlayData.locked
                 });
+
+                lastSavedSymbolsRef.current = JSON.stringify(symbolsData.devices || []);
+                lastSavedPolygonsRef.current = JSON.stringify(allPolygons);
+                lastSavedFurnitureRef.current = JSON.stringify(furnitureData);
 
                 isInitializedRef.current = true;
                 console.log('🚀 Editor initialization sequence complete');
@@ -425,6 +508,105 @@ export const FloorPlanRenderer: React.FC = () => {
         editor.on('room-edit-requested', onRoomEdit);
         return () => {
             editor.off('room-edit-requested', onRoomEdit);
+        };
+    }, [editor]);
+
+    // Listen for cross-tab data changes
+    useEffect(() => {
+        const handleProjectChange = async () => {
+            console.log('[FloorPlanRenderer] Detected external project change, reloading data');
+            if (!editor) return;
+
+            try {
+                // Force reload from server, bypassing cache
+                const project = await dataService.loadProject(undefined, true);
+                console.log('📦 Reloaded project data after external change');
+
+                // Update editor with fresh data
+                const scaleData = project.floorPlan.scale;
+                const symbolsData = { devices: project.devices };
+                const polygonsData = { polygons: project.floorPlan.polygons };
+                const overlayData = project.floorPlan.electricalOverlay;
+
+                // Update scale
+                if (scaleData && scaleData.scaleFactor) {
+                    editor.pixelsMeter = scaleData.scaleFactor;
+                }
+
+                // Update electrical layer transform
+                editor.setLayerTransform('electrical', {
+                    position: { x: overlayData.x || 0, y: overlayData.y || 0 },
+                    scale: { x: overlayData.scale || 1, y: overlayData.scale || 1 },
+                    rotation: overlayData.rotation || 0
+                }, true);
+
+                // Update symbols
+                const electricalLayer = editor.layerSystem.getLayer('electrical');
+                if (electricalLayer) {
+                    electricalLayer.content = {
+                        ...electricalLayer.content,
+                        symbols: symbolsData.devices || []
+                    };
+                    editor.layerSystem.markDirty('electrical');
+                }
+
+                // Update polygons
+                const roomLayer = editor.layerSystem.getLayer('room');
+                const maskLayer = editor.layerSystem.getLayer('mask');
+                const allPolygons = polygonsData.polygons || [];
+
+                if (roomLayer) {
+                    roomLayer.content = {
+                        ...roomLayer.content,
+                        rooms: allPolygons.filter((p: any) => p.type === 'room')
+                    };
+                    editor.layerSystem.markDirty('room');
+                }
+
+                if (maskLayer) {
+                    maskLayer.content = {
+                        ...maskLayer.content,
+                        masks: allPolygons.filter((p: any) => p.type === 'mask')
+                    };
+                    editor.layerSystem.markDirty('mask');
+                }
+
+                // Update furniture
+                const furnitureLayer = editor.layerSystem.getLayer('furniture');
+                const furnitureData = project.furniture || [];
+                if (furnitureLayer) {
+                    furnitureLayer.content = {
+                        ...furnitureLayer.content,
+                        furniture: furnitureData
+                    };
+                    editor.layerSystem.markDirty('furniture');
+                }
+
+                // Update layers state to trigger re-render
+                setLayers([...editor.layerSystem.getAllLayers()]);
+
+                // 💡 Update Cache Refs to prevent immediate re-save after reload
+                lastSavedPayloadRef.current = JSON.stringify({
+                    x: overlayData.x || 0,
+                    y: overlayData.y || 0,
+                    scale: overlayData.scale || 1,
+                    rotation: overlayData.rotation || 0,
+                    opacity: overlayData.opacity ?? 0.7,
+                    locked: !!overlayData.locked
+                });
+                lastSavedSymbolsRef.current = JSON.stringify(symbolsData.devices || []);
+                lastSavedPolygonsRef.current = JSON.stringify(allPolygons);
+                lastSavedFurnitureRef.current = JSON.stringify(furnitureData);
+
+                console.log('✅ Editor state synchronized with external changes');
+            } catch (error) {
+                console.error('Failed to reload project after external change:', error);
+            }
+        };
+
+        window.addEventListener('project-data-changed', handleProjectChange);
+        return () => {
+            window.removeEventListener('project-data-changed', handleProjectChange);
         };
     }, [editor]);
 

@@ -101,17 +101,57 @@ export interface VersionHistoryEntry {
 class DataService {
   private projectId: string = '270-boll-ave';
   private cache: ProjectData | null = null;
+  private cacheTimestamp: number | null = null;
+  private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
   private baseUrl: string = '/api';
+
+  constructor() {
+    // Listen for cross-tab changes via storage events
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', this.onStorageChange);
+    }
+  }
+
+  private onStorageChange = (e: StorageEvent): void => {
+    if (e.key === 'integrator-pro-last-save') {
+      console.log('[DataService] Detected external change, clearing cache');
+      this.clearCache();
+      // Dispatch event for components to reload
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('project-data-changed'));
+      }
+    }
+  };
 
   /**
    * Load entire project data
    * @param projectId Optional project ID (defaults to current project)
+   * @param forceReload If true, bypass cache and force reload from server
    * @returns Complete project data
    */
-  async loadProject(projectId?: string): Promise<ProjectData> {
+  async loadProject(projectId?: string, forceReload = false): Promise<ProjectData> {
     const id = projectId || this.projectId;
+    const now = Date.now();
+
+    // Check if cache is valid
+    const cacheValid = this.cache &&
+                       this.cacheTimestamp &&
+                       (now - this.cacheTimestamp < this.CACHE_TTL);
+
+    if (!forceReload && cacheValid) {
+      console.log('[DataService] Using cached project data (TTL valid)');
+      return this.cache;
+    }
 
     try {
+      if (forceReload) {
+        console.log('[DataService] Force reload - bypassing cache');
+      } else if (this.cache && !cacheValid) {
+        console.log('[DataService] Cache expired (TTL exceeded) - reloading');
+      } else {
+        console.log('[DataService] Loading project from server (no cache)');
+      }
+
       const response = await fetch(`${this.baseUrl}/project/${id}`);
 
       if (!response.ok) {
@@ -119,6 +159,7 @@ class DataService {
       }
 
       this.cache = await response.json();
+      this.cacheTimestamp = now;
       return this.cache;
     } catch (error) {
       console.error('Error loading project:', error);
@@ -153,6 +194,13 @@ class DataService {
       }
 
       this.cache = projectData;
+      this.cacheTimestamp = Date.now();
+
+      // Update localStorage to notify other tabs
+      if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+        localStorage.setItem('integrator-pro-last-save', Date.now().toString());
+      }
+
       console.log('✅ Project saved successfully with versioning');
     } catch (error) {
       console.error('Error saving project:', error);
@@ -293,10 +341,12 @@ class DataService {
   }
 
   /**
-   * Clear cache
+   * Clear cache (manual invalidation)
    */
   clearCache(): void {
     this.cache = null;
+    this.cacheTimestamp = null;
+    console.log('[DataService] Cache cleared');
   }
 
   /**

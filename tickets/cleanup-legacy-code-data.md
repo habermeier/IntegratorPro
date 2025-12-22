@@ -100,6 +100,25 @@ When cleaning up items:
 
 ---
 
+## Strategic Direction Change
+
+**Date:** 2025-12-21
+**Decision:** Deprioritize furniture features, focus on device placement (canned lights, sensors, etc.)
+
+**Rationale:**
+- Furniture is secondary need
+- Device placement is core business value
+- Furniture features "not great right now" per user feedback
+- Stop furniture refinements, focus on device system
+
+**Impact:**
+- No more furniture feature work
+- Existing furniture features remain as-is (functional but not polished)
+- All future work prioritizes device system (T-1 through T-12)
+- May revisit furniture later or remove entirely
+
+---
+
 ## Current Priority Items (From Recent Work)
 
 ### High Priority (Next 1-2 Weeks)

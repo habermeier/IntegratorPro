@@ -1,4 +1,7 @@
 import * as THREE from 'three';
+import { Line2 } from 'three/examples/jsm/lines/Line2.js';
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
+import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { Tool } from '../systems/ToolSystem';
 import { ToolType, Vector2, Furniture, VectorLayerContent, Room } from '../models/types';
 import { FloorPlanEditor } from '../FloorPlanEditor';
@@ -268,20 +271,30 @@ export class PlaceFurnitureTool implements Tool {
 
         const nearestFurniture = getNearestFurniture(worldPos, furnitureList, null, 200);
         nearestFurniture.forEach(info => {
-            // 1. Draw Line with 2px thickness
-            const points = [
-                new THREE.Vector3(worldPos.x, worldPos.y, 1),
-                new THREE.Vector3(info.pointOnTarget.x, info.pointOnTarget.y, 1)
-            ];
-            const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
-            const lineMat = new THREE.LineDashedMaterial({
-                color: info.distance < 3 ? 0xff0000 : 0x00ff00, // Green for furniture distance
-                depthTest: false,
-                dashSize: 4,
-                gapSize: 2,
-                linewidth: 2 // 2px thickness
+            // 1. Draw Line with 2px thickness using Line2 for cross-browser support
+            const geometry = new LineGeometry();
+            geometry.setPositions([
+                worldPos.x, worldPos.y, 1,
+                info.pointOnTarget.x, info.pointOnTarget.y, 1
+            ]);
+
+            // Get renderer size for LineMaterial resolution
+            const canvas = this.editor.scene.userData.canvas || document.querySelector('canvas');
+            const width = canvas ? canvas.width : window.innerWidth;
+            const height = canvas ? canvas.height : window.innerHeight;
+
+            const material = new LineMaterial({
+                color: info.distance < 3 ? 0xff0000 : 0x00ff00, // Red if too close, green otherwise
+                linewidth: 2, // 2 pixels in screen space
+                resolution: new THREE.Vector2(width, height),
+                dashed: true,
+                dashScale: 50,
+                dashSize: 0.1,
+                gapSize: 0.05,
+                depthTest: false
             });
-            const line = new THREE.Line(lineGeo, lineMat);
+
+            const line = new Line2(geometry, material);
             line.computeLineDistances(); // Required for dashed lines
             this.annotationGroup.add(line);
 
@@ -440,20 +453,37 @@ export class PlaceFurnitureTool implements Tool {
         const dy = wall.p2.y - wall.p1.y;
         let wallAngle = Math.atan2(dy, dx) * (180 / Math.PI);
 
-        // Normalize to 0-360
-        if (wallAngle < 0) wallAngle += 360;
+        // Normalize wall angle to 0-360
+        wallAngle = ((wallAngle % 360) + 360) % 360;
 
-        // Round to nearest 90 degrees for clean alignment
-        const roundedAngle = Math.round(wallAngle / 90) * 90;
+        // Handle wall direction ambiguity: choose angle closest to current rotation
+        // A wall has two parallel directions (wallAngle and wallAngle + 180°)
+        const altAngle = (wallAngle + 180) % 360;
 
-        // Set furniture rotation to align parallel to wall
-        this.currentRotation = roundedAngle;
+        // Normalize current rotation for comparison
+        const normalizedCurrent = ((this.currentRotation % 360) + 360) % 360;
+
+        // Calculate angular differences (shortest path)
+        const diff1 = Math.min(
+            Math.abs(normalizedCurrent - wallAngle),
+            360 - Math.abs(normalizedCurrent - wallAngle)
+        );
+        const diff2 = Math.min(
+            Math.abs(normalizedCurrent - altAngle),
+            360 - Math.abs(normalizedCurrent - altAngle)
+        );
+
+        // Choose the angle with smaller rotation change
+        const selectedAngle = diff2 < diff1 ? altAngle : wallAngle;
+
+        // Set furniture rotation to align parallel to wall (exact angle, no rounding)
+        this.currentRotation = selectedAngle;
         this.updatePreviewTransform();
 
         // Flash the wall for visual feedback
         this.flashWall(wall.p1, wall.p2);
 
-        console.log('[PlaceFurnitureTool] Snapped to wall, rotation:', this.currentRotation);
+        console.log(`[PlaceFurnitureTool] Snapped to wall at ${selectedAngle.toFixed(1)}°`);
     }
 
     private flashWall(p1: Vector2, p2: Vector2): void {
@@ -580,19 +610,29 @@ export class PlaceFurnitureTool implements Tool {
 
         const nearestFurniture = getNearestFurniture(worldPos, furnitureList, null, 200);
         nearestFurniture.forEach(info => {
-            const points = [
-                new THREE.Vector3(worldPos.x, worldPos.y, 1),
-                new THREE.Vector3(info.pointOnTarget.x, info.pointOnTarget.y, 1)
-            ];
-            const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
-            const lineMat = new THREE.LineDashedMaterial({
+            const geometry = new LineGeometry();
+            geometry.setPositions([
+                worldPos.x, worldPos.y, 1,
+                info.pointOnTarget.x, info.pointOnTarget.y, 1
+            ]);
+
+            // Get renderer size for LineMaterial resolution
+            const canvas = this.editor.scene.userData.canvas || document.querySelector('canvas');
+            const width = canvas ? canvas.width : window.innerWidth;
+            const height = canvas ? canvas.height : window.innerHeight;
+
+            const material = new LineMaterial({
                 color: info.distance < 3 ? 0xff0000 : 0x00ff00,
-                depthTest: false,
-                dashSize: 4,
-                gapSize: 2,
-                linewidth: 2
+                linewidth: 2, // 2 pixels in screen space
+                resolution: new THREE.Vector2(width, height),
+                dashed: true,
+                dashScale: 50,
+                dashSize: 0.1,
+                gapSize: 0.05,
+                depthTest: false
             });
-            const line = new THREE.Line(lineGeo, lineMat);
+
+            const line = new Line2(geometry, material);
             line.computeLineDistances();
             this.annotationGroup.add(line);
 

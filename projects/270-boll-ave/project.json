@@ -1,11 +1,11 @@
 {
   "version": "1.0",
-  "timestamp": "2025-12-21T17:34:20.546Z",
+  "timestamp": "2025-12-22T17:39:31.700Z",
   "metadata": {
     "name": "270 Boll Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2025-12-21T17:34:20.498Z"
+    "modified": "2025-12-22T17:39:31.589Z"
   },
   "floorPlan": {
     "scale": {
@@ -3872,7 +3872,108 @@
       "locked": true
     }
   },
-  "furniture": [],
+  "furniture": [
+    {
+      "id": "furn-1766345492947",
+      "type": "furniture",
+      "category": "furniture",
+      "x": 0,
+      "y": 0,
+      "width": 1.2191999999999998,
+      "length": 0.6095999999999999,
+      "rotation": 0,
+      "scale": 1,
+      "color": 8947848,
+      "isBlocking": true,
+      "room": "Patio",
+      "label": "Table",
+      "createdAt": "2025-12-21T19:31:32.947Z",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": "furn-1766345527164",
+      "type": "furniture",
+      "category": "furniture",
+      "x": 0,
+      "y": 0,
+      "width": 1.2191999999999998,
+      "length": 0.6095999999999999,
+      "rotation": 0,
+      "scale": 1,
+      "color": 8947848,
+      "isBlocking": true,
+      "room": "Patio",
+      "label": "Table",
+      "createdAt": "2025-12-21T19:32:07.164Z",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": "furn-1766345618632",
+      "type": "furniture",
+      "category": "furniture",
+      "x": 0,
+      "y": 0,
+      "width": 1.2191999999999998,
+      "length": 0.6095999999999999,
+      "rotation": 0,
+      "scale": 1,
+      "color": 8947848,
+      "isBlocking": true,
+      "room": "Patio",
+      "label": "Table",
+      "createdAt": "2025-12-21T19:33:38.632Z",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": "furn-1766345655365",
+      "type": "furniture",
+      "category": "furniture",
+      "x": 0,
+      "y": 0,
+      "width": 1.2191999999999998,
+      "length": 0.6095999999999999,
+      "rotation": 0,
+      "scale": 1,
+      "color": 8947848,
+      "isBlocking": true,
+      "room": "Patio",
+      "label": "Verification Table",
+      "createdAt": "2025-12-21T19:34:15.365Z",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": "furn-1766425168981",
+      "type": "furniture",
+      "category": "furniture",
+      "x": -1467.3788890090327,
+      "y": -242.71439584280827,
+      "width": 24,
+      "length": 24,
+      "rotation": 0,
+      "scale": 1,
+      "color": 11184810,
+      "isBlocking": false,
+      "room": "Office 2",
+      "label": "Chair",
+      "createdAt": "2025-12-22T17:39:28.981Z",
+      "position": {
+        "x": -1467.3788890090327,
+        "y": -242.71439584280827
+      }
+    }
+  ],
   "devices": [],
   "cables": [],
   "lcps": [],
