@@ -17,6 +17,7 @@ export interface AutoSaveHookReturn {
   debouncedSaveSymbols: () => void;
   debouncedSaveFurniture: () => void;
   debouncedSavePolygons: () => void;
+  debouncedSaveCables: () => void;
 }
 
 export function useAutoSave(
@@ -25,12 +26,14 @@ export function useAutoSave(
   lastSavedPayloadRef: React.MutableRefObject<string>,
   lastSavedSymbolsRef: React.MutableRefObject<string>,
   lastSavedPolygonsRef: React.MutableRefObject<string>,
-  lastSavedFurnitureRef: React.MutableRefObject<string>
+  lastSavedFurnitureRef: React.MutableRefObject<string>,
+  lastSavedCablesRef: React.MutableRefObject<string>
 ): AutoSaveHookReturn {
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const symbolsSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const polygonsSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const furnitureSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const cablesSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Debounced Save (Direct Editor Access)
   const debouncedSave = useCallback(() => {
@@ -81,23 +84,33 @@ export function useAutoSave(
       const editor = editorInstanceRef.current;
       if (!editor) return;
 
-      const electricalLayer = editor.layerSystem.getLayer('electrical');
-      if (electricalLayer && electricalLayer.type === 'vector') {
-        const devices = (electricalLayer.content as VectorLayerContent).symbols || [];
-        const devicesStr = JSON.stringify(devices);
+      // Collect symbols from ALL technical layers (not just 'electrical')
+      const allDevices: any[] = [];
+      const layers = editor.layerSystem.getAllLayers();
 
-        // 💡 Dirty Check: Only save if symbols have actually changed
-        if (devicesStr === lastSavedSymbolsRef.current) {
-          return;
+      layers.forEach(layer => {
+        if (layer.type === 'vector') {
+          const content = layer.content as VectorLayerContent;
+          const symbols = content.symbols || [];
+          if (symbols.length > 0) {
+            allDevices.push(...symbols);
+          }
         }
+      });
 
-        try {
-          await dataService.updateDevices(devices as any[]);
-          lastSavedSymbolsRef.current = devicesStr;
-          console.log('✅ Devices saved via DataService');
-        } catch (err) {
-          console.error('Failed to auto-save symbols:', err);
-        }
+      const devicesStr = JSON.stringify(allDevices);
+
+      // 💡 Dirty Check: Only save if symbols have actually changed
+      if (devicesStr === lastSavedSymbolsRef.current) {
+        return;
+      }
+
+      try {
+        await dataService.updateDevices(allDevices as any[]);
+        lastSavedSymbolsRef.current = devicesStr;
+        console.log(`✅ ${allDevices.length} devices saved via DataService (from all layers)`);
+      } catch (err) {
+        console.error('Failed to auto-save symbols:', err);
       }
     }, 1500); // Slightly longer debounce for symbols
   }, [editorInstanceRef, isInitializedRef, lastSavedSymbolsRef]);
@@ -180,10 +193,41 @@ export function useAutoSave(
     }, 500); // Shorter debounce for better responsiveness
   }, [editorInstanceRef, isInitializedRef, lastSavedPolygonsRef]);
 
+  // Debounced Save Cables
+  const debouncedSaveCables = useCallback(() => {
+    if (!isInitializedRef.current) return;
+    if (cablesSaveTimeoutRef.current) clearTimeout(cablesSaveTimeoutRef.current);
+
+    cablesSaveTimeoutRef.current = setTimeout(async () => {
+      const editor = editorInstanceRef.current;
+      if (!editor) return;
+
+      const cablesLayer = editor.layerSystem.getLayer('cables');
+      if (cablesLayer && cablesLayer.type === 'vector') {
+        const cables = (cablesLayer.content as VectorLayerContent).cables || [];
+        const cablesStr = JSON.stringify(cables);
+
+        // 💡 Dirty Check: Only save if cables have actually changed
+        if (cablesStr === lastSavedCablesRef.current) {
+          return;
+        }
+
+        try {
+          await dataService.updateCables(cables);
+          lastSavedCablesRef.current = cablesStr;
+          console.log('✅ Cables saved via DataService');
+        } catch (err) {
+          console.error('Failed to auto-save cables:', err);
+        }
+      }
+    }, 1200); // Similar debounce to furniture
+  }, [editorInstanceRef, isInitializedRef, lastSavedCablesRef]);
+
   return {
     debouncedSave,
     debouncedSaveSymbols,
     debouncedSaveFurniture,
-    debouncedSavePolygons
+    debouncedSavePolygons,
+    debouncedSaveCables
   };
 }

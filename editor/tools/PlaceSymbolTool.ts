@@ -105,7 +105,7 @@ export class PlaceSymbolTool implements Tool {
             createdAt: new Date().toISOString()
         };
 
-        const command = new AddSymbolCommand('electrical', symbol, this.editor.layerSystem);
+        const command = new AddSymbolCommand(def.category, symbol, this.editor.layerSystem);
         this.editor.commandManager.execute(command);
         this.editor.emit('layers-changed', this.editor.layerSystem.getAllLayers());
         this.editor.setDirty();

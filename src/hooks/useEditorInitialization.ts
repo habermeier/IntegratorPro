@@ -228,13 +228,31 @@ export function useEditorInitialization(
           rotation: overlayData.rotation || 0
         }, true);
 
-        // RESTORE SYMBOLS
-        const electricalLayer = editorInstance.layerSystem.getLayer('electrical');
-        if (electricalLayer) {
-          const content = electricalLayer.content as VectorLayerContent;
-          content.symbols = symbolsData.devices || [];
-          lastSavedSymbolsRef.current = JSON.stringify(content.symbols);
-        }
+        // RESTORE SYMBOLS - Distribute to thematic layers by category
+        const devices = symbolsData.devices || [];
+        const devicesByCategory: { [category: string]: PlacedSymbol[] } = {};
+
+        // Group devices by category
+        devices.forEach((device: PlacedSymbol) => {
+          const category = device.category || 'lighting'; // Default to lighting if no category
+          if (!devicesByCategory[category]) {
+            devicesByCategory[category] = [];
+          }
+          devicesByCategory[category].push(device);
+        });
+
+        // Load devices into their respective layers
+        Object.keys(devicesByCategory).forEach(category => {
+          const layer = editorInstance.layerSystem.getLayer(category);
+          if (layer && layer.type === 'vector') {
+            const content = layer.content as VectorLayerContent;
+            content.symbols = devicesByCategory[category];
+            editorInstance.layerSystem.markDirty(category);
+            console.log(`📍 Restored ${devicesByCategory[category].length} devices to ${category} layer`);
+          }
+        });
+
+        lastSavedSymbolsRef.current = JSON.stringify(devices);
 
         // RESTORE POLYGONS (rooms + masks)
         if (polygonsData.polygons && Array.isArray(polygonsData.polygons)) {

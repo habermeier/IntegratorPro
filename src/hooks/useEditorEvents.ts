@@ -26,10 +26,12 @@ export interface EditorEventCallbacks {
   debouncedSavePolygons: () => void;
   debouncedSaveSymbols: () => void;
   debouncedSaveFurniture: () => void;
+  debouncedSaveCables: () => void;
   lastSavedPayloadRef: React.MutableRefObject<string>;
   lastSavedSymbolsRef: React.MutableRefObject<string>;
   lastSavedPolygonsRef: React.MutableRefObject<string>;
   lastSavedFurnitureRef: React.MutableRefObject<string>;
+  lastSavedCablesRef: React.MutableRefObject<string>;
 }
 
 export function useEditorEvents(
@@ -58,6 +60,7 @@ export function useEditorEvents(
       callbacks.debouncedSavePolygons();
       callbacks.debouncedSaveSymbols();
       callbacks.debouncedSaveFurniture();
+      callbacks.debouncedSaveCables();
     };
 
     // Auto-activate layer when device/symbol is selected
@@ -195,6 +198,17 @@ export function useEditorEvents(
           editor.layerSystem.markDirty('furniture');
         }
 
+        // Update cables
+        const cablesLayer = editor.layerSystem.getLayer('cables');
+        const cablesData = project.cables || [];
+        if (cablesLayer) {
+          cablesLayer.content = {
+            ...cablesLayer.content,
+            cables: cablesData
+          };
+          editor.layerSystem.markDirty('cables');
+        }
+
         // Update layers state to trigger re-render
         callbacks.setLayers([...editor.layerSystem.getAllLayers()]);
 
@@ -210,6 +224,7 @@ export function useEditorEvents(
         callbacks.lastSavedSymbolsRef.current = JSON.stringify(symbolsData.devices || []);
         callbacks.lastSavedPolygonsRef.current = JSON.stringify(allPolygons);
         callbacks.lastSavedFurnitureRef.current = JSON.stringify(furnitureData);
+        callbacks.lastSavedCablesRef.current = JSON.stringify(cablesData);
 
         console.log('✅ Editor state synchronized with external changes');
       } catch (error) {

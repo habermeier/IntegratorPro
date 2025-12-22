@@ -291,6 +291,15 @@ class DataService {
   }
 
   /**
+   * Update cables (convenience method)
+   */
+  async updateCables(cables: any[]): Promise<void> {
+    if (!this.cache) await this.loadProject();
+    this.cache!.cables = cables;
+    await this.saveProject(this.cache!);
+  }
+
+  /**
    * Update settings (convenience method)
    */
   async updateSettings(settings: Settings): Promise<void> {

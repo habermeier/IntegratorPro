@@ -47,7 +47,7 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
         const center = 16;
 
         return (
-            <svg width={size} height={size} viewBox="0 0 32 32">
+            <svg width={size} height={size} viewBox="0 0 32 32" style={{ overflow: 'visible' }}>
                 {/* Filled black square */}
                 <rect
                     x={center - squareHalf}

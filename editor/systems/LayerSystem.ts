@@ -482,6 +482,17 @@ export class LayerSystem {
                         category: symbolData.category,
                         symbolType: symbolData.type
                     };
+
+                    // Add label if symbol has label or productId
+                    if (symbolData.label || symbolData.productId) {
+                        const labelText = symbolData.label || symbolData.productId || '';
+                        const labelSprite = this.createLabel(labelText, def.name);
+                        labelSprite.name = 'label';
+                        // Offset to bottom-right of symbol (+10 units X, -10 units Y)
+                        labelSprite.position.set(10, -10, 0.5);
+                        group.add(labelSprite);
+                    }
+
                     layer.container.add(group);
                     this.meshCache.set(cacheKey, group);
                 } else {

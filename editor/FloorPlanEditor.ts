@@ -13,6 +13,7 @@ import { PolygonTool } from './tools/PolygonTool';
 import { PlaceSymbolTool } from './tools/PlaceSymbolTool';
 import { PlaceFurnitureTool } from './tools/PlaceFurnitureTool';
 import { MeasureTool } from './tools/MeasureTool';
+import { DrawCableTool } from './tools/DrawCableTool';
 export class FloorPlanEditor {
     public scene: THREE.Scene;
     private renderer: THREE.WebGLRenderer;
