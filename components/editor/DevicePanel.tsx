@@ -4,19 +4,68 @@ import { SYMBOL_CATEGORIES, SYMBOL_LIBRARY } from '../../editor/models/symbolLib
 import { SymbolPalette } from './SymbolPalette';
 import { PlaceSymbolTool } from '../../editor/tools/PlaceSymbolTool';
 import { useDevices } from '../../src/hooks/useDevices';
+import { VectorLayerContent, Vector2, ToolType } from '../../editor/models/types';
+import { isPointInPolygon, findRoomAt, throttle } from '../../utils/spatialUtils';
 
 interface DevicePanelProps {
     editor: FloorPlanEditor | null;
+    activeTool?: ToolType;
 }
 
-export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor }) => {
-    const [expandedCategory, setExpandedCategory] = React.useState<string | null>(null);
+export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, activeTool }) => {
+    const [selectedCategory, setSelectedCategory] = React.useState<string>('lighting');
     const [selectedSymbolType, setSelectedSymbolType] = React.useState<string | null>(null);
     const [productId, setProductId] = React.useState<string>('generic-product');
     const [defaultHeight, setDefaultHeight] = React.useState<number>(2.4);
+    const [busAssignment, setBusAssignment] = React.useState<string>('Bus 1');
+    const [cableType, setCableType] = React.useState<string>('Cat6');
+    const [currentRoom, setCurrentRoom] = React.useState<string>('—');
 
     // Get all devices from registry
     const { devices } = useDevices();
+
+    // Throttled room detection to save CPU
+    const throttledDetectRoom = React.useMemo(() => 
+        throttle((x: number, y: number) => {
+            if (!editor) return;
+            const roomLayer = editor.layerSystem.getLayer('room');
+            if (!roomLayer) return;
+            const rooms = (roomLayer.content as VectorLayerContent).rooms || [];
+            const roomName = findRoomAt({ x, y }, rooms);
+            setCurrentRoom(roomName === 'external' ? 'External' : roomName);
+        }, 100), [editor]);
+
+    // Subscribe to cursor movement to detect room
+    React.useEffect(() => {
+        if (!editor) return;
+
+        const handleCursorMove = ({ x, y }: { x: number; y: number }) => {
+            throttledDetectRoom(x, y);
+        };
+
+        editor.on('cursor-move', handleCursorMove);
+
+        return () => {
+            editor.off('cursor-move', handleCursorMove);
+        };
+    }, [editor, throttledDetectRoom]);
+
+    // Sync selected category with active layer
+    React.useEffect(() => {
+        if (!editor) return;
+
+        const handleEditModeChange = ({ activeLayerId }: { activeLayerId: string | null; isEditMode: boolean }) => {
+            if (activeLayerId && SYMBOL_CATEGORIES.find(cat => cat.id === activeLayerId)) {
+                setSelectedCategory(activeLayerId);
+            }
+        };
+
+        editor.on('edit-mode-changed', handleEditModeChange);
+
+        return () => {
+            editor.off('edit-mode-changed', handleEditModeChange);
+        };
+    }, [editor]);
 
     // Memoize device counts per category to prevent redundant filtering
     const categoryCounts = React.useMemo(() => {
@@ -36,7 +85,9 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor }) =
             // Set default attributes when symbol is selected
             tool?.setActiveAttributes?.({
                 productId,
-                defaultHeight
+                defaultHeight,
+                busAssignment,
+                cableType
             });
         }
     };
@@ -47,132 +98,154 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor }) =
             const tool = editor.toolSystem.getTool<PlaceSymbolTool>('place-symbol');
             tool?.setActiveAttributes?.({
                 productId,
-                defaultHeight
+                defaultHeight,
+                busAssignment,
+                cableType
             });
         }
-    }, [editor, selectedSymbolType, productId, defaultHeight]);
+    }, [editor, selectedSymbolType, productId, defaultHeight, busAssignment, cableType]);
 
     return (
-        <div className="w-80 bg-slate-900 border-r border-slate-800 flex flex-col z-20 shadow-[10px_0_30px_rgba(0,0,0,0.3)]">
-            <div className="p-4 border-b border-slate-800 flex justify-between items-center">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Devices</h3>
-                <span className="text-[10px] text-slate-600 font-mono">{devices.length} Total</span>
+        <div className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col z-20 shadow-[10px_0_30px_rgba(0,0,0,0.3)]">
+            <div className="p-3 border-b border-slate-800 space-y-1.5">
+                <div className="flex justify-between items-center">
+                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Devices</h3>
+                    <span className="text-[9px] text-slate-600 font-mono">{devices.length} Total</span>
+                </div>
+                <div className="flex items-center justify-between px-1.5 py-1 bg-slate-950 rounded border border-slate-800">
+                    <span className="text-[8px] text-slate-500 uppercase font-bold tracking-tighter">Loc</span>
+                    <span className="text-[10px] text-blue-400 font-mono truncate">{currentRoom}</span>
+                </div>
             </div>
 
             {/* Device Selection Section */}
             <div className="flex-1 overflow-y-auto p-2 space-y-2">
-                <div className="px-2 py-1 flex justify-between items-center">
-                    <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Device Categories</h3>
-                    <span className="text-[10px] text-slate-700 font-mono">Select Type</span>
+                {/* Category Selector (Thematic) */}
+                <div className="space-y-1">
+                    <label className="text-[8px] text-slate-500 uppercase font-bold px-1">Working Layer</label>
+                    <select
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        className="w-full text-[10px] text-slate-200 font-semibold px-2 py-1 bg-slate-800 rounded border border-slate-700 focus:border-blue-500 focus:outline-none"
+                    >
+                        {SYMBOL_CATEGORIES.map(category => (
+                            <option key={category.id} value={category.id}>
+                                {category.name} ({categoryCounts[category.id] || 0})
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
-                {SYMBOL_CATEGORIES.map(category => {
-                    const deviceCount = categoryCounts[category.id] || 0;
-
-                    return (
-                        <div key={category.id} className="space-y-1">
-                            <button
-                                onClick={() => setExpandedCategory(expandedCategory === category.id ? null : category.id)}
-                                className={`w-full flex items-center p-2 rounded-lg transition-all border ${
-                                    expandedCategory === category.id
-                                        ? 'bg-slate-800 border-slate-700 shadow-md'
-                                        : 'bg-transparent border-transparent hover:bg-slate-800/30'
-                                }`}
-                            >
-                                <div
-                                    className="w-3 h-3 rounded-full mr-3 shadow-[0_0_8px_rgba(0,0,0,0.5)]"
-                                    style={{ backgroundColor: `#${category.color.toString(16).padStart(6, '0')}` }}
-                                />
-                                <span className={`flex-1 text-left text-xs font-semibold ${
-                                    expandedCategory === category.id ? 'text-slate-100' : 'text-slate-400'
-                                }`}>
-                                    {category.name}
-                                </span>
-                                <span className={`text-[10px] font-mono mr-2 ${
-                                    deviceCount > 0 ? 'text-blue-400' : 'text-slate-600'
-                                }`}>
-                                    {deviceCount}
-                                </span>
-                                <span className="text-[10px] text-slate-600">
-                                    {expandedCategory === category.id ? '▼' : '▶'}
-                                </span>
-                            </button>
-
-                            {expandedCategory === category.id && (
-                                <div className="pl-6 pr-2">
-                                    <SymbolPalette
-                                        activeCategory={category.id}
-                                        selectedSymbolType={selectedSymbolType}
-                                        onSelectSymbol={handleSelectSymbol}
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
+                <div className="pt-1">
+                    <SymbolPalette
+                        activeCategory={selectedCategory}
+                        selectedSymbolType={selectedSymbolType}
+                        onSelectSymbol={handleSelectSymbol}
+                    />
+                </div>
             </div>
 
-            {/* Active Product Specs */}
-            <div className="p-4 bg-slate-900 border-t border-slate-800 space-y-3">
-                <div className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Active Product</div>
-                {selectedSymbolType ? (
-                    <div className="space-y-3">
-                        {/* Symbol Name (Read-only) */}
-                        <div className="space-y-1">
-                            <label className="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Device Type</label>
-                            <div className="text-[11px] text-slate-200 font-semibold px-2 py-1.5 bg-slate-800/50 rounded border border-slate-700/50">
-                                {SYMBOL_LIBRARY[selectedSymbolType]?.name || selectedSymbolType}
+            {/* Active Product Specs or Cable Specs */}
+            <div className="p-2 bg-slate-950 border-t border-slate-800">
+                {activeTool === 'draw-cable' ? (
+                    <div className="space-y-1.5">
+                        <div className="flex items-center justify-between gap-1">
+                            <span className="text-[9px] text-slate-400 font-bold uppercase">Cable Routing</span>
+                            <span className="text-[8px] text-green-500 font-black px-1 rounded bg-green-500/10">DRAW</span>
+                        </div>
+
+                        <select
+                            value={cableType}
+                            onChange={(e) => setCableType(e.target.value)}
+                            className="w-full text-[9px] text-slate-300 font-mono px-1.5 py-1 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
+                        >
+                            <option value="Cat6">Cat6 - Data</option>
+                            <option value="Cat6A">Cat6A - Data</option>
+                            <option value="RG6">RG6 - Coax</option>
+                            <option value="18/2">18/2 - Power</option>
+                            <option value="14/2">14/2 - Power</option>
+                            <option value="Speaker">Speaker Wire</option>
+                            <option value="DALI">DALI Bus</option>
+                            <option value="KNX">KNX Bus</option>
+                        </select>
+
+                        <div className="flex gap-1">
+                            <div className="flex-1 flex items-center bg-slate-900 rounded border border-slate-800 px-1.5">
+                                <span className="text-[7px] text-slate-600 mr-1 font-bold">CLR</span>
+                                <input
+                                    type="text"
+                                    defaultValue="Blue"
+                                    className="w-full bg-transparent text-[9px] text-slate-300 font-mono py-1 focus:outline-none"
+                                    placeholder="Color"
+                                />
+                            </div>
+                            <div className="flex-1 flex items-center bg-slate-900 rounded border border-slate-800 px-1.5">
+                                <span className="text-[7px] text-slate-600 mr-1 font-bold">ID</span>
+                                <input
+                                    type="text"
+                                    className="w-full bg-transparent text-[9px] text-slate-300 font-mono py-1 focus:outline-none"
+                                    placeholder="Label"
+                                />
                             </div>
                         </div>
-
-                        {/* Product ID (Editable) */}
-                        <div className="space-y-1">
-                            <label className="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Product ID</label>
-                            <input
-                                type="text"
-                                value={productId}
-                                onChange={(e) => setProductId(e.target.value)}
-                                className="w-full text-[11px] text-slate-200 font-mono px-2 py-1.5 bg-slate-800 rounded border border-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
-                                placeholder="Enter product ID"
-                            />
+                    </div>
+                ) : selectedSymbolType ? (
+                    <div className="space-y-1.5">
+                        <div className="flex items-center justify-between gap-1">
+                            <span className="text-[9px] text-slate-400 font-bold uppercase truncate">
+                                {SYMBOL_LIBRARY[selectedSymbolType]?.name || selectedSymbolType}
+                            </span>
+                            <span className="text-[8px] text-blue-500 font-black px-1 rounded bg-blue-500/10">PLACE</span>
                         </div>
 
-                        {/* Default Height (Editable) */}
-                        <div className="space-y-1">
-                            <label className="text-[9px] text-slate-500 uppercase font-bold tracking-wider flex justify-between items-center">
-                                <span>Installation Height</span>
-                                <span className="text-blue-400 font-mono">{defaultHeight.toFixed(2)}m</span>
-                            </label>
-                            <div className="flex items-center space-x-2">
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="10"
-                                    step="0.1"
-                                    value={defaultHeight}
-                                    onChange={(e) => setDefaultHeight(parseFloat(e.target.value))}
-                                    className="flex-1 accent-blue-500 bg-slate-700 h-1 rounded-full appearance-none outline-none"
-                                />
+                        <input
+                            type="text"
+                            value={productId}
+                            onChange={(e) => setProductId(e.target.value)}
+                            className="w-full text-[9px] text-slate-300 font-mono px-1.5 py-1 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
+                            placeholder="Product ID"
+                        />
+
+                        <div className="flex gap-1">
+                            <div className="flex-1 flex items-center bg-slate-900 rounded border border-slate-800 px-1.5">
+                                <span className="text-[7px] text-slate-600 mr-1 font-bold">H</span>
                                 <input
                                     type="number"
                                     value={defaultHeight}
                                     onChange={(e) => setDefaultHeight(parseFloat(e.target.value) || 0)}
                                     step="0.1"
-                                    min="0"
-                                    max="10"
-                                    className="w-16 text-[11px] text-slate-200 font-mono px-2 py-1 bg-slate-800 rounded border border-slate-700 focus:border-blue-500 focus:outline-none text-right"
+                                    className="w-full bg-transparent text-[9px] text-slate-300 font-mono py-1 focus:outline-none"
+                                />
+                            </div>
+                            <div className="flex-1 flex items-center bg-slate-900 rounded border border-slate-800 px-1.5">
+                                <span className="text-[7px] text-slate-600 mr-1 font-bold">B</span>
+                                <input
+                                    type="text"
+                                    value={busAssignment}
+                                    onChange={(e) => setBusAssignment(e.target.value)}
+                                    className="w-full bg-transparent text-[9px] text-slate-300 font-mono py-1 focus:outline-none"
+                                    placeholder="Bus"
                                 />
                             </div>
                         </div>
 
-                        {/* Placement Mode Indicator */}
-                        <div className="pt-2 border-t border-slate-700/50 flex items-center justify-between">
-                            <span className="text-[9px] text-slate-500 uppercase font-bold">Mode</span>
-                            <span className="text-[10px] text-blue-400 font-bold uppercase tracking-wide">⚡ PLACE</span>
+                        <div className="flex items-center bg-slate-900 rounded border border-slate-800 px-1.5">
+                            <span className="text-[7px] text-slate-600 mr-1 font-bold">CABLE</span>
+                            <select
+                                value={cableType}
+                                onChange={(e) => setCableType(e.target.value)}
+                                className="w-full bg-transparent text-[9px] text-slate-300 font-mono py-1 focus:outline-none"
+                            >
+                                <option value="Cat6">Cat6</option>
+                                <option value="DALI">DALI</option>
+                                <option value="KNX">KNX</option>
+                            </select>
                         </div>
                     </div>
                 ) : (
-                    <div className="text-[10px] italic text-slate-700">No device selected</div>
+                    <div className="text-[8px] italic text-slate-700 px-1 py-4 text-center border border-dashed border-slate-800 rounded">
+                        No active device
+                    </div>
                 )}
             </div>
         </div>

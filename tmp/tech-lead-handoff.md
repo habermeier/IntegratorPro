@@ -1,20 +1,19 @@
-# Tech Lead Handoff - Cycle P7
+# Tech Lead Handoff - Cycle P8 (FINAL POLISH)
 
 ## Current Phase and Status
-**Phase**: P7 - Vector Symbols and Room Intelligence
-**Status**: IN-PROGRESS
-**Commit History**: P6 approved and ready for commit (`feat(p6): add device attributes, keyboard shortcuts, and final renderer refactor`).
+**Phase**: P8 - Professional UI Standards and Room Restoration
+**Status**: IN-PROGRESS (Polishing)
+**Commit History**: P7 completed.
 
 ## Active Worker Assignments
-- **Worker 1 (VECTOR-SYMBOLS-P7)**: SVG symbols implementation.
-- **Worker 2 (ROOM-DETECTION-P7)**: Point-in-polygon room detection.
-- **Worker 3 (BUS-STATE-P7)**: Bus/Universe logic.
+- **Worker 1 (UI-FINAL-POLISH-P8)**: Square box toggles, layer hierarchy, white theme selector (4-item max).
+- **Worker 2 (BUG-FIX-RELOAD-P8)**: Room recovery, HUD/Palette button cleanup.
+- **Worker 3 (LABEL-LOGIC-P8)**: Shorthand refinement, LCP scaling.
 
 ## Pending Issues / Blockers
-- **Performance**: `DevicePanel` count calculation memoized in P6 to resolve high CPU.
-- **Data Model**: `Device` interface needs extension for Bus assignments.
+- **Critical**: Missing room rendering (Worker 2 is investigating).
+- **Visual**: Removing emojis/emoticons for a CAD aesthetic.
 
-## Next Cycle Priorities (P8)
-1. **Cable Routing**: Begin manual drawing of segments between devices.
-2. **Topology Validation**: Basic loop detection for DALI.
-3. **Advanced Attributes**: Multiple wire/comms input tracking.
+## Next Cycle Priorities (P9)
+1. **Cable Routing**: Segment drawing and pathing.
+2. **Device Input Attributes**: Connectivity and power tracking.

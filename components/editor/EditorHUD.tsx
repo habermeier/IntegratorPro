@@ -23,14 +23,8 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
             <div className="flex items-center space-x-4">
                 {editor && (
                     <div className="flex items-center space-x-3 bg-slate-800 p-1 rounded-lg border border-slate-700 pr-3">
-                        <button
-                            onClick={() => editor.toggleEditMode()}
-                            className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all flex items-center space-x-2 ${isEditMode ? 'bg-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.5)]' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
-                        >
-                            <span>{isEditMode ? '🛠️ Editing' : '📐 Edit Layer'}</span>
-                        </button>
                         {activeLayerName && (
-                            <div className="flex items-center space-x-2 pl-2 border-l border-slate-700">
+                            <div className="flex items-center space-x-2">
                                 <span className="text-[10px] text-slate-500 uppercase font-black">Target:</span>
                                 <span className="text-xs text-blue-400 font-bold truncate max-w-[120px]">{activeLayerName}</span>
                             </div>

@@ -221,6 +221,13 @@ export interface Device {
   lcpAssignment: string | null;
 
   /**
+   * Bus/Universe assignment (logical connectivity group)
+   * Examples: "DALI Universe 1", "KNX Line 1", "Bus 1"
+   * Used for grouping devices by their communication bus
+   */
+  busAssignment: string | null;
+
+  /**
    * Device-specific metadata
    * Examples:
    * - range: number (custom range override for WiFi AP)

@@ -22,7 +22,7 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
     activeTool
 }) => {
     return (
-        <div className="w-80 bg-slate-900 border-l border-slate-800 flex flex-col z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.3)]">
+        <div className="w-60 bg-slate-900 border-l border-slate-800 flex flex-col z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.3)]">
             <div className="p-4 border-b border-slate-800 flex justify-between items-center">
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Layers</h3>
                 <span className="text-[10px] text-slate-600 font-mono">{layers.length} Active</span>
@@ -37,10 +37,44 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                             ? 'bg-red-900/20 border-red-500/50 shadow-[0_0_15px_rgba(220,38,38,0.1)_inset]'
                             : selectedIds.includes(l.id)
                                 ? 'bg-slate-800/80 border-blue-500/50 shadow-inner'
-                                : 'bg-transparent border-transparent hover:bg-slate-800/30'
+                                : l.visible
+                                    ? 'bg-slate-800/30 border-transparent hover:bg-slate-800/50'
+                                    : 'bg-transparent border-transparent hover:bg-slate-800/20'
                             }`}
                     >
                         <div className="flex items-center py-1 px-1.5 space-x-1">
+                            {/* Visibility Toggle - LEFTMOST */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    editor?.setLayerVisible(l.id, !l.visible);
+                                }}
+                                className={`w-6 h-6 flex items-center justify-center rounded transition-all`}
+                                title={l.visible ? "Hide Layer" : "Show Layer"}
+                            >
+                                <div className={`w-3 h-3 border-2 rounded transition-all ${
+                                    l.visible
+                                        ? 'bg-blue-400 border-blue-400'
+                                        : 'bg-transparent border-slate-600'
+                                }`} />
+                            </button>
+
+                            <div className="flex-1 min-w-0 px-1 cursor-pointer" onClick={() => {
+                                if (selectedIds.includes(l.id)) {
+                                    setSelectedIds(prev => prev.filter(id => id !== l.id));
+                                } else {
+                                    setSelectedIds(prev => [...prev, l.id]);
+                                }
+                            }}>
+                                <div className={`text-[10px] font-bold truncate leading-tight ${l.visible ? (activeLayerId === l.id ? 'text-red-400' : 'text-slate-100') : 'text-slate-600'}`}>
+                                    {l.name}
+                                </div>
+                                <div className="text-[8px] text-slate-500 font-mono uppercase tracking-tighter leading-tight flex justify-between items-center">
+                                    <span>{(l.opacity * 100).toFixed(0)}%</span>
+                                    {l.allowLayerEditing === false && <span className="text-[7px] text-slate-700">LOCKED</span>}
+                                </div>
+                            </div>
+
                             {/* Edit button - only for image layers */}
                             {l.allowLayerEditing === true && (
                                 <button
@@ -48,7 +82,7 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                                         e.stopPropagation();
                                         editor?.setActiveLayer(activeLayerId === l.id ? null : l.id);
                                     }}
-                                    className={`w-12 h-5 flex items-center justify-center rounded transition-all text-[8px] font-bold ${
+                                    className={`w-10 h-5 flex items-center justify-center rounded transition-all text-[8px] font-bold ${
                                         activeLayerId === l.id
                                             ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
                                             : 'text-slate-600 hover:text-slate-400 hover:bg-slate-700'
@@ -59,37 +93,8 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                                 </button>
                             )}
 
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    editor?.setLayerVisible(l.id, !l.visible);
-                                }}
-                                className={`w-10 h-5 flex items-center justify-center rounded transition-all text-[8px] font-bold ${
-                                    l.visible
-                                        ? 'text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-300'
-                                        : 'text-slate-500 bg-slate-800/50 hover:bg-slate-700 hover:text-slate-400'
-                                    }`}
-                            >
-                                {l.visible ? 'SHOW' : 'HIDE'}
-                            </button>
-
-                            <div className="flex-1 min-w-0 px-1" onClick={() => {
-                                if (selectedIds.includes(l.id)) {
-                                    setSelectedIds(prev => prev.filter(id => id !== l.id));
-                                } else {
-                                    setSelectedIds(prev => [...prev, l.id]);
-                                }
-                            }}>
-                                <div className={`text-[10px] font-bold truncate leading-tight ${l.visible ? (activeLayerId === l.id ? 'text-red-400' : 'text-slate-200') : 'text-slate-600'}`}>
-                                    {l.name}
-                                </div>
-                                <div className="text-[8px] text-slate-500 font-mono uppercase tracking-tighter leading-tight">
-                                    <span>opacity {(l.opacity * 100).toFixed(0)}%</span>
-                                </div>
-                            </div>
-
                             {selectedIds.includes(l.id) && (
-                                <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
                             )}
                         </div>
 

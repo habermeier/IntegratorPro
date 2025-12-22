@@ -4,6 +4,7 @@ import { ToolType, Vector2, PlacedSymbol, VectorLayerContent, Room } from '../mo
 import { FloorPlanEditor } from '../FloorPlanEditor';
 import { SYMBOL_LIBRARY } from '../models/symbolLibrary';
 import { AddSymbolCommand } from '../commands/AddSymbolCommand';
+import { findRoomAt } from '../../utils/spatialUtils';
 
 export class PlaceSymbolTool implements Tool {
     public type: ToolType = 'place-symbol';
@@ -14,6 +15,7 @@ export class PlaceSymbolTool implements Tool {
     private currentScale: number = 1.0;
     private activeProductId: string = 'generic-product';
     private activeDefaultHeight: number = 2.4;
+    private activeBusAssignment: string = 'Bus 1';
 
     constructor(editor: FloorPlanEditor) {
         this.editor = editor;
@@ -39,9 +41,12 @@ export class PlaceSymbolTool implements Tool {
         this.editor.emit('active-symbol-changed', type);
     }
 
-    public setActiveAttributes(attrs: { productId: string; defaultHeight: number }): void {
+    public setActiveAttributes(attrs: { productId: string; defaultHeight: number; busAssignment?: string }): void {
         this.activeProductId = attrs.productId;
         this.activeDefaultHeight = attrs.defaultHeight;
+        if (attrs.busAssignment !== undefined) {
+            this.activeBusAssignment = attrs.busAssignment;
+        }
     }
 
     private updatePreviewMesh(): void {
@@ -51,7 +56,7 @@ export class PlaceSymbolTool implements Tool {
         const def = SYMBOL_LIBRARY[this.symbolType];
         if (!def) return;
 
-        const mesh = def.createMesh();
+        const mesh = def.createMesh(def.size.width, def.size.height);
         // Make preview semi-transparent
         mesh.traverse((obj) => {
             if (obj instanceof THREE.Mesh && obj.material instanceof THREE.MeshBasicMaterial) {
@@ -80,8 +85,10 @@ export class PlaceSymbolTool implements Tool {
         const worldPos = this.editor.cameraSystem.screenToWorld(x, y);
         const def = SYMBOL_LIBRARY[this.symbolType];
 
-        // Find room at position
-        const roomName = this.findRoomAt(worldPos.x, worldPos.y);
+        // Find room at position using spatial utilities
+        const roomLayer = this.editor.layerSystem.getLayer('room');
+        const rooms = roomLayer?.content ? ((roomLayer.content as VectorLayerContent).rooms || []) : [];
+        const roomName = findRoomAt(worldPos, rooms);
 
         const symbol: PlacedSymbol = {
             id: `${def.category}-${Date.now()}`,
@@ -94,6 +101,7 @@ export class PlaceSymbolTool implements Tool {
             room: roomName,
             productId: this.activeProductId,
             installationHeight: this.activeDefaultHeight,
+            busAssignment: this.activeBusAssignment,
             createdAt: new Date().toISOString()
         };
 
@@ -134,32 +142,5 @@ export class PlaceSymbolTool implements Tool {
                 this.updatePreviewTransform();
             }
         }
-    }
-
-    private findRoomAt(x: number, y: number): string {
-        const roomLayer = this.editor.layerSystem.getLayer('room');
-        if (!roomLayer || !roomLayer.content) return 'external';
-
-        const rooms = (roomLayer.content as VectorLayerContent).rooms || [];
-        for (const room of rooms) {
-            if (this.isPointInPolygon({ x, y }, room.points)) {
-                return room.name;
-            }
-        }
-
-        return 'external';
-    }
-
-    private isPointInPolygon(point: Vector2, polygon: Vector2[]): boolean {
-        let inside = false;
-        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-            const xi = polygon[i].x, yi = polygon[i].y;
-            const xj = polygon[j].x, yj = polygon[j].y;
-
-            const intersect = ((yi > point.y) !== (yj > point.y))
-                && (point.x < (xj - xi) * (point.y - yi) / (yj - yi) + xi);
-            if (intersect) inside = !inside;
-        }
-        return inside;
     }
 }

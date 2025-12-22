@@ -246,10 +246,12 @@ export function useEditorInitialization(
 
           if (roomLayer) {
             (roomLayer.content as VectorLayerContent).rooms = rooms;
+            editorInstance.layerSystem.markDirty('room');
           }
 
           if (maskLayer) {
             (maskLayer.content as VectorLayerContent).masks = masks;
+            editorInstance.layerSystem.markDirty('mask');
           }
 
           console.log(`📐 Restored ${rooms.length} rooms and ${masks.length} masks from server`);
@@ -265,6 +267,7 @@ export function useEditorInitialization(
               y: f.position?.y ?? f.y ?? 0,
             }));
             (furnitureLayer.content as VectorLayerContent).furniture = mappedFurniture;
+            editorInstance.layerSystem.markDirty('furniture');
             console.log(`🪑 Restored ${mappedFurniture.length} furniture items from server`);
           }
         }

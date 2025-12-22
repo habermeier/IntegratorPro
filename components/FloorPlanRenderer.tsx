@@ -211,15 +211,17 @@ export const FloorPlanRenderer: React.FC = () => {
             />
 
             <div className={`flex-1 flex overflow-hidden transition-all duration-500`}>
-                {/* 🛠️ Vertical Tool Palette */}
-                <ToolPalette
-                    editor={editor}
-                    activeTool={activeTool}
-                    isEditMode={isEditMode}
-                />
+                {/* 🛠️ Vertical Tool Palette - Hidden during place-symbol mode */}
+                {activeTool !== 'place-symbol' && (
+                    <ToolPalette
+                        editor={editor}
+                        activeTool={activeTool}
+                        isEditMode={isEditMode}
+                    />
+                )}
 
                 {/* 📱 Device Selection Panel (Left) */}
-                <DevicePanel editor={editor} />
+                <DevicePanel editor={editor} activeTool={activeTool} />
 
                 <div className={`flex-1 relative overflow-hidden flex flex-col ${isEditMode ? 'ring-[8px] ring-red-600/50 ring-inset' : ''}`}>
                     <ThreeCanvas

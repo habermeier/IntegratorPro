@@ -50,6 +50,9 @@ export interface PlacedSymbol {
     scale: number;
     label?: string;
     room?: string;
+    productId?: string;
+    installationHeight?: number;
+    busAssignment?: string;
     metadata?: {
         circuit?: string;
         notes?: string;

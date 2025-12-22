@@ -350,3 +350,92 @@ export function getNearestFurniture(
 
     return unique;
 }
+
+// --- Room Detection ---
+
+/**
+ * Checks if a point is inside a polygon using ray-casting algorithm.
+ */
+export function isPointInPolygon(point: Vector2, polygon: Vector2[]): boolean {
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const xi = polygon[i].x, yi = polygon[i].y;
+        const xj = polygon[j].x, yj = polygon[j].y;
+
+        const intersect = ((yi > point.y) !== (yj > point.y))
+            && (point.x < (xj - xi) * (point.y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+    return inside;
+}
+
+/**
+ * Finds the room containing a given point.
+ * Returns the room name or 'external' if not in any room.
+ */
+export function findRoomAt(point: Vector2, rooms: Room[]): string {
+    for (const room of rooms) {
+        if (isPointInPolygon(point, room.points)) {
+            return room.name;
+        }
+    }
+    return 'external';
+}
+
+// --- Performance Utilities: Throttle/Debounce ---
+
+/**
+ * Creates a throttled version of a function that only executes at most once per specified interval.
+ * @param func The function to throttle
+ * @param wait The minimum time (in ms) between function executions
+ * @returns A throttled version of the function
+ */
+export function throttle<T extends (...args: any[]) => any>(
+    func: T,
+    wait: number
+): (...args: Parameters<T>) => void {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let lastRan = 0;
+
+    return function (this: any, ...args: Parameters<T>) {
+        const now = Date.now();
+
+        if (now - lastRan >= wait) {
+            func.apply(this, args);
+            lastRan = now;
+        } else {
+            if (timeoutId !== null) {
+                clearTimeout(timeoutId);
+            }
+            timeoutId = setTimeout(() => {
+                func.apply(this, args);
+                lastRan = Date.now();
+                timeoutId = null;
+            }, wait - (now - lastRan));
+        }
+    };
+}
+
+/**
+ * Creates a debounced version of a function that delays execution until after a specified wait period.
+ * @param func The function to debounce
+ * @param wait The time (in ms) to wait before executing the function
+ * @returns A debounced version of the function
+ */
+export function debounce<T extends (...args: any[]) => any>(
+    func: T,
+    wait: number
+): (...args: Parameters<T>) => void {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    return function (this: any, ...args: Parameters<T>) {
+        if (timeoutId !== null) {
+            clearTimeout(timeoutId);
+        }
+
+        timeoutId = setTimeout(() => {
+            func.apply(this, args);
+            timeoutId = null;
+        }, wait);
+    };
+}

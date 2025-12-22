@@ -471,7 +471,7 @@ export class LayerSystem {
                     const def = SYMBOL_LIBRARY[symbolData.type];
                     if (!def) return;
 
-                    group = def.createMesh();
+                    group = def.createMesh(def.size.width, def.size.height);
                     group.name = `symbol-${symbolData.id}`;
                     group.position.set(symbolData.x, symbolData.y, 0.2);
                     group.rotation.z = (symbolData.rotation * Math.PI) / 180;

@@ -7,17 +7,57 @@ export interface SymbolDefinition {
     description: string;
     color: number;
     size: { width: number, height: number };
-    createMesh: () => THREE.Group;
+    createMesh: (width: number, height: number) => THREE.Group;
 }
 
 export const SYMBOL_CATEGORIES = [
-    { id: 'lighting', name: 'Lighting', color: 0xeab308 }, // Yellow-500
-    { id: 'lv-controls', name: 'LV Controls', color: 0x3b82f6 }, // Blue-500
-    { id: 'receptacles', name: 'Receptacles', color: 0xf97316 }, // Orange-500
-    { id: 'hvac', name: 'HVAC', color: 0x22c55e }, // Green-500
-    { id: 'safety', name: 'Safety', color: 0xef4444 }, // Red-500
-    { id: 'infrastructure', name: 'Infrastructure', color: 0x64748b } // Slate-500
+    { id: 'lighting', name: 'Lighting', color: 0x000000 }, // Black
+    { id: 'lv-controls', name: 'LV Controls', color: 0x000000 }, // Black
+    { id: 'receptacles', name: 'Receptacles', color: 0x000000 }, // Black
+    { id: 'hvac', name: 'HVAC', color: 0x000000 }, // Black
+    { id: 'safety', name: 'Safety', color: 0x000000 }, // Black
+    { id: 'infrastructure', name: 'Infrastructure', color: 0x000000 } // Black
 ];
+
+/**
+ * Universal mesh creator: filled black rectangle with crosshairs
+ * Used for all symbol types (blueprint-style simplification)
+ * @param width - Width of the symbol in pixels
+ * @param height - Height of the symbol in pixels
+ */
+const createUniversalMesh = (width: number, height: number): THREE.Group => {
+    const group = new THREE.Group();
+    const halfWidth = width / 2;
+    const halfHeight = height / 2;
+    const crosshairExt = Math.max(halfWidth, halfHeight) * 0.5; // Extends 50% beyond rectangle
+
+    // Filled black rectangle
+    const geometry = new THREE.PlaneGeometry(width, height);
+    const material = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide });
+    const square = new THREE.Mesh(geometry, material);
+    group.add(square);
+
+    // Crosshairs (black lines)
+    const lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 });
+
+    // Horizontal crosshair
+    const pointsH = [
+        new THREE.Vector3(-halfWidth - crosshairExt, 0, 0.1),
+        new THREE.Vector3(halfWidth + crosshairExt, 0, 0.1)
+    ];
+    const geoH = new THREE.BufferGeometry().setFromPoints(pointsH);
+    group.add(new THREE.Line(geoH, lineMaterial));
+
+    // Vertical crosshair
+    const pointsV = [
+        new THREE.Vector3(0, -halfHeight - crosshairExt, 0.1),
+        new THREE.Vector3(0, halfHeight + crosshairExt, 0.1)
+    ];
+    const geoV = new THREE.BufferGeometry().setFromPoints(pointsV);
+    group.add(new THREE.Line(geoV, lineMaterial));
+
+    return group;
+};
 
 export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
     // --- LIGHTING ---
@@ -25,132 +65,37 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         id: 'recessed-light',
         name: 'Recessed Light',
         category: 'lighting',
-        description: 'Filled square with axis-aligned crosshairs',
-        color: 0xeab308,
+        description: 'Filled black square with crosshairs',
+        color: 0x000000,
         size: { width: 16, height: 16 },
-        createMesh: () => {
-            const group = new THREE.Group();
-            const size = 16;
-            const halfSize = size / 2;
-            const crosshairExt = halfSize * 1.5;
-
-            // Filled Square
-            const geometry = new THREE.PlaneGeometry(size, size);
-            const material = new THREE.MeshBasicMaterial({ color: 0xeab308, side: THREE.DoubleSide });
-            const square = new THREE.Mesh(geometry, material);
-            group.add(square);
-
-            // Crosshairs
-            const lineMaterial = new THREE.LineBasicMaterial({ color: 0xeab308 });
-            const pointsH = [new THREE.Vector3(-crosshairExt, 0, 0.1), new THREE.Vector3(crosshairExt, 0, 0.1)];
-            const pointsV = [new THREE.Vector3(0, -crosshairExt, 0.1), new THREE.Vector3(0, crosshairExt, 0.1)];
-
-            const geoH = new THREE.BufferGeometry().setFromPoints(pointsH);
-            const geoV = new THREE.BufferGeometry().setFromPoints(pointsV);
-
-            group.add(new THREE.Line(geoH, lineMaterial));
-            group.add(new THREE.Line(geoV, lineMaterial));
-
-            return group;
-        }
+        createMesh: createUniversalMesh
     },
     'pendant-light': {
         id: 'pendant-light',
         name: 'Pendant/Chandelier',
         category: 'lighting',
-        description: 'Circle with 5 radial spokes',
-        color: 0xeab308,
-        size: { width: 20, height: 20 },
-        createMesh: () => {
-            const group = new THREE.Group();
-            const radius = 10;
-            const lineMaterial = new THREE.LineBasicMaterial({ color: 0xeab308 });
-
-            // Circle
-            const curve = new THREE.EllipseCurve(0, 0, radius, radius, 0, 2 * Math.PI, false, 0);
-            const points = curve.getPoints(50);
-            const geometry = new THREE.BufferGeometry().setFromPoints(points);
-            group.add(new THREE.Line(geometry, lineMaterial));
-
-            // 5 Radial Spokes
-            for (let i = 0; i < 5; i++) {
-                const angle = (i * 2 * Math.PI) / 5;
-                const x = Math.cos(angle) * radius * 1.2;
-                const y = Math.sin(angle) * radius * 1.2;
-                const spokePoints = [new THREE.Vector3(0, 0, 0.1), new THREE.Vector3(x, y, 0.1)];
-                const spokeGeo = new THREE.BufferGeometry().setFromPoints(spokePoints);
-                group.add(new THREE.Line(spokeGeo, lineMaterial));
-
-                // Small circles at ends
-                const endCurve = new THREE.EllipseCurve(x, y, 2, 2, 0, 2 * Math.PI, false, 0);
-                const endPoints = endCurve.getPoints(10);
-                const endGeo = new THREE.BufferGeometry().setFromPoints(endPoints);
-                group.add(new THREE.Line(endGeo, lineMaterial));
-            }
-
-            return group;
-        }
+        description: 'Filled black square with crosshairs',
+        color: 0x000000,
+        size: { width: 16, height: 16 },
+        createMesh: createUniversalMesh
     },
     'ceiling-fan': {
         id: 'ceiling-fan',
         name: 'Ceiling Fan',
         category: 'lighting',
-        description: 'Fan blade symbol',
-        color: 0xeab308,
-        size: { width: 24, height: 24 },
-        createMesh: () => {
-            const group = new THREE.Group();
-            const lineMaterial = new THREE.LineBasicMaterial({ color: 0xeab308 });
-            const bladeLength = 12;
-            const bladeWidth = 4;
-
-            for (let i = 0; i < 4; i++) {
-                const angle = (i * 2 * Math.PI) / 4;
-                const shape = new THREE.Shape();
-                shape.moveTo(0, 0);
-                shape.lineTo(Math.cos(angle - 0.2) * bladeLength, Math.sin(angle - 0.2) * bladeLength);
-                shape.lineTo(Math.cos(angle + 0.2) * bladeLength, Math.sin(angle + 0.2) * bladeLength);
-                shape.closePath();
-                const geo = new THREE.ShapeGeometry(shape);
-                const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xeab308, transparent: true, opacity: 0.5 }));
-                group.add(mesh);
-            }
-
-            return group;
-        }
+        description: 'Filled black square with crosshairs',
+        color: 0x000000,
+        size: { width: 16, height: 16 },
+        createMesh: createUniversalMesh
     },
     'exterior-light': {
         id: 'exterior-light',
         name: 'Exterior Light',
         category: 'lighting',
-        description: 'Circle with X and crosshairs',
-        color: 0xeab308,
+        description: 'Filled black square with crosshairs',
+        color: 0x000000,
         size: { width: 16, height: 16 },
-        createMesh: () => {
-            const group = new THREE.Group();
-            const radius = 8;
-            const lineMaterial = new THREE.LineBasicMaterial({ color: 0xeab308 });
-
-            // Circle
-            const curve = new THREE.EllipseCurve(0, 0, radius, radius, 0, 2 * Math.PI, false, 0);
-            const points = curve.getPoints(32);
-            const geometry = new THREE.BufferGeometry().setFromPoints(points);
-            group.add(new THREE.Line(geometry, lineMaterial));
-
-            // X
-            const xSize = radius * 0.7;
-            const xPoints1 = [new THREE.Vector3(-xSize, -xSize, 0.1), new THREE.Vector3(xSize, xSize, 0.1)];
-            const xPoints2 = [new THREE.Vector3(-xSize, xSize, 0.1), new THREE.Vector3(xSize, -xSize, 0.1)];
-            group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(xPoints1), lineMaterial));
-            group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(xPoints2), lineMaterial));
-
-            // Crosshairs
-            const ext = radius * 1.5;
-            group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-ext, 0, 0.1), new THREE.Vector3(ext, 0, 0.1)]), lineMaterial));
-            group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, -ext, 0.1), new THREE.Vector3(0, ext, 0.1)]), lineMaterial));
-
-            return group;
-        }
+        createMesh: createUniversalMesh
     },
 
     // --- LV CONTROLS ---
@@ -158,18 +103,10 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         id: 'knx-switch',
         name: 'KNX Switch',
         category: 'lv-controls',
-        description: '$LV Symbol',
-        color: 0x3b82f6,
+        description: 'Filled black square with crosshairs',
+        color: 0x000000,
         size: { width: 16, height: 16 },
-        createMesh: () => {
-            const group = new THREE.Group();
-            // Placeholder for text as meshes is hard without font loader
-            // Use a specific geometry to represent it for now
-            const material = new THREE.MeshBasicMaterial({ color: 0x3b82f6 });
-            const box = new THREE.Mesh(new THREE.BoxGeometry(10, 10, 1), material);
-            group.add(box);
-            return group;
-        }
+        createMesh: createUniversalMesh
     },
 
     // --- RECEPTACLES ---
@@ -177,55 +114,62 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         id: 'standard-outlet',
         name: 'Standard Outlet',
         category: 'receptacles',
-        description: 'Circle with two lines',
-        color: 0xf97316,
+        description: 'Filled black square with crosshairs',
+        color: 0x000000,
         size: { width: 16, height: 16 },
-        createMesh: () => {
-            const group = new THREE.Group();
-            const radius = 8;
-            const lineMaterial = new THREE.LineBasicMaterial({ color: 0xf97316 });
+        createMesh: createUniversalMesh
+    },
 
-            // Circle
-            const curve = new THREE.EllipseCurve(0, 0, radius, radius, 0, 2 * Math.PI, false, 0);
-            const points = curve.getPoints(32);
-            group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), lineMaterial));
+    // --- LIGHTING (Additional) ---
+    'focus-light': {
+        id: 'focus-light',
+        name: 'Focus Light',
+        category: 'lighting',
+        description: 'Filled black square with crosshairs',
+        color: 0x000000,
+        size: { width: 16, height: 16 },
+        createMesh: createUniversalMesh
+    },
 
-            // Two parallel lines
-            const lineY = radius * 0.4;
-            const lineExt = radius * 1.5;
-            group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-lineExt, lineY, 0.1), new THREE.Vector3(lineExt, lineY, 0.1)]), lineMaterial));
-            group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-lineExt, -lineY, 0.1), new THREE.Vector3(lineExt, -lineY, 0.1)]), lineMaterial));
+    // --- SAFETY ---
+    'motion-sensor': {
+        id: 'motion-sensor',
+        name: 'Motion Sensor',
+        category: 'safety',
+        description: 'Filled black square with crosshairs',
+        color: 0x000000,
+        size: { width: 16, height: 16 },
+        createMesh: createUniversalMesh
+    },
 
-            return group;
-        }
+    'security-camera': {
+        id: 'security-camera',
+        name: 'Security Camera',
+        category: 'safety',
+        description: 'Filled black square with crosshairs',
+        color: 0x000000,
+        size: { width: 16, height: 16 },
+        createMesh: createUniversalMesh
     },
 
     // --- INFRASTRUCTURE ---
+    'wifi-ap': {
+        id: 'wifi-ap',
+        name: 'WiFi AP',
+        category: 'infrastructure',
+        description: 'Filled black square with crosshairs',
+        color: 0x000000,
+        size: { width: 16, height: 16 },
+        createMesh: createUniversalMesh
+    },
+
     'lcp-panel': {
         id: 'lcp-panel',
         name: 'LCP Panel',
         category: 'infrastructure',
-        description: 'Rectangular box (40x60px)',
-        color: 0x64748b,
+        description: 'Filled black square with crosshairs',
+        color: 0x000000,
         size: { width: 40, height: 60 },
-        createMesh: () => {
-            const group = new THREE.Group();
-            const geometry = new THREE.PlaneGeometry(40, 60);
-            const material = new THREE.MeshBasicMaterial({ color: 0x64748b, side: THREE.DoubleSide });
-            group.add(new THREE.Mesh(geometry, material));
-
-            // Border
-            const borderPoints = [
-                new THREE.Vector3(-20, -30, 0.1),
-                new THREE.Vector3(20, -30, 0.1),
-                new THREE.Vector3(20, 30, 0.1),
-                new THREE.Vector3(-20, 30, 0.1),
-                new THREE.Vector3(-20, -30, 0.1)
-            ];
-            const borderGeo = new THREE.BufferGeometry().setFromPoints(borderPoints);
-            group.add(new THREE.Line(borderGeo, new THREE.LineBasicMaterial({ color: 0xffffff })));
-
-            return group;
-        }
+        createMesh: createUniversalMesh
     }
 };
