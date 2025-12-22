@@ -60,15 +60,26 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
+                                    if (l.allowLayerEditing === false) {
+                                        return; // Disabled, no action
+                                    }
                                     editor?.setActiveLayer(activeLayerId === l.id ? null : l.id);
                                 }}
-                                className={`w-7 h-7 flex items-center justify-center rounded-md transition-all ${activeLayerId === l.id
-                                    ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
-                                    : 'text-slate-600 hover:text-slate-400 hover:bg-slate-700'
+                                className={`px-1.5 h-7 flex items-center justify-center rounded-md transition-all text-[9px] font-bold ${
+                                    l.allowLayerEditing === false
+                                        ? 'text-slate-700 cursor-not-allowed opacity-50'
+                                        : activeLayerId === l.id
+                                            ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
+                                            : 'text-slate-600 hover:text-slate-400 hover:bg-slate-700'
                                     }`}
-                                title={activeLayerId === l.id ? "End Editing" : "Start Editing"}
+                                title={
+                                    l.allowLayerEditing === false
+                                        ? "Data layer - locked to base coordinates"
+                                        : activeLayerId === l.id ? "End Editing" : "Start Editing"
+                                }
+                                disabled={l.allowLayerEditing === false}
                             >
-                                {activeLayerId === l.id ? '🎯' : '⭕'}
+                                {l.allowLayerEditing === false ? 'LOCK' : activeLayerId === l.id ? 'ACTIVE' : 'EDIT'}
                             </button>
 
                             <button
@@ -94,7 +105,8 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                                 </div>
                                 <div className="text-[9px] text-slate-500 font-mono uppercase tracking-tighter flex items-center space-x-2">
                                     <span>{l.type} layer</span>
-                                    {l.locked && <span className="text-[8px] bg-slate-800 px-1 rounded text-slate-600">LOCKED</span>}
+                                    {l.allowLayerEditing === false && <span className="text-[8px] bg-slate-800 px-1 rounded text-slate-600">🔒 LOCKED TO BASE</span>}
+                                    {l.allowLayerEditing === true && <span className="text-[8px] bg-emerald-900/30 px-1 rounded text-emerald-600">🔓 EDITABLE</span>}
                                 </div>
                             </div>
 
@@ -106,44 +118,60 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                         {/* Expanded Controls for Selected Layer */}
                         {selectedIds.includes(l.id) && (
                             <div className="px-4 pb-4 pt-2 space-y-4 border-t border-slate-700/50 mt-1">
-                                <div className="space-y-1">
-                                    <div className="flex justify-between items-center">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase">Opacity</label>
-                                        <span className="text-[10px] text-blue-400 font-mono">{(l.opacity * 100).toFixed(0)}%</span>
+                                {l.allowLayerEditing === false && (
+                                    <div className="bg-slate-800/50 border border-slate-700 rounded p-2 text-[10px] text-slate-400">
+                                        <div className="flex items-center gap-1 mb-1">
+                                            <span>🔒</span>
+                                            <span className="font-bold">Layer Locked to Base</span>
+                                        </div>
+                                        <div className="text-[9px] text-slate-500">
+                                            Data layers are always aligned to base coordinates. Only image layers can be adjusted for alignment.
+                                        </div>
                                     </div>
-                                    <input
-                                        type="range" min="0" max="1" step="0.01" value={l.opacity} className="w-full accent-blue-500 bg-slate-700 h-1 rounded-full appearance-none outline-none"
-                                        onChange={(e) => editor?.setLayerOpacity(l.id, parseFloat(e.target.value))}
-                                    />
-                                </div>
+                                )}
 
-                                <div className="space-y-1">
-                                    <div className="flex justify-between items-center">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase">Scale</label>
-                                        <span className="text-[10px] text-blue-400 font-mono">{l.transform.scale.x.toFixed(2)}x</span>
-                                    </div>
-                                    <input
-                                        type="range" min="0.1" max="5" step="0.01" value={l.transform.scale.x} className="w-full accent-blue-500 bg-slate-700 h-1 rounded-full appearance-none outline-none"
-                                        onChange={(e) => {
-                                            const s = parseFloat(e.target.value);
-                                            editor?.setLayerTransform(l.id, { scale: { x: s, y: s } });
-                                        }}
-                                    />
-                                </div>
+                                {l.allowLayerEditing !== false && (
+                                    <>
+                                        <div className="space-y-1">
+                                            <div className="flex justify-between items-center">
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase">Opacity</label>
+                                                <span className="text-[10px] text-blue-400 font-mono">{(l.opacity * 100).toFixed(0)}%</span>
+                                            </div>
+                                            <input
+                                                type="range" min="0" max="1" step="0.01" value={l.opacity} className="w-full accent-blue-500 bg-slate-700 h-1 rounded-full appearance-none outline-none"
+                                                onChange={(e) => editor?.setLayerOpacity(l.id, parseFloat(e.target.value))}
+                                            />
+                                        </div>
 
-                                <div className="space-y-1">
-                                    <div className="flex justify-between items-center">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase">Rotation</label>
-                                        <span className="text-[10px] text-blue-400 font-mono">{((l.transform.rotation * 180) / Math.PI).toFixed(1)}°</span>
-                                    </div>
-                                    <input
-                                        type="range" min="-180" max="180" step="0.5" value={(l.transform.rotation * 180) / Math.PI} className="w-full accent-blue-500 bg-slate-700 h-1 rounded-full appearance-none outline-none"
-                                        onChange={(e) => {
-                                            const r = (parseFloat(e.target.value) * Math.PI) / 180;
-                                            editor?.setLayerTransform(l.id, { rotation: r });
-                                        }}
-                                    />
-                                </div>
+                                        <div className="space-y-1">
+                                            <div className="flex justify-between items-center">
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase">Scale</label>
+                                                <span className="text-[10px] text-blue-400 font-mono">{l.transform.scale.x.toFixed(2)}x</span>
+                                            </div>
+                                            <input
+                                                type="range" min="0.1" max="5" step="0.01" value={l.transform.scale.x} className="w-full accent-blue-500 bg-slate-700 h-1 rounded-full appearance-none outline-none"
+                                                onChange={(e) => {
+                                                    const s = parseFloat(e.target.value);
+                                                    editor?.setLayerTransform(l.id, { scale: { x: s, y: s } });
+                                                }}
+                                            />
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <div className="flex justify-between items-center">
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase">Rotation</label>
+                                                <span className="text-[10px] text-blue-400 font-mono">{((l.transform.rotation * 180) / Math.PI).toFixed(1)}°</span>
+                                            </div>
+                                            <input
+                                                type="range" min="-180" max="180" step="0.5" value={(l.transform.rotation * 180) / Math.PI} className="w-full accent-blue-500 bg-slate-700 h-1 rounded-full appearance-none outline-none"
+                                                onChange={(e) => {
+                                                    const r = (parseFloat(e.target.value) * Math.PI) / 180;
+                                                    editor?.setLayerTransform(l.id, { rotation: r });
+                                                }}
+                                            />
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>

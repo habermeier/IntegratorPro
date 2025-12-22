@@ -22,6 +22,7 @@ export interface LayerConfig {
     locked: boolean;
     opacity: number;
     transform: Transform;
+    allowLayerEditing?: boolean; // true for image layers, false for data layers
 }
 
 export type RoomType = 'hallway' | 'closet' | 'bedroom' | 'bathroom' | 'open' | 'other' | 'garage';
@@ -78,6 +79,7 @@ export interface Layer {
     transform: Transform;
     container: THREE.Group;
     content: VectorLayerContent | any;
+    allowLayerEditing?: boolean; // true for image layers, false for data layers
 }
 
 export type ToolType =

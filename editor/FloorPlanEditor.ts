@@ -464,6 +464,16 @@ export class FloorPlanEditor {
     }
 
     public setActiveLayer(id: string | null): void {
+        // Check if layer allows editing
+        if (id) {
+            const layer = this.layerSystem.getLayer(id);
+            if (layer && layer.allowLayerEditing === false) {
+                console.warn(`[FloorPlanEditor] Cannot edit layer "${layer.name}" - locked to base coordinates`);
+                alert(`This layer is locked to base coordinates and cannot be edited.\n\nOnly image layers (like Electrical Overlay) can be adjusted for alignment.`);
+                return;
+            }
+        }
+
         // Clear previous state if any
         if (this.activeLayerId) {
             this.layerSystem.setLayerLocked(this.activeLayerId, true);

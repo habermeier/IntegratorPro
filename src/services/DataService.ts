@@ -5,6 +5,9 @@
  * Migrates from fragmented multi-endpoint pattern to monolithic project.json.
  */
 
+import { Device } from '../models/Device';
+import { DeviceRegistry } from './DeviceRegistry';
+
 // ============================================================================
 // TypeScript Interfaces
 // ============================================================================
@@ -82,7 +85,7 @@ export interface ProjectData {
   metadata: ProjectMetadata;
   floorPlan: FloorPlan;
   furniture: Furniture[];
-  devices: DaliDevice[];
+  devices: Device[];
   cables: unknown[];
   lcps: unknown[];
   settings: Settings;
@@ -160,6 +163,12 @@ class DataService {
 
       this.cache = await response.json();
       this.cacheTimestamp = now;
+
+      // Populate DeviceRegistry from loaded data
+      const deviceRegistry = DeviceRegistry.getInstance();
+      deviceRegistry.setDevices(this.cache.devices || []);
+      console.log(`[DataService] Loaded ${this.cache.devices?.length || 0} devices into registry`);
+
       return this.cache;
     } catch (error) {
       console.error('Error loading project:', error);
@@ -173,9 +182,14 @@ class DataService {
    */
   async saveProject(data: ProjectData): Promise<void> {
     try {
-      // Update timestamp
+      // Get devices from DeviceRegistry
+      const deviceRegistry = DeviceRegistry.getInstance();
+      const devices = deviceRegistry.getAllDevices();
+
+      // Update timestamp and include devices from registry
       const projectData = {
         ...data,
+        devices, // Use devices from registry
         timestamp: new Date().toISOString(),
         metadata: {
           ...data.metadata,
@@ -254,11 +268,18 @@ class DataService {
   }
 
   /**
-   * Update DALI devices (convenience method)
+   * Update devices (convenience method)
+   * Updates both the DeviceRegistry and saves to project
+   * @param devices Array of devices to save
    */
-  async updateDevices(devices: DaliDevice[]): Promise<void> {
+  async updateDevices(devices: Device[]): Promise<void> {
     if (!this.cache) await this.loadProject();
-    this.cache!.devices = devices;
+
+    // Update DeviceRegistry
+    const deviceRegistry = DeviceRegistry.getInstance();
+    deviceRegistry.setDevices(devices);
+
+    // Cache will be updated in saveProject from DeviceRegistry
     await this.saveProject(this.cache!);
   }
 

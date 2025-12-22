@@ -319,51 +319,128 @@ export const FloorPlanRenderer: React.FC = () => {
                 visible: true,
                 locked: true,
                 opacity: 1,
-                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 }
+                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
+                allowLayerEditing: true // Image layer - can be adjusted
             });
 
             editorInstance.addLayer({
                 id: 'mask',
                 name: 'Masking',
                 type: 'vector',
-                zIndex: 1,
+                zIndex: 10,
                 visible: true,
                 locked: true,
                 opacity: 1,
-                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 }
+                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
+                allowLayerEditing: false // Data layer - locked to base coordinates
             });
 
             editorInstance.addLayer({
                 id: 'electrical',
                 name: 'Electrical Overlay',
                 type: 'image',
-                zIndex: 2,
+                zIndex: 20,
                 visible: true,
                 locked: true,
                 opacity: 0.7,
-                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 }
+                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
+                allowLayerEditing: true // Image layer - can be adjusted for alignment
             });
 
             editorInstance.addLayer({
                 id: 'room',
                 name: 'Rooms',
                 type: 'vector',
-                zIndex: 3,
+                zIndex: 30,
                 visible: true,
-                locked: true,
+                locked: false,
                 opacity: 1,
-                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 }
+                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
+                allowLayerEditing: false // Data layer - locked to base coordinates
+            });
+
+            editorInstance.addLayer({
+                id: 'cables',
+                name: 'Cables',
+                type: 'vector',
+                zIndex: 40,
+                visible: true,
+                locked: false,
+                opacity: 1,
+                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
+                allowLayerEditing: false // Data layer - locked to base coordinates
+            });
+
+            editorInstance.addLayer({
+                id: 'lighting',
+                name: 'Lighting',
+                type: 'vector',
+                zIndex: 50,
+                visible: true,
+                locked: false,
+                opacity: 1,
+                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
+                allowLayerEditing: false // Data layer - locked to base coordinates
+            });
+
+            editorInstance.addLayer({
+                id: 'sensors',
+                name: 'Sensors',
+                type: 'vector',
+                zIndex: 51,
+                visible: true,
+                locked: false,
+                opacity: 1,
+                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
+                allowLayerEditing: false // Data layer - locked to base coordinates
+            });
+
+            editorInstance.addLayer({
+                id: 'security',
+                name: 'Security',
+                type: 'vector',
+                zIndex: 52,
+                visible: true,
+                locked: false,
+                opacity: 1,
+                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
+                allowLayerEditing: false // Data layer - locked to base coordinates
+            });
+
+            editorInstance.addLayer({
+                id: 'network',
+                name: 'Network',
+                type: 'vector',
+                zIndex: 53,
+                visible: true,
+                locked: false,
+                opacity: 1,
+                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
+                allowLayerEditing: false // Data layer - locked to base coordinates
+            });
+
+            editorInstance.addLayer({
+                id: 'lcps',
+                name: 'LCPs',
+                type: 'vector',
+                zIndex: 54,
+                visible: true,
+                locked: false,
+                opacity: 1,
+                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
+                allowLayerEditing: false // Data layer - locked to base coordinates
             });
 
             editorInstance.addLayer({
                 id: 'furniture',
                 name: 'Furniture',
                 type: 'vector',
-                zIndex: 4,
+                zIndex: 60,
                 visible: true,
-                locked: true,
+                locked: false,
                 opacity: 1,
-                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 }
+                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
+                allowLayerEditing: false // Data layer - locked to base coordinates
             });
 
             // 2. Load Images
