@@ -52,7 +52,7 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                                 className={`w-6 h-6 flex items-center justify-center rounded transition-all`}
                                 title={l.visible ? "Hide Layer" : "Show Layer"}
                             >
-                                <div className={`w-3 h-3 border-2 rounded transition-all ${
+                                <div className={`w-2.5 h-2.5 border rounded transition-all ${
                                     l.visible
                                         ? 'bg-blue-400 border-blue-400'
                                         : 'bg-transparent border-slate-600'

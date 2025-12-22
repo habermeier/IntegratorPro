@@ -371,12 +371,15 @@ export function isPointInPolygon(point: Vector2, polygon: Vector2[]): boolean {
 
 /**
  * Finds the room containing a given point.
+ * Checks rooms in reverse order (last-to-first) to prioritize most recently created rooms.
+ * This ensures proper "on top" behavior when rooms overlap.
  * Returns the room name or 'external' if not in any room.
  */
 export function findRoomAt(point: Vector2, rooms: Room[]): string {
-    for (const room of rooms) {
-        if (isPointInPolygon(point, room.points)) {
-            return room.name;
+    // Check in reverse order - most recently added room is checked first
+    for (let i = rooms.length - 1; i >= 0; i--) {
+        if (isPointInPolygon(point, rooms[i].points)) {
+            return rooms[i].name;
         }
     }
     return 'external';

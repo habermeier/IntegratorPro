@@ -118,35 +118,9 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                 </div>
             </div>
 
-            {/* Device Selection Section */}
-            <div className="flex-1 overflow-y-auto p-2 space-y-2">
-                {/* Category Selector (Thematic) */}
-                <div className="space-y-1">
-                    <label className="text-[8px] text-slate-500 uppercase font-bold px-1">Working Layer</label>
-                    <select
-                        value={selectedCategory}
-                        onChange={(e) => setSelectedCategory(e.target.value)}
-                        className="w-full text-[10px] text-slate-200 font-semibold px-2 py-1 bg-slate-800 rounded border border-slate-700 focus:border-blue-500 focus:outline-none"
-                    >
-                        {SYMBOL_CATEGORIES.map(category => (
-                            <option key={category.id} value={category.id}>
-                                {category.name} ({categoryCounts[category.id] || 0})
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className="pt-1">
-                    <SymbolPalette
-                        activeCategory={selectedCategory}
-                        selectedSymbolType={selectedSymbolType}
-                        onSelectSymbol={handleSelectSymbol}
-                    />
-                </div>
-            </div>
-
-            {/* Active Product Specs or Cable Specs */}
-            <div className="p-2 bg-slate-950 border-t border-slate-800">
+            {/* Active Product Specs or Cable Specs - MOVED UP */}
+            {(activeTool === 'draw-cable' || selectedSymbolType) && (
+                <div className="p-2 bg-slate-950 border-t border-b border-slate-800">
                 {activeTool === 'draw-cable' ? (
                     <div className="space-y-1.5">
                         <div className="flex items-center justify-between gap-1">
@@ -189,7 +163,7 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                             </div>
                         </div>
                     </div>
-                ) : selectedSymbolType ? (
+                ) : (
                     <div className="space-y-1.5">
                         <div className="flex items-center justify-between gap-1">
                             <span className="text-[9px] text-slate-400 font-bold uppercase truncate">
@@ -242,11 +216,35 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                             </select>
                         </div>
                     </div>
-                ) : (
-                    <div className="text-[8px] italic text-slate-700 px-1 py-4 text-center border border-dashed border-slate-800 rounded">
-                        No active device
-                    </div>
                 )}
+                </div>
+            )}
+
+            {/* Device Selection Section */}
+            <div className="flex-1 overflow-y-auto p-2 space-y-2">
+                {/* Category Selector (Thematic) */}
+                <div className="space-y-1">
+                    <label className="text-[8px] text-slate-500 uppercase font-bold px-1">Working Layer</label>
+                    <select
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        className="w-full text-[10px] text-slate-200 font-semibold px-2 py-1 bg-slate-800 rounded border border-slate-700 focus:border-blue-500 focus:outline-none"
+                    >
+                        {SYMBOL_CATEGORIES.map(category => (
+                            <option key={category.id} value={category.id}>
+                                {category.name} ({categoryCounts[category.id] || 0})
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="pt-1">
+                    <SymbolPalette
+                        activeCategory={selectedCategory}
+                        selectedSymbolType={selectedSymbolType}
+                        onSelectSymbol={handleSelectSymbol}
+                    />
+                </div>
             </div>
         </div>
     );
