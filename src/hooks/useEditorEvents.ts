@@ -73,17 +73,22 @@ export function useEditorEvents(
         if (layer.type !== 'vector') continue;
 
         const content = layer.content as VectorLayerContent;
-        const symbols = content.symbols || [];
+        
+        // Check if any selected ID matches an object in this layer
+        const isMatched = 
+          (content.symbols || []).some(s => selectedIds.includes(s.id)) ||
+          (content.rooms || []).some(r => selectedIds.includes(r.id)) ||
+          (content.masks || []).some(m => selectedIds.includes(m.id)) ||
+          (content.furniture || []).some(f => selectedIds.includes(f.id)) ||
+          (content.cables || []).some(c => selectedIds.includes(c.id));
 
-        // Check if any selected ID matches a symbol in this layer
-        const matchedSymbol = symbols.find(s => selectedIds.includes(s.id));
-        if (matchedSymbol) {
+        if (isMatched) {
           // Auto-activate and show this layer
           if (!layer.visible) {
             editor.setLayerVisible(layer.id, true);
           }
-          // Optionally set as active layer (for editing)
-          // editor.setActiveLayer(layer.id);
+          // Set as active layer (for editing) as requested by Worker 3
+          editor.setActiveLayer(layer.id);
           break; // Found the layer, no need to continue
         }
       }

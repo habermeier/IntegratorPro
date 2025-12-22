@@ -16,6 +16,9 @@ export class PlaceSymbolTool implements Tool {
     private activeProductId: string = 'generic-product';
     private activeDefaultHeight: number = 2.4;
     private activeBusAssignment: string = 'Bus 1';
+    private activeLumens: number = 800;
+    private activeBeamAngle: number = 60;
+    private activeRange: number = 10;
 
     constructor(editor: FloorPlanEditor) {
         this.editor = editor;
@@ -41,12 +44,22 @@ export class PlaceSymbolTool implements Tool {
         this.editor.emit('active-symbol-changed', type);
     }
 
-    public setActiveAttributes(attrs: { productId: string; defaultHeight: number; busAssignment?: string }): void {
+    public setActiveAttributes(attrs: {
+        productId: string;
+        defaultHeight: number;
+        busAssignment?: string;
+        lumens?: number;
+        beamAngle?: number;
+        range?: number;
+    }): void {
         this.activeProductId = attrs.productId;
         this.activeDefaultHeight = attrs.defaultHeight;
         if (attrs.busAssignment !== undefined) {
             this.activeBusAssignment = attrs.busAssignment;
         }
+        if (attrs.lumens !== undefined) this.activeLumens = attrs.lumens;
+        if (attrs.beamAngle !== undefined) this.activeBeamAngle = attrs.beamAngle;
+        if (attrs.range !== undefined) this.activeRange = attrs.range;
     }
 
     private updatePreviewMesh(): void {
@@ -102,6 +115,12 @@ export class PlaceSymbolTool implements Tool {
             productId: this.activeProductId,
             installationHeight: this.activeDefaultHeight,
             busAssignment: this.activeBusAssignment,
+            metadata: {
+                productId: this.activeProductId,
+                lumens: this.activeLumens,
+                beamAngle: this.activeBeamAngle,
+                range: this.activeRange
+            },
             createdAt: new Date().toISOString()
         };
 

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
-import { Layer, LayerConfig, Transform, VectorLayerContent, Polygon, PlacedSymbol, Furniture } from '../models/types';
+import { Layer, LayerConfig, Transform, VectorLayerContent, Polygon, PlacedSymbol, Furniture, Room } from '../models/types';
 import { SYMBOL_LIBRARY } from '../models/symbolLibrary';
+import { calculatePolygonArea } from '../../utils/spatialUtils';
 
 export class LayerSystem {
     private layers: Map<string, Layer> = new Map();
@@ -327,7 +328,14 @@ export class LayerSystem {
                     const roomType = (poly as any).roomType || 'other';
                     const displayType = this.formatRoomType(roomType);
 
-                    const labelSprite = this.createLabel(roomName, displayType);
+                    // Calculate Area
+                    const areaPx = calculatePolygonArea(poly.points);
+                    const pixelsPerMeter = (this.scene.userData.editor as any)?.pixelsMeter || 1;
+                    const areaM2 = areaPx / (pixelsPerMeter * pixelsPerMeter);
+                    const areaSqFt = areaM2 * 10.764;
+                    const areaLabel = `${Math.round(areaSqFt)} sqft`;
+
+                    const labelSprite = this.createLabel(roomName, displayType, areaLabel);
                     labelSprite.name = 'label';
 
                     // Calculate Centroid
@@ -342,6 +350,7 @@ export class LayerSystem {
                     // Cache name to avoid recreation
                     group.userData.labelName = roomName;
                     group.userData.labelType = roomType;
+                    group.userData.areaLabel = areaLabel;
                 }
 
                 group.userData = { id, type: poly.polyType, lastHash: pointsHash };
@@ -399,16 +408,29 @@ export class LayerSystem {
                     const rName = (poly as any).name;
                     const rType = (poly as any).roomType || 'other';
 
-                    if (group.userData.labelName !== rName || group.userData.labelType !== rType) {
+                    // Re-calculate area to see if it changed (via pointsHash check)
+                    const areaPx = calculatePolygonArea(poly.points);
+                    const pixelsPerMeter = (this.scene.userData.editor as any)?.pixelsMeter || 1;
+                    const areaM2 = areaPx / (pixelsPerMeter * pixelsPerMeter);
+                    const areaSqFt = areaM2 * 10.764;
+                    const areaLabel = `${Math.round(areaSqFt)} sqft`;
+
+                    if (group.userData.labelName !== rName || group.userData.labelType !== rType || group.userData.areaLabel !== areaLabel) {
                         const oldLabel = group.getObjectByName('label') as THREE.Sprite;
                         if (oldLabel) {
-                            oldLabel.geometry.dispose();
-                            (oldLabel.material as THREE.Material).dispose();
+                            if (oldLabel.geometry) oldLabel.geometry.dispose();
+                            if (oldLabel.material) {
+                                if (Array.isArray(oldLabel.material)) {
+                                    oldLabel.material.forEach(m => m.dispose());
+                                } else {
+                                    oldLabel.material.dispose();
+                                }
+                            }
                             group.remove(oldLabel);
                         }
 
                         const displayType = this.formatRoomType(rType);
-                        const newLabel = this.createLabel(rName, displayType);
+                        const newLabel = this.createLabel(rName, displayType, areaLabel);
                         newLabel.name = 'label';
                         let cx = 0, cy = 0;
                         poly.points.forEach(p => { cx += p.x; cy += p.y; });
@@ -419,6 +441,7 @@ export class LayerSystem {
 
                         group.userData.labelName = rName;
                         group.userData.labelType = rType;
+                        group.userData.areaLabel = areaLabel;
                     }
                 }
 
@@ -500,6 +523,9 @@ export class LayerSystem {
                     group.rotation.z = (symbolData.rotation * Math.PI) / 180;
                     group.scale.set(symbolData.scale, symbolData.scale, 1);
                 }
+
+                // Update Coverage Circle (Worker 2)
+                this.updateCoverageCircle(group, symbolData);
             });
         }
         if (content.furniture) {
@@ -595,7 +621,7 @@ export class LayerSystem {
         }
     }
 
-    private createLabel(name: string, type: string): THREE.Sprite {
+    private createLabel(name: string, type: string, area?: string): THREE.Sprite {
         const canvas = document.createElement('canvas');
         const fontSize = 24;
         const font = `bold ${fontSize}px Inter, sans-serif`;
@@ -611,9 +637,15 @@ export class LayerSystem {
         ctx.font = subFont;
         const typeMetrics = ctx.measureText(type);
 
-        const textWidth = Math.max(nameMetrics.width, typeMetrics.width);
+        let areaMetrics = { width: 0 };
+        if (area) {
+            areaMetrics = ctx.measureText(area);
+        }
+
+        const textWidth = Math.max(nameMetrics.width, typeMetrics.width, areaMetrics.width);
         const lineHeight = fontSize * 1.2;
-        const totalHeight = lineHeight * 2; // 2 lines
+        const totalLines = area ? 3 : 2;
+        const totalHeight = lineHeight * totalLines;
 
         // 2. Resize Canvas
         canvas.width = textWidth + 40; // Padding
@@ -634,14 +666,19 @@ export class LayerSystem {
 
         // Line 1: Name
         ctx.font = font;
-        ctx.strokeText(name, centerX, centerY - lineHeight * 0.5);
-        ctx.fillText(name, centerX, centerY - lineHeight * 0.5);
+        ctx.strokeText(name, centerX, centerY - lineHeight * (totalLines - 1) * 0.5);
+        ctx.fillText(name, centerX, centerY - lineHeight * (totalLines - 1) * 0.5);
 
-        // Line 2: Type (uppercase or title case?) -> User said "Mud Hallway" implies Title Case
-        // We will receive title case or format it before calling.
+        // Line 2: Type
         ctx.font = subFont;
-        ctx.strokeText(type, centerX, centerY + lineHeight * 0.6);
-        ctx.fillText(type, centerX, centerY + lineHeight * 0.6);
+        ctx.strokeText(type, centerX, centerY - lineHeight * (totalLines - 1) * 0.5 + lineHeight);
+        ctx.fillText(type, centerX, centerY - lineHeight * (totalLines - 1) * 0.5 + lineHeight);
+
+        // Line 3: Area (Optional)
+        if (area) {
+            ctx.strokeText(area, centerX, centerY - lineHeight * (totalLines - 1) * 0.5 + lineHeight * 2);
+            ctx.fillText(area, centerX, centerY - lineHeight * (totalLines - 1) * 0.5 + lineHeight * 2);
+        }
 
         const texture = new THREE.CanvasTexture(canvas);
         texture.minFilter = THREE.LinearFilter;
@@ -698,6 +735,75 @@ export class LayerSystem {
                 }
             });
         });
+    }
+
+    private updateCoverageCircle(group: THREE.Group, symbolData: PlacedSymbol): void {
+        const COVERAGE_NAME = 'coverage-circle';
+        let circle = group.getObjectByName(COVERAGE_NAME) as THREE.Line;
+
+        // Calculate radius
+        let radius = 0;
+        const metadata = symbolData.metadata || {};
+        const beamAngle = (metadata as any).beamAngle;
+        const range = (metadata as any).range;
+        const height = symbolData.installationHeight || 2.4;
+
+        if (beamAngle && height) {
+            // Light coverage: radius = tan(beamAngle/2) * (height - 0.8)
+            const rad = (beamAngle * Math.PI) / 180;
+            radius = Math.tan(rad / 2) * (height - 0.8);
+            // Convert meters to world units
+            const pixelsPerMeter = (this.scene.userData.editor as any)?.pixelsMeter || 1;
+            radius *= pixelsPerMeter;
+        } else if (range) {
+            // WiFi/RF coverage: radius = range (in meters)
+            const pixelsPerMeter = (this.scene.userData.editor as any)?.pixelsMeter || 1;
+            radius = range * pixelsPerMeter;
+        }
+
+        // Apply inverse symbol scale to radius so the circle world-size is correct
+        // since the circle is a child of the symbol group which is scaled.
+        if (radius > 0 && symbolData.scale > 0) {
+            radius /= symbolData.scale;
+        }
+
+        if (radius <= 0) {
+            if (circle) {
+                circle.visible = false;
+            }
+            return;
+        }
+
+        if (!circle) {
+            const curve = new THREE.EllipseCurve(0, 0, radius, radius, 0, 2 * Math.PI, false, 0);
+            const points = curve.getPoints(64);
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            const material = new THREE.LineDashedMaterial({
+                color: 0x333333,
+                dashSize: 10,
+                gapSize: 5,
+                opacity: 0.3,
+                transparent: true
+            });
+            circle = new THREE.Line(geometry, material);
+            circle.computeLineDistances(); // Required for dashed lines
+            circle.name = COVERAGE_NAME;
+            circle.position.z = -0.1; // Slightly behind the symbol
+            circle.userData = { radius };
+            group.add(circle);
+        } else {
+            // Update existing circle if radius changed
+            const oldRadius = (circle.userData as any)?.radius;
+            if (Math.abs(oldRadius - radius) > 0.01) {
+                const curve = new THREE.EllipseCurve(0, 0, radius, radius, 0, 2 * Math.PI, false, 0);
+                const points = curve.getPoints(64);
+                circle.geometry.dispose();
+                circle.geometry = new THREE.BufferGeometry().setFromPoints(points);
+                circle.computeLineDistances();
+                circle.userData.radius = radius;
+            }
+            circle.visible = true;
+        }
     }
 
     private applyTransform(layer: Layer): void {

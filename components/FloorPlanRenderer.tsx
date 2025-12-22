@@ -58,20 +58,23 @@ export const FloorPlanRenderer: React.FC = () => {
     const lastSavedSymbolsRef = useRef<string>('');
     const lastSavedPolygonsRef = useRef<string>('');
     const lastSavedFurnitureRef = useRef<string>('');
+    const lastSavedCablesRef = useRef<string>('');
 
     // Auto-save functionality (extracted to useAutoSave hook)
     const {
         debouncedSave,
         debouncedSaveSymbols,
         debouncedSaveFurniture,
-        debouncedSavePolygons
+        debouncedSavePolygons,
+        debouncedSaveCables
     } = useAutoSave(
         editorInstanceRef,
         isInitializedRef,
         lastSavedPayloadRef,
         lastSavedSymbolsRef,
         lastSavedPolygonsRef,
-        lastSavedFurnitureRef
+        lastSavedFurnitureRef,
+        lastSavedCablesRef
     );
 
     // Editor event callbacks (stable reference via useMemo)
@@ -89,11 +92,13 @@ export const FloorPlanRenderer: React.FC = () => {
         debouncedSavePolygons,
         debouncedSaveSymbols,
         debouncedSaveFurniture,
+        debouncedSaveCables,
         lastSavedPayloadRef,
         lastSavedSymbolsRef,
         lastSavedPolygonsRef,
-        lastSavedFurnitureRef
-    }), [debouncedSavePolygons, debouncedSaveSymbols, debouncedSaveFurniture]);
+        lastSavedFurnitureRef,
+        lastSavedCablesRef
+    }), [debouncedSavePolygons, debouncedSaveSymbols, debouncedSaveFurniture, debouncedSaveCables]);
 
     // Auto-activate & show layers based on tool selection (extracted to useEditorEvents hook)
     useEditorEvents(editor, editorEventCallbacks);

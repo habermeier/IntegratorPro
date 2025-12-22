@@ -386,6 +386,24 @@ export function formatRoomType(type: string): string {
 }
 
 /**
+ * Calculates the area of a polygon using the Shoelace formula.
+ * @param points Array of polygon vertices
+ * @returns The area in square units (matching the input coordinate system)
+ */
+export function calculatePolygonArea(points: Vector2[]): number {
+    if (points.length < 3) return 0;
+
+    let area = 0;
+    for (let i = 0; i < points.length; i++) {
+        const j = (i + 1) % points.length;
+        area += points[i].x * points[j].y;
+        area -= points[j].x * points[i].y;
+    }
+
+    return Math.abs(area) / 2;
+}
+
+/**
  * Finds the room containing a given point.
  * Checks rooms in reverse order (last-to-first) to prioritize most recently created rooms.
  * Returns the room name and type (e.g. 'Primary Bedroom') or 'external' if not in any room.

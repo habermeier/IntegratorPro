@@ -20,6 +20,9 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
     const [busAssignment, setBusAssignment] = React.useState<string>('Bus 1');
     const [cableType, setCableType] = React.useState<string>('Cat6');
     const [currentRoom, setCurrentRoom] = React.useState<string>('—');
+    const [lumens, setLumens] = React.useState<number>(800);
+    const [beamAngle, setBeamAngle] = React.useState<number>(60);
+    const [range, setRange] = React.useState<number>(10);
 
     // Get all devices from registry
     const { devices } = useDevices();
@@ -28,6 +31,7 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
     const throttledDetectRoom = React.useMemo(() =>
         throttle((x: number, y: number) => {
             if (!editor) return;
+            if (!editor.cameraSystem) return; // Safety check for initialization
             const roomLayer = editor.layerSystem.getLayer('room');
             if (!roomLayer) return;
             const rooms = (roomLayer.content as VectorLayerContent).rooms || [];
@@ -89,7 +93,10 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                 productId,
                 defaultHeight,
                 busAssignment,
-                cableType
+                cableType,
+                lumens,
+                beamAngle,
+                range
             });
         }
     };
@@ -102,10 +109,13 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                 productId,
                 defaultHeight,
                 busAssignment,
-                cableType
+                cableType,
+                lumens,
+                beamAngle,
+                range
             });
         }
-    }, [editor, selectedSymbolType, productId, defaultHeight, busAssignment, cableType]);
+    }, [editor, selectedSymbolType, productId, defaultHeight, busAssignment, cableType, lumens, beamAngle, range]);
 
     return (
         <div className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col z-20 shadow-[10px_0_30px_rgba(0,0,0,0.3)]">
@@ -216,6 +226,36 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                                 <option value="DALI">DALI</option>
                                 <option value="KNX">KNX</option>
                             </select>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-1">
+                            <div className="flex flex-col bg-slate-900 rounded border border-slate-800 px-1.5 py-0.5">
+                                <span className="text-[7px] text-slate-600 font-bold uppercase">Lumens</span>
+                                <input
+                                    type="number"
+                                    value={lumens}
+                                    onChange={(e) => setLumens(parseInt(e.target.value) || 0)}
+                                    className="w-full bg-transparent text-[9px] text-slate-300 font-mono focus:outline-none"
+                                />
+                            </div>
+                            <div className="flex flex-col bg-slate-900 rounded border border-slate-800 px-1.5 py-0.5">
+                                <span className="text-[7px] text-slate-600 font-bold uppercase">Beam</span>
+                                <input
+                                    type="number"
+                                    value={beamAngle}
+                                    onChange={(e) => setBeamAngle(parseInt(e.target.value) || 0)}
+                                    className="w-full bg-transparent text-[9px] text-slate-300 font-mono focus:outline-none"
+                                />
+                            </div>
+                            <div className="flex flex-col bg-slate-900 rounded border border-slate-800 px-1.5 py-0.5">
+                                <span className="text-[7px] text-slate-600 font-bold uppercase">Range</span>
+                                <input
+                                    type="number"
+                                    value={range}
+                                    onChange={(e) => setRange(parseInt(e.target.value) || 0)}
+                                    className="w-full bg-transparent text-[9px] text-slate-300 font-mono focus:outline-none"
+                                />
+                            </div>
                         </div>
                     </div>
                 )}
