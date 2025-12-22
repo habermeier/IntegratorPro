@@ -25,13 +25,15 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
     const { devices } = useDevices();
 
     // Throttled room detection to save CPU
-    const throttledDetectRoom = React.useMemo(() => 
+    const throttledDetectRoom = React.useMemo(() =>
         throttle((x: number, y: number) => {
             if (!editor) return;
             const roomLayer = editor.layerSystem.getLayer('room');
             if (!roomLayer) return;
             const rooms = (roomLayer.content as VectorLayerContent).rooms || [];
-            const roomName = findRoomAt({ x, y }, rooms);
+            // Convert screen coordinates to world coordinates
+            const worldPos = editor.cameraSystem.screenToWorld(x, y);
+            const roomName = findRoomAt(worldPos, rooms);
             setCurrentRoom(roomName === 'external' ? 'External' : roomName);
         }, 100), [editor]);
 

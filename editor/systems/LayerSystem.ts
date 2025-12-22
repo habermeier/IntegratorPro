@@ -559,6 +559,29 @@ export class LayerSystem {
             layer.container.remove(child);
             this.meshCache.delete(`${layer.id}-${child.userData.id}`);
         });
+
+        if (content.cables) {
+            content.cables.forEach(cable => {
+                activeItemIds.add(cable.id);
+                const cacheKey = `${layer.id}-${cable.id}`;
+                let line = this.meshCache.get(cacheKey) as THREE.Line;
+
+                if (!line) {
+                    const points = cable.points.map(p => new THREE.Vector3(p.x, p.y, 0.1));
+                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    const material = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 });
+                    line = new THREE.Line(geometry, material);
+                    line.name = `cable-${cable.id}`;
+                    line.userData = { id: cable.id, type: 'cable' };
+                    layer.container.add(line);
+                    this.meshCache.set(cacheKey, line);
+                } else {
+                    // Update points if needed
+                    const points = cable.points.map(p => new THREE.Vector3(p.x, p.y, 0.1));
+                    line.geometry.setFromPoints(points);
+                }
+            });
+        }
     }
 
     private createLabel(name: string, type: string): THREE.Sprite {

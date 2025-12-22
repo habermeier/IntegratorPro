@@ -60,12 +60,39 @@ export function useEditorEvents(
       callbacks.debouncedSaveFurniture();
     };
 
+    // Auto-activate layer when device/symbol is selected
+    const onSelectionChanged = (selectedIds: string[]) => {
+      if (selectedIds.length === 0) return;
+
+      // Find the layer containing the selected object
+      const layers = editor.layerSystem.getAllLayers();
+      for (const layer of layers) {
+        if (layer.type !== 'vector') continue;
+
+        const content = layer.content as VectorLayerContent;
+        const symbols = content.symbols || [];
+
+        // Check if any selected ID matches a symbol in this layer
+        const matchedSymbol = symbols.find(s => selectedIds.includes(s.id));
+        if (matchedSymbol) {
+          // Auto-activate and show this layer
+          if (!layer.visible) {
+            editor.setLayerVisible(layer.id, true);
+          }
+          // Optionally set as active layer (for editing)
+          // editor.setActiveLayer(layer.id);
+          break; // Found the layer, no need to continue
+        }
+      }
+    };
+
     editor.on('tool-changed', onToolChanged);
     editor.on('mode-changed', onModeChanged);
     editor.on('edit-mode-changed', onEditModeChanged);
     editor.on('layers-changed', onLayersChanged);
     editor.on('active-symbol-changed', (type: string) => callbacks.setActiveSymbol(type));
     editor.on('panning-changed', (panning: boolean) => callbacks.setIsPanning(panning));
+    editor.on('selection-changed', onSelectionChanged);
 
     const onModifierChanged = ({ isAltPressed, isShiftPressed }: { isAltPressed: boolean, isShiftPressed: boolean }) => {
       callbacks.setIsAltPressed(isAltPressed);
@@ -198,6 +225,7 @@ export function useEditorEvents(
       editor.off('edit-mode-changed', onEditModeChanged);
       editor.off('layers-changed', onLayersChanged);
       editor.off('modifier-changed', onModifierChanged);
+      editor.off('selection-changed', onSelectionChanged);
       window.removeEventListener('storage-units-changed', handleUnitsChanged);
       window.removeEventListener('storage-settings-changed', handleSettingsChanged);
       window.removeEventListener('beforeunload', handleBeforeUnload);

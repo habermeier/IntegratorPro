@@ -69,6 +69,7 @@ export interface VectorLayerContent {
     masks?: Mask[];
     symbols?: PlacedSymbol[];
     furniture?: Furniture[];
+    cables?: Cable[];
 }
 
 export interface Layer {
@@ -101,6 +102,14 @@ export interface Furniture extends PlacedSymbol {
     length: number;
     isBlocking: boolean;
     color: number; // Hex
+}
+
+export interface Cable {
+    id: string;
+    points: Vector2[];
+    cableType: string; // Cat6, DALI, KNX, etc.
+    color?: string;
+    label?: string;
 }
 
 

@@ -105,6 +105,7 @@ export class FloorPlanEditor {
         this.toolSystem.registerTool(new PlaceSymbolTool(this));
         this.toolSystem.registerTool(new PlaceFurnitureTool(this));
         this.toolSystem.registerTool(new MeasureTool(this));
+        this.toolSystem.registerTool(new DrawCableTool(this));
         this.toolSystem.setActiveTool('select');
 
         this.setupEventListeners();
