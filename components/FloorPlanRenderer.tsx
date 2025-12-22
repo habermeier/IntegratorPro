@@ -5,6 +5,9 @@ import BASE_IMAGE from '../images/floor-plan-clean.jpg';
 import ELECTRICAL_IMAGE from '../images/electric-plan-plain-full-clean-2025-12-12.jpg';
 import { parseDistanceInput, formatDistance } from '../utils/measurementUtils';
 import { dataService } from '../src/services/DataService';
+import { useEditorInitialization } from '../src/hooks/useEditorInitialization';
+import { useEditorEvents } from '../src/hooks/useEditorEvents';
+import { useAutoSave } from '../src/hooks/useAutoSave';
 
 // Modular Components
 import { ThreeCanvas } from './editor/ThreeCanvas';
@@ -47,246 +50,60 @@ export const FloorPlanRenderer: React.FC = () => {
     const coordsRef = useRef<HTMLSpanElement>(null);
 
     const editorInstanceRef = useRef<FloorPlanEditor | null>(null);
-    const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const symbolsSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const polygonsSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const furnitureSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const isInitializedRef = useRef(false);
     const lastSavedPayloadRef = useRef<string>('');
     const lastSavedSymbolsRef = useRef<string>('');
     const lastSavedPolygonsRef = useRef<string>('');
     const lastSavedFurnitureRef = useRef<string>('');
 
-    // Debounced Save (Direct Editor Access)
-    const debouncedSave = useCallback(() => {
-        if (!isInitializedRef.current) return;
-        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    // Auto-save functionality (extracted to useAutoSave hook)
+    const {
+        debouncedSave,
+        debouncedSaveSymbols,
+        debouncedSaveFurniture,
+        debouncedSavePolygons
+    } = useAutoSave(
+        editorInstanceRef,
+        isInitializedRef,
+        lastSavedPayloadRef,
+        lastSavedSymbolsRef,
+        lastSavedPolygonsRef,
+        lastSavedFurnitureRef
+    );
 
-        saveTimeoutRef.current = setTimeout(async () => {
-            const editor = editorInstanceRef.current;
-            if (!editor) return;
+    // Editor event callbacks (stable reference via useMemo)
+    const editorEventCallbacks = useMemo(() => ({
+        setActiveTool,
+        setIsEditMode,
+        setActiveLayerId,
+        setLayers,
+        setActiveSymbol,
+        setIsPanning,
+        setIsAltPressed,
+        setIsShiftPressed,
+        setUnitPreference,
+        setFastZoomMultiplier,
+        debouncedSavePolygons,
+        debouncedSaveSymbols,
+        debouncedSaveFurniture,
+        lastSavedPayloadRef,
+        lastSavedSymbolsRef,
+        lastSavedPolygonsRef,
+        lastSavedFurnitureRef
+    }), [debouncedSavePolygons, debouncedSaveSymbols, debouncedSaveFurniture]);
 
-            const layers = editor.layerSystem.getAllLayers();
-            const electricalLayer = layers.find(l => l.id === 'electrical');
-            if (!electricalLayer) return;
+    // Auto-activate & show layers based on tool selection (extracted to useEditorEvents hook)
+    useEditorEvents(editor, editorEventCallbacks);
 
-            const payload = {
-                x: electricalLayer.transform.position.x,
-                y: electricalLayer.transform.position.y,
-                scale: electricalLayer.transform.scale.x,
-                rotation: electricalLayer.transform.rotation,
-                opacity: electricalLayer.opacity,
-                locked: electricalLayer.locked
-            };
-
-            const payloadStr = JSON.stringify(payload);
-
-            // 💡 Dirty Check: Only save if state has actually changed
-            if (payloadStr === lastSavedPayloadRef.current) {
-                return;
-            }
-
-            try {
-                await dataService.updateElectricalOverlay(payload);
-                lastSavedPayloadRef.current = payloadStr;
-                console.log('✅ Electrical overlay saved automatically via DataService');
-            } catch (err) {
-                console.error('Failed to auto-save overlay state:', err);
-            }
-        }, 1000);
-    }, []);
-
-    // Debounced Save Symbols (using DataService)
-    const debouncedSaveSymbols = useCallback(() => {
-        if (!isInitializedRef.current) return;
-
-        if (symbolsSaveTimeoutRef.current) clearTimeout(symbolsSaveTimeoutRef.current);
-
-        symbolsSaveTimeoutRef.current = setTimeout(async () => {
-            const editor = editorInstanceRef.current;
-            if (!editor) return;
-
-            const electricalLayer = editor.layerSystem.getLayer('electrical');
-            if (electricalLayer && electricalLayer.type === 'vector') {
-                const devices = (electricalLayer.content as VectorLayerContent).symbols || [];
-                const devicesStr = JSON.stringify(devices);
-
-                // 💡 Dirty Check: Only save if symbols have actually changed
-                if (devicesStr === lastSavedSymbolsRef.current) {
-                    return;
-                }
-
-                try {
-                    await dataService.updateDevices(devices as any[]);
-                    lastSavedSymbolsRef.current = devicesStr;
-                    console.log('✅ Devices saved via DataService');
-                } catch (err) {
-                    console.error('Failed to auto-save symbols:', err);
-                }
-            }
-        }, 1500); // Slightly longer debounce for symbols
-    }, []);
-
-    // Debounced Save Furniture (using DataService)
-    const debouncedSaveFurniture = useCallback(() => {
-        if (!isInitializedRef.current) return;
-        if (furnitureSaveTimeoutRef.current) clearTimeout(furnitureSaveTimeoutRef.current);
-
-        furnitureSaveTimeoutRef.current = setTimeout(async () => {
-            const editor = editorInstanceRef.current;
-            if (!editor) return;
-
-            const furnitureLayer = editor.layerSystem.getLayer('furniture');
-            if (furnitureLayer && furnitureLayer.type === 'vector') {
-                const furniture = (furnitureLayer.content as VectorLayerContent).furniture || [];
-                const furnitureStr = JSON.stringify(furniture);
-
-                // 💡 Dirty Check
-                if (furnitureStr === lastSavedFurnitureRef.current) {
-                    return;
-                }
-
-                try {
-                    // Map editor furniture to DataService structure
-                    const mappedFurniture = furniture.map(f => ({
-                        ...f,
-                        position: { x: f.x, y: f.y }
-                    })) as any[];
-
-                    await dataService.updateFurniture(mappedFurniture);
-                    lastSavedFurnitureRef.current = furnitureStr;
-                    console.log('✅ Furniture saved via DataService');
-                } catch (err) {
-                    console.error('Failed to auto-save furniture:', err);
-                }
-            }
-        }, 1200);
-    }, []);
-
-    // Debounced Save Polygons (Unified System)
-    const debouncedSavePolygons = useCallback(() => {
-        if (!isInitializedRef.current) return;
-        if (polygonsSaveTimeoutRef.current) clearTimeout(polygonsSaveTimeoutRef.current);
-
-        polygonsSaveTimeoutRef.current = setTimeout(async () => {
-            const editor = editorInstanceRef.current;
-            if (!editor) return;
-
-            const roomLayer = editor.layerSystem.getLayer('room');
-            const maskLayer = editor.layerSystem.getLayer('mask');
-
-            const allPolygons: any[] = [];
-
-            if (roomLayer && roomLayer.type === 'vector') {
-                const rooms = (roomLayer.content as VectorLayerContent).rooms || [];
-                rooms.forEach(r => allPolygons.push({ ...r, type: 'room' }));
-            }
-
-            if (maskLayer && maskLayer.type === 'vector') {
-                const masks = (maskLayer.content as VectorLayerContent).masks || [];
-                masks.forEach(m => allPolygons.push({ ...m, type: 'mask' }));
-            }
-
-            const polygonsStr = JSON.stringify(allPolygons);
-
-            // 💡 Dirty Check: Only save if polygons have actually changed
-            if (polygonsStr === lastSavedPolygonsRef.current) {
-                return;
-            }
-
-            try {
-                console.log('💾 Saving polygons via DataService...', allPolygons.length, 'items');
-                await dataService.updatePolygons(allPolygons);
-                lastSavedPolygonsRef.current = polygonsStr;
-                console.log('✅ Polygons saved successfully via DataService');
-            } catch (err) {
-                console.error('Failed to auto-save unified polygons:', err);
-            }
-        }, 500); // Shorter debounce for better responsiveness
-    }, []);
-
-    // Auto-activate & show layers based on tool selection
-    useEffect(() => {
-        if (!editor) return;
-
-        // Editor -> React changes
-        const onToolChanged = (tool: ToolType) => {
-            setActiveTool(tool);
-        };
-
-        const onModeChanged = (mode: boolean) => {
-            setIsEditMode(mode);
-        };
-
-        const onEditModeChanged = ({ isEditMode, activeLayerId }: { isEditMode: boolean, activeLayerId: string | null }) => {
-            setIsEditMode(isEditMode);
-            setActiveLayerId(activeLayerId);
-        };
-
-        const onLayersChanged = (newLayers: Layer[]) => {
-            setLayers([...newLayers]);
-            debouncedSavePolygons();
-            debouncedSaveSymbols();
-            debouncedSaveFurniture();
-        };
-
-        editor.on('tool-changed', onToolChanged);
-        editor.on('mode-changed', onModeChanged);
-        editor.on('edit-mode-changed', onEditModeChanged);
-        editor.on('layers-changed', onLayersChanged);
-        editor.on('active-symbol-changed', (type: string) => setActiveSymbol(type));
-        editor.on('panning-changed', (panning: boolean) => setIsPanning(panning));
-        const onModifierChanged = ({ isAltPressed, isShiftPressed }: { isAltPressed: boolean, isShiftPressed: boolean }) => {
-            setIsAltPressed(isAltPressed);
-            setIsShiftPressed(isShiftPressed);
-        };
-        editor.on('modifier-changed', onModifierChanged);
-
-        // Sync units & settings
-        const handleUnitsChanged = () => {
-            setUnitPreference((localStorage.getItem('integrator-pro-units') as 'METRIC' | 'IMPERIAL') || 'IMPERIAL');
-        };
-        const handleSettingsChanged = () => {
-            const multiplier = parseFloat(localStorage.getItem('integrator-pro-fast-zoom-multiplier') || '3');
-            setFastZoomMultiplier(multiplier);
-            if (editor) {
-                editor.fastZoomMultiplier = multiplier;
-            }
-        };
-
-        window.addEventListener('storage-units-changed', handleUnitsChanged);
-        window.addEventListener('storage-settings-changed', handleSettingsChanged);
-
-        // FLUSH ON UNLOAD
-        const handleBeforeUnload = () => {
-            // We can't easily wait for async fetch in beforeunload, 
-            // but we can try to use sendBeacon if we had a dedicated endpoint.
-            // For now, let's just hope the 500ms debounce hits before the user closes.
-            // A more robust way is to use sync flush if possible (deprecated) or beacon.
-        };
-        window.addEventListener('beforeunload', handleBeforeUnload);
-
-        return () => {
-            editor.off('tool-changed', onToolChanged);
-            editor.off('mode-changed', onModeChanged);
-            editor.off('edit-mode-changed', onEditModeChanged);
-            editor.off('layers-changed', onLayersChanged);
-            editor.off('modifier-changed', onModifierChanged);
-            window.removeEventListener('storage-units-changed', handleUnitsChanged);
-            window.removeEventListener('storage-settings-changed', handleSettingsChanged);
-            window.removeEventListener('beforeunload', handleBeforeUnload);
-        };
-    }, [editor, debouncedSavePolygons, debouncedSaveSymbols]);
-
-    const initEditor = useCallback((container: HTMLDivElement) => {
-        if (editorInstanceRef.current) return;
-
-        const editorInstance = new FloorPlanEditor(container);
-        editorInstanceRef.current = editorInstance;
-        setEditor(editorInstance);
-        (window as any).editor = editorInstance;
-
-        editorInstance.on('cursor-move', ({ x, y }: { x: number, y: number }) => {
+    // Editor initialization callbacks (stable reference via useMemo)
+    const editorInitCallbacks = useMemo(() => ({
+        setEditor,
+        setLayers,
+        setActiveTool,
+        setIsEditMode,
+        setFastZoomMultiplier,
+        setUnitPreference,
+        onCursorMove: (x: number, y: number) => {
             if (zoomCursorRef.current) {
                 zoomCursorRef.current.style.display = x > 0 ? 'block' : 'none';
                 zoomCursorRef.current.style.transform = `translate3d(${x - 62.5}px, ${y - 62.5}px, 0)`;
@@ -294,284 +111,29 @@ export const FloorPlanRenderer: React.FC = () => {
             if (coordsRef.current) {
                 coordsRef.current.textContent = x > 0 ? `X: ${x.toFixed(0)} Y: ${y.toFixed(0)} ` : '---';
             }
-        });
-
-        editorInstance.on('keydown', (key: string) => {
+        },
+        onKeydown: (key: string) => {
             setLastKey(key);
             setTimeout(() => setLastKey(null), 1000);
-        });
-
-        editorInstance.on('calibration-needed', setCalibrationData);
-        editorInstance.on('selection-changed', setSelectedIds);
-        editorInstance.on('measure-changed', setMeasurement);
-        editorInstance.on('room-completion-pending', (room: Room) => {
+        },
+        onCalibrationNeeded: setCalibrationData,
+        onSelectionChanged: setSelectedIds,
+        onMeasureChanged: setMeasurement,
+        onRoomCompletionPending: (room: Room) => {
             setPendingRoom(room);
-        });
+        }
+    }), []);
 
-        // Initial Layers & Persistence Setup
-        const setup = async () => {
-            // 1. Define Layers
-            editorInstance.addLayer({
-                id: 'base',
-                name: 'Base Floor Plan',
-                type: 'image',
-                zIndex: 0,
-                visible: true,
-                locked: true,
-                opacity: 1,
-                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
-                allowLayerEditing: true // Image layer - can be adjusted
-            });
-
-            editorInstance.addLayer({
-                id: 'mask',
-                name: 'Masking',
-                type: 'vector',
-                zIndex: 10,
-                visible: true,
-                locked: true,
-                opacity: 1,
-                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
-                allowLayerEditing: false // Data layer - locked to base coordinates
-            });
-
-            editorInstance.addLayer({
-                id: 'electrical',
-                name: 'Electrical Overlay',
-                type: 'image',
-                zIndex: 20,
-                visible: true,
-                locked: true,
-                opacity: 0.7,
-                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
-                allowLayerEditing: true // Image layer - can be adjusted for alignment
-            });
-
-            editorInstance.addLayer({
-                id: 'room',
-                name: 'Rooms',
-                type: 'vector',
-                zIndex: 30,
-                visible: true,
-                locked: false,
-                opacity: 1,
-                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
-                allowLayerEditing: false // Data layer - locked to base coordinates
-            });
-
-            editorInstance.addLayer({
-                id: 'cables',
-                name: 'Cables',
-                type: 'vector',
-                zIndex: 40,
-                visible: true,
-                locked: false,
-                opacity: 1,
-                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
-                allowLayerEditing: false // Data layer - locked to base coordinates
-            });
-
-            editorInstance.addLayer({
-                id: 'lighting',
-                name: 'Lighting',
-                type: 'vector',
-                zIndex: 50,
-                visible: true,
-                locked: false,
-                opacity: 1,
-                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
-                allowLayerEditing: false // Data layer - locked to base coordinates
-            });
-
-            editorInstance.addLayer({
-                id: 'sensors',
-                name: 'Sensors',
-                type: 'vector',
-                zIndex: 51,
-                visible: true,
-                locked: false,
-                opacity: 1,
-                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
-                allowLayerEditing: false // Data layer - locked to base coordinates
-            });
-
-            editorInstance.addLayer({
-                id: 'security',
-                name: 'Security',
-                type: 'vector',
-                zIndex: 52,
-                visible: true,
-                locked: false,
-                opacity: 1,
-                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
-                allowLayerEditing: false // Data layer - locked to base coordinates
-            });
-
-            editorInstance.addLayer({
-                id: 'network',
-                name: 'Network',
-                type: 'vector',
-                zIndex: 53,
-                visible: true,
-                locked: false,
-                opacity: 1,
-                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
-                allowLayerEditing: false // Data layer - locked to base coordinates
-            });
-
-            editorInstance.addLayer({
-                id: 'lcps',
-                name: 'LCPs',
-                type: 'vector',
-                zIndex: 54,
-                visible: true,
-                locked: false,
-                opacity: 1,
-                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
-                allowLayerEditing: false // Data layer - locked to base coordinates
-            });
-
-            editorInstance.addLayer({
-                id: 'furniture',
-                name: 'Furniture',
-                type: 'vector',
-                zIndex: 60,
-                visible: true,
-                locked: false,
-                opacity: 1,
-                transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
-                allowLayerEditing: false // Data layer - locked to base coordinates
-            });
-
-            // 2. Load Images
-            await editorInstance.loadImage('base', BASE_IMAGE);
-            await editorInstance.loadImage('electrical', ELECTRICAL_IMAGE);
-
-            // 3. Load Persistence (Editor knows best)
-            editorInstance.loadPersistentState();
-
-            // 4. Load Saved State from Server (using DataService)
-            try {
-                const project = await dataService.loadProject();
-                console.log('📦 Loaded project data from DataService');
-
-                // Extract data from monolithic project structure
-                const overlayData = project.floorPlan.electricalOverlay;
-                const scaleData = project.floorPlan.scale;
-                const symbolsData = { devices: project.devices };
-                const polygonsData = { polygons: project.floorPlan.polygons };
-                const settingsData = project.settings;
-
-                if (scaleData && scaleData.scaleFactor) {
-                    editorInstance.pixelsMeter = scaleData.scaleFactor;
-                    console.log('📏 Restored scale from server:', scaleData.scaleFactor);
-                }
-
-                // RESTORE POSITION
-                editorInstance.setLayerTransform('electrical', {
-                    position: { x: overlayData.x || 0, y: overlayData.y || 0 },
-                    scale: { x: overlayData.scale || 1, y: overlayData.scale || 1 },
-                    rotation: overlayData.rotation || 0
-                }, true);
-
-                // RESTORE SYMBOLS
-                const electricalLayer = editorInstance.layerSystem.getLayer('electrical');
-                if (electricalLayer) {
-                    electricalLayer.content = {
-                        ...electricalLayer.content,
-                        symbols: symbolsData.devices || []
-                    };
-                    editorInstance.layerSystem.markDirty('electrical');
-                }
-
-                // RESTORE POLYGONS
-                const roomLayer = editorInstance.layerSystem.getLayer('room');
-                const maskLayer = editorInstance.layerSystem.getLayer('mask');
-                const allPolygons = polygonsData.polygons || [];
-                console.log('📦 Fetched polygons from server:', allPolygons.length);
-
-                if (roomLayer) {
-                    roomLayer.content = {
-                        ...roomLayer.content,
-                        rooms: allPolygons.filter((p: any) => p.type === 'room')
-                    };
-                    editorInstance.layerSystem.markDirty('room');
-                }
-
-                if (maskLayer) {
-                    maskLayer.content = {
-                        ...maskLayer.content,
-                        masks: allPolygons.filter((p: any) => p.type === 'mask')
-                    };
-                    editorInstance.layerSystem.markDirty('mask');
-                }
-
-                // RESTORE FURNITURE
-                const furnitureLayer = editorInstance.layerSystem.getLayer('furniture');
-                const furnitureData = project.furniture || [];
-                if (furnitureLayer) {
-                    furnitureLayer.content = {
-                        ...furnitureLayer.content,
-                        furniture: furnitureData
-                    };
-                    editorInstance.layerSystem.markDirty('furniture');
-                }
-
-                // RESTORE OPACITY
-                editorInstance.setLayerOpacity('electrical', overlayData.opacity ?? 0.7);
-
-                // Initial setup complete - enable auto-save & sync UI
-                setLayers([...editorInstance.layerSystem.getAllLayers()]);
-                setActiveTool(editorInstance.toolSystem.getActiveToolType());
-                setIsEditMode(editorInstance.editMode);
-
-                lastSavedPayloadRef.current = JSON.stringify({
-                    x: overlayData.x || 0,
-                    y: overlayData.y || 0,
-                    scale: overlayData.scale || 1,
-                    rotation: overlayData.rotation || 0,
-                    opacity: overlayData.opacity ?? 0.7,
-                    locked: !!overlayData.locked
-                });
-
-                lastSavedSymbolsRef.current = JSON.stringify(symbolsData.devices || []);
-                lastSavedPolygonsRef.current = JSON.stringify(allPolygons);
-                lastSavedFurnitureRef.current = JSON.stringify(furnitureData);
-
-                isInitializedRef.current = true;
-                console.log('🚀 Editor initialization sequence complete');
-
-                // 5. Load App Settings (from project data)
-                if (settingsData) {
-                    if (settingsData.fastZoomMultiplier) {
-                        setFastZoomMultiplier(settingsData.fastZoomMultiplier);
-                        editorInstance.fastZoomMultiplier = settingsData.fastZoomMultiplier;
-                        localStorage.setItem('integrator-pro-fast-zoom-multiplier', settingsData.fastZoomMultiplier.toString());
-                    }
-                    if (settingsData.units) {
-                        setUnitPreference(settingsData.units);
-                        localStorage.setItem('integrator-pro-units', settingsData.units);
-                        window.dispatchEvent(new Event('storage-units-changed'));
-                    }
-                }
-            } catch (err) {
-                console.error('Failed to restore editor state:', err);
-                // Still mark as initialized so manual edits can be saved
-                isInitializedRef.current = true;
-            }
-        };
-
-        setup();
-
-        return () => {
-            editorInstance.dispose();
-            editorInstanceRef.current = null;
-            setEditor(null);
-            if ((window as any).editor === editorInstance) {
-                (window as any).editor = null;
-            }
-        };
-    }, []);
+    // Editor initialization (extracted to useEditorInitialization hook)
+    const initEditor = useEditorInitialization(
+        editorInstanceRef,
+        isInitializedRef,
+        lastSavedSymbolsRef,
+        lastSavedPayloadRef,
+        lastSavedPolygonsRef,
+        lastSavedFurnitureRef,
+        editorInitCallbacks
+    );
 
     useEffect(() => {
         if (!editor) return;
@@ -585,105 +147,6 @@ export const FloorPlanRenderer: React.FC = () => {
         editor.on('room-edit-requested', onRoomEdit);
         return () => {
             editor.off('room-edit-requested', onRoomEdit);
-        };
-    }, [editor]);
-
-    // Listen for cross-tab data changes
-    useEffect(() => {
-        const handleProjectChange = async () => {
-            console.log('[FloorPlanRenderer] Detected external project change, reloading data');
-            if (!editor) return;
-
-            try {
-                // Force reload from server, bypassing cache
-                const project = await dataService.loadProject(undefined, true);
-                console.log('📦 Reloaded project data after external change');
-
-                // Update editor with fresh data
-                const scaleData = project.floorPlan.scale;
-                const symbolsData = { devices: project.devices };
-                const polygonsData = { polygons: project.floorPlan.polygons };
-                const overlayData = project.floorPlan.electricalOverlay;
-
-                // Update scale
-                if (scaleData && scaleData.scaleFactor) {
-                    editor.pixelsMeter = scaleData.scaleFactor;
-                }
-
-                // Update electrical layer transform
-                editor.setLayerTransform('electrical', {
-                    position: { x: overlayData.x || 0, y: overlayData.y || 0 },
-                    scale: { x: overlayData.scale || 1, y: overlayData.scale || 1 },
-                    rotation: overlayData.rotation || 0
-                }, true);
-
-                // Update symbols
-                const electricalLayer = editor.layerSystem.getLayer('electrical');
-                if (electricalLayer) {
-                    electricalLayer.content = {
-                        ...electricalLayer.content,
-                        symbols: symbolsData.devices || []
-                    };
-                    editor.layerSystem.markDirty('electrical');
-                }
-
-                // Update polygons
-                const roomLayer = editor.layerSystem.getLayer('room');
-                const maskLayer = editor.layerSystem.getLayer('mask');
-                const allPolygons = polygonsData.polygons || [];
-
-                if (roomLayer) {
-                    roomLayer.content = {
-                        ...roomLayer.content,
-                        rooms: allPolygons.filter((p: any) => p.type === 'room')
-                    };
-                    editor.layerSystem.markDirty('room');
-                }
-
-                if (maskLayer) {
-                    maskLayer.content = {
-                        ...maskLayer.content,
-                        masks: allPolygons.filter((p: any) => p.type === 'mask')
-                    };
-                    editor.layerSystem.markDirty('mask');
-                }
-
-                // Update furniture
-                const furnitureLayer = editor.layerSystem.getLayer('furniture');
-                const furnitureData = project.furniture || [];
-                if (furnitureLayer) {
-                    furnitureLayer.content = {
-                        ...furnitureLayer.content,
-                        furniture: furnitureData
-                    };
-                    editor.layerSystem.markDirty('furniture');
-                }
-
-                // Update layers state to trigger re-render
-                setLayers([...editor.layerSystem.getAllLayers()]);
-
-                // 💡 Update Cache Refs to prevent immediate re-save after reload
-                lastSavedPayloadRef.current = JSON.stringify({
-                    x: overlayData.x || 0,
-                    y: overlayData.y || 0,
-                    scale: overlayData.scale || 1,
-                    rotation: overlayData.rotation || 0,
-                    opacity: overlayData.opacity ?? 0.7,
-                    locked: !!overlayData.locked
-                });
-                lastSavedSymbolsRef.current = JSON.stringify(symbolsData.devices || []);
-                lastSavedPolygonsRef.current = JSON.stringify(allPolygons);
-                lastSavedFurnitureRef.current = JSON.stringify(furnitureData);
-
-                console.log('✅ Editor state synchronized with external changes');
-            } catch (error) {
-                console.error('Failed to reload project after external change:', error);
-            }
-        };
-
-        window.addEventListener('project-data-changed', handleProjectChange);
-        return () => {
-            window.removeEventListener('project-data-changed', handleProjectChange);
         };
     }, [editor]);
 

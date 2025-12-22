@@ -44,18 +44,18 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
             </div>
 
             {/* Layer Stack */}
-            <div className="flex-1 overflow-y-auto p-2 space-y-1 bg-slate-950/50">
+            <div className="flex-1 overflow-y-auto p-2 space-y-0.5 bg-slate-950/50">
                 {[...layers].sort((a, b) => b.zIndex - a.zIndex).map(l => (
                     <div
                         key={l.id}
-                        className={`group rounded-lg transition-all border ${activeLayerId === l.id && isEditMode
+                        className={`group rounded transition-all border ${activeLayerId === l.id && isEditMode
                             ? 'bg-red-900/20 border-red-500/50 shadow-[0_0_15px_rgba(220,38,38,0.1)_inset]'
                             : selectedIds.includes(l.id)
                                 ? 'bg-slate-800/80 border-blue-500/50 shadow-inner'
                                 : 'bg-transparent border-transparent hover:bg-slate-800/30'
                             }`}
                     >
-                        <div className="flex items-center p-2 space-x-1">
+                        <div className="flex items-center py-1 px-1.5 space-x-1">
                             {/* Edit/Active Toggle Icon */}
                             <button
                                 onClick={(e) => {
@@ -65,7 +65,7 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                                     }
                                     editor?.setActiveLayer(activeLayerId === l.id ? null : l.id);
                                 }}
-                                className={`px-1.5 h-7 flex items-center justify-center rounded-md transition-all text-[9px] font-bold ${
+                                className={`w-12 h-5 flex items-center justify-center rounded transition-all text-[8px] font-bold ${
                                     l.allowLayerEditing === false
                                         ? 'text-slate-700 cursor-not-allowed opacity-50'
                                         : activeLayerId === l.id
@@ -87,26 +87,29 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                                     e.stopPropagation();
                                     editor?.setLayerVisible(l.id, !l.visible);
                                 }}
-                                className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors ${l.visible ? 'text-blue-400 hover:bg-blue-500/10' : 'text-slate-600 hover:bg-slate-700'
+                                className={`w-10 h-5 flex items-center justify-center rounded transition-all text-[8px] font-bold ${
+                                    l.visible
+                                        ? 'text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-300'
+                                        : 'text-slate-500 bg-slate-800/50 hover:bg-slate-700 hover:text-slate-400'
                                     }`}
                             >
-                                {l.visible ? '👁️' : '🕶️'}
+                                {l.visible ? 'SHOW' : 'HIDE'}
                             </button>
 
-                            <div className="flex-1 min-w-0 p-1" onClick={() => {
+                            <div className="flex-1 min-w-0 px-1" onClick={() => {
                                 if (selectedIds.includes(l.id)) {
                                     setSelectedIds(prev => prev.filter(id => id !== l.id));
                                 } else {
                                     setSelectedIds(prev => [...prev, l.id]);
                                 }
                             }}>
-                                <div className={`text-xs font-bold truncate ${l.visible ? (activeLayerId === l.id ? 'text-red-400' : 'text-slate-200') : 'text-slate-600'}`}>
+                                <div className={`text-[10px] font-bold truncate leading-tight ${l.visible ? (activeLayerId === l.id ? 'text-red-400' : 'text-slate-200') : 'text-slate-600'}`}>
                                     {l.name}
                                 </div>
-                                <div className="text-[9px] text-slate-500 font-mono uppercase tracking-tighter flex items-center space-x-2">
+                                <div className="text-[8px] text-slate-500 font-mono uppercase tracking-tighter flex items-center space-x-1.5 leading-tight">
                                     <span>{l.type} layer</span>
-                                    {l.allowLayerEditing === false && <span className="text-[8px] bg-slate-800 px-1 rounded text-slate-600">🔒 LOCKED TO BASE</span>}
-                                    {l.allowLayerEditing === true && <span className="text-[8px] bg-emerald-900/30 px-1 rounded text-emerald-600">🔓 EDITABLE</span>}
+                                    {l.allowLayerEditing === false && <span className="text-[7px] bg-slate-800 px-0.5 rounded text-slate-600 font-bold">LOCKED TO BASE</span>}
+                                    {l.allowLayerEditing === true && <span className="text-[7px] bg-emerald-900/30 px-0.5 rounded text-emerald-600 font-bold">EDITABLE</span>}
                                 </div>
                             </div>
 
@@ -121,7 +124,6 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                                 {l.allowLayerEditing === false && (
                                     <div className="bg-slate-800/50 border border-slate-700 rounded p-2 text-[10px] text-slate-400">
                                         <div className="flex items-center gap-1 mb-1">
-                                            <span>🔒</span>
                                             <span className="font-bold">Layer Locked to Base</span>
                                         </div>
                                         <div className="text-[9px] text-slate-500">

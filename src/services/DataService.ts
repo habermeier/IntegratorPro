@@ -161,7 +161,14 @@ class DataService {
         throw new Error(`Failed to load project: ${response.statusText}`);
       }
 
-      this.cache = await response.json();
+      const projectData = await response.json();
+
+      // Apply migration if needed
+      if (projectData.devices && projectData.devices.length > 0) {
+        projectData.devices = this.migrateDaliDevices(projectData.devices);
+      }
+
+      this.cache = projectData;
       this.cacheTimestamp = now;
 
       // Populate DeviceRegistry from loaded data
@@ -327,7 +334,14 @@ class DataService {
         throw new Error(`Failed to load version: ${response.statusText}`);
       }
 
-      return await response.json();
+      const versionData = await response.json();
+
+      // Apply migration if needed
+      if (versionData.devices && versionData.devices.length > 0) {
+        versionData.devices = this.migrateDaliDevices(versionData.devices);
+      }
+
+      return versionData;
     } catch (error) {
       console.error('Error loading version:', error);
       throw error;
@@ -376,6 +390,66 @@ class DataService {
   setProjectId(projectId: string): void {
     this.projectId = projectId;
     this.clearCache();
+  }
+
+  /**
+   * Migrate legacy DALI devices to new Device structure
+   * @param legacyDevices Array of legacy device objects
+   * @returns Array of properly structured Device objects
+   */
+  private migrateDaliDevices(legacyDevices: any[]): Device[] {
+    if (!legacyDevices || legacyDevices.length === 0) {
+      return [];
+    }
+
+    return legacyDevices.map((legacy, index) => {
+      // Check if this is already a migrated Device (has required fields)
+      const isAlreadyMigrated =
+        legacy.deviceTypeId !== undefined &&
+        legacy.position !== undefined &&
+        typeof legacy.position === 'object' &&
+        legacy.position.x !== undefined &&
+        legacy.position.y !== undefined &&
+        legacy.layerId !== undefined;
+
+      if (isAlreadyMigrated) {
+        // Already in new format, return as-is
+        return legacy as Device;
+      }
+
+      // Legacy device detected - perform migration
+      console.log(`[DataService] Migrating legacy device ${legacy.id || index}`);
+
+      // Extract position from legacy x/y or position object
+      const position = {
+        x: legacy.x ?? legacy.position?.x ?? 0,
+        y: legacy.y ?? legacy.position?.y ?? 0
+      };
+
+      // Build migrated device
+      const migratedDevice: Device = {
+        id: legacy.id || `migrated-device-${Date.now()}-${index}`,
+        deviceTypeId: legacy.deviceTypeId || 'generic-lighting',
+        productId: legacy.productId || 'generic-legacy',
+        name: legacy.name || `Device ${index + 1}`,
+        position,
+        rotation: legacy.rotation ?? 0,
+        roomId: legacy.roomId ?? null,
+        layerId: legacy.layerId || 'lighting',
+        installationHeight: legacy.installationHeight ?? 2.4,
+        networkConnections: legacy.networkConnections || [],
+        lcpAssignment: legacy.lcpAssignment ?? null,
+        metadata: {
+          // Preserve all legacy fields in metadata for reference
+          ...legacy,
+          _migratedFrom: 'DaliDevice',
+          _migrationTimestamp: Date.now()
+        },
+        createdAt: legacy.createdAt ?? Date.now()
+      };
+
+      return migratedDevice;
+    });
   }
 }
 

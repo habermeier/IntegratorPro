@@ -12,10 +12,12 @@ import { Device } from '../models/Device';
 /**
  * DeviceRegistry singleton class
  * Manages the in-memory collection of all device instances
+ * Implements EventEmitter pattern for reactive UI updates
  */
 export class DeviceRegistry {
   private static instance: DeviceRegistry;
   private devices: Map<string, Device>;
+  private eventListeners: Map<string, Function[]> = new Map();
 
   /**
    * Private constructor (singleton pattern)
@@ -40,6 +42,7 @@ export class DeviceRegistry {
    */
   public addDevice(device: Device): void {
     this.devices.set(device.id, device);
+    this.emit('change', { type: 'add', device });
   }
 
   /**
@@ -47,7 +50,11 @@ export class DeviceRegistry {
    * @param deviceId - ID of device to remove
    */
   public removeDevice(deviceId: string): void {
+    const device = this.devices.get(deviceId);
     this.devices.delete(deviceId);
+    if (device) {
+      this.emit('change', { type: 'remove', deviceId, device });
+    }
   }
 
   /**
@@ -89,7 +96,9 @@ export class DeviceRegistry {
    * Clear all devices from the registry
    */
   public clearDevices(): void {
+    const deviceCount = this.devices.size;
     this.devices.clear();
+    this.emit('change', { type: 'clear', deviceCount });
   }
 
   /**
@@ -124,6 +133,7 @@ export class DeviceRegistry {
     // Merge updates into existing device
     const updatedDevice = { ...device, ...updates, id: device.id }; // Preserve ID
     this.devices.set(deviceId, updatedDevice);
+    this.emit('change', { type: 'update', deviceId, device: updatedDevice, updates });
     return true;
   }
 
@@ -133,8 +143,43 @@ export class DeviceRegistry {
    * @param devices - Array of devices to set
    */
   public setDevices(devices: Device[]): void {
-    this.clearDevices();
-    devices.forEach(device => this.addDevice(device));
+    const oldCount = this.devices.size;
+    this.devices.clear();
+    devices.forEach(device => this.devices.set(device.id, device));
+    this.emit('change', { type: 'set', devices, oldCount, newCount: devices.length });
+  }
+
+  /**
+   * Subscribe to registry events
+   * @param event - Event name to listen for
+   * @param callback - Callback function to execute when event is emitted
+   */
+  public on(event: string, callback: Function): void {
+    if (!this.eventListeners.has(event)) {
+      this.eventListeners.set(event, []);
+    }
+    this.eventListeners.get(event)?.push(callback);
+  }
+
+  /**
+   * Unsubscribe from registry events
+   * @param event - Event name to stop listening to
+   * @param callback - Callback function to remove
+   */
+  public off(event: string, callback: Function): void {
+    const listeners = this.eventListeners.get(event);
+    if (listeners) {
+      this.eventListeners.set(event, listeners.filter(cb => cb !== callback));
+    }
+  }
+
+  /**
+   * Emit an event to all subscribers
+   * @param event - Event name to emit
+   * @param data - Data to pass to event listeners
+   */
+  private emit(event: string, data: any): void {
+    this.eventListeners.get(event)?.forEach(cb => cb(data));
   }
 }
 
