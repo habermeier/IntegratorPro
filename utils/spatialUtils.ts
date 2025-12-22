@@ -370,16 +370,33 @@ export function isPointInPolygon(point: Vector2, polygon: Vector2[]): boolean {
 }
 
 /**
+ * Formats a room type string into a human-readable label.
+ */
+export function formatRoomType(type: string): string {
+    const map: { [key: string]: string } = {
+        'hallway': 'Hallway',
+        'closet': 'Closet',
+        'bedroom': 'Bedroom',
+        'bathroom': 'Bathroom',
+        'garage': 'Garage',
+        'open': 'Open Area',
+        'other': '' // If 'other', we'll just show the name
+    };
+    return map[type] || (type ? type.charAt(0).toUpperCase() + type.slice(1) : '');
+}
+
+/**
  * Finds the room containing a given point.
  * Checks rooms in reverse order (last-to-first) to prioritize most recently created rooms.
- * This ensures proper "on top" behavior when rooms overlap.
- * Returns the room name or 'external' if not in any room.
+ * Returns the room name and type (e.g. 'Primary Bedroom') or 'external' if not in any room.
  */
 export function findRoomAt(point: Vector2, rooms: Room[]): string {
     // Check in reverse order - most recently added room is checked first
     for (let i = rooms.length - 1; i >= 0; i--) {
         if (isPointInPolygon(point, rooms[i].points)) {
-            return rooms[i].name;
+            const room = rooms[i];
+            const typeLabel = formatRoomType(room.roomType);
+            return typeLabel ? `${room.name} ${typeLabel}` : room.name;
         }
     }
     return 'external';
