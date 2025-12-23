@@ -51,6 +51,13 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
                     >
                         ↪️
                     </button>
+                    <button
+                        onClick={() => window.dispatchEvent(new CustomEvent('test-purge-polygons'))}
+                        className="p-2 hover:bg-red-900/40 rounded-md text-red-500 hover:text-red-400 transition-colors text-lg"
+                        title="DEBUG: Purge All Polygons (Test Data Protection)"
+                    >
+                        🗑️
+                    </button>
                 </div>
             </div>
 

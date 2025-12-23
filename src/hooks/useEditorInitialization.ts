@@ -21,6 +21,7 @@ export interface EditorInitCallbacks {
   setIsEditMode: (mode: boolean) => void;
   setFastZoomMultiplier: (multiplier: number) => void;
   setUnitPreference: (units: 'METRIC' | 'IMPERIAL') => void;
+  setDataLossThreshold: (threshold: number) => void;
   onCursorMove: (x: number, y: number) => void;
   onKeydown: (key: string) => void;
   onCalibrationNeeded: (data: any) => void;
@@ -318,6 +319,10 @@ export function useEditorInitialization(
             callbacks.setUnitPreference(settingsData.units);
             localStorage.setItem('integrator-pro-units', settingsData.units);
             window.dispatchEvent(new Event('storage-units-changed'));
+          }
+          if (settingsData.dataLossThreshold !== undefined) {
+            callbacks.setDataLossThreshold(settingsData.dataLossThreshold);
+            localStorage.setItem('integrator-pro-data-loss-threshold', settingsData.dataLossThreshold.toString());
           }
         }
 

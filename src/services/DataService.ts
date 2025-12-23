@@ -54,6 +54,7 @@ export interface DaliDevice {
 export interface Settings {
   units: 'IMPERIAL' | 'METRIC';
   fastZoomMultiplier?: number;
+  dataLossThreshold?: number; // 0.0 to 1.0 (e.g., 0.1 for 10%)
   [key: string]: unknown;
 }
 
@@ -105,6 +106,7 @@ class DataService {
   private projectId: string = '270-boll-ave';
   private cache: ProjectData | null = null;
   private cacheTimestamp: number | null = null;
+  private versionToken: string | null = null;
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
   private baseUrl: string = '/api';
 
@@ -138,8 +140,8 @@ class DataService {
 
     // Check if cache is valid
     const cacheValid = this.cache &&
-                       this.cacheTimestamp &&
-                       (now - this.cacheTimestamp < this.CACHE_TTL);
+      this.cacheTimestamp &&
+      (now - this.cacheTimestamp < this.CACHE_TTL);
 
     if (!forceReload && cacheValid) {
       console.log('[DataService] Using cached project data (TTL valid)');
@@ -162,6 +164,12 @@ class DataService {
       }
 
       const projectData = await response.json();
+
+      // Capture version token
+      if (projectData.versionToken) {
+        this.versionToken = projectData.versionToken;
+        console.log(`[DataService] Project version token: ${this.versionToken}`);
+      }
 
       // Apply migration if needed
       if (projectData.devices && projectData.devices.length > 0) {
@@ -187,7 +195,7 @@ class DataService {
    * Save entire project data with automatic versioning
    * @param data Complete project data to save
    */
-  async saveProject(data: ProjectData): Promise<void> {
+  async saveProject(data: ProjectData, force: boolean = false): Promise<void> {
     try {
       // Get devices from DeviceRegistry
       const deviceRegistry = DeviceRegistry.getInstance();
@@ -207,11 +215,32 @@ class DataService {
       const response = await fetch(`${this.baseUrl}/project/${this.projectId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(projectData)
+        body: JSON.stringify({
+          ...projectData,
+          versionToken: this.versionToken, // Include token for optimistic locking
+          force // Force bypass for user-confirmed overwrites
+        })
       });
+
+      if (response.status === 409) {
+        const errorData = await response.json();
+        console.warn('[DataService] Save conflict detected:', errorData);
+        // Dispatch event for UI to show conflict resolution
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('project-collision-detected', {
+            detail: errorData
+          }));
+        }
+        throw new Error('VERSION_CONFLICT');
+      }
 
       if (!response.ok) {
         throw new Error(`Failed to save project: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      if (result.versionToken) {
+        this.versionToken = result.versionToken;
       }
 
       this.cache = projectData;
@@ -361,7 +390,7 @@ class DataService {
    * List all available projects
    * @returns Array of project summaries
    */
-  async listProjects(): Promise<Array<{id: string; name: string; status: string; modified: string}>> {
+  async listProjects(): Promise<Array<{ id: string; name: string; status: string; modified: string }>> {
     try {
       const response = await fetch(`${this.baseUrl}/projects`);
 
@@ -390,6 +419,7 @@ class DataService {
   clearCache(): void {
     this.cache = null;
     this.cacheTimestamp = null;
+    this.versionToken = null;
     console.log('[DataService] Cache cleared');
   }
 
@@ -448,6 +478,7 @@ class DataService {
         installationHeight: legacy.installationHeight ?? 2.4,
         networkConnections: legacy.networkConnections || [],
         lcpAssignment: legacy.lcpAssignment ?? null,
+        busAssignment: legacy.busAssignment ?? null,
         metadata: {
           // Preserve all legacy fields in metadata for reference
           ...legacy,

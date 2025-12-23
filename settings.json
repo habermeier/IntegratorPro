@@ -1,4 +1,5 @@
 {
   "units": "IMPERIAL",
-  "fastZoomMultiplier": 3
+  "fastZoomMultiplier": 3,
+  "dataLossThreshold": 0.5
 }

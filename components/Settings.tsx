@@ -26,6 +26,10 @@ export const Settings: React.FC = () => {
         const saved = localStorage.getItem('integrator-pro-snap-to-wall');
         return saved ? saved === 'true' : true;
     });
+    const [dataLossThreshold, setDataLossThreshold] = useState<number>(() => {
+        const saved = localStorage.getItem('integrator-pro-data-loss-threshold');
+        return saved ? parseFloat(saved) : 0.5;
+    });
     const [isLoading, setIsLoading] = useState(true);
     const [isSyncing, setIsSyncing] = useState(true);
     const [hasSyncError, setHasSyncError] = useState(false);
@@ -54,6 +58,10 @@ export const Settings: React.FC = () => {
                         setSnapToWallEnabled(data.snapToWallEnabled);
                         localStorage.setItem('integrator-pro-snap-to-wall', data.snapToWallEnabled.toString());
                     }
+                    if (data.dataLossThreshold !== undefined) {
+                        setDataLossThreshold(data.dataLossThreshold);
+                        localStorage.setItem('integrator-pro-data-loss-threshold', data.dataLossThreshold.toString());
+                    }
 
                     // Dispatch events to sync other components
                     window.dispatchEvent(new Event('storage-units-changed'));
@@ -74,7 +82,7 @@ export const Settings: React.FC = () => {
         loadSettings();
     }, []);
 
-    const saveSettings = async (newUnits: UnitSystem, newMultiplier: number, newSnapToWall: boolean) => {
+    const saveSettings = async (newUnits: UnitSystem, newMultiplier: number, newSnapToWall: boolean, newThreshold: number) => {
         // Prevent saving if we haven't synced with server yet to avoid overwriting with stale local data
         if (isSyncing) return;
 
@@ -86,6 +94,7 @@ export const Settings: React.FC = () => {
                     units: newUnits,
                     fastZoomMultiplier: newMultiplier,
                     snapToWallEnabled: newSnapToWall,
+                    dataLossThreshold: newThreshold,
                     lastUpdated: Date.now()
                 })
             });
@@ -98,21 +107,28 @@ export const Settings: React.FC = () => {
     const handleUnitChange = (newUnits: UnitSystem) => {
         setUnits(newUnits);
         localStorage.setItem('integrator-pro-units', newUnits);
-        saveSettings(newUnits, fastZoomMultiplier, snapToWallEnabled);
+        saveSettings(newUnits, fastZoomMultiplier, snapToWallEnabled, dataLossThreshold);
         window.dispatchEvent(new Event('storage-units-changed'));
     };
 
     const handleMultiplierChange = (newMultiplier: number) => {
         setFastZoomMultiplier(newMultiplier);
         localStorage.setItem('integrator-pro-fast-zoom-multiplier', newMultiplier.toString());
-        saveSettings(units, newMultiplier, snapToWallEnabled);
+        saveSettings(units, newMultiplier, snapToWallEnabled, dataLossThreshold);
         window.dispatchEvent(new Event('storage-settings-changed'));
     };
 
     const handleSnapToWallChange = (enabled: boolean) => {
         setSnapToWallEnabled(enabled);
         localStorage.setItem('integrator-pro-snap-to-wall', enabled.toString());
-        saveSettings(units, fastZoomMultiplier, enabled);
+        saveSettings(units, fastZoomMultiplier, enabled, dataLossThreshold);
+        window.dispatchEvent(new Event('storage-settings-changed'));
+    };
+
+    const handleThresholdChange = (threshold: number) => {
+        setDataLossThreshold(threshold);
+        localStorage.setItem('integrator-pro-data-loss-threshold', threshold.toString());
+        saveSettings(units, fastZoomMultiplier, snapToWallEnabled, threshold);
         window.dispatchEvent(new Event('storage-settings-changed'));
     };
 
@@ -283,6 +299,40 @@ export const Settings: React.FC = () => {
                                                 <span className="w-12 text-center py-1 bg-slate-800 rounded-md text-blue-400 font-mono font-bold text-sm border border-slate-700">45°</span>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+
+                                {/* Data Protection Settings */}
+                                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <div>
+                                            <h4 className="text-lg font-semibold text-white">Data Protection</h4>
+                                            <p className="text-slate-400 text-sm mt-1">
+                                                Configure safeguards against accidental data loss.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-sm font-medium text-slate-300">Data Loss Threshold (%)</label>
+                                            <div className="flex items-center space-x-3">
+                                                <input
+                                                    type="range"
+                                                    min="0.05"
+                                                    max="0.9"
+                                                    step="0.05"
+                                                    value={dataLossThreshold}
+                                                    onChange={(e) => handleThresholdChange(parseFloat(e.target.value))}
+                                                    className="w-48 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                                />
+                                                <span className="w-16 text-center py-1 bg-slate-800 rounded-md text-blue-400 font-mono font-bold text-sm border border-slate-700">
+                                                    {(dataLossThreshold * 100).toFixed(0)}%
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <p className="text-[10px] text-slate-500 italic">
+                                            If a save would delete more than this percentage of items, a confirmation warning will appear.
+                                        </p>
                                     </div>
                                 </div>
                             </div>

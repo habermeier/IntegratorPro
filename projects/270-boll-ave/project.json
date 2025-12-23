@@ -1,15 +1,15 @@
 {
   "version": "1.0",
-  "timestamp": "2025-12-23T05:52:03.049Z",
+  "timestamp": "2025-12-22T19:34:44.732Z",
   "metadata": {
     "name": "270 Boll Ave",
     "status": "Draft",
-    "created": "2025-12-23T05:52:03.049Z",
-    "modified": "2025-12-23T05:52:03.049Z"
+    "created": "2025-12-21T17:05:55.950Z",
+    "modified": "2025-12-22T19:34:44.658Z"
   },
   "floorPlan": {
     "scale": {
-      "scaleFactor": 19.79520143873257
+      "scaleFactor": 136.68962867615474
     },
     "layout": [
       {
@@ -477,8 +477,8 @@
             "y": 1028.3390100610966
           },
           {
-            "x": 61.39612562095806,
-            "y": 1025.2844653214352
+            "x": 60.90713776571215,
+            "y": 1026.0635902599572
           },
           {
             "x": 56.03716004778846,
@@ -1101,6 +1101,43 @@
         "name": "Office",
         "roomType": "hallway",
         "color": 5105024,
+        "type": "room"
+      },
+      {
+        "id": "f1wy65",
+        "points": [
+          {
+            "x": 60.90713776571215,
+            "y": 1026.0635902599572
+          },
+          {
+            "x": -1702.0856723540167,
+            "y": 1033.9950527924761
+          },
+          {
+            "x": -1706.9533370914485,
+            "y": 109.90451242715858
+          },
+          {
+            "x": -1872.6111104596764,
+            "y": 106.44416360441619
+          },
+          {
+            "x": -1870.948613072637,
+            "y": -6.605658714261153
+          },
+          {
+            "x": 50.590245917211575,
+            "y": -4.129077927273727
+          },
+          {
+            "x": 56.6368993813071,
+            "y": 294.33010092377094
+          }
+        ],
+        "name": "Patio",
+        "roomType": "other",
+        "color": 15059277,
         "type": "room"
       },
       {
@@ -3835,12 +3872,114 @@
       "locked": true
     }
   },
-  "furniture": [],
+  "furniture": [
+    {
+      "id": "furn-1766345492947",
+      "type": "furniture",
+      "category": "furniture",
+      "x": 0,
+      "y": 0,
+      "width": 1.2191999999999998,
+      "length": 0.6095999999999999,
+      "rotation": 0,
+      "scale": 1,
+      "color": 8947848,
+      "isBlocking": true,
+      "room": "Patio",
+      "label": "Table",
+      "createdAt": "2025-12-21T19:31:32.947Z",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": "furn-1766345527164",
+      "type": "furniture",
+      "category": "furniture",
+      "x": 0,
+      "y": 0,
+      "width": 1.2191999999999998,
+      "length": 0.6095999999999999,
+      "rotation": 0,
+      "scale": 1,
+      "color": 8947848,
+      "isBlocking": true,
+      "room": "Patio",
+      "label": "Table",
+      "createdAt": "2025-12-21T19:32:07.164Z",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": "furn-1766345618632",
+      "type": "furniture",
+      "category": "furniture",
+      "x": 0,
+      "y": 0,
+      "width": 1.2191999999999998,
+      "length": 0.6095999999999999,
+      "rotation": 0,
+      "scale": 1,
+      "color": 8947848,
+      "isBlocking": true,
+      "room": "Patio",
+      "label": "Table",
+      "createdAt": "2025-12-21T19:33:38.632Z",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": "furn-1766345655365",
+      "type": "furniture",
+      "category": "furniture",
+      "x": 0,
+      "y": 0,
+      "width": 1.2191999999999998,
+      "length": 0.6095999999999999,
+      "rotation": 0,
+      "scale": 1,
+      "color": 8947848,
+      "isBlocking": true,
+      "room": "Patio",
+      "label": "Verification Table",
+      "createdAt": "2025-12-21T19:34:15.365Z",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": "furn-1766425168981",
+      "type": "furniture",
+      "category": "furniture",
+      "x": -1467.3788890090327,
+      "y": -242.71439584280827,
+      "width": 24,
+      "length": 24,
+      "rotation": 0,
+      "scale": 1,
+      "color": 11184810,
+      "isBlocking": false,
+      "room": "Office 2",
+      "label": "Chair",
+      "createdAt": "2025-12-22T17:39:28.981Z",
+      "position": {
+        "x": -1467.3788890090327,
+        "y": -242.71439584280827
+      }
+    }
+  ],
   "devices": [],
   "cables": [],
   "lcps": [],
   "settings": {
     "units": "IMPERIAL",
-    "fastZoomMultiplier": 3
+    "fastZoomMultiplier": 3,
+    "dataLossThreshold": 0.5
   }
 }

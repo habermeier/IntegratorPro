@@ -257,7 +257,8 @@ const SETTINGS_OVERRIDE_FILE = path.join(__dirname, 'settings.local.json');
 if (!fs.existsSync(SETTINGS_FILE)) {
     fs.writeFileSync(SETTINGS_FILE, JSON.stringify({
         units: 'IMPERIAL',
-        fastZoomMultiplier: 3
+        fastZoomMultiplier: 3,
+        dataLossThreshold: 0.5
     }, null, 2));
 }
 
@@ -297,7 +298,7 @@ createDataEndpoints('/api/dali-devices', DALI_DEVICES_FILE, DALI_DEVICES_OVERRID
 // PROJECT DATA ENDPOINTS (Monolithic Pattern with Versioning)
 // ============================================================================
 
-// GET /api/project/:projectId - Load entire project
+// GET /api/project/:projectId - Load entire project with version token
 app.get('/api/project/:projectId', (req, res) => {
     try {
         const projectId = req.params.projectId;
@@ -307,22 +308,48 @@ app.get('/api/project/:projectId', (req, res) => {
             return res.status(404).json({ error: `Project ${projectId} not found` });
         }
 
-        console.log(`Loading project: ${projectId}`);
-        const data = fs.readFileSync(projectFile, 'utf8');
-        res.json(JSON.parse(data));
+        const stats = fs.statSync(projectFile);
+        const versionToken = stats.mtimeMs.toString();
+
+        console.log(`Loading project: ${projectId} [Version: ${versionToken}]`);
+        const data = JSON.parse(fs.readFileSync(projectFile, 'utf8'));
+
+        res.json({
+            ...data,
+            versionToken
+        });
     } catch (err) {
         console.error('Error reading project data:', err);
         res.status(500).json({ error: 'Failed to read project data' });
     }
 });
 
-// POST /api/project/:projectId - Save entire project with auto-versioning
+// POST /api/project/:projectId - Save entire project with auto-versioning and conflict check
 app.post('/api/project/:projectId', (req, res) => {
     try {
         const projectId = req.params.projectId;
         const projectDir = path.join(__dirname, 'projects', projectId);
         const projectFile = path.join(projectDir, 'project.json');
         const historyDir = path.join(projectDir, '.history');
+
+        // Versioning check (if exists)
+        if (fs.existsSync(projectFile)) {
+            const stats = fs.statSync(projectFile);
+            const currentToken = stats.mtimeMs.toString();
+            const providedToken = req.body.versionToken || req.headers['x-version-token'];
+
+            // Allow bypass for migrations or specific force-saves
+            const isForceSave = req.body.force === true;
+
+            if (providedToken && providedToken !== currentToken && !isForceSave) {
+                console.warn(`[CONFLICT] Project ${projectId} version mismatch. Client: ${providedToken}, Server: ${currentToken}`);
+                return res.status(409).json({
+                    error: 'Version mismatch (Optimistic Lock Conflict)',
+                    serverToken: currentToken,
+                    clientToken: providedToken
+                });
+            }
+        }
 
         // Ensure directories exist
         if (!fs.existsSync(projectDir)) {
@@ -341,14 +368,25 @@ app.post('/api/project/:projectId', (req, res) => {
         }
 
         // Step 2: Write new project file
+        // Strip the versionToken before saving if it's in the body, so it doesn't nest
+        const { versionToken, ...cleanData } = req.body;
         const projectData = {
-            ...req.body,
+            ...cleanData,
             timestamp: new Date().toISOString()
         };
         fs.writeFileSync(projectFile, JSON.stringify(projectData, null, 2));
-        console.log(`✅ Project ${projectId} saved successfully`);
 
-        res.json({ success: true, savedTo: projectFile });
+        // Get new token for the client
+        const newStats = fs.statSync(projectFile);
+        const newToken = newStats.mtimeMs.toString();
+
+        console.log(`✅ Project ${projectId} saved successfully [New Version: ${newToken}]`);
+
+        res.json({
+            success: true,
+            savedTo: projectFile,
+            versionToken: newToken
+        });
     } catch (err) {
         console.error('Error saving project data:', err);
         res.status(500).json({ error: 'Failed to save project data' });

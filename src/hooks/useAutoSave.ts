@@ -18,6 +18,7 @@ export interface AutoSaveHookReturn {
   debouncedSaveFurniture: () => void;
   debouncedSavePolygons: () => void;
   debouncedSaveCables: () => void;
+  resetAnchors: () => void;
 }
 
 export function useAutoSave(
@@ -27,13 +28,17 @@ export function useAutoSave(
   lastSavedSymbolsRef: React.MutableRefObject<string>,
   lastSavedPolygonsRef: React.MutableRefObject<string>,
   lastSavedFurnitureRef: React.MutableRefObject<string>,
-  lastSavedCablesRef: React.MutableRefObject<string>
+  lastSavedCablesRef: React.MutableRefObject<string>,
+  dataLossThreshold: number = 0.5
 ): AutoSaveHookReturn {
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const symbolsSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const polygonsSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const furnitureSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const cablesSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Anchor counts for data loss heuristics (Prevents incremental bypass)
+  const anchorCountRef = useRef<number>(-1);
 
   // Debounced Save (Direct Editor Access)
   const debouncedSave = useCallback(() => {
@@ -160,6 +165,15 @@ export function useAutoSave(
       const editor = editorInstanceRef.current;
       if (!editor) return;
 
+      const lastCountObj = JSON.parse(lastSavedPolygonsRef.current || '[]');
+      const lastCount = Array.isArray(lastCountObj) ? lastCountObj.length : 0;
+
+      // Initialize anchor count if not set
+      if (anchorCountRef.current === -1) {
+        anchorCountRef.current = lastCount;
+      }
+      const referenceCount = anchorCountRef.current;
+
       const roomLayer = editor.layerSystem.getLayer('room');
       const maskLayer = editor.layerSystem.getLayer('mask');
 
@@ -177,8 +191,28 @@ export function useAutoSave(
 
       const polygonsStr = JSON.stringify(allPolygons);
 
+      // 💡 Data Loss Heuristic: If we lose more than the threshold relative to session start, warn
+      // This prevents "Slow death by incremental saves"
+      const dropRatio = allPolygons.length / referenceCount;
+      const isMassiveLoss = dropRatio < (1 - dataLossThreshold) && referenceCount > 5;
+
+      if (isMassiveLoss) {
+        console.warn(`[useAutoSave] Massive data loss detected! From anchor ${referenceCount} to ${allPolygons.length}.`);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('massive-change-detected', {
+            detail: {
+              type: 'polygons',
+              lastCount,
+              currentCount: allPolygons.length,
+              data: allPolygons
+            }
+          }));
+        }
+        return; // Block auto-save, wait for manual override or resolution
+      }
+
       // 💡 Safety Guard: If new state is empty but last saved had data, prevent overwrite
-      // This protects against initialization race conditions where the layer might be temporarily empty
+      // This protects against initialization race conditions (checked after massive loss for explicit UI to work)
       if (allPolygons.length === 0 && lastSavedPolygonsRef.current.length > 2) {
         console.warn('⚠️ Prevented auto-save of empty polygons (Possible initialization race)');
         return;
@@ -230,11 +264,17 @@ export function useAutoSave(
     }, 1200); // Similar debounce to furniture
   }, [editorInstanceRef, isInitializedRef, lastSavedCablesRef]);
 
+  const resetAnchors = useCallback(() => {
+    console.log('[useAutoSave] Anchors reset');
+    anchorCountRef.current = -1;
+  }, []);
+
   return {
     debouncedSave,
     debouncedSaveSymbols,
     debouncedSaveFurniture,
     debouncedSavePolygons,
-    debouncedSaveCables
+    debouncedSaveCables,
+    resetAnchors
   };
 }
