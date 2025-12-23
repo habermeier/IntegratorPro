@@ -86,33 +86,107 @@ export const ScaleRuler: React.FC<ScaleRulerProps> = ({ editor }) => {
     return (
         <div className="absolute bottom-10 left-20 z-40 pointer-events-none select-none flex flex-col items-start gap-1">
             {/* L-Shape Ruler */}
-            <div className="relative" style={{ width: rulerData.widthPx + 20, height: rulerData.widthPx + 20 }}>
-                <svg width={rulerData.widthPx + 20} height={rulerData.widthPx + 20} className="drop-shadow-lg">
+            <div className="relative" style={{ width: rulerData.widthPx + 60, height: rulerData.widthPx + 60 }}>
+                <svg width={rulerData.widthPx + 60} height={rulerData.widthPx + 60} style={{ overflow: 'visible' }} className="drop-shadow-2xl">
+                    <defs>
+                        {/* Gradient for X-axis: Fades out vertically upwards */}
+                        <linearGradient id="xGlow" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#020617" stopOpacity="0" />
+                            <stop offset="60%" stopColor="#020617" stopOpacity="0.4" />
+                            <stop offset="100%" stopColor="#020617" stopOpacity="0.9" />
+                        </linearGradient>
+
+                        {/* Gradient for Y-axis: Fades out horizontally to the right */}
+                        <linearGradient id="yGlow" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stopColor="#020617" stopOpacity="0.9" />
+                            <stop offset="40%" stopColor="#020617" stopOpacity="0.4" />
+                            <stop offset="100%" stopColor="#020617" stopOpacity="0" />
+                        </linearGradient>
+                    </defs>
+
+                    {/* Background Axis Glows */}
+                    {/* X-Axis Glow: Narrow strip along the bottom line */}
+                    <rect
+                        x="-20" y={rulerData.widthPx - 30}
+                        width={rulerData.widthPx + 60}
+                        height="60"
+                        fill="url(#xGlow)"
+                        style={{ pointerEvents: 'none' }}
+                    />
+                    {/* Y-Axis Glow: Narrow strip along the left line */}
+                    <rect
+                        x="-30" y="-20"
+                        width="60"
+                        height={rulerData.widthPx + 60}
+                        fill="url(#yGlow)"
+                        style={{ pointerEvents: 'none' }}
+                    />
+
                     {/* X-Axis (Bottom) */}
                     <path
                         d={`M 0 ${rulerData.widthPx} L ${rulerData.widthPx} ${rulerData.widthPx}`}
                         stroke="white"
-                        strokeWidth="2"
+                        strokeWidth="2.5"
+                        strokeLinecap="square"
                     />
-                    {/* X Ticks */}
-                    <line x1="0" y1={rulerData.widthPx - 8} x2="0" y2={rulerData.widthPx + 8} stroke="white" strokeWidth="2" />
-                    <line x1={rulerData.widthPx / 2} y1={rulerData.widthPx - 4} x2={rulerData.widthPx / 2} y2={rulerData.widthPx} stroke="white" strokeWidth="1" />
-                    <line x1={rulerData.widthPx} y1={rulerData.widthPx - 8} x2={rulerData.widthPx} y2={rulerData.widthPx + 8} stroke="white" strokeWidth="2" />
+                    {/* X Ticks (4 segments = 5 ticks) */}
+                    {[0, 0.25, 0.5, 0.75, 1].map((p, i) => (
+                        <line
+                            key={`xt-${i}`}
+                            x1={rulerData.widthPx * p}
+                            y1={rulerData.widthPx - (i % 2 === 0 ? 10 : 5)}
+                            x2={rulerData.widthPx * p}
+                            y2={rulerData.widthPx + (i % 2 === 0 ? 10 : 0)}
+                            stroke="white"
+                            strokeWidth={i % 2 === 0 ? 2.5 : 1.5}
+                        />
+                    ))}
 
                     {/* Y-Axis (Left) */}
                     <path
                         d={`M 0 0 L 0 ${rulerData.widthPx}`}
                         stroke="white"
-                        strokeWidth="2"
+                        strokeWidth="2.5"
+                        strokeLinecap="square"
                     />
-                    {/* Y Ticks */}
-                    <line x1="-8" y1="0" x2="8" y2="0" stroke="white" strokeWidth="2" />
-                    <line x1="-4" y1={rulerData.widthPx / 2} x2="0" y2={rulerData.widthPx / 2} stroke="white" strokeWidth="1" />
-                    <line x1="-8" y1={rulerData.widthPx} x2="8" y2={rulerData.widthPx} stroke="white" strokeWidth="2" />
+                    {/* Y Ticks (4 segments = 5 ticks) */}
+                    {[0, 0.25, 0.5, 0.75, 1].map((p, i) => (
+                        <line
+                            key={`yt-${i}`}
+                            x1={i % 2 === 0 ? -10 : -5}
+                            y1={rulerData.widthPx * (1 - p)}
+                            x2={i % 2 === 0 ? 10 : 0}
+                            y2={rulerData.widthPx * (1 - p)}
+                            stroke="white"
+                            strokeWidth={i % 2 === 0 ? 2.5 : 1.5}
+                        />
+                    ))}
 
                     {/* Labels */}
-                    <text x={rulerData.widthPx + 4} y={rulerData.widthPx + 14} fill="white" fontSize="10" fontWeight="bold" textAnchor="end">{rulerData.label}</text>
-                    <text x="12" y="10" fill="white" fontSize="10" fontWeight="bold" transform={`rotate(-90, 12, 10)`}>{rulerData.label}</text>
+                    <text
+                        x={rulerData.widthPx + 10}
+                        y={rulerData.widthPx + 18}
+                        fill="white"
+                        fontSize="12"
+                        fontWeight="900"
+                        textAnchor="start"
+                        className="uppercase tracking-widest"
+                        style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
+                    >
+                        {rulerData.label}
+                    </text>
+                    <text
+                        x="12"
+                        y="12"
+                        fill="white"
+                        fontSize="12"
+                        fontWeight="900"
+                        textAnchor="start"
+                        className="uppercase tracking-widest"
+                        style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
+                    >
+                        {rulerData.label}
+                    </text>
                 </svg>
             </div>
         </div>

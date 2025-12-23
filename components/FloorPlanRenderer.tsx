@@ -257,6 +257,28 @@ export const FloorPlanRenderer: React.FC = () => {
         window.location.reload();
     };
 
+    const handleKeepServerVersion = async () => {
+        try {
+            console.log('🔄 Keeping server version, reloading data...');
+
+            // Dismiss modals first
+            setConflictData(null);
+            setMassiveChangeData(null);
+
+            // Trigger project reload from server (this will update editor state and refs)
+            window.dispatchEvent(new CustomEvent('project-data-changed'));
+
+            // Reset anchors to match the reloaded state
+            resetAnchors();
+
+            console.log('✅ Server version restored, in-memory changes discarded.');
+        } catch (err) {
+            console.error('Failed to reload server version:', err);
+            alert('Reload failed. Refreshing page...');
+            window.location.reload();
+        }
+    };
+
     const cursorLabel = React.useMemo(() => {
         if (isAltPressed) return 'SELECT';
         if (isPanning || activeTool === 'pan') return 'PAN';
@@ -413,10 +435,10 @@ export const FloorPlanRenderer: React.FC = () => {
                         </p>
                         <div className="grid grid-cols-2 gap-4">
                             <button
-                                onClick={() => setMassiveChangeData(null)}
+                                onClick={handleKeepServerVersion}
                                 className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold transition-all border border-slate-700"
                             >
-                                Keep My Work
+                                Undo & Reload
                             </button>
                             <button
                                 onClick={handleForceSave}
