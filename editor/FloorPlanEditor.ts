@@ -56,6 +56,7 @@ export class FloorPlanEditor {
 
     public set pixelsMeter(val: number) {
         this.pixelsPerMeter = val;
+        this.emit('scale-changed', val);
     }
 
     constructor(container: HTMLElement) {
