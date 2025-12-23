@@ -1,0 +1,39 @@
+{
+  "version": "1.0",
+  "timestamp": "2025-12-23T05:47:25.672Z",
+  "metadata": {
+    "name": "270 Boll Ave",
+    "status": "Draft",
+    "created": "2025-12-21T17:05:55.950Z",
+    "modified": "2025-12-23T05:47:25.630Z"
+  },
+  "floorPlan": {
+    "scale": {
+      "scaleFactor": 136.68962867615474
+    },
+    "layout": [
+      {
+        "id": "map-calibration",
+        "type": "CALIBRATION",
+        "pxPerMeter": 51.30481752244078
+      }
+    ],
+    "polygons": [],
+    "electricalOverlay": {
+      "scale": 1.6900000000000006,
+      "rotation": -0.017453292519943295,
+      "x": -92,
+      "y": 376,
+      "opacity": 0.7,
+      "locked": true
+    }
+  },
+  "furniture": [],
+  "devices": [],
+  "cables": [],
+  "lcps": [],
+  "settings": {
+    "units": "IMPERIAL",
+    "fastZoomMultiplier": 3
+  }
+}

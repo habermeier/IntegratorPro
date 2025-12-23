@@ -177,6 +177,13 @@ export function useAutoSave(
 
       const polygonsStr = JSON.stringify(allPolygons);
 
+      // 💡 Safety Guard: If new state is empty but last saved had data, prevent overwrite
+      // This protects against initialization race conditions where the layer might be temporarily empty
+      if (allPolygons.length === 0 && lastSavedPolygonsRef.current.length > 2) {
+        console.warn('⚠️ Prevented auto-save of empty polygons (Possible initialization race)');
+        return;
+      }
+
       // 💡 Dirty Check: Only save if polygons have actually changed
       if (polygonsStr === lastSavedPolygonsRef.current) {
         return;

@@ -9,7 +9,7 @@
 
 import { useCallback, useRef } from 'react';
 import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
-import { Room, VectorLayerContent } from '../../editor/models/types';
+import { Room, VectorLayerContent, PlacedSymbol, Furniture, RoomType } from '../../editor/models/types';
 import { dataService } from '../services/DataService';
 import BASE_IMAGE from '../../images/floor-plan-clean.jpg';
 import ELECTRICAL_IMAGE from '../../images/electric-plan-plain-full-clean-2025-12-12.jpg';
@@ -81,7 +81,7 @@ export function useEditorInitialization(
         id: 'mask',
         name: 'Masking',
         type: 'vector',
-        zIndex: 10,
+        zIndex: 25, // Above electrical (20), below rooms (30)
         visible: true,
         locked: true,
         opacity: 1,
@@ -233,7 +233,7 @@ export function useEditorInitialization(
         const devicesByCategory: { [category: string]: PlacedSymbol[] } = {};
 
         // Group devices by category
-        devices.forEach((device: PlacedSymbol) => {
+        devices.forEach((device: any) => {
           const category = device.category || 'lighting'; // Default to lighting if no category
           if (!devicesByCategory[category]) {
             devicesByCategory[category] = [];
@@ -263,7 +263,7 @@ export function useEditorInitialization(
           const masks = polygonsData.polygons.filter(p => p.type === 'mask');
 
           if (roomLayer) {
-            (roomLayer.content as VectorLayerContent).rooms = rooms;
+            (roomLayer.content as VectorLayerContent).rooms = rooms as Room[];
             editorInstance.layerSystem.markDirty('room');
           }
 
@@ -284,7 +284,7 @@ export function useEditorInitialization(
               x: f.position?.x ?? f.x ?? 0,
               y: f.position?.y ?? f.y ?? 0,
             }));
-            (furnitureLayer.content as VectorLayerContent).furniture = mappedFurniture;
+            (furnitureLayer.content as VectorLayerContent).furniture = mappedFurniture as any[];
             editorInstance.layerSystem.markDirty('furniture');
             console.log(`🪑 Restored ${mappedFurniture.length} furniture items from server`);
           }

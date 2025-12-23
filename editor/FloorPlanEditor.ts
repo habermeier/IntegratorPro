@@ -124,7 +124,9 @@ export class FloorPlanEditor {
             activeLayerId: this.activeLayerId,
             isEditMode: this.isEditMode,
             visibility,
-            preMaskVisibility: Object.fromEntries(this.preMaskVisibility),
+            preMaskVisibility: this.preMaskVisibility.size > 0
+                ? Object.fromEntries(this.preMaskVisibility)
+                : (JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}').preMaskVisibility || {}),
             camera: this.cameraSystem.getState()
         };
 

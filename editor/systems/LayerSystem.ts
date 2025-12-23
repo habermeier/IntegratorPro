@@ -185,13 +185,15 @@ export class LayerSystem {
                     const id = group.userData.id;
                     if (id && selectedIds.has(id)) {
                         const fill = group.getObjectByName('fill') as THREE.Mesh;
+                        const itemType = group.userData.type;
+                        const isMaskItem = itemType === 'mask';
                         if (fill && fill.material instanceof THREE.MeshBasicMaterial) {
-                            // Pulse color: Bright Red (0xff0000) to Golden (0xffd700)
+                            // Pulse: Bright Golden (0xffd700) to Soft Yellow
                             const r = 1.0;
-                            const g = pulse * 0.8;
+                            const g = 0.8 + pulse * 0.2;
                             const b = 0.0;
                             fill.material.color.setRGB(r, g, b);
-                            fill.material.opacity = 0.05 + pulse * 0.1; // Pulse around 0.1 (0.05 to 0.15)
+                            fill.material.opacity = isMaskItem ? 0.3 + pulse * 0.2 : 0.1 + pulse * 0.2;
                         }
                         const border = group.getObjectByName('border') as THREE.Line;
                         if (border && border.material instanceof THREE.LineBasicMaterial) {
@@ -228,8 +230,10 @@ export class LayerSystem {
 
             // 1. Check if points OR attributes have changed (hash)
             // We include name, color, type in hash to force re-render if they change
+            // We ALSO include isMaskEditMode and isSelected to ensure the visual state stays sync'd
+            const isSelected = selectedIds.has(id);
             const pointsHash = poly.points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join('|') +
-                `|${(poly as any).name || ''}|${(poly as any).roomType || ''}|${poly.color || ''}`;
+                `|${(poly as any).name || ''}|${(poly as any).roomType || ''}|${poly.color || ''}|${isSelected}|${isMask ? this.isMaskEditMode : ''}`;
 
             if (!group) {
                 group = new THREE.Group();
@@ -294,7 +298,7 @@ export class LayerSystem {
                 const borderMaterial = new THREE.LineBasicMaterial({
                     color: isMask ? 0xf8fafc : (poly.color || 0x60a5fa),
                     transparent: true,
-                    opacity: 1.0
+                    opacity: isSelected ? 1.0 : (isMask && !this.isMaskEditMode ? 0.0 : 1.0)
                 });
                 const line = new THREE.Line(borderGeometry, borderMaterial);
                 line.name = 'border';
@@ -467,33 +471,6 @@ export class LayerSystem {
                 }
 
                 group.userData.lastHash = pointsHash;
-            }
-
-            // Always update colors/opacity (fast)
-            const fill = group.getObjectByName('fill') as THREE.Mesh;
-            const isSelected = selectedIds.has(id);
-            if (fill && fill.material instanceof THREE.MeshBasicMaterial) {
-                const fillColor = isMask ? (this.isMaskEditMode ? 0x94a3b8 : 0xffffff) : (poly.color || 0x3b82f6);
-                if (isSelected) {
-                    fill.material.color.set(0xff0000); // Start with bright red
-                    fill.material.opacity = 0.1;      // Final refined alpha
-                } else {
-                    fill.material.color.set(fillColor);
-                    fill.material.opacity = isMask ? 1.0 : 0.4;
-                }
-            }
-
-            const border = group.getObjectByName('border') as THREE.Line;
-            if (border && border.material instanceof THREE.LineBasicMaterial) {
-                if (isSelected) {
-                    border.material.color.set(0xffff00); // Start with yellow
-                    border.material.opacity = 1.0;
-                } else {
-                    border.material.color.set(isMask ? 0xf8fafc : (poly.color || 0x60a5fa));
-                    // Hide mask borders when not in edit mode
-                    border.material.opacity = (isMask && !this.isMaskEditMode) ? 0.0 : 1.0;
-                    border.material.transparent = true;
-                }
             }
 
             // Sync Vertex/Glow Visibility for Masks

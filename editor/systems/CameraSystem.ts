@@ -176,6 +176,12 @@ export class CameraSystem {
         this.updateZoomCamera();
     }
 
+    public setFastZoomMultiplier(multiplier: number): void {
+        // This is used by the CameraSystem internally or by external zoom logic
+        // We'll store it in the state for consistency
+        (this.state as any).fastZoomMultiplier = multiplier;
+    }
+
     public render(renderer: THREE.WebGLRenderer, scene: THREE.Scene): void {
         renderer.clear();
 
