@@ -613,8 +613,13 @@ export class FloorPlanEditor {
                 } else if (layer.id === this.activeLayerId) {
                     this.layerSystem.setLayerVisible(layer.id, true); // Show target
                     this.layerSystem.setLayerLocked(layer.id, false); // Unlock target
+                } else if (layer.type === 'vector' && (layer.id === 'room' || layer.id === 'mask')) {
+                    // KEEP Rooms and Masks visible even if not the active focus layer
+                    // This allows snapping and context while drawing.
+                    this.layerSystem.setLayerVisible(layer.id, true);
+                    this.layerSystem.setLayerLocked(layer.id, true);
                 } else {
-                    // Hide everything else (Room, Mask, Electrical, etc.)
+                    // Hide everything else (Electrical, Furniture, etc.)
                     this.layerSystem.setLayerVisible(layer.id, false);
                     this.layerSystem.setLayerLocked(layer.id, true);
                 }

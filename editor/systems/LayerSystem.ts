@@ -218,6 +218,8 @@ export class LayerSystem {
         ];
 
         allPolys.forEach(poly => {
+            if (!poly.points || poly.points.length === 0) return;
+
             const id = poly.id;
             activeItemIds.add(id);
             const cacheKey = `${layer.id}-${id}`;
@@ -362,7 +364,7 @@ export class LayerSystem {
                 const border = group.getObjectByName('border') as THREE.Line;
                 const label = group.getObjectByName('label') as THREE.Sprite;
 
-                if (fill) {
+                if (fill && poly.points.length > 0) {
                     const shape = new THREE.Shape();
                     shape.moveTo(poly.points[0].x, poly.points[0].y);
                     for (let i = 1; i < poly.points.length; i++) shape.lineTo(poly.points[i].x, poly.points[i].y);
@@ -388,11 +390,30 @@ export class LayerSystem {
                     border.geometry = new THREE.BufferGeometry().setFromPoints(borderPoints);
                 }
 
-                // Update vertex sprite positions
+                // Update vertex sprite positions or create missing ones
                 poly.points.forEach((p, idx) => {
-                    const v = group.getObjectByName(`vertex-${idx}`);
-                    if (v) v.position.set(p.x, p.y, 0.2);
+                    let v = group.getObjectByName(`vertex-${idx}`) as THREE.Sprite;
+                    if (!v) {
+                        v = new THREE.Sprite(this.vertexMaterial!.clone());
+                        v.name = `vertex-${idx}`;
+                        v.material.color.set(isMask ? 0x1e40af : 0x1e40af);
+                        v.scale.set(12, 12, 1);
+                        group.add(v);
+                    }
+                    v.position.set(p.x, p.y, 0.2);
+                    v.visible = !isMask || this.isMaskEditMode;
                 });
+
+                // Remove excess vertex sprites if points were deleted
+                let vIdx = poly.points.length;
+                while (true) {
+                    const v = group.getObjectByName(`vertex-${vIdx}`);
+                    if (!v) break;
+                    group.remove(v);
+                    if ((v as THREE.Sprite).geometry) (v as THREE.Sprite).geometry.dispose();
+                    if ((v as THREE.Sprite).material) (v as THREE.Sprite).material.dispose();
+                    vIdx++;
+                }
 
                 // Update Label Position
                 if (label) {
@@ -585,18 +606,6 @@ export class LayerSystem {
             });
         }
 
-        const toRemove: THREE.Object3D[] = [];
-        layer.container.children.forEach(child => {
-            const id = child.userData?.id;
-            if (id && !activeItemIds.has(id)) {
-                toRemove.push(child);
-            }
-        });
-        toRemove.forEach(child => {
-            layer.container.remove(child);
-            this.meshCache.delete(`${layer.id}-${child.userData.id}`);
-        });
-
         if (content.cables) {
             content.cables.forEach(cable => {
                 activeItemIds.add(cable.id);
@@ -619,6 +628,18 @@ export class LayerSystem {
                 }
             });
         }
+
+        const toRemove: THREE.Object3D[] = [];
+        layer.container.children.forEach(child => {
+            const id = child.userData?.id;
+            if (id && !activeItemIds.has(id)) {
+                toRemove.push(child);
+            }
+        });
+        toRemove.forEach(child => {
+            layer.container.remove(child);
+            this.meshCache.delete(`${layer.id}-${child.userData.id}`);
+        });
     }
 
     private createLabel(name: string, type: string, area?: string): THREE.Sprite {
