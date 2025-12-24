@@ -5,7 +5,7 @@ import { calculatePolygonArea } from '../../utils/spatialUtils';
 
 export class LayerSystem {
     private layers: Map<string, Layer> = new Map();
-    private scene: THREE.Scene;
+    public scene: THREE.Scene;
     private dirtyLayers: Set<string> = new Set();
     private isMaskEditMode: boolean = false;
     private textureLoader: THREE.TextureLoader = new THREE.TextureLoader();

@@ -59,6 +59,10 @@ export interface PlacedSymbol {
         productId?: string;
         specUrl?: string;
         cost?: number;
+        lumens?: number;
+        beamAngle?: number;
+        range?: number;
+        cableType?: string;
     };
     createdAt: string;
 }

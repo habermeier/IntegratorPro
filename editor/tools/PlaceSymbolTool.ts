@@ -16,6 +16,7 @@ export class PlaceSymbolTool implements Tool {
     private activeProductId: string = 'generic-product';
     private activeDefaultHeight: number = 2.4;
     private activeBusAssignment: string = 'Bus 1';
+    private activeCableType: string = 'Cat6';
     private activeLumens: number = 800;
     private activeBeamAngle: number = 60;
     private activeRange: number = 10;
@@ -48,6 +49,7 @@ export class PlaceSymbolTool implements Tool {
         productId: string;
         defaultHeight: number;
         busAssignment?: string;
+        cableType?: string;
         lumens?: number;
         beamAngle?: number;
         range?: number;
@@ -56,6 +58,9 @@ export class PlaceSymbolTool implements Tool {
         this.activeDefaultHeight = attrs.defaultHeight;
         if (attrs.busAssignment !== undefined) {
             this.activeBusAssignment = attrs.busAssignment;
+        }
+        if (attrs.cableType !== undefined) {
+            this.activeCableType = attrs.cableType;
         }
         if (attrs.lumens !== undefined) this.activeLumens = attrs.lumens;
         if (attrs.beamAngle !== undefined) this.activeBeamAngle = attrs.beamAngle;
@@ -119,7 +124,8 @@ export class PlaceSymbolTool implements Tool {
                 productId: this.activeProductId,
                 lumens: this.activeLumens,
                 beamAngle: this.activeBeamAngle,
-                range: this.activeRange
+                range: this.activeRange,
+                cableType: this.activeCableType
             },
             createdAt: new Date().toISOString()
         };
