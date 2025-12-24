@@ -29,6 +29,15 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
                                 <span className="text-xs text-blue-400 font-bold truncate max-w-[120px]">{activeLayerName}</span>
                             </div>
                         )}
+                        {isEditMode && (
+                            <button
+                                onClick={() => editor.setEditMode(false)}
+                                className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-[10px] font-black uppercase tracking-wider rounded-md transition-colors ml-2 border border-red-400/50"
+                                title="Exit Layer Editing Mode (Ctrl+L)"
+                            >
+                                EXIT LAYER EDITING
+                            </button>
+                        )}
                         <div className="flex items-center space-x-2 pl-2 border-l border-slate-700 ml-2">
                             <span className="text-[9px] text-slate-500 uppercase font-bold">Space + Drag:</span>
                             <span className="text-[9px] text-blue-500/80 uppercase font-bold italic">Pan View</span>

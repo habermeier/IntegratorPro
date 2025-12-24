@@ -123,7 +123,6 @@ export class FloorPlanEditor {
         const state = {
             activeTool: this.toolSystem.getActiveToolType(),
             activeLayerId: this.activeLayerId,
-            isEditMode: this.isEditMode,
             visibility,
             preMaskVisibility: this.preMaskVisibility.size > 0
                 ? Object.fromEntries(this.preMaskVisibility)
@@ -154,7 +153,6 @@ export class FloorPlanEditor {
             }
 
             // 3. Restore Metadata
-            this.isEditMode = !!state.isEditMode;
             this.activeLayerId = state.activeLayerId || null;
 
             // 4. Restore Tool (Triggers side effects)

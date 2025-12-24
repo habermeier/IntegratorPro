@@ -28,12 +28,12 @@ export const EditorOverlays: React.FC<EditorOverlaysProps> = ({
     <>
       {/* Editor Mode Overlay */}
       {isEditMode && activeTool !== 'scale-calibrate' && (
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 flex flex-col items-center z-30 animate-pulse pointer-events-none">
-          <div className="bg-red-600 text-white px-8 py-2 rounded-full text-sm font-black uppercase tracking-[0.2em] shadow-[0_0_30px_rgba(220,38,38,1)] border-2 border-red-400">
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 flex flex-col items-center z-30 animate-pulse">
+          <div className="bg-red-600 text-white px-8 py-2 rounded-full text-sm font-black uppercase tracking-[0.2em] shadow-[0_0_30px_rgba(220,38,38,1)] border-2 border-red-400 pointer-events-none">
             🛠️ Layer Editing Mode
           </div>
-          <div className="mt-2 text-[10px] text-red-400 font-bold bg-slate-950/80 px-4 py-1 rounded-md backdrop-blur-sm border border-red-900/50">
-            Arrows: Move • Ctrl+Arrows: Scale/Rotate • Ctrl+L: Lock
+          <div className="mt-2 text-[10px] text-red-400 font-bold bg-slate-950/80 px-4 py-1 rounded-md backdrop-blur-sm border border-red-900/50 pointer-events-none">
+            Arrows: Move • Ctrl+Arrows: Scale/Rotate • Click Exit or Ctrl+L to Lock
           </div>
         </div>
       )}

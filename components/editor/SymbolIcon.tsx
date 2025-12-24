@@ -36,7 +36,7 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
             'standard-outlet': 'OUT',
             'lcp-panel': 'LCP'
         };
-        return shorthandMap[symbolType] || '???';
+        return shorthandMap[symbolType] || '';
     };
 
     // Universal symbol design for ALL types

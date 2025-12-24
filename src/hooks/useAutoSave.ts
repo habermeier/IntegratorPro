@@ -110,6 +110,13 @@ export function useAutoSave(
         return;
       }
 
+      // 💡 Safety Guard: If new state is empty but last saved had data, prevent overwrite
+      // This protects against initialization race conditions
+      if (allDevices.length === 0 && lastSavedSymbolsRef.current.length > 2) {
+        console.warn('⚠️ Prevented auto-save of empty symbols (Possible initialization race)');
+        return;
+      }
+
       try {
         await dataService.updateDevices(allDevices as any[]);
         lastSavedSymbolsRef.current = devicesStr;
@@ -136,6 +143,13 @@ export function useAutoSave(
 
         // 💡 Dirty Check
         if (furnitureStr === lastSavedFurnitureRef.current) {
+          return;
+        }
+
+        // 💡 Safety Guard: If new state is empty but last saved had data, prevent overwrite
+        // This protects against initialization race conditions
+        if (furniture.length === 0 && lastSavedFurnitureRef.current.length > 2) {
+          console.warn('⚠️ Prevented auto-save of empty furniture (Possible initialization race)');
           return;
         }
 
@@ -250,6 +264,13 @@ export function useAutoSave(
 
         // 💡 Dirty Check: Only save if cables have actually changed
         if (cablesStr === lastSavedCablesRef.current) {
+          return;
+        }
+
+        // 💡 Safety Guard: If new state is empty but last saved had data, prevent overwrite
+        // This protects against initialization race conditions
+        if (cables.length === 0 && lastSavedCablesRef.current.length > 2) {
+          console.warn('⚠️ Prevented auto-save of empty cables (Possible initialization race)');
           return;
         }
 
