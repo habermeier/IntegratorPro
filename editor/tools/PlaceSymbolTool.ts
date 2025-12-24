@@ -138,7 +138,8 @@ export class PlaceSymbolTool implements Tool {
 
     public onMouseMove(x: number, y: number, event: MouseEvent): void {
         const worldPos = this.editor.cameraSystem.screenToWorld(x, y);
-        this.previewGroup.position.set(worldPos.x, worldPos.y, 0.5);
+        // Set higher Z-position (100) to ensure preview is on top of everything
+        this.previewGroup.position.set(worldPos.x, worldPos.y, 100);
         this.previewGroup.visible = !!this.symbolType;
         this.editor.setDirty();
     }

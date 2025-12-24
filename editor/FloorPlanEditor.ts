@@ -621,6 +621,10 @@ export class FloorPlanEditor {
                     // This allows snapping and context while drawing.
                     this.layerSystem.setLayerVisible(layer.id, true);
                     this.layerSystem.setLayerLocked(layer.id, true);
+                } else if (activeTool === 'place-symbol' && layer.type === 'vector') {
+                    // During symbol placement, show other technical layers for context
+                    this.layerSystem.setLayerVisible(layer.id, true);
+                    this.layerSystem.setLayerLocked(layer.id, true);
                 } else {
                     // Hide everything else (Electrical, Furniture, etc.)
                     this.layerSystem.setLayerVisible(layer.id, false);

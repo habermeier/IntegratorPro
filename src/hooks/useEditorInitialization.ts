@@ -187,6 +187,30 @@ export function useEditorInitialization(
       });
 
       editorInstance.addLayer({
+        id: 'hvac',
+        name: 'HVAC',
+        type: 'vector',
+        zIndex: 55,
+        visible: true,
+        locked: false,
+        opacity: 1,
+        transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
+        allowLayerEditing: false // Data layer - locked to base coordinates
+      });
+
+      editorInstance.addLayer({
+        id: 'receptacles',
+        name: 'Receptacles',
+        type: 'vector',
+        zIndex: 56,
+        visible: true,
+        locked: false,
+        opacity: 1,
+        transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
+        allowLayerEditing: false // Data layer - locked to base coordinates
+      });
+
+      editorInstance.addLayer({
         id: 'furniture',
         name: 'Furniture',
         type: 'vector',

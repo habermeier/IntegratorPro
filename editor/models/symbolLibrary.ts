@@ -11,12 +11,14 @@ export interface SymbolDefinition {
 }
 
 export const SYMBOL_CATEGORIES = [
-    { id: 'lighting', name: 'Lighting', color: 0x000000 }, // Black
-    { id: 'lv-controls', name: 'LV Controls', color: 0x000000 }, // Black
-    { id: 'receptacles', name: 'Receptacles', color: 0x000000 }, // Black
-    { id: 'hvac', name: 'HVAC', color: 0x000000 }, // Black
-    { id: 'safety', name: 'Safety', color: 0x000000 }, // Black
-    { id: 'infrastructure', name: 'Infrastructure', color: 0x000000 } // Black
+    { id: 'lighting', name: 'Lighting', color: 0x000000 },
+    { id: 'lcps', name: 'LV Controls', color: 0x000000 },
+    { id: 'receptacles', name: 'Receptacles', color: 0x000000 },
+    { id: 'hvac', name: 'HVAC', color: 0x000000 },
+    { id: 'sensors', name: 'Sensors', color: 0x000000 },
+    { id: 'security', name: 'Security', color: 0x000000 },
+    { id: 'network', name: 'Network', color: 0x000000 },
+    { id: 'infrastructure', name: 'Infrastructure', color: 0x000000 }
 ];
 
 /**
@@ -102,7 +104,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
     'knx-switch': {
         id: 'knx-switch',
         name: 'KNX Switch',
-        category: 'lv-controls',
+        category: 'lcps',
         description: 'Filled black square with crosshairs',
         color: 0x000000,
         size: { width: 16, height: 16 },
@@ -131,11 +133,11 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         createMesh: createUniversalMesh
     },
 
-    // --- SAFETY ---
+    // --- SAFETY/SENSORS ---
     'motion-sensor': {
         id: 'motion-sensor',
         name: 'Motion Sensor',
-        category: 'safety',
+        category: 'sensors',
         description: 'Filled black square with crosshairs',
         color: 0x000000,
         size: { width: 16, height: 16 },
@@ -145,18 +147,18 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
     'security-camera': {
         id: 'security-camera',
         name: 'Security Camera',
-        category: 'safety',
+        category: 'security',
         description: 'Filled black square with crosshairs',
         color: 0x000000,
         size: { width: 16, height: 16 },
         createMesh: createUniversalMesh
     },
 
-    // --- INFRASTRUCTURE ---
+    // --- NETWORK ---
     'wifi-ap': {
         id: 'wifi-ap',
         name: 'WiFi AP',
-        category: 'infrastructure',
+        category: 'network',
         description: 'Filled black square with crosshairs',
         color: 0x000000,
         size: { width: 16, height: 16 },
@@ -166,7 +168,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
     'lcp-panel': {
         id: 'lcp-panel',
         name: 'LCP Panel',
-        category: 'infrastructure',
+        category: 'lcps',
         description: 'Filled black square with crosshairs',
         color: 0x000000,
         size: { width: 40, height: 60 },

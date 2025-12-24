@@ -85,6 +85,14 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
     const handleSelectSymbol = (type: string) => {
         setSelectedSymbolType(type);
         if (editor) {
+            const def = SYMBOL_LIBRARY[type];
+            if (def) {
+                // Auto-activate the relevant layer for this symbol category
+                editor.setActiveLayer(def.category);
+                // Ensure edit mode is enabled for placement
+                editor.setEditMode(true);
+            }
+
             editor.setActiveTool('place-symbol');
             const tool = editor.toolSystem.getTool<PlaceSymbolTool>('place-symbol');
             tool?.setSymbolType(type);
