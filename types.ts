@@ -8,7 +8,8 @@ export enum ModuleType {
   ACCESSORY = 'ACCESSORY',
   ENCLOSURE = 'ENCLOSURE',
   POWER = 'POWER',
-  UI = 'UI' // Added for Switches/Keypads
+  UI = 'UI', // Added for Switches/Keypads
+  AUDIO_VIDEO = 'AUDIO_VIDEO'
 }
 
 export enum MountType {

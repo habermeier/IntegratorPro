@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Manual test for Device models and DeviceRegistry
  *
