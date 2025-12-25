@@ -11,6 +11,7 @@ import { useEffect } from 'react';
 import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
 import { Layer, ToolType, VectorLayerContent } from '../../editor/models/types';
 import { dataService } from '../services/DataService';
+import { useApplyProjectData } from './useApplyProjectData';
 
 export interface EditorEventCallbacks {
   setActiveTool: (tool: ToolType) => void;
@@ -38,6 +39,14 @@ export function useEditorEvents(
   editor: FloorPlanEditor | null,
   callbacks: EditorEventCallbacks
 ) {
+  const applyProjectData = useApplyProjectData(
+    callbacks.lastSavedPayloadRef,
+    callbacks.lastSavedSymbolsRef,
+    callbacks.lastSavedPolygonsRef,
+    callbacks.lastSavedFurnitureRef,
+    callbacks.lastSavedCablesRef
+  );
+
   useEffect(() => {
     if (!editor) return;
 
@@ -73,9 +82,9 @@ export function useEditorEvents(
         if (layer.type !== 'vector') continue;
 
         const content = layer.content as VectorLayerContent;
-        
+
         // Check if any selected ID matches an object in this layer
-        const isMatched = 
+        const isMatched =
           (content.symbols || []).some(s => selectedIds.includes(s.id)) ||
           (content.rooms || []).some(r => selectedIds.includes(r.id)) ||
           (content.masks || []).some(m => selectedIds.includes(m.id)) ||
@@ -133,107 +142,55 @@ export function useEditorEvents(
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
 
+    // Smooth Handover: Claim baton on interaction
+    const handleInteraction = () => {
+      if (!dataService.isPrimary()) {
+        console.log('[useEditorEvents] User interaction detected, claiming Master Baton');
+        dataService.claimBaton();
+      }
+    };
+
+    window.addEventListener('mousedown', handleInteraction, { capture: true });
+    window.addEventListener('keydown', handleInteraction, { capture: true });
+
+    // Wakeup: Check for updates on window focus
+    const handleFocus = () => {
+      console.log('[useEditorEvents] Tab focused, checking for external updates');
+      // Trigger a check via project-data-changed logic if needed, 
+      // or just trust the storage event which should have fired.
+      // Actually, if we've been in the background, we might have missed storage events?
+      // No, they are queued/processed when resumed.
+      // But we can force a sync check here if we wanted to be robust.
+    };
+    window.addEventListener('focus', handleFocus);
+
     // Listen for cross-tab data changes
-    const handleProjectChange = async () => {
-      console.log('[useEditorEvents] Detected external project change, reloading data');
+    const handleProjectChange = async (e?: any) => {
+      const isExternal = e?.detail?.external;
+      const wasRequestedByMaster = e?.detail?.isMaster;
+
+      if (dataService.isPrimary() && isExternal) {
+        console.log('[useEditorEvents] Ignoring external change event because we are the Master tab');
+        return;
+      }
+
+      console.log('[useEditorEvents] Detected project change, performing SILENT sync');
       if (!editor) return;
 
       try {
         // Force reload from server, bypassing cache
         const project = await dataService.loadProject(undefined, true);
-        console.log('📦 Reloaded project data after external change');
 
-        // Update editor with fresh data
-        const scaleData = project.floorPlan.scale;
-        const symbolsData = { devices: project.devices };
-        const polygonsData = { polygons: project.floorPlan.polygons };
-        const overlayData = project.floorPlan.electricalOverlay;
-
-        // Update scale
-        if (scaleData && scaleData.scaleFactor) {
-          editor.pixelsMeter = scaleData.scaleFactor;
-        }
-
-        // Update electrical layer transform
-        editor.setLayerTransform('electrical', {
-          position: { x: overlayData.x || 0, y: overlayData.y || 0 },
-          scale: { x: overlayData.scale || 1, y: overlayData.scale || 1 },
-          rotation: overlayData.rotation || 0
-        }, true);
-
-        // Update symbols
-        const electricalLayer = editor.layerSystem.getLayer('electrical');
-        if (electricalLayer) {
-          electricalLayer.content = {
-            ...electricalLayer.content,
-            symbols: symbolsData.devices || []
-          };
-          editor.layerSystem.markDirty('electrical');
-        }
-
-        // Update polygons
-        const roomLayer = editor.layerSystem.getLayer('room');
-        const maskLayer = editor.layerSystem.getLayer('mask');
-        const allPolygons = polygonsData.polygons || [];
-
-        if (roomLayer) {
-          roomLayer.content = {
-            ...roomLayer.content,
-            rooms: allPolygons.filter((p: any) => p.type === 'room')
-          };
-          editor.layerSystem.markDirty('room');
-        }
-
-        if (maskLayer) {
-          maskLayer.content = {
-            ...maskLayer.content,
-            masks: allPolygons.filter((p: any) => p.type === 'mask')
-          };
-          editor.layerSystem.markDirty('mask');
-        }
-
-        // Update furniture
-        const furnitureLayer = editor.layerSystem.getLayer('furniture');
-        const furnitureData = project.furniture || [];
-        if (furnitureLayer) {
-          furnitureLayer.content = {
-            ...furnitureLayer.content,
-            furniture: furnitureData
-          };
-          editor.layerSystem.markDirty('furniture');
-        }
-
-        // Update cables
-        const cablesLayer = editor.layerSystem.getLayer('cables');
-        const cablesData = project.cables || [];
-        if (cablesLayer) {
-          cablesLayer.content = {
-            ...cablesLayer.content,
-            cables: cablesData
-          };
-          editor.layerSystem.markDirty('cables');
+        if (project) {
+          applyProjectData(editor, project);
         }
 
         // Update layers state to trigger re-render
         callbacks.setLayers([...editor.layerSystem.getAllLayers()]);
 
-        // 💡 Update Cache Refs to prevent immediate re-save after reload
-        callbacks.lastSavedPayloadRef.current = JSON.stringify({
-          x: overlayData.x || 0,
-          y: overlayData.y || 0,
-          scale: overlayData.scale || 1,
-          rotation: overlayData.rotation || 0,
-          opacity: overlayData.opacity ?? 0.7,
-          locked: !!overlayData.locked
-        });
-        callbacks.lastSavedSymbolsRef.current = JSON.stringify(symbolsData.devices || []);
-        callbacks.lastSavedPolygonsRef.current = JSON.stringify(allPolygons);
-        callbacks.lastSavedFurnitureRef.current = JSON.stringify(furnitureData);
-        callbacks.lastSavedCablesRef.current = JSON.stringify(cablesData);
-
-        console.log('✅ Editor state synchronized with external changes');
+        console.log('✅ Editor state synchronized silently');
       } catch (error) {
-        console.error('Failed to reload project after external change:', error);
+        console.error('Failed to reload project silently:', error);
       }
     };
 
@@ -250,6 +207,9 @@ export function useEditorEvents(
       window.removeEventListener('storage-settings-changed', handleSettingsChanged);
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('project-data-changed', handleProjectChange);
+      window.removeEventListener('mousedown', handleInteraction, { capture: true });
+      window.removeEventListener('keydown', handleInteraction, { capture: true });
+      window.removeEventListener('focus', handleFocus);
     };
-  }, [editor, callbacks]);
+  }, [editor, callbacks, applyProjectData]);
 }

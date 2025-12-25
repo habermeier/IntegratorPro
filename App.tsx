@@ -19,6 +19,7 @@ import Settings from './components/Settings';
 import { LayoutDashboard, Activity, Cpu, Map, FileText, Hammer, Menu, Settings as SettingsIcon } from 'lucide-react';
 
 import MobileNav from './components/MobileNav';
+import ConflictNotification from './components/editor/ConflictNotification';
 
 const App = () => {
   console.log('IntegratorPro: App component rendering');
@@ -222,6 +223,7 @@ const App = () => {
         onNavigate={handleNavigate}
         navItems={navItems.map(n => ({ ...n, mode: n.mode as ViewMode }))}
       />
+      <ConflictNotification />
     </>
   );
 };

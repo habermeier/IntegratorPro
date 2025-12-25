@@ -55,7 +55,7 @@ const BOT_PATTERN = new RegExp(
 );
 
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '50mb' }));
 
 // Helper function to create GET/POST endpoints for JSON data with override pattern
 function createDataEndpoints(apiPath, baseFile, overrideFile, dataKey, displayName) {
@@ -365,6 +365,29 @@ app.post('/api/project/:projectId', (req, res) => {
             const historyFile = path.join(historyDir, `project-${timestamp}.json`);
             fs.copyFileSync(projectFile, historyFile);
             console.log(`📦 Archived to: ${path.basename(historyFile)}`);
+
+            // Prune history to keep only the last 50 versions to prevent infinite bloat
+            try {
+                const historyFiles = fs.readdirSync(historyDir)
+                    .filter(f => f.startsWith('project-') && f.endsWith('.json'))
+                    .map(f => ({
+                        name: f,
+                        path: path.join(historyDir, f),
+                        mtime: fs.statSync(path.join(historyDir, f)).mtimeMs
+                    }))
+                    .sort((a, b) => b.mtime - a.mtime);
+
+                const MAX_HISTORY = 50;
+                if (historyFiles.length > MAX_HISTORY) {
+                    const toDelete = historyFiles.slice(MAX_HISTORY);
+                    toDelete.forEach(file => {
+                        fs.unlinkSync(file.path);
+                    });
+                    console.log(`♻️ Pruned ${toDelete.length} old history files`);
+                }
+            } catch (pruneErr) {
+                console.error('Failed to prune history:', pruneErr);
+            }
         }
 
         // Step 2: Write new project file

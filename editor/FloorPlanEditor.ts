@@ -25,7 +25,7 @@ export class FloorPlanEditor {
     public commandManager: CommandManager;
     public selectionSystem: SelectionSystem;
 
-    private isEditMode: boolean = false;
+    private isOverlayAlignmentMode: boolean = false;
     private activeLayerId: string | null = null;
     private isSpacePressed: boolean = false;
     private isAltPressed: boolean = false;
@@ -47,7 +47,7 @@ export class FloorPlanEditor {
     private STORAGE_KEY = 'integrator-pro-editor-state';
 
     public get editMode(): boolean {
-        return this.isEditMode;
+        return this.isOverlayAlignmentMode;
     }
 
     public get pixelsMeter(): number {
@@ -167,7 +167,7 @@ export class FloorPlanEditor {
             }
 
             this.emit('layers-changed', this.layerSystem.getAllLayers());
-            this.emit('edit-mode-changed', { isEditMode: this.isEditMode, activeLayerId: this.activeLayerId });
+            this.emit('edit-mode-changed', { isEditMode: this.isOverlayAlignmentMode, activeLayerId: this.activeLayerId });
         } catch (err) {
             console.error('[FloorPlanEditor] Failed to load persistent state:', err);
         }
@@ -202,8 +202,8 @@ export class FloorPlanEditor {
             this.setDirty();
         }
 
-        // Edit Mode Toggle (Skip repeats)
-        if (!e.repeat && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
+        // Overlay Alignment Mode Toggle (Skip repeats)
+        if (!e.repeat && e.key.toLowerCase() === 'l' && !e.ctrlKey && !e.metaKey) {
             e.preventDefault();
             this.toggleEditMode();
             this.setDirty();
@@ -239,8 +239,8 @@ export class FloorPlanEditor {
             return;
         }
 
-        // Arrow Key Scooting / Scaling / Rotation
-        if (this.isEditMode && this.activeLayerId) {
+        // Arrow Key Scooting / Scaling / Rotation (ONLY for alignable layers in Alignment Mode)
+        if (this.isOverlayAlignmentMode && this.activeLayerId) {
             const layer = this.layerSystem.getLayer(this.activeLayerId);
             if (!layer) return;
 
@@ -476,36 +476,41 @@ export class FloorPlanEditor {
     }
 
     public toggleEditMode(): void {
-        this.setEditMode(!this.isEditMode);
+        this.setEditMode(!this.isOverlayAlignmentMode);
     }
 
     public setEditMode(enabled: boolean): void {
-        if (this.isEditMode === enabled) return;
-        this.isEditMode = enabled;
+        if (this.isOverlayAlignmentMode === enabled) return;
+        this.isOverlayAlignmentMode = enabled;
 
-        if (this.isEditMode) {
+        if (this.isOverlayAlignmentMode) {
             this.container.focus();
             this.renderer.domElement.focus();
+            // Automatically select 'electrical' layer if none selected or if current is not alignable
+            const layer = this.activeLayerId ? this.layerSystem.getLayer(this.activeLayerId) : null;
+            if (!layer || layer.allowLayerEditing === false) {
+                this.setActiveLayer('electrical', true); // Internal set to avoid alert
+            }
         }
 
         if (this.activeLayerId) {
-            this.layerSystem.setLayerLocked(this.activeLayerId, !this.isEditMode);
+            this.layerSystem.setLayerLocked(this.activeLayerId, !this.isOverlayAlignmentMode);
         }
 
         this.updateFocusMode();
         this.savePersistentState();
-        this.emit('mode-changed', this.isEditMode);
-        this.emit('edit-mode-changed', { isEditMode: this.isEditMode, activeLayerId: this.activeLayerId });
+        this.emit('mode-changed', this.isOverlayAlignmentMode);
+        this.emit('edit-mode-changed', { isEditMode: this.isOverlayAlignmentMode, activeLayerId: this.activeLayerId });
         this.setDirty();
     }
 
-    public setActiveLayer(id: string | null): void {
-        // Check if layer allows editing
-        if (id) {
+    public setActiveLayer(id: string | null, internal: boolean = false): void {
+        // Check if layer allows editing (only if NOT internal and ONLY if we are in Alignment Mode)
+        if (id && !internal && this.isOverlayAlignmentMode) {
             const layer = this.layerSystem.getLayer(id);
             if (layer && layer.allowLayerEditing === false) {
-                console.warn(`[FloorPlanEditor] Cannot edit layer "${layer.name}" - locked to base coordinates`);
-                alert(`This layer is locked to base coordinates and cannot be edited.\n\nOnly image layers (like Electrical Overlay) can be adjusted for alignment.`);
+                console.warn(`[FloorPlanEditor] Cannot shimmy layer "${layer.name}" - locked to base coordinates`);
+                // alert removed per user request: "no point in acting like we could and then pop up an error"
                 return;
             }
         }
@@ -517,15 +522,15 @@ export class FloorPlanEditor {
 
         this.activeLayerId = id;
 
-        // If in edit mode, apply new lock and tint
-        if (this.isEditMode && id) {
+        // If in alignment mode, apply new lock
+        if (this.isOverlayAlignmentMode && id) {
             this.container.focus();
             this.layerSystem.setLayerLocked(id, false);
         }
 
         this.updateFocusMode();
         this.savePersistentState();
-        this.emit('edit-mode-changed', { isEditMode: this.isEditMode, activeLayerId: this.activeLayerId });
+        this.emit('edit-mode-changed', { isEditMode: this.isOverlayAlignmentMode, activeLayerId: this.activeLayerId });
         this.setDirty();
     }
 
@@ -570,29 +575,31 @@ export class FloorPlanEditor {
 
         // Auto-activate Focus Mode for specific tools
         if (type === 'draw-mask') {
-            this.activeLayerId = 'mask';
-            this.isEditMode = true;
+            this.setActiveLayer('mask', true);
         } else if (type === 'draw-room') {
-            this.activeLayerId = 'room';
-            this.isEditMode = true;
+            this.setActiveLayer('room', true);
         } else if (type === 'scale-calibrate' || type === 'measure') {
-            this.activeLayerId = 'base';
-            this.isEditMode = false; // Hide banner, use explicit isolation in updateFocusMode
+            this.setActiveLayer('base', true);
         }
 
         this.updateFocusMode();
         this.savePersistentState();
         this.emit('tool-changed', type);
-        this.emit('edit-mode-changed', { isEditMode: this.isEditMode, activeLayerId: this.activeLayerId });
+        this.emit('edit-mode-changed', { isEditMode: this.isOverlayAlignmentMode, activeLayerId: this.activeLayerId });
         this.updateCursor();
         this.setDirty();
     }
 
     private updateFocusMode(): void {
         const activeTool = this.toolSystem.getActiveToolType();
-        // Focus Mode is active if we have an active layer AND (are in Edit Mode OR are calibrating/measuring)
+        // Focus Mode (Isolation) is active if we are using specific vector-critical tools
         const isIsolationRequired = activeTool === 'draw-mask' || activeTool === 'draw-room' || activeTool === 'scale-calibrate' || activeTool === 'measure';
-        const isFocusActive = !!(this.activeLayerId && (this.isEditMode || isIsolationRequired));
+
+        // Alignment Mode is explicitly toggled
+        const isFocusActive = isIsolationRequired || this.isOverlayAlignmentMode;
+
+        // Special case for symbol placement: show context but don't isolate
+        const isSymbolPlacement = activeTool === 'place-symbol' || activeTool === 'place-furniture';
 
         // Update specific Mask Edit Mode flag for LayerSystem styling
         const isMaskFocus = isFocusActive && this.activeLayerId === 'mask';
@@ -609,22 +616,34 @@ export class FloorPlanEditor {
 
             // 2. Apply Isolation Rules
             this.layerSystem.getAllLayers().forEach(layer => {
+                const isTarget = layer.id === this.activeLayerId;
+
                 if (layer.id === 'base') {
                     this.layerSystem.setLayerVisible(layer.id, true); // Always show base
-                } else if (layer.id === this.activeLayerId) {
+                } else if (isTarget) {
                     this.layerSystem.setLayerVisible(layer.id, true); // Show target
-                    this.layerSystem.setLayerLocked(layer.id, false); // Unlock target
-                } else if (layer.type === 'vector' && (layer.id === 'room' || layer.id === 'mask')) {
-                    // KEEP Rooms and Masks visible even if not the active focus layer
-                    // This allows snapping and context while drawing.
+                    // Only unlock if we are in ALIGNMENT mode
+                    this.layerSystem.setLayerLocked(layer.id, !this.isOverlayAlignmentMode);
+                } else if (this.isOverlayAlignmentMode && layer.id === 'electrical') {
+                    // Always show electrical during alignment mode even if not the active layer
+                    // (facilitates multi-image alignment if ever supported, but mandatory for overlay)
                     this.layerSystem.setLayerVisible(layer.id, true);
                     this.layerSystem.setLayerLocked(layer.id, true);
-                } else if (activeTool === 'place-symbol' && layer.type === 'vector') {
+                } else if (layer.type === 'vector' && (layer.id === 'room' || layer.id === 'mask')) {
+                    // KEEP Rooms and Masks visible even if not the active focus layer
+                    this.layerSystem.setLayerVisible(layer.id, true);
+                    this.layerSystem.setLayerLocked(layer.id, true);
+                } else if (isSymbolPlacement && layer.type === 'vector') {
                     // During symbol placement, show other technical layers for context
                     this.layerSystem.setLayerVisible(layer.id, true);
                     this.layerSystem.setLayerLocked(layer.id, true);
+                } else if (this.isOverlayAlignmentMode) {
+                    // During alignment, hide other irrelevant layers to reduce noise
+                    if (layer.type === 'vector') {
+                        this.layerSystem.setLayerVisible(layer.id, false);
+                    }
                 } else {
-                    // Hide everything else (Electrical, Furniture, etc.)
+                    // Default Isolation (e.g. Draw Mask hides Furniture)
                     this.layerSystem.setLayerVisible(layer.id, false);
                     this.layerSystem.setLayerLocked(layer.id, true);
                 }

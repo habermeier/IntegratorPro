@@ -13,6 +13,15 @@ export interface Transform {
     rotation: number; // radians
 }
 
+export type Point = Vector2;
+
+export interface LayoutModule {
+    id: string;
+    type: string;
+    pxPerMeter?: number;
+    [key: string]: unknown;
+}
+
 export interface LayerConfig {
     id: string;
     name: string;
@@ -31,6 +40,7 @@ export interface Polygon {
     id: string;
     points: Vector2[];
     color?: number;
+    type?: string; // 'room' or 'mask'
 }
 
 export interface Room extends Polygon {
@@ -123,4 +133,50 @@ export interface CameraState {
     zoomCursorEnabled: boolean;
     zoomCursorMagnification: number;
     zoomCursorSize: number;
+}
+
+export interface ScaleData {
+    scaleFactor: number;
+}
+
+export interface ElectricalOverlay {
+    scale: number;
+    rotation: number;
+    x: number;
+    y: number;
+    opacity: number;
+    locked: boolean;
+}
+
+export interface FloorPlan {
+    scale: ScaleData;
+    layout: any[];
+    polygons: Polygon[];
+    electricalOverlay: ElectricalOverlay;
+}
+
+export interface ProjectMetadata {
+    name: string;
+    status: string;
+    created: string;
+    modified: string;
+}
+
+export interface ProjectSettings {
+    units: 'IMPERIAL' | 'METRIC';
+    fastZoomMultiplier?: number;
+    dataLossThreshold?: number;
+    [key: string]: unknown;
+}
+
+export interface ProjectData {
+    version: string;
+    timestamp: string;
+    metadata: ProjectMetadata;
+    floorPlan: FloorPlan;
+    furniture: Furniture[];
+    devices: any[];
+    cables: any[];
+    lcps: any[];
+    settings: ProjectSettings;
 }

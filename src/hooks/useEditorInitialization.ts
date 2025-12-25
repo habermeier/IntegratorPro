@@ -9,8 +9,9 @@
 
 import { useCallback, useRef } from 'react';
 import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
-import { Room, VectorLayerContent, PlacedSymbol, Furniture, RoomType } from '../../editor/models/types';
 import { dataService } from '../services/DataService';
+import { useApplyProjectData } from './useApplyProjectData';
+import { Room } from '../../editor/models/types';
 import BASE_IMAGE from '../../images/floor-plan-clean.jpg';
 import ELECTRICAL_IMAGE from '../../images/electric-plan-plain-full-clean-2025-12-12.jpg';
 
@@ -37,8 +38,17 @@ export function useEditorInitialization(
   lastSavedPayloadRef: React.MutableRefObject<string>,
   lastSavedPolygonsRef: React.MutableRefObject<string>,
   lastSavedFurnitureRef: React.MutableRefObject<string>,
+  lastSavedCablesRef: React.MutableRefObject<string>,
   callbacks: EditorInitCallbacks
 ) {
+  const applyProjectData = useApplyProjectData(
+    lastSavedPayloadRef,
+    lastSavedSymbolsRef,
+    lastSavedPolygonsRef,
+    lastSavedFurnitureRef,
+    lastSavedCablesRef
+  );
+
   const initEditor = useCallback((container: HTMLDivElement) => {
     if (editorInstanceRef.current) return;
 
@@ -234,125 +244,31 @@ export function useEditorInitialization(
         const project = await dataService.loadProject();
         console.log('📦 Loaded project data from DataService');
 
-        // Extract data from monolithic project structure
-        const overlayData = project.floorPlan.electricalOverlay;
-        const scaleData = project.floorPlan.scale;
-        const symbolsData = { devices: project.devices };
-        const polygonsData = { polygons: project.floorPlan.polygons };
-        const settingsData = project.settings;
+        if (project) {
+          applyProjectData(editorInstance, project);
 
-        if (scaleData && scaleData.scaleFactor) {
-          editorInstance.pixelsMeter = scaleData.scaleFactor;
-          console.log('📏 Restored scale from server:', scaleData.scaleFactor);
+          const settingsData = project.settings;
+          if (settingsData) {
+            if (settingsData.fastZoomMultiplier !== undefined) {
+              callbacks.setFastZoomMultiplier(settingsData.fastZoomMultiplier);
+              editorInstance.cameraSystem.setFastZoomMultiplier(settingsData.fastZoomMultiplier);
+              localStorage.setItem('integrator-pro-fast-zoom-multiplier', settingsData.fastZoomMultiplier.toString());
+            }
+            if (settingsData.units) {
+              callbacks.setUnitPreference(settingsData.units as 'METRIC' | 'IMPERIAL');
+              localStorage.setItem('integrator-pro-units', settingsData.units);
+              window.dispatchEvent(new Event('storage-units-changed'));
+            }
+            if (settingsData.dataLossThreshold !== undefined) {
+              callbacks.setDataLossThreshold(settingsData.dataLossThreshold);
+              localStorage.setItem('integrator-pro-data-loss-threshold', settingsData.dataLossThreshold.toString());
+            }
+          }
+
+          // Mark as initialized so auto-saves can proceed
+          isInitializedRef.current = true;
+          console.log('✅ Editor initialized and state restored');
         }
-
-        // RESTORE POSITION
-        editorInstance.setLayerTransform('electrical', {
-          position: { x: overlayData.x || 0, y: overlayData.y || 0 },
-          scale: { x: overlayData.scale || 1, y: overlayData.scale || 1 },
-          rotation: overlayData.rotation || 0
-        }, true);
-
-        // RESTORE SYMBOLS - Distribute to thematic layers by category
-        const devices = symbolsData.devices || [];
-        const devicesByCategory: { [category: string]: PlacedSymbol[] } = {};
-
-        // Group devices by category
-        devices.forEach((device: any) => {
-          const category = device.category || 'lighting'; // Default to lighting if no category
-          if (!devicesByCategory[category]) {
-            devicesByCategory[category] = [];
-          }
-          devicesByCategory[category].push(device);
-        });
-
-        // Load devices into their respective layers
-        Object.keys(devicesByCategory).forEach(category => {
-          const layer = editorInstance.layerSystem.getLayer(category);
-          if (layer && layer.type === 'vector') {
-            const content = layer.content as VectorLayerContent;
-            content.symbols = devicesByCategory[category];
-            editorInstance.layerSystem.markDirty(category);
-            console.log(`📍 Restored ${devicesByCategory[category].length} devices to ${category} layer`);
-          }
-        });
-
-        lastSavedSymbolsRef.current = JSON.stringify(devices);
-
-        // RESTORE POLYGONS (rooms + masks)
-        if (polygonsData.polygons && Array.isArray(polygonsData.polygons)) {
-          const roomLayer = editorInstance.layerSystem.getLayer('room');
-          const maskLayer = editorInstance.layerSystem.getLayer('mask');
-
-          const rooms = polygonsData.polygons.filter(p => p.type === 'room');
-          const masks = polygonsData.polygons.filter(p => p.type === 'mask');
-
-          if (roomLayer) {
-            (roomLayer.content as VectorLayerContent).rooms = rooms as Room[];
-            editorInstance.layerSystem.markDirty('room');
-          }
-
-          if (maskLayer) {
-            (maskLayer.content as VectorLayerContent).masks = masks;
-            editorInstance.layerSystem.markDirty('mask');
-          }
-
-          console.log(`📐 Restored ${rooms.length} rooms and ${masks.length} masks from server`);
-        }
-
-        // RESTORE FURNITURE
-        if (project.furniture && Array.isArray(project.furniture)) {
-          const furnitureLayer = editorInstance.layerSystem.getLayer('furniture');
-          if (furnitureLayer) {
-            const mappedFurniture = project.furniture.map(f => ({
-              ...f,
-              x: f.position?.x ?? f.x ?? 0,
-              y: f.position?.y ?? f.y ?? 0,
-            }));
-            (furnitureLayer.content as VectorLayerContent).furniture = mappedFurniture as any[];
-            editorInstance.layerSystem.markDirty('furniture');
-            console.log(`🪑 Restored ${mappedFurniture.length} furniture items from server`);
-          }
-        }
-
-        // RESTORE SETTINGS & Sync UI
-        callbacks.setLayers([...editorInstance.layerSystem.getAllLayers()]);
-        callbacks.setActiveTool(editorInstance.toolSystem.getActiveToolType());
-        callbacks.setIsEditMode(editorInstance.editMode);
-
-        lastSavedPayloadRef.current = JSON.stringify({
-          x: overlayData.x || 0,
-          y: overlayData.y || 0,
-          scale: overlayData.scale || 1,
-          rotation: overlayData.rotation || 0,
-          opacity: overlayData.opacity ?? 0.7,
-          locked: !!overlayData.locked
-        });
-
-        lastSavedSymbolsRef.current = JSON.stringify(symbolsData.devices || []);
-        lastSavedPolygonsRef.current = JSON.stringify(polygonsData.polygons || []);
-        lastSavedFurnitureRef.current = JSON.stringify(project.furniture || []);
-
-        if (settingsData) {
-          if (settingsData.fastZoomMultiplier !== undefined) {
-            callbacks.setFastZoomMultiplier(settingsData.fastZoomMultiplier);
-            editorInstance.cameraSystem.setFastZoomMultiplier(settingsData.fastZoomMultiplier);
-            localStorage.setItem('integrator-pro-fast-zoom-multiplier', settingsData.fastZoomMultiplier.toString());
-          }
-          if (settingsData.units) {
-            callbacks.setUnitPreference(settingsData.units);
-            localStorage.setItem('integrator-pro-units', settingsData.units);
-            window.dispatchEvent(new Event('storage-units-changed'));
-          }
-          if (settingsData.dataLossThreshold !== undefined) {
-            callbacks.setDataLossThreshold(settingsData.dataLossThreshold);
-            localStorage.setItem('integrator-pro-data-loss-threshold', settingsData.dataLossThreshold.toString());
-          }
-        }
-
-        // Mark as initialized so auto-saves can proceed
-        isInitializedRef.current = true;
-        console.log('✅ Editor initialized and state restored');
       } catch (err) {
         console.error('Failed to restore editor state:', err);
         // Still mark as initialized so manual edits can be saved
@@ -361,16 +277,7 @@ export function useEditorInitialization(
     };
 
     setup();
-
-    return () => {
-      editorInstance.dispose();
-      editorInstanceRef.current = null;
-      callbacks.setEditor(null);
-      if ((window as any).editor === editorInstance) {
-        (window as any).editor = null;
-      }
-    };
-  }, [editorInstanceRef, isInitializedRef, lastSavedSymbolsRef, lastSavedPayloadRef, lastSavedPolygonsRef, lastSavedFurnitureRef, callbacks]);
+  }, [editorInstanceRef, isInitializedRef, lastSavedSymbolsRef, lastSavedPayloadRef, lastSavedPolygonsRef, lastSavedFurnitureRef, lastSavedCablesRef, callbacks, applyProjectData]);
 
   return initEditor;
 }

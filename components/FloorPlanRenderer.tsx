@@ -52,10 +52,6 @@ export const FloorPlanRenderer: React.FC = () => {
         return parseFloat(localStorage.getItem('integrator-pro-data-loss-threshold') || '0.5');
     });
 
-    // Data Protection State
-    const [conflictData, setConflictData] = useState<any | null>(null);
-    const [massiveChangeData, setMassiveChangeData] = useState<any | null>(null);
-
     const zoomCursorRef = useRef<HTMLDivElement>(null);
     const coordsRef = useRef<HTMLSpanElement>(null);
 
@@ -150,6 +146,7 @@ export const FloorPlanRenderer: React.FC = () => {
         lastSavedPayloadRef,
         lastSavedPolygonsRef,
         lastSavedFurnitureRef,
+        lastSavedCablesRef,
         editorInitCallbacks
     );
 
@@ -174,29 +171,8 @@ export const FloorPlanRenderer: React.FC = () => {
 
         editor.on('room-edit-requested', onRoomEdit);
 
-        // Data Protection Listeners
-        const handleCollision = (e: any) => setConflictData(e.detail);
-        const handleMassiveChange = (e: any) => setMassiveChangeData(e.detail);
-        const handleTestPurge = () => {
-            console.log('🗑️ DEBUG: Purging all polygons for testing...');
-            const roomLayer = editor.layerSystem.getLayer('room');
-            const maskLayer = editor.layerSystem.getLayer('mask');
-            if (roomLayer && roomLayer.type === 'vector') (roomLayer.content as VectorLayerContent).rooms = [];
-            if (maskLayer && maskLayer.type === 'vector') (maskLayer.content as VectorLayerContent).masks = [];
-            editor.layerSystem.markDirty('room');
-            editor.layerSystem.markDirty('mask');
-            debouncedSavePolygons();
-        };
-
-        window.addEventListener('project-collision-detected', handleCollision);
-        window.addEventListener('massive-change-detected', handleMassiveChange);
-        window.addEventListener('test-purge-polygons', handleTestPurge);
-
         return () => {
             editor.off('room-edit-requested', onRoomEdit);
-            window.removeEventListener('project-collision-detected', handleCollision);
-            window.removeEventListener('massive-change-detected', handleMassiveChange);
-            window.removeEventListener('test-purge-polygons', handleTestPurge);
         };
     }, [editor]);
 
@@ -224,67 +200,13 @@ export const FloorPlanRenderer: React.FC = () => {
         editor?.setActiveTool('select');
     };
 
-    const handleForceSave = async () => {
-        if (!massiveChangeData && !conflictData) return;
-
-        try {
-            console.log('🚀 Force saving project...');
-            const project = await dataService.loadProject(); // Get current full structure
-
-            // Merge the pending data
-            if (massiveChangeData) {
-                if (massiveChangeData.type === 'polygons') {
-                    project.floorPlan.polygons = massiveChangeData.data;
-                }
-            }
-
-            await dataService.saveProject(project, true); // true for force save
-
-            // Step 4: Reset protection state and anchors
-            lastSavedPolygonsRef.current = JSON.stringify(project.floorPlan.polygons);
-            resetAnchors();
-
-            setConflictData(null);
-            setMassiveChangeData(null);
-            console.log('✅ Force save complete, anchors reset.');
-        } catch (err) {
-            console.error('Force save failed:', err);
-            alert('Force save failed. Check console.');
-        }
-    };
-
-    const handleReload = () => {
-        window.location.reload();
-    };
-
-    const handleKeepServerVersion = async () => {
-        try {
-            console.log('🔄 Keeping server version, reloading data...');
-
-            // Dismiss modals first
-            setConflictData(null);
-            setMassiveChangeData(null);
-
-            // Trigger project reload from server (this will update editor state and refs)
-            window.dispatchEvent(new CustomEvent('project-data-changed'));
-
-            // Reset anchors to match the reloaded state
-            resetAnchors();
-
-            console.log('✅ Server version restored, in-memory changes discarded.');
-        } catch (err) {
-            console.error('Failed to reload server version:', err);
-            alert('Reload failed. Refreshing page...');
-            window.location.reload();
-        }
-    };
 
     const cursorLabel = React.useMemo(() => {
         if (isAltPressed) return 'SELECT';
         if (isPanning || activeTool === 'pan') return 'PAN';
         if (activeTool === 'draw-mask') return 'SET MASK';
         if (activeTool === 'draw-room') return 'SET ROOM';
-        if (activeTool === 'place-symbol') return activeSymbol ? `PLACING: ${activeSymbol.replace(/^.*?-/, '').replace(/_/g, ' ').toUpperCase()}` : 'PLACING SYMBOL';
+        if (activeTool === 'place-symbol') return activeSymbol ? `PLACING: ${activeSymbol.replace(/^.*?-/, '').replace(/_/g, ' ').toUpperCase()}` : 'PLACING DEVICE';
         if (activeTool === 'measure') return 'MEASURE';
         if (activeTool === 'scale-calibrate') return 'CALIBRATE';
         return 'SELECT';
@@ -382,74 +304,6 @@ export const FloorPlanRenderer: React.FC = () => {
                 />
             )}
 
-            {/* ⚠️ Conflict Resolution Modal */}
-            {conflictData && (
-                <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/80 backdrop-blur-md">
-                    <div className="bg-slate-900 border-2 border-red-500 rounded-xl p-8 max-w-md shadow-2xl animate-in fade-in zoom-in duration-300">
-                        <div className="flex items-center gap-4 mb-6">
-                            <div className="p-3 bg-red-500/20 rounded-lg text-red-500">
-                                <span className="text-3xl font-bold">!</span>
-                            </div>
-                            <div>
-                                <h2 className="text-2xl font-bold text-white uppercase tracking-tight">Save Conflict</h2>
-                                <p className="text-red-400 font-mono text-sm">OPTIMISTIC_LOCK_VIOLATION</p>
-                            </div>
-                        </div>
-                        <p className="text-slate-300 leading-relaxed mb-8">
-                            This project was modified by another tab or user since you loaded it. Saving now will overwrite those changes.
-                        </p>
-                        <div className="grid grid-cols-2 gap-4">
-                            <button
-                                onClick={handleReload}
-                                className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold transition-all border border-slate-700"
-                            >
-                                Reload (Safe)
-                            </button>
-                            <button
-                                onClick={handleForceSave}
-                                className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white rounded-lg font-bold transition-all shadow-lg shadow-red-600/20"
-                            >
-                                Overwrite (Risk)
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* ⚠️ Massive Change Warning */}
-            {massiveChangeData && !conflictData && (
-                <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/80 backdrop-blur-md">
-                    <div className="bg-slate-900 border-2 border-amber-500 rounded-xl p-8 max-w-md shadow-2xl animate-in fade-in zoom-in duration-300">
-                        <div className="flex items-center gap-4 mb-6">
-                            <div className="p-3 bg-amber-500/20 rounded-lg text-amber-500">
-                                <span className="text-3xl font-bold">?</span>
-                            </div>
-                            <div>
-                                <h2 className="text-2xl font-bold text-white uppercase tracking-tight">Massive Change</h2>
-                                <p className="text-amber-400 font-mono text-sm">DATA_LOSS_HEURISTIC_TRIGGERED</p>
-                            </div>
-                        </div>
-                        <p className="text-slate-300 leading-relaxed mb-8">
-                            You are about to delete {massiveChangeData.lastCount - massiveChangeData.currentCount} elements ({massiveChangeData.lastCount} → {massiveChangeData.currentCount}).
-                            Was this intentional?
-                        </p>
-                        <div className="grid grid-cols-2 gap-4">
-                            <button
-                                onClick={handleKeepServerVersion}
-                                className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold transition-all border border-slate-700"
-                            >
-                                Undo & Reload
-                            </button>
-                            <button
-                                onClick={handleForceSave}
-                                className="px-6 py-3 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-bold transition-all shadow-lg shadow-amber-600/20"
-                            >
-                                Confirm Save
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

@@ -81,7 +81,11 @@ export class DrawCableTool implements Tool {
             event.preventDefault();
             if (this.points.length > 0) {
                 this.points.pop();
-                this.updatePreview();
+                // If it was a Manhattan elbow, we might want to pop twice,
+                // but usually user wants to undo the last intentional click.
+                // However, since we push elbows automatically, popping once
+                // might just remove the final segment. Let's keep it simple for now.
+                this.updatePreview(event.shiftKey);
             }
             return;
         }
@@ -98,16 +102,31 @@ export class DrawCableTool implements Tool {
             return;
         }
 
+        // Manhattan Logic: Add elbow point if not aligned
+        if (this.points.length > 0) {
+            const lastPoint = this.points[this.points.length - 1];
+            const isAlignedX = Math.abs(lastPoint.x - worldPos.x) < 0.01;
+            const isAlignedY = Math.abs(lastPoint.y - worldPos.y) < 0.01;
+
+            if (!isAlignedX && !isAlignedY) {
+                // Shift = Vertical first, No Shift = Horizontal first
+                const elbowPos = event.shiftKey
+                    ? { x: lastPoint.x, y: worldPos.y }
+                    : { x: worldPos.x, y: lastPoint.y };
+                this.points.push(elbowPos);
+            }
+        }
+
         // Add point
         this.points.push(worldPos);
         this.lastClickTime = now;
-        this.updatePreview();
+        this.updatePreview(event.shiftKey);
     }
 
     public onMouseMove(x: number, y: number, event: MouseEvent): void {
         const worldPos = this.editor.cameraSystem.screenToWorld(x, y);
         this.currentMousePos = worldPos;
-        this.updatePreview();
+        this.updatePreview(event.shiftKey);
     }
 
     public onMouseUp(x: number, y: number, event: MouseEvent): void {
@@ -116,8 +135,18 @@ export class DrawCableTool implements Tool {
 
     public onKeyDown(key: string, event: KeyboardEvent): void {
         if (key === 'Enter' && this.points.length >= 2) {
-            // Include current mouse position as the last point
+            // Include current mouse position (and elbow) as the last points
             if (this.currentMousePos) {
+                const lastPoint = this.points[this.points.length - 1];
+                const isAlignedX = Math.abs(lastPoint.x - this.currentMousePos.x) < 0.01;
+                const isAlignedY = Math.abs(lastPoint.y - this.currentMousePos.y) < 0.01;
+
+                if (!isAlignedX && !isAlignedY) {
+                    const elbowPos = event.shiftKey
+                        ? { x: lastPoint.x, y: this.currentMousePos.y }
+                        : { x: this.currentMousePos.x, y: lastPoint.y };
+                    this.points.push(elbowPos);
+                }
                 this.points.push(this.currentMousePos);
             }
             this.finalizeCable();
@@ -125,7 +154,7 @@ export class DrawCableTool implements Tool {
             if (this.points.length > 0) {
                 // Undo last vertex
                 this.points.pop();
-                this.updatePreview();
+                this.updatePreview(event.shiftKey);
             }
         } else if (key === 'Backspace' || key === 'Delete') {
             // Cancel entire cable
@@ -133,12 +162,23 @@ export class DrawCableTool implements Tool {
         }
     }
 
-    private updatePreview(): void {
+    private updatePreview(isShiftPressed: boolean = false): void {
         this.previewGroup.clear();
         if (this.points.length === 0) return;
 
         const allPoints = [...this.points];
         if (this.currentMousePos && this.points.length > 0) {
+            // Add Manhattan elbow to preview if needed
+            const lastPoint = this.points[this.points.length - 1];
+            const isAlignedX = Math.abs(lastPoint.x - this.currentMousePos.x) < 0.01;
+            const isAlignedY = Math.abs(lastPoint.y - this.currentMousePos.y) < 0.01;
+
+            if (!isAlignedX && !isAlignedY) {
+                const elbowPos = isShiftPressed
+                    ? { x: lastPoint.x, y: this.currentMousePos.y }
+                    : { x: this.currentMousePos.x, y: lastPoint.y };
+                allPoints.push(elbowPos);
+            }
             allPoints.push(this.currentMousePos);
         }
 

@@ -7,90 +7,13 @@
 
 import { Device } from '../models/Device';
 import { DeviceRegistry } from './DeviceRegistry';
+import { ProjectData, ProjectSettings as Settings, ElectricalOverlay, Polygon, Point, Furniture, ProjectMetadata, ScaleData, LayoutModule, FloorPlan } from '../../editor/models/types';
 
 // ============================================================================
 // TypeScript Interfaces
 // ============================================================================
 
-export interface Point {
-  x: number;
-  y: number;
-}
-
-export interface Polygon {
-  id: string;
-  points: Point[];
-  name: string;
-  roomType?: string;
-  type: string;
-  color?: number;
-}
-
-export interface LayoutModule {
-  id: string;
-  type: string;
-  pxPerMeter?: number;
-  [key: string]: unknown;
-}
-
-export interface ScaleData {
-  scaleFactor: number;
-}
-
-export interface ElectricalOverlay {
-  scale: number;
-  rotation: number;
-  x: number;
-  y: number;
-  opacity: number;
-  locked: boolean;
-}
-
-export interface DaliDevice {
-  id: string;
-  [key: string]: unknown;
-}
-
-export interface Settings {
-  units: 'IMPERIAL' | 'METRIC';
-  fastZoomMultiplier?: number;
-  dataLossThreshold?: number; // 0.0 to 1.0 (e.g., 0.1 for 10%)
-  [key: string]: unknown;
-}
-
-export interface Furniture {
-  id: string;
-  type: string;
-  position: Point;
-  rotation: number;
-  [key: string]: unknown;
-}
-
-export interface FloorPlan {
-  scale: ScaleData;
-  layout: LayoutModule[];
-  polygons: Polygon[];
-  electricalOverlay: ElectricalOverlay;
-}
-
-export interface ProjectMetadata {
-  name: string;
-  status: string;
-  created: string;
-  modified: string;
-}
-
-export interface ProjectData {
-  version: string;
-  timestamp: string;
-  metadata: ProjectMetadata;
-  floorPlan: FloorPlan;
-  furniture: Furniture[];
-  devices: Device[];
-  cables: unknown[];
-  lcps: unknown[];
-  settings: Settings;
-}
+// Interfaces removed (now in editor/models/types.ts)
 
 export interface VersionHistoryEntry {
   filename: string;
@@ -109,8 +32,15 @@ class DataService {
   private versionToken: string | null = null;
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
   private baseUrl: string = '/api';
+  private tabId: string = Math.random().toString(36).substring(2, 15);
+  private readonly MASTER_KEY = 'integrator-pro-master-tab';
 
   constructor() {
+    console.log(`[DataService] Initialized with Tab ID: ${this.tabId}`);
+    // Check if we are the first/only tab, if so claim baton
+    if (typeof window !== 'undefined' && !localStorage.getItem(this.MASTER_KEY)) {
+      this.claimBaton();
+    }
     // Listen for cross-tab changes via storage events
     if (typeof window !== 'undefined') {
       window.addEventListener('storage', this.onStorageChange);
@@ -123,10 +53,38 @@ class DataService {
       this.clearCache();
       // Dispatch event for components to reload
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('project-data-changed'));
+        const isMaster = localStorage.getItem(this.MASTER_KEY) === this.tabId;
+        window.dispatchEvent(new CustomEvent('project-data-changed', {
+          detail: { external: true, isMaster }
+        }));
       }
     }
   };
+
+  /**
+   * Check if this tab is the primary (master) tab
+   */
+  isPrimary(): boolean {
+    if (typeof window === 'undefined') return true;
+    return localStorage.getItem(this.MASTER_KEY) === this.tabId;
+  }
+
+  /**
+   * Claim the master baton for this tab
+   */
+  claimBaton(): void {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(this.MASTER_KEY, this.tabId);
+    console.log(`[DataService] Tab ${this.tabId} claimed Master Baton`);
+    window.dispatchEvent(new CustomEvent('master-baton-changed', { detail: { isPrimary: true } }));
+  }
+
+  /**
+   * Get this tab's ID
+   */
+  getTabId(): string {
+    return this.tabId;
+  }
 
   /**
    * Load entire project data
@@ -249,6 +207,16 @@ class DataService {
       // Update localStorage to notify other tabs
       if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
         localStorage.setItem('integrator-pro-last-save', Date.now().toString());
+
+        // Dispatch event for same-tab components to sync their state/refs
+        window.dispatchEvent(new CustomEvent('project-data-changed', {
+          detail: {
+            projectId: this.projectId,
+            timestamp: this.cacheTimestamp,
+            origin: this.tabId,
+            external: false // Mark as internal to distinguish from cross-tab storage event
+          }
+        }));
       }
 
       console.log('✅ Project saved successfully with versioning');

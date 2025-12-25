@@ -1,6 +1,7 @@
 import React from 'react';
 import { ToolType } from '../../editor/models/types';
 import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
+import { dataService } from '../../src/services/DataService';
 
 interface EditorHUDProps {
     editor: FloorPlanEditor | null;
@@ -11,11 +12,38 @@ interface EditorHUDProps {
 }
 
 export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeTool, isEditMode, activeLayerName, lastKey }) => {
+    const [isPrimary, setIsPrimary] = React.useState(() => dataService.isPrimary());
+
+    React.useEffect(() => {
+        const handleBatonChange = (e: any) => {
+            setIsPrimary(e.detail.isPrimary);
+        };
+
+        const handleProjectChange = (e: any) => {
+            if (e.detail?.isMaster !== undefined) {
+                setIsPrimary(e.detail.isMaster);
+            }
+        };
+
+        window.addEventListener('master-baton-changed', handleBatonChange);
+        window.addEventListener('project-data-changed', handleProjectChange);
+
+        return () => {
+            window.removeEventListener('master-baton-changed', handleBatonChange);
+            window.removeEventListener('project-data-changed', handleProjectChange);
+        };
+    }, []);
+
     return (
         <div className="p-4 bg-slate-900/80 border-b border-slate-800 flex justify-between items-center z-10 relative">
             <div className="flex items-center space-x-6">
                 <div>
-                    <h2 className="text-lg font-bold text-white leading-none">IntegratorPro Editor</h2>
+                    <div className="flex items-center space-x-2">
+                        <h2 className="text-lg font-bold text-white leading-none">IntegratorPro Editor</h2>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-tighter ${isPrimary ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}`}>
+                            {isPrimary ? 'Primary' : 'Secondary'}
+                        </span>
+                    </div>
                     <p className="text-[10px] uppercase tracking-widest text-blue-500 font-bold mt-1">System Planning Suite</p>
                 </div>
             </div>
@@ -33,9 +61,9 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
                             <button
                                 onClick={() => editor.setEditMode(false)}
                                 className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-[10px] font-black uppercase tracking-wider rounded-md transition-colors ml-2 border border-red-400/50"
-                                title="Exit Layer Editing Mode (Ctrl+L)"
+                                title="Exit Overlay Alignment Mode (L)"
                             >
-                                EXIT LAYER EDITING
+                                EXIT ALIGNMENT MODE
                             </button>
                         )}
                         <div className="flex items-center space-x-2 pl-2 border-l border-slate-700 ml-2">

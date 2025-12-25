@@ -52,11 +52,10 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                                 className={`w-6 h-6 flex items-center justify-center rounded transition-all`}
                                 title={l.visible ? "Hide Layer" : "Show Layer"}
                             >
-                                <div className={`w-2.5 h-2.5 border rounded transition-all ${
-                                    l.visible
+                                <div className={`w-2.5 h-2.5 border rounded transition-all ${l.visible
                                         ? 'bg-blue-400 border-blue-400'
                                         : 'bg-transparent border-slate-600'
-                                }`} />
+                                    }`} />
                             </button>
 
                             <div className="flex-1 min-w-0 px-1 cursor-pointer" onClick={() => {
@@ -82,14 +81,13 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                                         e.stopPropagation();
                                         editor?.setActiveLayer(activeLayerId === l.id ? null : l.id);
                                     }}
-                                    className={`w-10 h-5 flex items-center justify-center rounded transition-all text-[8px] font-bold ${
-                                        activeLayerId === l.id
+                                    className={`w-10 h-5 flex items-center justify-center rounded transition-all text-[8px] font-bold ${activeLayerId === l.id
                                             ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
                                             : 'text-slate-600 hover:text-slate-400 hover:bg-slate-700'
                                         }`}
-                                    title={activeLayerId === l.id ? "End Editing" : "Edit Layer Transform"}
+                                    title={activeLayerId === l.id && isEditMode ? "End Shimmy" : "Shimmy Overlay"}
                                 >
-                                    {activeLayerId === l.id ? 'ACTIVE' : 'EDIT'}
+                                    {activeLayerId === l.id && isEditMode ? 'SHIMMY' : 'SHIMMY'}
                                 </button>
                             )}
 
