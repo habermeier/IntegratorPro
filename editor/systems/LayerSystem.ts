@@ -584,7 +584,28 @@ export class LayerSystem {
         }
 
         if (content.cables) {
+            // Smart Cable Filtering:
+            // If any technical layers are visible, we ONLY show cables linked to those layers (or generic cables).
+            // This prevents "Blind" cables from cluttering a "Lighting" focused view.
+            const visibleTechnicalLayerIds = this.getAllLayers()
+                .filter(l => l.category === 'technical' && l.visible)
+                .map(l => l.id);
+
             content.cables.forEach(cable => {
+                const isRelevant = visibleTechnicalLayerIds.length === 0 ||
+                    !cable.systemId ||
+                    visibleTechnicalLayerIds.includes(cable.systemId);
+
+                if (!isRelevant) {
+                    const cacheKey = `${layer.id}-${cable.id}`;
+                    const line = this.meshCache.get(cacheKey);
+                    if (line) {
+                        layer.container.remove(line);
+                        this.meshCache.delete(cacheKey);
+                    }
+                    return;
+                }
+
                 activeItemIds.add(cable.id);
                 const cacheKey = `${layer.id}-${cable.id}`;
                 let line = this.meshCache.get(cacheKey) as THREE.Line;

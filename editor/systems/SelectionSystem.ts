@@ -73,6 +73,11 @@ export class SelectionSystem {
         return Array.from(this.selectedIds);
     }
 
+    public select(id: string): void {
+        this.selectedIds.clear();
+        this.selectedIds.add(id);
+    }
+
     public clearSelection(): void {
         this.selectedIds.clear();
     }

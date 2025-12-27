@@ -20,6 +20,11 @@ export function useApplyProjectData(
     lastSavedCablesRef: React.MutableRefObject<string>
 ) {
     const applyProjectData = useCallback((editor: FloorPlanEditor, project: ProjectData) => {
+        console.log('[useApplyProjectData Debug] Incoming Project Data Keys:', Object.keys(project));
+        // Check for suspicious payload issues
+        if ((project as any).layers || (project as any).visibility) {
+            console.warn('[useApplyProjectData Debug] ⚠️ WARNING: Server data contains "layers" or "visibility" root keys! This might overwrite local state.');
+        }
         // 1. Scale
         if (project.floorPlan.scale?.scaleFactor) {
             editor.pixelsMeter = project.floorPlan.scale.scaleFactor;

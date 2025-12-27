@@ -24,6 +24,7 @@ import { EditorOverlays } from './editor/EditorOverlays';
 import { Room, RoomType, VectorLayerContent } from '../editor/models/types';
 import { AddPolygonCommand } from '../editor/commands/AddPolygonCommand';
 import { ScaleRuler } from './editor/ScaleRuler';
+import { Layers } from 'lucide-react';
 
 export const FloorPlanRenderer: React.FC = () => {
     const [editor, setEditor] = useState<FloorPlanEditor | null>(null);
@@ -52,6 +53,7 @@ export const FloorPlanRenderer: React.FC = () => {
         return parseFloat(localStorage.getItem('integrator-pro-data-loss-threshold') || '0.5');
     });
 
+
     const zoomCursorRef = useRef<HTMLDivElement>(null);
     const coordsRef = useRef<HTMLSpanElement>(null);
 
@@ -65,11 +67,7 @@ export const FloorPlanRenderer: React.FC = () => {
 
     // Auto-save functionality (extracted to useAutoSave hook)
     const {
-        debouncedSave,
-        debouncedSaveSymbols,
-        debouncedSaveFurniture,
-        debouncedSavePolygons,
-        debouncedSaveCables,
+        debouncedSaveProject,
         resetAnchors
     } = useAutoSave(
         editorInstanceRef,
@@ -94,16 +92,13 @@ export const FloorPlanRenderer: React.FC = () => {
         setIsShiftPressed,
         setUnitPreference,
         setFastZoomMultiplier,
-        debouncedSavePolygons,
-        debouncedSaveSymbols,
-        debouncedSaveFurniture,
-        debouncedSaveCables,
+        debouncedSaveProject,
         lastSavedPayloadRef,
         lastSavedSymbolsRef,
         lastSavedPolygonsRef,
         lastSavedFurnitureRef,
         lastSavedCablesRef
-    }), [debouncedSavePolygons, debouncedSaveSymbols, debouncedSaveFurniture, debouncedSaveCables]);
+    }), [debouncedSaveProject]);
 
     // Auto-activate & show layers based on tool selection (extracted to useEditorEvents hook)
     useEditorEvents(editor, editorEventCallbacks);
@@ -256,25 +251,26 @@ export const FloorPlanRenderer: React.FC = () => {
                     <ScaleRuler editor={editor} />
                 </div>
 
-                {/* 📑 Layers Sidebar (Always Visible) */}
-                {/* 📑 Layers Sidebar or Furniture Sidebar */}
-                {activeTool === 'place-furniture' ? (
-                    <FurnitureSidebar
-                        editor={editor}
-                        layers={layers}
-                        isEditMode={isEditMode}
-                    />
-                ) : (
-                    <LayersSidebar
-                        editor={editor}
-                        layers={layers}
-                        activeLayerId={activeLayerId}
-                        isEditMode={isEditMode}
-                        selectedIds={selectedIds}
-                        setSelectedIds={setSelectedIds}
-                        activeTool={activeTool}
-                    />
-                )}
+                {/* 📑 Right Sidebar Area */}
+                <div className="flex flex-col relative border-l border-slate-800">
+                    {activeTool === 'place-furniture' ? (
+                        <FurnitureSidebar
+                            editor={editor}
+                            layers={layers}
+                            isEditMode={isEditMode}
+                        />
+                    ) : (
+                        <LayersSidebar
+                            editor={editor}
+                            layers={layers}
+                            activeLayerId={activeLayerId}
+                            isEditMode={isEditMode}
+                            selectedIds={selectedIds}
+                            setSelectedIds={setSelectedIds}
+                            activeTool={activeTool}
+                        />
+                    )}
+                </div>
             </div>
 
             {calibrationData && (

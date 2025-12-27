@@ -183,6 +183,13 @@ class DataService {
       if (response.status === 409) {
         const errorData = await response.json();
         console.warn('[DataService] Save conflict detected:', errorData);
+
+        // Update token so the next attempt has a chance, even if this one failed
+        if (errorData.serverToken) {
+          this.versionToken = errorData.serverToken;
+          console.log(`[DataService] Token updated to server version: ${this.versionToken}`);
+        }
+
         // Dispatch event for UI to show conflict resolution
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('project-collision-detected', {

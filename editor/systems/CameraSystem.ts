@@ -147,6 +147,23 @@ export class CameraSystem {
         };
     }
 
+    public centerOn(x: number, y: number, zoom?: number): void {
+        if (zoom !== undefined) {
+            this.state.zoom = zoom;
+        }
+
+        const halfWidth = (this.viewportWidth / this.state.zoom) / 2;
+        const halfHeight = (this.viewportHeight / this.state.zoom) / 2;
+
+        this.mainCamera.left = x - halfWidth;
+        this.mainCamera.right = x + halfWidth;
+        this.mainCamera.top = y + halfHeight;
+        this.mainCamera.bottom = y - halfHeight;
+
+        this.mainCamera.updateProjectionMatrix();
+        this.updateZoomCamera();
+    }
+
     public getState(): { x: number, y: number, zoom: number } {
         const cx = (this.mainCamera.left + this.mainCamera.right) / 2;
         const cy = (this.mainCamera.top + this.mainCamera.bottom) / 2;

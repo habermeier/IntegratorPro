@@ -24,10 +24,7 @@ export interface EditorEventCallbacks {
   setIsShiftPressed: (pressed: boolean) => void;
   setUnitPreference: (units: 'METRIC' | 'IMPERIAL') => void;
   setFastZoomMultiplier: (multiplier: number) => void;
-  debouncedSavePolygons: () => void;
-  debouncedSaveSymbols: () => void;
-  debouncedSaveFurniture: () => void;
-  debouncedSaveCables: () => void;
+  debouncedSaveProject: (force?: boolean) => void;
   lastSavedPayloadRef: React.MutableRefObject<string>;
   lastSavedSymbolsRef: React.MutableRefObject<string>;
   lastSavedPolygonsRef: React.MutableRefObject<string>;
@@ -66,10 +63,7 @@ export function useEditorEvents(
 
     const onLayersChanged = (newLayers: Layer[]) => {
       callbacks.setLayers([...newLayers]);
-      callbacks.debouncedSavePolygons();
-      callbacks.debouncedSaveSymbols();
-      callbacks.debouncedSaveFurniture();
-      callbacks.debouncedSaveCables();
+      callbacks.debouncedSaveProject();
     };
 
     // Auto-activate layer when device/symbol is selected

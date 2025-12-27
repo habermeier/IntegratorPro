@@ -32,8 +32,15 @@ export const EditorOverlays: React.FC<EditorOverlaysProps> = ({
           <div className="bg-red-600 text-white px-8 py-2 rounded-full text-sm font-black uppercase tracking-[0.2em] shadow-[0_0_30px_rgba(220,38,38,1)] border-2 border-red-400 pointer-events-none">
             🛠️ Overlay Alignment Mode
           </div>
-          <div className="mt-2 text-[10px] text-red-400 font-bold bg-slate-950/80 px-4 py-1 rounded-md backdrop-blur-sm border border-red-900/50 pointer-events-none">
-            Arrows: Nudge • Ctrl+Arrows: Scale/Rotate • L to Finish
+          <div className="mt-2 text-[10px] text-red-200 font-bold bg-slate-950/90 px-6 py-2 rounded-lg backdrop-blur-md border border-red-900/50 pointer-events-none shadow-2xl flex flex-col items-center space-y-1">
+            <div className="flex space-x-4">
+              <span><span className="text-red-400">Arrows:</span> Nudge <span className="text-slate-500 font-normal italic">(+Shift: Fast)</span></span>
+              <span><span className="text-red-400">Ctrl+Arrows:</span> Scale/Rotate</span>
+            </div>
+            <div className="flex space-x-4">
+              <span><span className="text-red-400">+/-:</span> Opacity</span>
+              <span><span className="text-red-400">L:</span> Toggle Mode</span>
+            </div>
           </div>
         </div>
       )}

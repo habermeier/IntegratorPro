@@ -80,6 +80,7 @@ export function useEditorInitialization(
         id: 'base',
         name: 'Base Floor Plan',
         type: 'image',
+        category: 'foundation',
         zIndex: 0,
         visible: true,
         locked: true,
@@ -92,7 +93,8 @@ export function useEditorInitialization(
         id: 'mask',
         name: 'Masking',
         type: 'vector',
-        zIndex: 25, // Above electrical (20), below rooms (30)
+        category: 'foundation',
+        zIndex: 10, // After base (0), before electrical (20)
         visible: true,
         locked: true,
         opacity: 1,
@@ -104,7 +106,8 @@ export function useEditorInitialization(
         id: 'electrical',
         name: 'Electrical Overlay',
         type: 'image',
-        zIndex: 20,
+        category: 'foundation',
+        zIndex: 30, // Above rooms (20)
         visible: true,
         locked: true,
         opacity: 0.7,
@@ -116,7 +119,8 @@ export function useEditorInitialization(
         id: 'room',
         name: 'Rooms',
         type: 'vector',
-        zIndex: 30,
+        category: 'foundation',
+        zIndex: 20, // Below electrical (30)
         visible: true,
         locked: false,
         opacity: 1,
@@ -128,6 +132,7 @@ export function useEditorInitialization(
         id: 'cables',
         name: 'Cables',
         type: 'vector',
+        category: 'utility',
         zIndex: 40,
         visible: true,
         locked: false,
@@ -140,7 +145,8 @@ export function useEditorInitialization(
         id: 'lighting',
         name: 'Lighting',
         type: 'vector',
-        zIndex: 50,
+        category: 'technical',
+        zIndex: 90,
         visible: true,
         locked: false,
         opacity: 1,
@@ -152,8 +158,9 @@ export function useEditorInitialization(
         id: 'sensors',
         name: 'Sensors',
         type: 'vector',
-        zIndex: 51,
-        visible: true,
+        category: 'technical',
+        zIndex: 80,
+        visible: false,
         locked: false,
         opacity: 1,
         transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
@@ -164,8 +171,9 @@ export function useEditorInitialization(
         id: 'security',
         name: 'Security',
         type: 'vector',
-        zIndex: 52,
-        visible: true,
+        category: 'technical',
+        zIndex: 75,
+        visible: false,
         locked: false,
         opacity: 1,
         transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
@@ -176,8 +184,9 @@ export function useEditorInitialization(
         id: 'network',
         name: 'Network',
         type: 'vector',
-        zIndex: 53,
-        visible: true,
+        category: 'technical',
+        zIndex: 70,
+        visible: false,
         locked: false,
         opacity: 1,
         transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
@@ -188,8 +197,9 @@ export function useEditorInitialization(
         id: 'lcps',
         name: 'LCPs',
         type: 'vector',
-        zIndex: 54,
-        visible: true,
+        category: 'technical',
+        zIndex: 65,
+        visible: false,
         locked: false,
         opacity: 1,
         transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
@@ -200,8 +210,9 @@ export function useEditorInitialization(
         id: 'hvac',
         name: 'HVAC',
         type: 'vector',
-        zIndex: 55,
-        visible: true,
+        category: 'technical',
+        zIndex: 60,
+        visible: false,
         locked: false,
         opacity: 1,
         transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
@@ -212,8 +223,9 @@ export function useEditorInitialization(
         id: 'receptacles',
         name: 'Receptacles',
         type: 'vector',
-        zIndex: 56,
-        visible: true,
+        category: 'technical',
+        zIndex: 55,
+        visible: false,
         locked: false,
         opacity: 1,
         transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
@@ -224,8 +236,9 @@ export function useEditorInitialization(
         id: 'furniture',
         name: 'Furniture',
         type: 'vector',
-        zIndex: 60,
-        visible: true,
+        category: 'technical',
+        zIndex: 45,
+        visible: false,
         locked: false,
         opacity: 1,
         transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
@@ -245,7 +258,17 @@ export function useEditorInitialization(
         console.log('📦 Loaded project data from DataService');
 
         if (project) {
+
+          // Debug Trace: Before Server Data
+          const preServerLayers = editorInstance.layerSystem.getAllLayers().map(l => ({ id: l.id, visible: l.visible, category: l.category }));
+          console.log('[Initialization Debug] Tech Layers BEFORE Server Data:', JSON.stringify(preServerLayers.filter(l => l.category === 'technical')));
+
           applyProjectData(editorInstance, project);
+
+          // Debug Trace: After Server Data
+          const postServerLayers = editorInstance.layerSystem.getAllLayers().map(l => ({ id: l.id, visible: l.visible, category: l.category }));
+          console.log('[Initialization Debug] Tech Layers AFTER Server Data:', JSON.stringify(postServerLayers.filter(l => l.category === 'technical')));
+
 
           const settingsData = project.settings;
           if (settingsData) {
@@ -267,6 +290,8 @@ export function useEditorInitialization(
 
           // Mark as initialized so auto-saves can proceed
           isInitializedRef.current = true;
+          // Defense in Depth: One final mutex check to ensure UI is clean after server load
+          editorInstance.enforceTechnicalLayerMutex();
           console.log('✅ Editor initialized and state restored');
         }
       } catch (err) {

@@ -220,10 +220,15 @@ export class DrawCableTool implements Tool {
         }
 
         const id = Math.random().toString(36).substring(7);
+        const activeLayerId = this.editor.activeLayer;
+        const activeLayer = activeLayerId ? this.editor.layerSystem.getLayer(activeLayerId) : null;
+        const systemId = activeLayer?.category === 'technical' ? activeLayerId : undefined;
+
         const cable: Cable = {
             id,
             points: [...this.points],
             cableType: this.cableType,
+            systemId,
             color: '#000000', // Black
             label: ''
         };

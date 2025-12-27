@@ -22,10 +22,13 @@ export interface LayoutModule {
     [key: string]: unknown;
 }
 
+export type LayerCategory = 'foundation' | 'technical' | 'utility';
+
 export interface LayerConfig {
     id: string;
     name: string;
     type: LayerType;
+    category?: LayerCategory;
     zIndex: number;
     visible: boolean;
     locked: boolean;
@@ -90,6 +93,7 @@ export interface Layer {
     id: string;
     name: string;
     type: LayerType;
+    category?: LayerCategory;
     zIndex: number;
     visible: boolean;
     locked: boolean;
@@ -122,6 +126,7 @@ export interface Cable {
     id: string;
     points: Vector2[];
     cableType: string; // Cat6, DALI, KNX, etc.
+    systemId?: string; // Links to a technical layer (e.g., 'lighting')
     color?: string;
     label?: string;
 }

@@ -1,7 +1,15 @@
 import * as THREE from 'three';
 import { LayerSystem } from './systems/LayerSystem';
 import { CameraSystem } from './systems/CameraSystem';
-import { LayerConfig, ToolType, Transform } from './models/types';
+import {
+    LayerConfig,
+    ToolType,
+    Transform,
+    VectorLayerContent,
+    PlacedSymbol,
+    Furniture,
+    Layer
+} from './models/types';
 import { ToolSystem } from './systems/ToolSystem';
 import { ScaleCalibrateTool } from './tools/ScaleCalibrateTool';
 import { SelectTool } from './tools/SelectTool';
@@ -14,6 +22,7 @@ import { PlaceSymbolTool } from './tools/PlaceSymbolTool';
 import { PlaceFurnitureTool } from './tools/PlaceFurnitureTool';
 import { MeasureTool } from './tools/MeasureTool';
 import { DrawCableTool } from './tools/DrawCableTool';
+import { DeleteSymbolCommand } from './commands/DeleteSymbolCommand';
 export class FloorPlanEditor {
     public scene: THREE.Scene;
     private renderer: THREE.WebGLRenderer;
@@ -25,7 +34,7 @@ export class FloorPlanEditor {
     public commandManager: CommandManager;
     public selectionSystem: SelectionSystem;
 
-    private isOverlayAlignmentMode: boolean = false;
+    public isOverlayAlignmentMode: boolean = false;
     private activeLayerId: string | null = null;
     private isSpacePressed: boolean = false;
     private isAltPressed: boolean = false;
@@ -44,10 +53,15 @@ export class FloorPlanEditor {
     private animationFrameId: number | null = null;
     private eventListeners: Map<string, Function[]> = new Map();
     private preMaskVisibility: Map<string, boolean> = new Map();
+    private preShimmyOpacity: Map<string, number> = new Map();
     private STORAGE_KEY = 'integrator-pro-editor-state';
 
     public get editMode(): boolean {
         return this.isOverlayAlignmentMode;
+    }
+
+    public get activeLayer(): string | null {
+        return this.activeLayerId;
     }
 
     public get pixelsMeter(): number {
@@ -61,7 +75,7 @@ export class FloorPlanEditor {
 
     constructor(container: HTMLElement) {
         const editorId = Math.random().toString(36).substring(7);
-        console.log(`[FloorPlanEditor] Initializing new instance: ${editorId}`);
+        console.log(`[FloorPlanEditor] Initializing new instance: ${editorId} `);
         this.container = container;
 
         // Initialize Three.js
@@ -142,10 +156,17 @@ export class FloorPlanEditor {
 
             // 1. Restore Visibility
             if (state.visibility) {
-                Object.entries(state.visibility as Record<string, boolean>).forEach(([id, visible]) => {
-                    this.layerSystem.setLayerVisible(id, visible);
+                console.log('[FloorPlanEditor Debug] Restoring visibility from persistence:', JSON.stringify(state.visibility));
+                const entries = Object.entries(state.visibility as Record<string, boolean>);
+                entries.forEach(([id, visible], index) => {
+                    // We batch updates by skipping emit. The final state verification 
+                    // in enforceTechnicalLayerMutex will emit the correct final state.
+                    this.setLayerVisible(id, visible, true, true);
                 });
             }
+
+            // Defense in Depth: Explicitly enforce mutex after restoration to catch any race conditions
+            this.enforceTechnicalLayerMutex();
 
             // 2. Restore Pre-Mask Visibility Map
             if (state.preMaskVisibility) {
@@ -233,7 +254,7 @@ export class FloorPlanEditor {
                         : Math.max(0, layer.opacity - opacityStep);
 
                     this.setLayerOpacity(targetLayerId, newOpacity);
-                    console.log(`[FloorPlanEditor] Adjusted ${layer.name} opacity: ${(newOpacity * 100).toFixed(0)}%`);
+                    console.log(`[FloorPlanEditor] Adjusted ${layer.name} opacity: ${(newOpacity * 100).toFixed(0)}% `);
                 }
             }
             return;
@@ -281,6 +302,8 @@ export class FloorPlanEditor {
                 case 'f': this.setActiveTool('place-furniture'); break;
                 case 's': this.setActiveTool('scale-calibrate'); break;
                 case 'd': this.setActiveTool('measure'); break;
+                case '[': this.cycleDevices('prev'); break;
+                case ']': this.cycleDevices('next'); break;
             }
         }
 
@@ -484,12 +507,25 @@ export class FloorPlanEditor {
         this.isOverlayAlignmentMode = enabled;
 
         if (this.isOverlayAlignmentMode) {
-            this.container.focus();
             this.renderer.domElement.focus();
             // Automatically select 'electrical' layer if none selected or if current is not alignable
             const layer = this.activeLayerId ? this.layerSystem.getLayer(this.activeLayerId) : null;
             if (!layer || layer.allowLayerEditing === false) {
                 this.setActiveLayer('electrical', true); // Internal set to avoid alert
+            }
+
+            // Auto-dim room layer for better visibility during alignment
+            const roomLayer = this.layerSystem.getLayer('room');
+            if (roomLayer) {
+                this.preShimmyOpacity.set('room', roomLayer.opacity);
+                this.layerSystem.setLayerOpacity('room', 0.5);
+            }
+        } else {
+            // Exit Alignment Mode: Restore room opacity
+            const originalOpacity = this.preShimmyOpacity.get('room');
+            if (originalOpacity !== undefined) {
+                this.layerSystem.setLayerOpacity('room', originalOpacity);
+                this.preShimmyOpacity.delete('room'); // Clear it
             }
         }
 
@@ -504,14 +540,27 @@ export class FloorPlanEditor {
         this.setDirty();
     }
 
-    public setActiveLayer(id: string | null, internal: boolean = false): void {
-        // Check if layer allows editing (only if NOT internal and ONLY if we are in Alignment Mode)
-        if (id && !internal && this.isOverlayAlignmentMode) {
+    public setActiveLayer(id: string | null, internal: boolean = false, forceShimmy: boolean = false): void {
+        // Toggle off if clicking the already active layer in alignment mode
+        if (id === this.activeLayerId && !internal && this.isOverlayAlignmentMode && !forceShimmy) {
+            this.setEditMode(false);
+            this.activeLayerId = null;
+            this.updateFocusMode();
+            this.emit('edit-mode-changed', { isEditMode: this.isOverlayAlignmentMode, activeLayerId: this.activeLayerId });
+            return;
+        }
+
+        // Check if layer allows editing (only if NOT internal)
+        if (id && !internal) {
             const layer = this.layerSystem.getLayer(id);
-            if (layer && layer.allowLayerEditing === false) {
-                console.warn(`[FloorPlanEditor] Cannot shimmy layer "${layer.name}" - locked to base coordinates`);
-                // alert removed per user request: "no point in acting like we could and then pop up an error"
-                return;
+
+            // If we are selecting a shimmy-able layer from the UI with an explicit SHIMMY request
+            if (forceShimmy && !this.isOverlayAlignmentMode) {
+                if (layer && layer.allowLayerEditing === false) {
+                    console.warn(`[FloorPlanEditor] Cannot shimmy layer "${layer.name}" - locked to base coordinates`);
+                    return;
+                }
+                this.setEditMode(true);
             }
         }
 
@@ -522,9 +571,9 @@ export class FloorPlanEditor {
 
         this.activeLayerId = id;
 
-        // If in alignment mode, apply new lock
+        // If in alignment mode, apply new lock and ENSURE FOCUS
         if (this.isOverlayAlignmentMode && id) {
-            this.container.focus();
+            this.renderer.domElement.focus();
             this.layerSystem.setLayerLocked(id, false);
         }
 
@@ -536,15 +585,238 @@ export class FloorPlanEditor {
 
     public addLayer(config: LayerConfig): void {
         this.layerSystem.addLayer({ ...config, locked: true }); // Default to locked
+
+        // Ensure mutex if added as visible
+        if (config.visible) {
+            this.setLayerVisible(config.id, true, true);
+        }
+
         this.emit('layers-changed', this.layerSystem.getAllLayers());
         this.setDirty();
     }
 
-    public setLayerVisible(id: string, visible: boolean): void {
+    public setLayerVisible(id: string, visible: boolean, skipSave: boolean = false, skipEmit: boolean = false): void {
+        const layer = this.layerSystem.getLayer(id);
+        console.log(`[FloorPlanEditor Debug] setLayerVisible called for ${id}: ${visible}, skipSave: ${skipSave}`);
+
+        // Enforce mutual exclusivity for technical layers
+        if (visible && layer?.category === 'technical') {
+            const allLayers = this.layerSystem.getAllLayers();
+            allLayers.forEach(l => {
+                if (l.category === 'technical' && l.id !== id) {
+                    // Check if other technical layer is currently visible
+                    if (l.visible) {
+                        console.log(`[FloorPlanEditor Debug] Mutex Check: Disabling ${l.id} because ${id} is becoming visible.`);
+                        this.layerSystem.setLayerVisible(l.id, false);
+                    }
+                }
+            });
+        }
+
         this.layerSystem.setLayerVisible(id, visible);
+        if (!skipSave) {
+            this.savePersistentState();
+        }
+
+        if (!skipEmit) {
+            // Force a fresh array reference and ensure objects are treated as updated
+            const currentLayers = this.layerSystem.getAllLayers().map(l => ({ ...l }));
+            this.emit('layers-changed', currentLayers);
+        }
+        this.setDirty();
+    }
+
+    public enforceTechnicalLayerMutex(): void {
+        console.log('[FloorPlanEditor Debug] 🛡️ STARTING MUTEX ENFORCEMENT 🛡️');
+        const layers = this.layerSystem.getAllLayers();
+        const techLayers = layers.filter(l => l.category === 'technical' && l.visible);
+
+        console.log('[FloorPlanEditor Debug] Enforcing Mutex. Visible Tech Layers:', techLayers.map(l => l.id));
+
+        if (techLayers.length > 1) {
+            console.warn('[FloorPlanEditor] Mutex violation detected. Enforcing single technical layer.');
+            // Identify which one should stay active.
+            // Preference: Lighting > HVAC > First available
+            // Or just keep the last one (most likely user intent from restoration loop)
+            // Let's keep the last one found in the list (simplest heuristic for now) or specific priority?
+
+            // Heuristic: If multiple are active, keep the one with the highest zIndex (topmost) or just pick one.
+            // Let's match the user's report: they saw "All 3".
+            // Let's keep the one that appears *last* in the list (highest z-index usually) as the "active" one, disable others.
+
+            // Actually, let's look for known types to prioritize: 'lighting' is a good default if active.
+            let keptLayerId = techLayers[techLayers.length - 1].id;
+            const lighting = techLayers.find(l => l.id === 'lighting');
+            if (lighting) keptLayerId = 'lighting';
+
+            console.log(`[FloorPlanEditor Debug] Keeping ${keptLayerId} active, disabling others.`);
+
+            techLayers.forEach(l => {
+                if (l.id !== keptLayerId) {
+                    console.log(`[FloorPlanEditor Debug] Auto-disabling layer ${l.id}`);
+                    this.layerSystem.setLayerVisible(l.id, false);
+                }
+            });
+            this.savePersistentState();
+            // Force fresh array for React
+            this.emit('layers-changed', this.layerSystem.getAllLayers().map(l => ({ ...l })));
+        } else {
+            console.log('[FloorPlanEditor Debug] No mutex violation found.');
+        }
+    }
+
+    public setLayerSolo(id: string): void {
+        const layers = this.layerSystem.getAllLayers();
+        const targetLayer = layers.find(l => l.id === id);
+        if (!targetLayer) return;
+
+        layers.forEach(l => {
+            // Foundational layers stay visible
+            if (l.category === 'foundation') {
+                this.layerSystem.setLayerVisible(l.id, true);
+                return;
+            }
+
+            // Solo target stays visible
+            if (l.id === id) {
+                this.layerSystem.setLayerVisible(l.id, true);
+                return;
+            }
+
+            // Other technical/utility layers are hidden
+            if (l.category === 'technical' || l.category === 'utility') {
+                this.layerSystem.setLayerVisible(l.id, false);
+            }
+        });
+
         this.savePersistentState();
         this.emit('layers-changed', this.layerSystem.getAllLayers());
         this.setDirty();
+    }
+
+    public focusOnDevice(id: string): void {
+        // Find device in all layers
+        const layers = this.layerSystem.getAllLayers();
+        let foundDevice: PlacedSymbol | Furniture | null = null;
+        let foundLayer: Layer | null = null;
+
+        for (const layer of layers) {
+            if (layer.type === 'vector') {
+                const content = layer.content as VectorLayerContent;
+                const dev = (content.symbols || []).find(s => s.id === id)
+                    || (content.furniture || []).find(f => f.id === id); // Check furniture too
+                if (dev) {
+                    foundDevice = dev;
+                    foundLayer = layer;
+                    break;
+                }
+            }
+        }
+
+        if (foundDevice && foundLayer) {
+            console.log(`[FloorPlanEditor] Focusing on device ${id} in layer ${foundLayer.id}`);
+
+            // 1. Auto-show and activate layer (but don't shimmy)
+            this.layerSystem.setLayerVisible(foundLayer.id, true);
+            this.setActiveLayer(foundLayer.id, true); // internal=true prevents auto-shimmy logic
+
+            // 2. Calculate World Position
+            // Important: symbols are children of the layer container, which has its own transform
+            const localPos = new THREE.Vector3(foundDevice.x, foundDevice.y, 0);
+            const worldPos = localPos.applyMatrix4(foundLayer.container.matrixWorld);
+
+            // 3. Center camera with progressive zoom
+            const currentZoom = this.cameraSystem.getState().zoom;
+            const targetZoom = Math.max(currentZoom, 2.5); // Focus zoom
+            this.cameraSystem.centerOn(worldPos.x, worldPos.y, targetZoom);
+
+            // 4. Selection highlight
+            this.selectionSystem.select(id);
+            this.emit('selection-changed', [id]);
+
+            this.setDirty();
+        } else {
+            console.warn(`[FloorPlanEditor] Could not find device to focus: ${id}`);
+        }
+    }
+
+    public deleteDevice(id: string): void {
+        // Find device and its layer
+        const layers = this.layerSystem.getAllLayers();
+        let foundDevice: PlacedSymbol | Furniture | null = null;
+        let foundLayerId: string | null = null;
+
+        for (const layer of layers) {
+            if (layer.type === 'vector') {
+                const content = layer.content as VectorLayerContent;
+                const dev = (content.symbols || []).find(s => s.id === id)
+                    || (content.furniture || []).find(f => f.id === id);
+                if (dev) {
+                    foundDevice = dev;
+                    foundLayerId = layer.id;
+                    break;
+                }
+            }
+        }
+
+        if (foundDevice && foundLayerId) {
+            const command = new DeleteSymbolCommand(foundLayerId, foundDevice, this.layerSystem);
+            this.commandManager.execute(command);
+
+            // Clear selection if it was deleted
+            if (this.selectionSystem.getSelectedIds().includes(id)) {
+                this.selectionSystem.clearSelection();
+                this.emit('selection-changed', []);
+            }
+
+            this.emit('layers-changed', this.layerSystem.getAllLayers());
+            this.setDirty();
+        }
+    }
+
+    public cycleDevices(direction: 'next' | 'prev'): void {
+        const layers = this.layerSystem.getAllLayers();
+        const allDevices: { id: string, name: string, roomId: string }[] = [];
+
+        // Collect all devices from all vector layers
+        layers.forEach(layer => {
+            if (layer.type === 'vector') {
+                const content = layer.content as VectorLayerContent;
+                const symbols = (content.symbols || []).map(s => ({ id: s.id, name: s.label || s.type, roomId: s.room || 'Unassigned' }));
+                const furniture = (content.furniture || []).map(f => ({ id: f.id, name: f.label || f.type, roomId: f.room || 'Unassigned' }));
+                allDevices.push(...symbols, ...furniture);
+            }
+        });
+
+        if (allDevices.length === 0) return;
+
+        // Sort by room then name (matching the UI list order roughly)
+        allDevices.sort((a, b) => {
+            if (a.roomId === 'Unassigned' && b.roomId !== 'Unassigned') return 1;
+            if (a.roomId !== 'Unassigned' && b.roomId === 'Unassigned') return -1;
+            const roomComp = a.roomId.localeCompare(b.roomId);
+            if (roomComp !== 0) return roomComp;
+            return a.name.localeCompare(b.name);
+        });
+
+        // Find current index
+        const selectedIds = this.selectionSystem.getSelectedIds();
+        let currentIndex = -1;
+        if (selectedIds.length > 0) {
+            currentIndex = allDevices.findIndex(d => d.id === selectedIds[0]);
+        }
+
+        let nextIndex: number;
+        if (direction === 'next') {
+            nextIndex = (currentIndex + 1) % allDevices.length;
+        } else {
+            nextIndex = (currentIndex - 1 + allDevices.length) % allDevices.length;
+        }
+
+        const targetDevice = allDevices[nextIndex];
+        if (targetDevice) {
+            this.focusOnDevice(targetDevice.id);
+        }
     }
 
     public setLayerOpacity(id: string, opacity: number): void {
