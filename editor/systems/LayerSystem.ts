@@ -19,6 +19,9 @@ export class LayerSystem {
 
     constructor(scene: THREE.Scene) {
         this.scene = scene;
+
+        // DEBUG: Expose scene to browser console for manual inspection
+        (window as any).scene = this.scene;
     }
 
     public addLayer(config: LayerConfig): Layer {
@@ -512,6 +515,7 @@ export class LayerSystem {
 
         if (content.symbols) {
             content.symbols.forEach(symbolData => {
+                remoteLog('SYMBOL DATA: ' + JSON.stringify(symbolData), 'info', 'DATA-AUDIT');
                 remoteLog(`Processing symbol - id: ${symbolData.id}, type: ${symbolData.type}, category: ${symbolData.category}`, 'debug', '🔍 DEEP-TRACE');
                 remoteLog(`⭐ Device Position: (${(symbolData.x ?? 0).toFixed(2)}, ${(symbolData.y ?? 0).toFixed(2)}) rotation: ${symbolData.rotation}°`, 'debug', '🔍 DEEP-TRACE');
 
@@ -528,10 +532,16 @@ export class LayerSystem {
                     }
 
                     group = def.createMesh(def.size.width, def.size.height);
+
                     group.name = `symbol-${symbolData.id}`;
                     group.position.set(symbolData.x, symbolData.y, 0.2);
                     group.rotation.z = (symbolData.rotation * Math.PI) / 180;
-                    group.scale.set(symbolData.scale, symbolData.scale, 1);
+                    // CRITICAL: Default scale to 1 if null/undefined
+                    // Device interface has no 'scale' field, so loaded devices have scale=null
+                    // Without this default, Three.js converts null→0, making symbols invisible
+                    // See: docs/SCALE-BUG-POSTMORTEM.md
+                    const scale = symbolData.scale ?? 1;
+                    group.scale.set(scale, scale, 1);
                     group.userData = {
                         id: symbolData.id,
                         type: 'symbol',
@@ -556,7 +566,9 @@ export class LayerSystem {
                     remoteLog(`♻️ Updating CACHED symbol ${symbolData.id} position to (${(symbolData.x ?? 0).toFixed(2)}, ${(symbolData.y ?? 0).toFixed(2)})`, 'debug', '🔍 DEEP-TRACE');
                     group.position.set(symbolData.x, symbolData.y, 0.2);
                     group.rotation.z = (symbolData.rotation * Math.PI) / 180;
-                    group.scale.set(symbolData.scale, symbolData.scale, 1);
+                    // CRITICAL: Default scale to 1 (see docs/SCALE-BUG-POSTMORTEM.md)
+                    const scale = symbolData.scale ?? 1;
+                    group.scale.set(scale, scale, 1);
                 }
 
                 // Update Coverage Circle (Worker 2)
@@ -824,8 +836,10 @@ export class LayerSystem {
 
         // Apply inverse symbol scale to radius so the circle world-size is correct
         // since the circle is a child of the symbol group which is scaled.
-        if (radius > 0 && symbolData.scale > 0) {
-            radius /= symbolData.scale;
+        // CRITICAL: Default scale to 1 (see docs/SCALE-BUG-POSTMORTEM.md)
+        const scale = symbolData.scale ?? 1;
+        if (radius > 0 && scale > 0) {
+            radius /= scale;
         }
 
         if (radius <= 0) {

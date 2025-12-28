@@ -1,11 +1,11 @@
 {
   "version": "1.0",
-  "timestamp": "2025-12-28T20:08:38.805Z",
+  "timestamp": "2025-12-28T22:09:12.012Z",
   "metadata": {
     "name": "270 Boll Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2025-12-28T20:08:38.500Z"
+    "modified": "2025-12-28T22:09:10.981Z"
   },
   "floorPlan": {
     "scale": {
@@ -3976,13 +3976,13 @@
   ],
   "devices": [
     {
-      "id": "lighting-1766877279601",
+      "id": "lighting-1766959378660",
       "deviceTypeId": "recessed-light",
       "productId": "generic-product",
       "name": "recessed-light ligh",
       "position": {
-        "x": 866.2294152239774,
-        "y": 710.6947371159645
+        "x": 328.0045166015625,
+        "y": 586.5192108154297
       },
       "rotation": 0,
       "roomId": "Family Room Open Area",
@@ -3998,16 +3998,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1766877279601
+      "createdAt": 1766959378660
     },
     {
-      "id": "lighting-1766934550671",
+      "id": "lighting-1766959379159",
       "deviceTypeId": "recessed-light",
       "productId": "generic-product",
       "name": "recessed-light ligh",
       "position": {
-        "x": 977.8270315515016,
-        "y": 715.7321295196374
+        "x": 541.0045166015625,
+        "y": 567.5192108154297
       },
       "rotation": 0,
       "roomId": "Family Room Open Area",
@@ -4023,16 +4023,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1766934550671
+      "createdAt": 1766959379159
     },
     {
-      "id": "lighting-1766936624761",
+      "id": "lighting-1766959571286",
       "deviceTypeId": "recessed-light",
       "productId": "generic-product",
       "name": "recessed-light ligh",
       "position": {
-        "x": 874.3684915602493,
-        "y": 738.6015852298235
+        "x": 360.0045166015625,
+        "y": 627.5192108154297
       },
       "rotation": 0,
       "roomId": "Family Room Open Area",
@@ -4048,16 +4048,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1766936624761
+      "createdAt": 1766959571286
     },
     {
-      "id": "lighting-1766942231846",
+      "id": "lighting-1766959581792",
       "deviceTypeId": "recessed-light",
       "productId": "generic-product",
       "name": "recessed-light ligh",
       "position": {
-        "x": 256.0045166015625,
-        "y": 616.5192108154297
+        "x": 273.0045166015625,
+        "y": 383.51921081542974
       },
       "rotation": 0,
       "roomId": "Family Room Open Area",
@@ -4073,16 +4073,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1766942231846
+      "createdAt": 1766959581792
     },
     {
-      "id": "lighting-1766942289242",
+      "id": "lighting-1766959582266",
       "deviceTypeId": "recessed-light",
       "productId": "generic-product",
       "name": "recessed-light ligh",
       "position": {
-        "x": 364.0045166015625,
-        "y": 608.0192108154297
+        "x": 545.0045166015625,
+        "y": 378.5192108154297
       },
       "rotation": 0,
       "roomId": "Family Room Open Area",
@@ -4098,16 +4098,91 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1766942289242
+      "createdAt": 1766959582266
     },
     {
-      "id": "lighting-1766952516991",
+      "id": "lighting-1766959593650",
       "deviceTypeId": "recessed-light",
       "productId": "generic-product",
       "name": "recessed-light ligh",
       "position": {
-        "x": -2327.7615130370637,
-        "y": 1220.6019459510785
+        "x": 521.0045166015625,
+        "y": 461.5192108154297
+      },
+      "rotation": 0,
+      "roomId": "Family Room Open Area",
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1766959593650
+    },
+    {
+      "id": "lighting-1766959596274",
+      "deviceTypeId": "recessed-light",
+      "productId": "generic-product",
+      "name": "recessed-light ligh",
+      "position": {
+        "x": 355.0045166015625,
+        "y": 481.5192108154297
+      },
+      "rotation": 0,
+      "roomId": "Family Room Open Area",
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1766959596274
+    },
+    {
+      "id": "lighting-1766959641235",
+      "deviceTypeId": "recessed-light",
+      "productId": "generic-product",
+      "name": "recessed-light ligh",
+      "position": {
+        "x": 198.0045166015625,
+        "y": 571.5192108154297
+      },
+      "rotation": 0,
+      "roomId": "Family Room Open Area",
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1766959641235
+    },
+    {
+      "id": "lighting-1766959745568",
+      "deviceTypeId": "recessed-light",
+      "productId": "generic-product",
+      "name": "recessed-light ligh",
+      "position": {
+        "x": -2329.962997931004,
+        "y": 1217.1493305357826
       },
       "rotation": 0,
       "roomId": "Primary Bedroom",
@@ -4123,7 +4198,32 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1766952516991
+      "createdAt": 1766959745568
+    },
+    {
+      "id": "lighting-1766959749480",
+      "deviceTypeId": "recessed-light",
+      "productId": "generic-product",
+      "name": "recessed-light ligh",
+      "position": {
+        "x": -2333.3780653028934,
+        "y": 1209.6361823176267
+      },
+      "rotation": 0,
+      "roomId": "Primary Bedroom",
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1766959749480
     }
   ],
   "cables": [],
