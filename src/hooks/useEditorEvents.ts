@@ -168,6 +168,11 @@ export function useEditorEvents(
         return;
       }
 
+      if (!isExternal) {
+        console.log('[useEditorEvents] Ignoring internal change event (we are the originator)');
+        return;
+      }
+
       console.log('[useEditorEvents] Detected project change, performing SILENT sync');
       if (!editor) return;
 

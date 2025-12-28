@@ -24,25 +24,43 @@ export const SYMBOL_CATEGORIES = [
 /**
  * Universal mesh creator: filled black rectangle with crosshairs
  * Used for all symbol types (blueprint-style simplification)
- * @param width - Width of the symbol in pixels
- * @param height - Height of the symbol in pixels
+ * @param width - Width of the symbol in pixels (default: 16)
+ * @param height - Height of the symbol in pixels (default: 16)
  */
-const createUniversalMesh = (width: number, height: number): THREE.Group => {
+const createUniversalMesh = (width?: number, height?: number): THREE.Group => {
+    const w = width || 16;
+    const h = height || 16;
     const group = new THREE.Group();
-    const halfWidth = width / 2;
-    const halfHeight = height / 2;
+    const halfWidth = w / 2;
+    const halfHeight = h / 2;
     const crosshairExt = Math.max(halfWidth, halfHeight) * 0.5; // Extends 50% beyond rectangle
 
-    // Filled black rectangle
-    const geometry = new THREE.PlaneGeometry(width, height);
-    const material = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide });
+    // Filled BLACK rectangle (Blueprint style)
+    const geometry = new THREE.PlaneGeometry(w, h);
+    const material = new THREE.MeshBasicMaterial({
+        color: 0x000000,
+        side: THREE.DoubleSide
+    });
     const square = new THREE.Mesh(geometry, material);
+    square.name = 'fill';
     group.add(square);
 
-    // Crosshairs (black lines)
-    const lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 });
+    // Blue Lines (0x0055FF) for Crosshairs and Border
+    const lineColor = 0x0055FF;
+    const lineMaterial = new THREE.LineBasicMaterial({ color: lineColor, linewidth: 2 });
 
-    // Horizontal crosshair
+    // 1. Border Outline (New)
+    const borderPoints = [
+        new THREE.Vector3(-halfWidth, -halfHeight, 0.1),
+        new THREE.Vector3(halfWidth, -halfHeight, 0.1),
+        new THREE.Vector3(halfWidth, halfHeight, 0.1),
+        new THREE.Vector3(-halfWidth, halfHeight, 0.1),
+        new THREE.Vector3(-halfWidth, -halfHeight, 0.1)
+    ];
+    const borderGeo = new THREE.BufferGeometry().setFromPoints(borderPoints);
+    group.add(new THREE.Line(borderGeo, lineMaterial));
+
+    // 2. Horizontal crosshair
     const pointsH = [
         new THREE.Vector3(-halfWidth - crosshairExt, 0, 0.1),
         new THREE.Vector3(halfWidth + crosshairExt, 0, 0.1)
@@ -50,7 +68,7 @@ const createUniversalMesh = (width: number, height: number): THREE.Group => {
     const geoH = new THREE.BufferGeometry().setFromPoints(pointsH);
     group.add(new THREE.Line(geoH, lineMaterial));
 
-    // Vertical crosshair
+    // 3. Vertical crosshair
     const pointsV = [
         new THREE.Vector3(0, -halfHeight - crosshairExt, 0.1),
         new THREE.Vector3(0, halfHeight + crosshairExt, 0.1)
@@ -68,6 +86,16 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         name: 'Recessed Light',
         category: 'lighting',
         description: 'Filled black square with crosshairs',
+        color: 0x000000,
+        size: { width: 16, height: 16 },
+        createMesh: createUniversalMesh
+    },
+    // Fallback for migration/legacy data
+    'generic-lighting': {
+        id: 'generic-lighting',
+        name: 'Generic Light',
+        category: 'lighting',
+        description: 'Fallback symbol',
         color: 0x000000,
         size: { width: 16, height: 16 },
         createMesh: createUniversalMesh

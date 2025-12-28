@@ -170,8 +170,18 @@ export class CameraSystem {
         return { x: cx, y: cy, zoom: this.state.zoom };
     }
 
+    public logViewportDebug(context: string = 'CameraSystem'): void {
+        const cx = (this.mainCamera.left + this.mainCamera.right) / 2;
+        const cy = (this.mainCamera.top + this.mainCamera.bottom) / 2;
+        console.log(`[📷 VIEWPORT DEBUG - ${context}] Camera Center: (${cx.toFixed(2)}, ${cy.toFixed(2)}), Zoom: ${this.state.zoom.toFixed(3)}`);
+        console.log(`[📷 VIEWPORT DEBUG - ${context}] Viewport Bounds: left=${this.mainCamera.left.toFixed(2)}, right=${this.mainCamera.right.toFixed(2)}, top=${this.mainCamera.top.toFixed(2)}, bottom=${this.mainCamera.bottom.toFixed(2)}`);
+        console.log(`[📷 VIEWPORT DEBUG - ${context}] Visible World Area: width=${(this.mainCamera.right - this.mainCamera.left).toFixed(2)}, height=${(this.mainCamera.top - this.mainCamera.bottom).toFixed(2)}`);
+    }
+
     public setState(state: { x: number, y: number, zoom: number }): void {
         if (!state) return;
+
+        console.log(`[📷 CAMERA] Restoring camera state: center=(${state.x}, ${state.y}), zoom=${state.zoom}`);
 
         // Restore Zoom
         this.state.zoom = state.zoom || 1;
@@ -191,6 +201,8 @@ export class CameraSystem {
 
         this.mainCamera.updateProjectionMatrix();
         this.updateZoomCamera();
+
+        this.logViewportDebug('After setState');
     }
 
     public setFastZoomMultiplier(multiplier: number): void {

@@ -1,19 +1,18 @@
-# Tech Lead Handoff - Cycle P14
+# Tech Lead Handoff - Cycle P14 (REMOTE LOGGING)
 
 ## Current Phase and Status
-**Phase**: P14 - Analytics and Coverage Engineering
+**Phase**: P14 - Remote Logging Infrastructure
 **Status**: IN-PROGRESS
-**Commit History**: P13 completed.
+**Commit History**: P9 completed. P13 debugging in progress.
 
 ## Active Worker Assignments
-- **Worker 1 (ROOM-AREA-P14)**: Shoelace area calculation and room label updates.
-- **Worker 2 (COVERAGE-RENDERER-P14)**: 3D coverage circle rendering.
-- **Worker 3 (ENGINEERING-UI-P14)**: UI/Model expansion for Lumens, Spread, and Range.
+- **Worker 1 (SERVER-LOG-ENDPOINT-P14)**: Implement `/api/log` on Node server.
+- **Worker 2 (CLIENT-LOGGER-P14)**: Create `remoteLog` utility and update traces.
 
 ## Pending Issues / Blockers
-- **Integration**: Verifying that coverage circles update in real-time as attributes change.
-- **Visual**: Balancing label legibility with area text.
+- **Critical**: "Invisible Devices" bug still active. P14 builds the tool to diagnose it.
+- **Action Required**: Server restart needed after P14 completion.
 
 ## Next Cycle Priorities (P15)
-1. **Lumens Coverage Check**: Simple pass/fail status per room.
-2. **Cable Snapping**: Magnetic docking logic.
+1. **Analyze Logs**: Read `tmp/server-logs/client-debug.log`.
+2. **Fix Rendering**: Apply the fix found via remote logs.

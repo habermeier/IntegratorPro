@@ -53,7 +53,7 @@ export interface DeviceType {
   name: string;
 
   /** Device category for grouping and layer assignment */
-  category: 'lighting' | 'sensors' | 'security' | 'network' | 'controls' | 'hvac';
+  category: 'lighting' | 'sensors' | 'security' | 'network' | 'lcps' | 'hvac' | 'receptacles' | 'infrastructure';
 
   /** Default product for this device type (recommended model) */
   defaultProductId: string;

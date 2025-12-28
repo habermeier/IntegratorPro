@@ -517,6 +517,44 @@ app.post('/api/debug-log', (req, res) => {
     }
 });
 
+// POST logging endpoint - Append JSON bodies with timestamp
+const SERVER_LOGS_DIR = path.join(__dirname, 'tmp', 'server-logs');
+const CLIENT_DEBUG_LOG = path.join(SERVER_LOGS_DIR, 'client-debug.log');
+app.post('/api/log', (req, res) => {
+    try {
+        // Ensure tmp/server-logs directory exists
+        if (!fs.existsSync(SERVER_LOGS_DIR)) {
+            fs.mkdirSync(SERVER_LOGS_DIR, { recursive: true });
+        }
+
+        const timestamp = new Date().toISOString();
+        const logEntry = JSON.stringify({
+            timestamp,
+            ...req.body
+        }) + '\n';
+
+        fs.appendFileSync(CLIENT_DEBUG_LOG, logEntry);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error writing to server log:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// POST snapshot-bom
+const SNAPSHOT_BOM_FILE = path.join(__dirname, 'snapshot_bom.json');
+app.post('/api/snapshot-bom', (req, res) => {
+    try {
+        const data = req.body;
+        fs.writeFileSync(SNAPSHOT_BOM_FILE, JSON.stringify(data, null, 2));
+        console.log('✅ BOM snapshot saved to snapshot_bom.json');
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error saving BOM snapshot:', err);
+        res.status(500).json({ error: 'Failed to save BOM snapshot' });
+    }
+});
+
 // --- VECTORIZATION BRIDGE ---
 
 

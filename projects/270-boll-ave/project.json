@@ -1,11 +1,11 @@
 {
   "version": "1.0",
-  "timestamp": "2025-12-26T22:35:25.067Z",
+  "timestamp": "2025-12-28T20:08:38.805Z",
   "metadata": {
     "name": "270 Boll Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2025-12-26T22:35:25.048Z"
+    "modified": "2025-12-28T20:08:38.500Z"
   },
   "floorPlan": {
     "scale": {
@@ -3976,710 +3976,13 @@
   ],
   "devices": [
     {
-      "id": "lighting-1766609878562",
-      "deviceTypeId": "generic-lighting",
-      "productId": "generic-product",
-      "name": "Device 1",
-      "position": {
-        "x": 626.2806997533197,
-        "y": 728.8076449399206
-      },
-      "rotation": 0,
-      "roomId": null,
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "id": "lighting-1766609878562",
-        "type": "recessed-light",
-        "category": "lighting",
-        "x": 626.2806997533197,
-        "y": 728.8076449399206,
-        "rotation": 0,
-        "scale": 1,
-        "room": "Family Room Open Area",
-        "productId": "generic-product",
-        "installationHeight": 2.4,
-        "busAssignment": "Bus 1",
-        "metadata": {
-          "productId": "generic-product",
-          "lumens": 800,
-          "beamAngle": 60,
-          "range": 10,
-          "cableType": "Cat6"
-        },
-        "createdAt": "2025-12-24T20:57:58.562Z",
-        "_migratedFrom": "DaliDevice",
-        "_migrationTimestamp": 1766609894927
-      },
-      "createdAt": "2025-12-24T20:57:58.562Z"
-    },
-    {
-      "id": "lighting-1766609994942",
-      "deviceTypeId": "generic-lighting",
-      "productId": "generic-product",
-      "name": "Device 2",
-      "position": {
-        "x": 260.943483027066,
-        "y": 909.906036039181
-      },
-      "rotation": 0,
-      "roomId": null,
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "id": "lighting-1766609994942",
-        "type": "recessed-light",
-        "category": "lighting",
-        "x": 260.943483027066,
-        "y": 909.906036039181,
-        "rotation": 0,
-        "scale": 1,
-        "room": "Family Room Open Area",
-        "productId": "generic-product",
-        "installationHeight": 2.4,
-        "busAssignment": "Bus 1",
-        "metadata": {
-          "productId": "generic-product",
-          "lumens": 800,
-          "beamAngle": 60,
-          "range": 10,
-          "cableType": "Cat6"
-        },
-        "createdAt": "2025-12-24T20:59:54.942Z",
-        "_migratedFrom": "DaliDevice",
-        "_migrationTimestamp": 1766610049988
-      },
-      "createdAt": "2025-12-24T20:59:54.942Z"
-    },
-    {
-      "id": "lighting-1766610078058",
-      "deviceTypeId": "generic-lighting",
-      "productId": "generic-product",
-      "name": "Device 3",
-      "position": {
-        "x": 365.624633951494,
-        "y": 805.224885114753
-      },
-      "rotation": 0,
-      "roomId": null,
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "id": "lighting-1766610078058",
-        "type": "pendant-light",
-        "category": "lighting",
-        "x": 365.624633951494,
-        "y": 805.224885114753,
-        "rotation": 0,
-        "scale": 1,
-        "room": "Family Room Open Area",
-        "productId": "generic-product",
-        "installationHeight": 2.4,
-        "busAssignment": "Bus 1",
-        "metadata": {
-          "productId": "generic-product",
-          "lumens": 800,
-          "beamAngle": 60,
-          "range": 10,
-          "cableType": "Cat6"
-        },
-        "createdAt": "2025-12-24T21:01:18.058Z",
-        "_migratedFrom": "DaliDevice",
-        "_migrationTimestamp": 1766611028747
-      },
-      "createdAt": "2025-12-24T21:01:18.058Z"
-    },
-    {
-      "id": "lighting-1766611121110",
-      "deviceTypeId": "generic-lighting",
-      "productId": "generic-product",
-      "name": "Device 4",
-      "position": {
-        "x": 414,
-        "y": 606
-      },
-      "rotation": 0,
-      "roomId": null,
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "id": "lighting-1766611121110",
-        "type": "recessed-light",
-        "category": "lighting",
-        "x": 414,
-        "y": 606,
-        "rotation": 0,
-        "scale": 1,
-        "room": "Family Room Open Area",
-        "productId": "generic-product",
-        "installationHeight": 2.4,
-        "busAssignment": "Bus 1",
-        "metadata": {
-          "productId": "generic-product",
-          "lumens": 800,
-          "beamAngle": 60,
-          "range": 10,
-          "cableType": "Cat6"
-        },
-        "createdAt": "2025-12-24T21:18:41.110Z",
-        "_migratedFrom": "DaliDevice",
-        "_migrationTimestamp": 1766611427267
-      },
-      "createdAt": "2025-12-24T21:18:41.110Z"
-    },
-    {
-      "id": "lighting-1766611490518",
-      "deviceTypeId": "generic-lighting",
-      "productId": "generic-product",
-      "name": "Device 5",
-      "position": {
-        "x": 470,
-        "y": 606
-      },
-      "rotation": 0,
-      "roomId": null,
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "id": "lighting-1766611490518",
-        "type": "recessed-light",
-        "category": "lighting",
-        "x": 470,
-        "y": 606,
-        "rotation": 0,
-        "scale": 1,
-        "room": "Family Room Open Area",
-        "productId": "generic-product",
-        "installationHeight": 2.4,
-        "busAssignment": "Bus 1",
-        "metadata": {
-          "productId": "generic-product",
-          "lumens": 800,
-          "beamAngle": 60,
-          "range": 10,
-          "cableType": "Cat6"
-        },
-        "createdAt": "2025-12-24T21:24:50.518Z",
-        "_migratedFrom": "DaliDevice",
-        "_migrationTimestamp": 1766611492123
-      },
-      "createdAt": "2025-12-24T21:24:50.518Z"
-    },
-    {
-      "id": "lighting-1766611527458",
-      "deviceTypeId": "generic-lighting",
-      "productId": "generic-product",
-      "name": "Device 6",
-      "position": {
-        "x": 470,
-        "y": 606
-      },
-      "rotation": 0,
-      "roomId": null,
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "id": "lighting-1766611527458",
-        "type": "recessed-light",
-        "category": "lighting",
-        "x": 470,
-        "y": 606,
-        "rotation": 0,
-        "scale": 1,
-        "room": "Family Room Open Area",
-        "productId": "generic-product",
-        "installationHeight": 2.4,
-        "busAssignment": "Bus 1",
-        "metadata": {
-          "productId": "generic-product",
-          "lumens": 800,
-          "beamAngle": 60,
-          "range": 10,
-          "cableType": "Cat6"
-        },
-        "createdAt": "2025-12-24T21:25:27.458Z",
-        "_migratedFrom": "DaliDevice",
-        "_migrationTimestamp": 1766611668613
-      },
-      "createdAt": "2025-12-24T21:25:27.458Z"
-    },
-    {
-      "id": "lighting-1766611787077",
-      "deviceTypeId": "generic-lighting",
-      "productId": "generic-product",
-      "name": "Device 7",
-      "position": {
-        "x": 599,
-        "y": 861
-      },
-      "rotation": 0,
-      "roomId": null,
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "id": "lighting-1766611787077",
-        "type": "recessed-light",
-        "category": "lighting",
-        "x": 599,
-        "y": 861,
-        "rotation": 0,
-        "scale": 1,
-        "room": "Family Room Open Area",
-        "productId": "generic-product",
-        "installationHeight": 2.4,
-        "busAssignment": "Bus 1",
-        "metadata": {
-          "productId": "generic-product",
-          "lumens": 800,
-          "beamAngle": 60,
-          "range": 10,
-          "cableType": "Cat6"
-        },
-        "createdAt": "2025-12-24T21:29:47.077Z",
-        "_migratedFrom": "DaliDevice",
-        "_migrationTimestamp": 1766611788662
-      },
-      "createdAt": "2025-12-24T21:29:47.077Z"
-    },
-    {
-      "id": "lighting-1766612153474",
-      "deviceTypeId": "generic-lighting",
-      "productId": "generic-product",
-      "name": "Device 8",
-      "position": {
-        "x": 507,
-        "y": 606
-      },
-      "rotation": 0,
-      "roomId": null,
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "id": "lighting-1766612153474",
-        "type": "recessed-light",
-        "category": "lighting",
-        "x": 507,
-        "y": 606,
-        "rotation": 0,
-        "scale": 1,
-        "room": "Family Room Open Area",
-        "productId": "generic-product",
-        "installationHeight": 2.4,
-        "busAssignment": "Bus 1",
-        "metadata": {
-          "productId": "generic-product",
-          "lumens": 800,
-          "beamAngle": 60,
-          "range": 10,
-          "cableType": "Cat6"
-        },
-        "createdAt": "2025-12-24T21:35:53.474Z",
-        "_migratedFrom": "DaliDevice",
-        "_migrationTimestamp": 1766612155065
-      },
-      "createdAt": "2025-12-24T21:35:53.474Z"
-    },
-    {
-      "id": "lighting-1766612229463",
-      "deviceTypeId": "generic-lighting",
-      "productId": "generic-product",
-      "name": "Device 9",
-      "position": {
-        "x": 599,
-        "y": 542
-      },
-      "rotation": 0,
-      "roomId": null,
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "id": "lighting-1766612229463",
-        "type": "pendant-light",
-        "category": "lighting",
-        "x": 599,
-        "y": 542,
-        "rotation": 0,
-        "scale": 1,
-        "room": "Family Room Open Area",
-        "productId": "generic-product",
-        "installationHeight": 2.4,
-        "busAssignment": "Bus 1",
-        "metadata": {
-          "productId": "generic-product",
-          "lumens": 800,
-          "beamAngle": 60,
-          "range": 10,
-          "cableType": "Cat6"
-        },
-        "createdAt": "2025-12-24T21:37:09.463Z",
-        "_migratedFrom": "DaliDevice",
-        "_migrationTimestamp": 1766612259555
-      },
-      "createdAt": "2025-12-24T21:37:09.463Z"
-    },
-    {
-      "id": "lighting-1766612305007",
-      "deviceTypeId": "generic-lighting",
-      "productId": "generic-product",
-      "name": "Device 10",
-      "position": {
-        "x": 507,
-        "y": 606
-      },
-      "rotation": 0,
-      "roomId": null,
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "id": "lighting-1766612305007",
-        "type": "recessed-light",
-        "category": "lighting",
-        "x": 507,
-        "y": 606,
-        "rotation": 0,
-        "scale": 1,
-        "room": "Family Room Open Area",
-        "productId": "generic-product",
-        "installationHeight": 2.4,
-        "busAssignment": "Bus 1",
-        "metadata": {
-          "productId": "generic-product",
-          "lumens": 800,
-          "beamAngle": 60,
-          "range": 10,
-          "cableType": "Cat6"
-        },
-        "createdAt": "2025-12-24T21:38:25.007Z",
-        "_migratedFrom": "DaliDevice",
-        "_migrationTimestamp": 1766612306620
-      },
-      "createdAt": "2025-12-24T21:38:25.007Z"
-    },
-    {
-      "id": "lighting-1766612367770",
-      "deviceTypeId": "generic-lighting",
-      "productId": "generic-product",
-      "name": "Device 11",
-      "position": {
-        "x": 507,
-        "y": 606
-      },
-      "rotation": 0,
-      "roomId": null,
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "id": "lighting-1766612367770",
-        "type": "recessed-light",
-        "category": "lighting",
-        "x": 507,
-        "y": 606,
-        "rotation": 0,
-        "scale": 1,
-        "room": "Family Room Open Area",
-        "productId": "generic-product",
-        "installationHeight": 2.4,
-        "busAssignment": "Bus 1",
-        "metadata": {
-          "productId": "generic-product",
-          "lumens": 800,
-          "beamAngle": 60,
-          "range": 10,
-          "cableType": "Cat6"
-        },
-        "createdAt": "2025-12-24T21:39:27.770Z",
-        "_migratedFrom": "DaliDevice",
-        "_migrationTimestamp": 1766612369310
-      },
-      "createdAt": "2025-12-24T21:39:27.770Z"
-    },
-    {
-      "id": "lighting-1766612444100",
-      "deviceTypeId": "generic-lighting",
-      "productId": "generic-product",
-      "name": "Device 12",
-      "position": {
-        "x": 507,
-        "y": 606
-      },
-      "rotation": 0,
-      "roomId": null,
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "id": "lighting-1766612444100",
-        "type": "recessed-light",
-        "category": "lighting",
-        "x": 507,
-        "y": 606,
-        "rotation": 0,
-        "scale": 1,
-        "room": "Family Room Open Area",
-        "productId": "generic-product",
-        "installationHeight": 2.4,
-        "busAssignment": "Bus 1",
-        "metadata": {
-          "productId": "generic-product",
-          "lumens": 800,
-          "beamAngle": 60,
-          "range": 10,
-          "cableType": "Cat6"
-        },
-        "createdAt": "2025-12-24T21:40:44.100Z",
-        "_migratedFrom": "DaliDevice",
-        "_migrationTimestamp": 1766612445857
-      },
-      "createdAt": "2025-12-24T21:40:44.100Z"
-    },
-    {
-      "id": "lighting-1766612742869",
-      "deviceTypeId": "generic-lighting",
-      "productId": "generic-product",
-      "name": "Device 13",
-      "position": {
-        "x": 599,
-        "y": 734
-      },
-      "rotation": 0,
-      "roomId": null,
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "id": "lighting-1766612742869",
-        "type": "recessed-light",
-        "category": "lighting",
-        "x": 599,
-        "y": 734,
-        "rotation": 0,
-        "scale": 1,
-        "room": "Family Room Open Area",
-        "productId": "generic-product",
-        "installationHeight": 2.4,
-        "busAssignment": "Bus 1",
-        "metadata": {
-          "productId": "generic-product",
-          "lumens": 800,
-          "beamAngle": 60,
-          "range": 10,
-          "cableType": "Cat6"
-        },
-        "createdAt": "2025-12-24T21:45:42.869Z",
-        "_migratedFrom": "DaliDevice",
-        "_migrationTimestamp": 1766612744454
-      },
-      "createdAt": "2025-12-24T21:45:42.869Z"
-    },
-    {
-      "id": "lighting-1766612761077",
-      "deviceTypeId": "generic-lighting",
-      "productId": "generic-product",
-      "name": "Device 14",
-      "position": {
-        "x": 599,
-        "y": 734
-      },
-      "rotation": 0,
-      "roomId": null,
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "id": "lighting-1766612761077",
-        "type": "recessed-light",
-        "category": "lighting",
-        "x": 599,
-        "y": 734,
-        "rotation": 0,
-        "scale": 1,
-        "room": "Family Room Open Area",
-        "productId": "generic-product",
-        "installationHeight": 2.4,
-        "busAssignment": "Bus 1",
-        "metadata": {
-          "productId": "generic-product",
-          "lumens": 800,
-          "beamAngle": 60,
-          "range": 10,
-          "cableType": "Cat6"
-        },
-        "createdAt": "2025-12-24T21:46:01.077Z",
-        "_migratedFrom": "DaliDevice",
-        "_migrationTimestamp": 1766612762622
-      },
-      "createdAt": "2025-12-24T21:46:01.077Z"
-    },
-    {
-      "id": "lighting-1766612773816",
-      "deviceTypeId": "generic-lighting",
-      "productId": "generic-product",
-      "name": "Device 15",
-      "position": {
-        "x": 229,
-        "y": 734
-      },
-      "rotation": 0,
-      "roomId": null,
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "id": "lighting-1766612773816",
-        "type": "recessed-light",
-        "category": "lighting",
-        "x": 229,
-        "y": 734,
-        "rotation": 0,
-        "scale": 1,
-        "room": "Family Room Open Area",
-        "productId": "generic-product",
-        "installationHeight": 2.4,
-        "busAssignment": "Bus 1",
-        "metadata": {
-          "productId": "generic-product",
-          "lumens": 800,
-          "beamAngle": 60,
-          "range": 10,
-          "cableType": "Cat6"
-        },
-        "createdAt": "2025-12-24T21:46:13.816Z",
-        "_migratedFrom": "DaliDevice",
-        "_migrationTimestamp": 1766613039544
-      },
-      "createdAt": "2025-12-24T21:46:13.816Z"
-    },
-    {
-      "id": "lighting-1766613162836",
-      "deviceTypeId": "generic-lighting",
-      "productId": "generic-product",
-      "name": "Device 16",
-      "position": {
-        "x": 229,
-        "y": 734
-      },
-      "rotation": 0,
-      "roomId": null,
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "id": "lighting-1766613162836",
-        "type": "recessed-light",
-        "category": "lighting",
-        "x": 229,
-        "y": 734,
-        "rotation": 0,
-        "scale": 1,
-        "room": "Family Room Open Area",
-        "productId": "generic-product",
-        "installationHeight": 2.4,
-        "busAssignment": "Bus 1",
-        "metadata": {
-          "productId": "generic-product",
-          "lumens": 800,
-          "beamAngle": 60,
-          "range": 10,
-          "cableType": "Cat6"
-        },
-        "createdAt": "2025-12-24T21:52:42.836Z",
-        "_migratedFrom": "DaliDevice",
-        "_migrationTimestamp": 1766613164539
-      },
-      "createdAt": "2025-12-24T21:52:42.836Z"
-    },
-    {
-      "id": "lighting-1766613316236",
-      "deviceTypeId": "generic-lighting",
-      "productId": "generic-product",
-      "name": "Device 17",
-      "position": {
-        "x": 414,
-        "y": 606
-      },
-      "rotation": 0,
-      "roomId": null,
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "id": "lighting-1766613316236",
-        "type": "recessed-light",
-        "category": "lighting",
-        "x": 414,
-        "y": 606,
-        "rotation": 0,
-        "scale": 1,
-        "room": "Family Room Open Area",
-        "productId": "generic-product",
-        "installationHeight": 2.4,
-        "busAssignment": "Bus 1",
-        "metadata": {
-          "productId": "generic-product",
-          "lumens": 800,
-          "beamAngle": 60,
-          "range": 10,
-          "cableType": "Cat6"
-        },
-        "createdAt": "2025-12-24T21:55:16.236Z",
-        "_migratedFrom": "DaliDevice",
-        "_migrationTimestamp": 1766782421282
-      },
-      "createdAt": "2025-12-24T21:55:16.236Z"
-    },
-    {
-      "id": "lighting-1766787807973",
+      "id": "lighting-1766877279601",
       "deviceTypeId": "recessed-light",
       "productId": "generic-product",
       "name": "recessed-light ligh",
       "position": {
-        "x": 672.5000000000001,
-        "y": 707.5
+        "x": 866.2294152239774,
+        "y": 710.6947371159645
       },
       "rotation": 0,
       "roomId": "Family Room Open Area",
@@ -4695,19 +3998,19 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1766787807973
+      "createdAt": 1766877279601
     },
     {
-      "id": "lighting-1766787895327",
+      "id": "lighting-1766934550671",
       "deviceTypeId": "recessed-light",
       "productId": "generic-product",
       "name": "recessed-light ligh",
       "position": {
-        "x": null,
-        "y": null
+        "x": 977.8270315515016,
+        "y": 715.7321295196374
       },
       "rotation": 0,
-      "roomId": "external",
+      "roomId": "Family Room Open Area",
       "layerId": "lighting",
       "installationHeight": 2.4,
       "networkConnections": [],
@@ -4720,7 +4023,107 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1766787895328
+      "createdAt": 1766934550671
+    },
+    {
+      "id": "lighting-1766936624761",
+      "deviceTypeId": "recessed-light",
+      "productId": "generic-product",
+      "name": "recessed-light ligh",
+      "position": {
+        "x": 874.3684915602493,
+        "y": 738.6015852298235
+      },
+      "rotation": 0,
+      "roomId": "Family Room Open Area",
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1766936624761
+    },
+    {
+      "id": "lighting-1766942231846",
+      "deviceTypeId": "recessed-light",
+      "productId": "generic-product",
+      "name": "recessed-light ligh",
+      "position": {
+        "x": 256.0045166015625,
+        "y": 616.5192108154297
+      },
+      "rotation": 0,
+      "roomId": "Family Room Open Area",
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1766942231846
+    },
+    {
+      "id": "lighting-1766942289242",
+      "deviceTypeId": "recessed-light",
+      "productId": "generic-product",
+      "name": "recessed-light ligh",
+      "position": {
+        "x": 364.0045166015625,
+        "y": 608.0192108154297
+      },
+      "rotation": 0,
+      "roomId": "Family Room Open Area",
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1766942289242
+    },
+    {
+      "id": "lighting-1766952516991",
+      "deviceTypeId": "recessed-light",
+      "productId": "generic-product",
+      "name": "recessed-light ligh",
+      "position": {
+        "x": -2327.7615130370637,
+        "y": 1220.6019459510785
+      },
+      "rotation": 0,
+      "roomId": "Primary Bedroom",
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1766952516991
     }
   ],
   "cables": [],

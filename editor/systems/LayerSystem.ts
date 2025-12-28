@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Layer, LayerConfig, Transform, VectorLayerContent, Polygon, PlacedSymbol, Furniture, Room } from '../models/types';
 import { SYMBOL_LIBRARY } from '../models/symbolLibrary';
 import { calculatePolygonArea } from '../../utils/spatialUtils';
+import { remoteLog } from '../../src/utils/logger';
 
 export class LayerSystem {
     private layers: Map<string, Layer> = new Map();
@@ -14,6 +15,7 @@ export class LayerSystem {
     // Cache to prevent recreating everything from scratch
     private meshCache: Map<string, THREE.Object3D> = new Map();
     private clock: THREE.Clock = new THREE.Clock();
+    private hasLoggedLighting: boolean = false;
 
     constructor(scene: THREE.Scene) {
         this.scene = scene;
@@ -204,11 +206,37 @@ export class LayerSystem {
                 });
             });
         }
+
+        // 3. One-time debug logging for lighting layer (AUTO-DEBUG-P16)
+        if (!this.hasLoggedLighting) {
+            const lightingLayer = this.layers.get('lighting');
+            if (lightingLayer && lightingLayer.type === 'vector') {
+                const content = lightingLayer.content as VectorLayerContent;
+                if (content && content.symbols && content.symbols.length > 0) {
+                    remoteLog(`[AUTO-DEBUG] Triggering one-time debugLayer('lighting') - symbols detected: ${content.symbols.length}`, 'info', '🔍 AUTO-DEBUG');
+                    this.debugLayer('lighting');
+                    this.hasLoggedLighting = true;
+                }
+            }
+        }
     }
 
     private renderVectorLayer(layer: Layer): void {
+        remoteLog(`renderVectorLayer ENTRY for layer: ${layer.id}`, 'debug', '🔍 DEEP-TRACE');
+
+        // Log viewport state at render time
+        const editor = (this.scene.userData.editor as any);
+        if (editor && editor.cameraSystem && layer.id === 'lighting') {
+            editor.cameraSystem.logViewportDebug(`During renderVectorLayer(${layer.id})`);
+        }
+
         const content = layer.content as VectorLayerContent;
-        if (!content) return;
+        if (!content) {
+            remoteLog(`Layer ${layer.id} has no content, returning early`, 'debug', '🔍 DEEP-TRACE');
+            return;
+        }
+
+        remoteLog(`Layer ${layer.id} - content.symbols length: ${(content.symbols || []).length}`, 'debug', '🔍 DEEP-TRACE');
 
         const activeItemIds = new Set<string>();
         const selectedIds = new Set(this.scene.userData.editor?.selectionSystem.getSelectedIds() || []);
@@ -232,7 +260,7 @@ export class LayerSystem {
             // We include name, color, type in hash to force re-render if they change
             // We ALSO include isMaskEditMode and isSelected to ensure the visual state stays sync'd
             const isSelected = selectedIds.has(id);
-            const pointsHash = poly.points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join('|') +
+            const pointsHash = poly.points.map(p => `${(p.x ?? 0).toFixed(1)},${(p.y ?? 0).toFixed(1)}`).join('|') +
                 `|${(poly as any).name || ''}|${(poly as any).roomType || ''}|${poly.color || ''}|${isSelected}|${isMask ? this.isMaskEditMode : ''}`;
 
             if (!group) {
@@ -484,13 +512,20 @@ export class LayerSystem {
 
         if (content.symbols) {
             content.symbols.forEach(symbolData => {
+                remoteLog(`Processing symbol - id: ${symbolData.id}, type: ${symbolData.type}, category: ${symbolData.category}`, 'debug', '🔍 DEEP-TRACE');
+                remoteLog(`⭐ Device Position: (${(symbolData.x ?? 0).toFixed(2)}, ${(symbolData.y ?? 0).toFixed(2)}) rotation: ${symbolData.rotation}°`, 'debug', '🔍 DEEP-TRACE');
+
                 activeItemIds.add(symbolData.id);
                 const cacheKey = `${layer.id}-${symbolData.id}`;
                 let group = this.meshCache.get(cacheKey) as THREE.Group;
 
                 if (!group) {
                     const def = SYMBOL_LIBRARY[symbolData.type];
-                    if (!def) return;
+                    remoteLog(`Symbol ${symbolData.id} - SYMBOL_LIBRARY[${symbolData.type}] found: ${!!def}`, 'debug', '🔍 DEEP-TRACE');
+                    if (!def) {
+                        remoteLog(`⚠️ Symbol ${symbolData.id} SKIPPED - type '${symbolData.type}' not in SYMBOL_LIBRARY`, 'warn', '🔍 DEEP-TRACE');
+                        return;
+                    }
 
                     group = def.createMesh(def.size.width, def.size.height);
                     group.name = `symbol-${symbolData.id}`;
@@ -514,9 +549,11 @@ export class LayerSystem {
                         group.add(labelSprite);
                     }
 
+                    remoteLog(`✅ Adding NEW symbol ${symbolData.id} to layer.container for layer ${layer.id} at position (${(symbolData.x ?? 0).toFixed(2)}, ${(symbolData.y ?? 0).toFixed(2)})`, 'debug', '🔍 DEEP-TRACE');
                     layer.container.add(group);
                     this.meshCache.set(cacheKey, group);
                 } else {
+                    remoteLog(`♻️ Updating CACHED symbol ${symbolData.id} position to (${(symbolData.x ?? 0).toFixed(2)}, ${(symbolData.y ?? 0).toFixed(2)})`, 'debug', '🔍 DEEP-TRACE');
                     group.position.set(symbolData.x, symbolData.y, 0.2);
                     group.rotation.z = (symbolData.rotation * Math.PI) / 180;
                     group.scale.set(symbolData.scale, symbolData.scale, 1);
@@ -525,6 +562,11 @@ export class LayerSystem {
                 // Update Coverage Circle (Worker 2)
                 this.updateCoverageCircle(group, symbolData);
             });
+
+            // Summary log for lighting layer
+            if (layer.id === 'lighting') {
+                remoteLog(`📊 SUMMARY for ${layer.id}: Processed ${content.symbols.length} symbols, container has ${layer.container.children.length} children`, 'debug', '🔍 DEEP-TRACE');
+            }
         }
         if (content.furniture) {
             content.furniture.forEach(item => {
@@ -832,5 +874,50 @@ export class LayerSystem {
         layer.container.rotation.z = rotation;
 
         layer.container.updateMatrixWorld(true);
+    }
+
+    public debugLayer(layerId: string): void {
+        const layer = this.layers.get(layerId);
+        if (!layer) {
+            remoteLog(`[debugLayer] Layer '${layerId}' not found`, 'warn', '🔍 LAYER-DEBUG');
+            return;
+        }
+
+        remoteLog(`[debugLayer] ========== Layer: ${layerId} ==========`, 'info', '🔍 LAYER-DEBUG');
+        remoteLog(`[debugLayer] Layer Type: ${layer.type}, Visible: ${layer.visible}, Children Count: ${layer.container.children.length}`, 'info', '🔍 LAYER-DEBUG');
+
+        layer.container.children.forEach((child, index) => {
+            remoteLog(`[debugLayer] --- Child ${index}: ${child.name || child.type} ---`, 'info', '🔍 LAYER-DEBUG');
+            remoteLog(`[debugLayer]   visible: ${child.visible}`, 'info', '🔍 LAYER-DEBUG');
+            remoteLog(`[debugLayer]   position: (${(child.position.x ?? 0).toFixed(2)}, ${(child.position.y ?? 0).toFixed(2)}, ${(child.position.z ?? 0).toFixed(2)})`, 'info', '🔍 LAYER-DEBUG');
+            remoteLog(`[debugLayer]   scale: (${(child.scale.x ?? 0).toFixed(2)}, ${(child.scale.y ?? 0).toFixed(2)}, ${(child.scale.z ?? 0).toFixed(2)})`, 'info', '🔍 LAYER-DEBUG');
+            remoteLog(`[debugLayer]   userData: ${JSON.stringify(child.userData)}`, 'info', '🔍 LAYER-DEBUG');
+
+            if (child instanceof THREE.Mesh) {
+                const material = child.material;
+                const geometry = child.geometry;
+
+                if (material instanceof THREE.MeshBasicMaterial) {
+                    remoteLog(`[debugLayer]   [MESH] material.opacity: ${material.opacity}`, 'info', '🔍 LAYER-DEBUG');
+                    remoteLog(`[debugLayer]   [MESH] material.color: #${material.color.getHexString()}`, 'info', '🔍 LAYER-DEBUG');
+                    remoteLog(`[debugLayer]   [MESH] material.transparent: ${material.transparent}`, 'info', '🔍 LAYER-DEBUG');
+                } else if (Array.isArray(material)) {
+                    remoteLog(`[debugLayer]   [MESH] material: Array (${material.length} materials)`, 'info', '🔍 LAYER-DEBUG');
+                    material.forEach((mat, idx) => {
+                        if (mat instanceof THREE.MeshBasicMaterial) {
+                            remoteLog(`[debugLayer]   [MESH] material[${idx}].opacity: ${mat.opacity}`, 'info', '🔍 LAYER-DEBUG');
+                            remoteLog(`[debugLayer]   [MESH] material[${idx}].color: #${mat.color.getHexString()}`, 'info', '🔍 LAYER-DEBUG');
+                            remoteLog(`[debugLayer]   [MESH] material[${idx}].transparent: ${mat.transparent}`, 'info', '🔍 LAYER-DEBUG');
+                        }
+                    });
+                } else {
+                    remoteLog(`[debugLayer]   [MESH] material.type: ${material.type}`, 'info', '🔍 LAYER-DEBUG');
+                }
+
+                remoteLog(`[debugLayer]   [MESH] geometry.type: ${geometry.type}`, 'info', '🔍 LAYER-DEBUG');
+            }
+        });
+
+        remoteLog(`[debugLayer] ========================================`, 'info', '🔍 LAYER-DEBUG');
     }
 }

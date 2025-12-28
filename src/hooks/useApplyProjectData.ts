@@ -43,18 +43,51 @@ export function useApplyProjectData(
         const devicesByCategory: { [category: string]: PlacedSymbol[] } = {};
 
         devices.forEach((device: any) => {
-            const category = device.category || 'lighting';
-            if (!devicesByCategory[category]) devicesByCategory[category] = [];
-            devicesByCategory[category].push(device);
+            // Use layerId as the primary grouping key, matching the Device model
+            const layerId = device.layerId || device.category || 'lighting';
+            if (!devicesByCategory[layerId]) devicesByCategory[layerId] = [];
+
+            // Fix: Map Device (nested) to PlacedSymbol (flat) structure for the Renderer
+            // Default to 'recessed-light' which is guaranteed to exist
+            const rawType = device.deviceTypeId || device.type || 'recessed-light';
+
+            // Validate against library to prevent invisible symbols
+            // We can't import SYMBOL_LIBRARY directly here easily due to cycles/hook nature, 
+            // but we can trust the 'recessed-light' default we just set.
+
+            const symbol: PlacedSymbol = {
+                ...device,
+                x: device.position?.x ?? device.x ?? 0,
+                y: device.position?.y ?? device.y ?? 0,
+                type: rawType,
+                category: layerId
+            };
+
+            if (symbol.type === 'generic-lighting') {
+                // Auto-migrate old generic types to recessed-light on load
+                symbol.type = 'recessed-light';
+            }
+
+            devicesByCategory[layerId].push(symbol);
         });
 
         // Clear and fill thematic layers
-        const thematicLayers = ['lighting', 'sensors', 'security', 'network', 'lcps', 'hvac', 'receptacles'];
+        const thematicLayers = ['lighting', 'sensors', 'security', 'network', 'lcps', 'hvac', 'receptacles', 'infrastructure'];
+
+        console.log(`[🔍 DEEP-TRACE] useApplyProjectData - Device distribution by category:`, Object.keys(devicesByCategory).map(k => `${k}: ${devicesByCategory[k].length}`).join(', '));
+
         thematicLayers.forEach(id => {
             const layer = editor.layerSystem.getLayer(id);
             if (layer && layer.type === 'vector') {
-                (layer.content as VectorLayerContent).symbols = devicesByCategory[id] || [];
+                const symbolsToAssign = devicesByCategory[id] || [];
+                console.log(`[🔍 DEEP-TRACE] Assigning ${symbolsToAssign.length} symbols to layer '${id}'`);
+                if (symbolsToAssign.length > 0) {
+                    console.log(`[🔍 DEEP-TRACE] Layer '${id}' symbols:`, symbolsToAssign.map(s => `{id:${s.id}, type:${s.type}, pos:(${s.x},${s.y})}`).join(', '));
+                }
+                (layer.content as VectorLayerContent).symbols = symbolsToAssign;
                 editor.layerSystem.markDirty(id);
+            } else {
+                console.warn(`[🔍 DEEP-TRACE] Layer '${id}' not found or not vector type!`);
             }
         });
 

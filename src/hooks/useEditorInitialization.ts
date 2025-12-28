@@ -11,6 +11,7 @@ import { useCallback, useRef } from 'react';
 import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
 import { dataService } from '../services/DataService';
 import { useApplyProjectData } from './useApplyProjectData';
+import { remoteLog } from '../utils/logger';
 import { Room } from '../../editor/models/types';
 import BASE_IMAGE from '../../images/floor-plan-clean.jpg';
 import ELECTRICAL_IMAGE from '../../images/electric-plan-plain-full-clean-2025-12-12.jpg';
@@ -233,6 +234,19 @@ export function useEditorInitialization(
       });
 
       editorInstance.addLayer({
+        id: 'infrastructure',
+        name: 'Infrastructure',
+        type: 'vector',
+        category: 'technical',
+        zIndex: 50,
+        visible: false,
+        locked: false,
+        opacity: 1,
+        transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
+        allowLayerEditing: false // Data layer - locked to base coordinates
+      });
+
+      editorInstance.addLayer({
         id: 'furniture',
         name: 'Furniture',
         type: 'vector',
@@ -261,13 +275,13 @@ export function useEditorInitialization(
 
           // Debug Trace: Before Server Data
           const preServerLayers = editorInstance.layerSystem.getAllLayers().map(l => ({ id: l.id, visible: l.visible, category: l.category }));
-          console.log('[Initialization Debug] Tech Layers BEFORE Server Data:', JSON.stringify(preServerLayers.filter(l => l.category === 'technical')));
+          remoteLog(`Tech Layers BEFORE Server Data: ${JSON.stringify(preServerLayers.filter(l => l.category === 'technical'))}`, 'debug', 'Initialization Debug');
 
           applyProjectData(editorInstance, project);
 
           // Debug Trace: After Server Data
           const postServerLayers = editorInstance.layerSystem.getAllLayers().map(l => ({ id: l.id, visible: l.visible, category: l.category }));
-          console.log('[Initialization Debug] Tech Layers AFTER Server Data:', JSON.stringify(postServerLayers.filter(l => l.category === 'technical')));
+          remoteLog(`Tech Layers AFTER Server Data: ${JSON.stringify(postServerLayers.filter(l => l.category === 'technical'))}`, 'debug', 'Initialization Debug');
 
 
           const settingsData = project.settings;

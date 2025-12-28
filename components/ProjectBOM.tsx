@@ -215,7 +215,7 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
 
         return (
             <th
-                className={`px-2 md:px-4 py-2 md:py-3 cursor-pointer group hover:bg-slate-800 transition-colors select-none text-${align} ${className}`}
+                className={`px-2 md:px-4 py-2 md:py-3 cursor-pointer group hover:bg-slate-800 transition-colors text-${align} ${className}`}
                 onClick={() => handleSort(sortKey)}
             >
                 <div className={`flex items-center gap-1 ${align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start'}`}>

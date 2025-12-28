@@ -44,6 +44,14 @@ class DataService {
     // Listen for cross-tab changes via storage events
     if (typeof window !== 'undefined') {
       window.addEventListener('storage', this.onStorageChange);
+
+      // Auto-release baton on unload so we can reclaim it on reload
+      window.addEventListener('beforeunload', () => {
+        if (this.isPrimary()) {
+          console.log('[DataService] Releasing Master Baton on unload');
+          localStorage.removeItem(this.MASTER_KEY);
+        }
+      });
     }
   }
 

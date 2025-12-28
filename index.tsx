@@ -17,6 +17,8 @@ window.onerror = function (msg, url, lineNo, columnNo, error) {
   errorDiv.style.padding = '20px';
   errorDiv.style.zIndex = '9999';
   errorDiv.style.whiteSpace = 'pre-wrap';
+  errorDiv.style.userSelect = 'text'; // Enable text selection
+  errorDiv.style.webkitUserSelect = 'text';
   errorDiv.innerHTML = `<h3>CRITICAL ERROR</h3><p>${msg}</p><p>${url}:${lineNo}:${columnNo}</p><pre>${error?.stack}</pre>`;
   document.body.appendChild(errorDiv);
   return false;

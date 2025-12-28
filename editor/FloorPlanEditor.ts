@@ -183,8 +183,13 @@ export class FloorPlanEditor {
 
             // 5. Restore Camera State
             if (state.camera) {
+                console.log('[📷 FloorPlanEditor] Restoring camera from localStorage...');
                 this.cameraSystem.setState(state.camera);
                 this.layerSystem.updateLabelScales(state.camera.zoom);
+                this.cameraSystem.logViewportDebug('After loadPersistentState');
+            } else {
+                console.log('[📷 FloorPlanEditor] No camera state in localStorage, using defaults');
+                this.cameraSystem.logViewportDebug('Default state (no saved camera)');
             }
 
             this.emit('layers-changed', this.layerSystem.getAllLayers());
