@@ -123,11 +123,13 @@ export function useAutoSave(
       }
 
       // -- Empty Content Guards (Initialization Safety) --
-      if (allDevices.length === 0 && lastSavedSymbolsRef.current.length > 2) {
-        console.warn('⚠️ Prevented mono-save of empty symbols'); return;
+      // FIXED: Only block empty saves if content is NOT dirty (i.e., unintentional)
+      // If symbols/furniture ARE dirty, the user explicitly deleted them → allow save
+      if (allDevices.length === 0 && lastSavedSymbolsRef.current.length > 2 && !isSymbolsDirty) {
+        console.warn('⚠️ Prevented mono-save of empty symbols (initialization guard)'); return;
       }
-      if (furniture.length === 0 && lastSavedFurnitureRef.current.length > 2) {
-        console.warn('⚠️ Prevented mono-save of empty furniture'); return;
+      if (furniture.length === 0 && lastSavedFurnitureRef.current.length > 2 && !isFurnitureDirty) {
+        console.warn('⚠️ Prevented mono-save of empty furniture (initialization guard)'); return;
       }
 
       // 4. Perform Monolithic Save

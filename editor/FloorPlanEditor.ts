@@ -228,6 +228,14 @@ export class FloorPlanEditor {
             this.setDirty();
         }
 
+        // Delete / Backspace - Delete selected items
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            // Prevent backspace from navigating back in browser
+            e.preventDefault();
+            this.deleteSelection();
+            return;
+        }
+
         // Overlay Alignment Mode Toggle (Skip repeats)
         if (!e.repeat && e.key.toLowerCase() === 'l' && !e.ctrlKey && !e.metaKey) {
             e.preventDefault();
@@ -777,6 +785,22 @@ export class FloorPlanEditor {
             this.emit('layers-changed', this.layerSystem.getAllLayers());
             this.setDirty();
         }
+    }
+
+    /**
+     * Delete all currently selected items (devices, furniture, etc.)
+     * Triggered by Delete or Backspace keys
+     */
+    public deleteSelection(): void {
+        const selectedIds = this.selectionSystem.getSelectedIds();
+        if (selectedIds.length === 0) {
+            return; // Nothing selected
+        }
+
+        // Delete each selected item
+        selectedIds.forEach(id => {
+            this.deleteDevice(id);
+        });
     }
 
     public cycleDevices(direction: 'next' | 'prev'): void {
