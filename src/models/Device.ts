@@ -228,6 +228,20 @@ export interface Device {
   busAssignment: string | null;
 
   /**
+   * Device configuration attributes
+   * Optional configuration parameters for device operation
+   * Examples:
+   * - driver: DALI driver type or dimming protocol
+   * - mount: Mounting configuration (recessed, surface, pendant)
+   * - cct: Correlated Color Temperature (e.g., "2700K", "3000K", "4000K")
+   */
+  configuration?: {
+    driver?: string;
+    mount?: string;
+    cct?: string;
+  };
+
+  /**
    * Device-specific metadata
    * Examples:
    * - range: number (custom range override for WiFi AP)

@@ -283,7 +283,7 @@
         "id": "light-fix-dali",
         "name": "HE Williams 2DS Square",
         "manufacturer": "HE Williams",
-        "description": "2\" Tunable White Fixed Trimless Downlight (DALI-2)",
+        "description": "2\" Tunable White Mud-in Fixed Trimless Downlight (DALI-2)",
         "type": "LIGHTING",
         "mountType": "CEILING_MOUNT",
         "size": 0,
@@ -300,6 +300,9 @@
             "lighting"
         ],
         "genericRole": "Fixed Downlight",
+        "metadata": {
+            "driverType": "DALI-2 (LD2)"
+        },
         "instances": [
             {
                 "id": "dl-hall",
@@ -342,7 +345,7 @@
         "id": "light-adj-dali",
         "name": "HE Williams 2AS Adjustable",
         "manufacturer": "HE Williams",
-        "description": "2\" Tunable White Adjustable Trimless (DALI-2)",
+        "description": "2\" Tunable White Mud-in Adjustable Trimless (DALI-2)",
         "type": "LIGHTING",
         "mountType": "CEILING_MOUNT",
         "size": 0,
@@ -359,6 +362,9 @@
             "lighting"
         ],
         "genericRole": "Accent Downlight",
+        "metadata": {
+            "driverType": "DALI-2 (LD2)"
+        },
         "instances": [
             {
                 "id": "adj-master",
@@ -386,29 +392,6 @@
                 "notes": "Art/Wall (Qty 5)"
             }
         ]
-    },
-    {
-        "id": "light-adj-dali-4",
-        "name": "HE Williams 4DS Adjustable (Alt)",
-        "manufacturer": "HE Williams",
-        "description": "4.5\" Tunable White Adjustable (Alternative Option)",
-        "type": "LIGHTING",
-        "mountType": "CEILING_MOUNT",
-        "size": 0,
-        "cost": 280.00,
-        "powerWatts": 20,
-        "quantity": 0,
-        "requiresBus": [
-            "DALI"
-        ],
-        "specUrl": "https://hew.com/specifications/4DS_tunable-white.pdf",
-        "url": "https://www.google.com/search?q=site:hewilliams.com+4DS+Tunable+White+Adjustable",
-        "linkStatus": "PREFERRED",
-        "systemIds": [
-            "lighting"
-        ],
-        "genericRole": "Accent Downlight (Large)",
-        "notes": "ALTERNATIVE: 4.5\" Aperture for less busy ceiling. Higher lumens allows fewer fixtures."
     },
     {
         "id": "mw-hdr-150",
@@ -915,6 +898,79 @@
         "description": "12/2 Power + 16/2 Control (NM-B-PCS)",
         "notes": "CORE STRATEGY: \"Code Hack\" for NEC. Bundles Class 1 (120V) + Class 2 (0-10V/DALI) in one cable. Saves dual pulls.",
         "location": "Infra"
+    },
+    {
+        "id": "cable-duo-12awg",
+        "name": "DUO-12-AWG Hybrid Power/Control Cable",
+        "manufacturer": "Southwire",
+        "type": "ACCESSORY",
+        "mountType": "NA",
+        "size": 0,
+        "cost": 1650.00,
+        "powerWatts": 0,
+        "quantity": 1,
+        "systemIds": [
+            "infra",
+            "lighting",
+            "hvac"
+        ],
+        "url": "https://www.google.com/search?q=Southwire+DUO+12+AWG+NM-B-PCS+Hybrid+Cable",
+        "linkStatus": "PREFERRED",
+        "description": "12 AWG Power + 16 AWG Control Dual Cable (1000ft) - NM-B-PCS Rated",
+        "notes": "ENHANCED SPEC: Professional-grade dual cable system. 12/2 NM-B (120V/20A Class 1) bundled with 16/2 plenum-rated control (DALI/0-10V Class 2). UL Listed for NEC 725.136 exception. Eliminates dual conduit runs. White jacket with red tracer stripe. Temperature rating: 90°C dry, 60°C wet. Voltage rating: 600V (power), 300V (control). Ampacity: 20A @ 12 AWG, 10A @ 16 AWG. Jacket material: PVC with flame-retardant additives. Pull strength: 250 lbs. Bend radius: 10x cable diameter (6 inches minimum). Compatible with standard NM cable staples and clamps. CRITICAL: Control conductors MUST be terminated at both ends even if unused - prevents induction interference. Label 'HYBRID CABLE - CLASS 1 + CLASS 2' every 10 feet per NEC 725.179. Ideal for DALI drivers, 0-10V dimming, fan speed control, and motorized shades.",
+        "specifications": {
+            "conductorSize": {
+                "power": "12 AWG",
+                "control": "16 AWG"
+            },
+            "conductorMaterial": "Copper",
+            "insulation": {
+                "power": "THHN/THWN-2",
+                "control": "Plenum-rated FEP"
+            },
+            "jacketColor": "White with Red Tracer",
+            "temperatureRating": {
+                "dry": "90°C",
+                "wet": "60°C"
+            },
+            "voltageRating": {
+                "power": "600V",
+                "control": "300V"
+            },
+            "ampacity": {
+                "power": "20A",
+                "control": "10A"
+            },
+            "pullStrength": "250 lbs",
+            "bendRadius": "6 inches minimum",
+            "spoolLength": "1000 ft",
+            "weight": "85 lbs per 1000ft"
+        },
+        "compliance": {
+            "ul": "UL 83 (NM-B), UL 13 (Control)",
+            "nec": "NEC Article 334 (NM Cable), Article 725 (Class 1/2 Circuits)",
+            "rohs": true,
+            "flameRating": "VW-1"
+        },
+        "applications": [
+            "DALI LED Driver Circuits",
+            "0-10V Dimming Systems",
+            "HVAC Fan Speed Control",
+            "Motorized Shade/Blind Control",
+            "KNX Power Supply Wiring",
+            "Security System Low Voltage"
+        ],
+        "installationNotes": [
+            "Use NM cable staples every 4.5 feet and within 12 inches of boxes",
+            "Maintain 6-inch separation from high-voltage (>1kV) sources",
+            "Label 'HYBRID CABLE - CLASS 1 + CLASS 2' every 10 feet",
+            "Terminate unused control conductors at both ends",
+            "Do not exceed 80% ampacity for continuous loads (16A @ 12 AWG)",
+            "Use insulated staples to prevent jacket damage",
+            "Compatible with standard blue plastic boxes and metal conduit bodies"
+        ],
+        "location": "Infra",
+        "linkStatus": "PREFERRED"
     },
     {
         "id": "cable-cat6",

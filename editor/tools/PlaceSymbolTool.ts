@@ -21,6 +21,9 @@ export class PlaceSymbolTool implements Tool {
     private activeLumens: number = 800;
     private activeBeamAngle: number = 60;
     private activeRange: number = 10;
+    private activeDriver?: string;
+    private activeMount?: string;
+    private activeCCT?: string;
 
     constructor(editor: FloorPlanEditor) {
         this.editor = editor;
@@ -54,6 +57,9 @@ export class PlaceSymbolTool implements Tool {
         lumens?: number;
         beamAngle?: number;
         range?: number;
+        driver?: string;
+        mount?: string;
+        cct?: string;
     }): void {
         this.activeProductId = attrs.productId;
         this.activeDefaultHeight = attrs.defaultHeight;
@@ -66,6 +72,9 @@ export class PlaceSymbolTool implements Tool {
         if (attrs.lumens !== undefined) this.activeLumens = attrs.lumens;
         if (attrs.beamAngle !== undefined) this.activeBeamAngle = attrs.beamAngle;
         if (attrs.range !== undefined) this.activeRange = attrs.range;
+        if (attrs.driver !== undefined) this.activeDriver = attrs.driver;
+        if (attrs.mount !== undefined) this.activeMount = attrs.mount;
+        if (attrs.cct !== undefined) this.activeCCT = attrs.cct;
     }
 
     private updatePreviewMesh(): void {
@@ -202,7 +211,15 @@ export class PlaceSymbolTool implements Tool {
                 lumens: this.activeLumens,
                 beamAngle: this.activeBeamAngle,
                 range: this.activeRange,
-                cableType: this.activeCableType
+                cableType: this.activeCableType,
+                // Configuration attributes
+                ...(this.activeDriver || this.activeMount || this.activeCCT ? {
+                    configuration: {
+                        ...(this.activeDriver && { driver: this.activeDriver }),
+                        ...(this.activeMount && { mount: this.activeMount }),
+                        ...(this.activeCCT && { cct: this.activeCCT })
+                    }
+                } : {})
             },
             createdAt: new Date().toISOString()
         };

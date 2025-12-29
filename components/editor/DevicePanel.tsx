@@ -1,6 +1,7 @@
 import React from 'react';
 import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
 import { SYMBOL_CATEGORIES, SYMBOL_LIBRARY } from '../../editor/models/symbolLibrary';
+import { CABLE_LIBRARY, getAllCableTypes } from '../../editor/models/cableLibrary';
 import { SymbolPalette } from './SymbolPalette';
 import { PlaceSymbolTool } from '../../editor/tools/PlaceSymbolTool';
 import { useDevices } from '../../src/hooks/useDevices';
@@ -358,14 +359,11 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                                 onChange={(e) => setCableType(e.target.value)}
                                 className="w-full text-[9px] text-slate-300 font-mono px-1.5 py-1 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
                             >
-                                <option value="Cat6">Cat6 - Data</option>
-                                <option value="Cat6A">Cat6A - Data</option>
-                                <option value="RG6">RG6 - Coax</option>
-                                <option value="18/2">18/2 - Power</option>
-                                <option value="14/2">14/2 - Power</option>
-                                <option value="Speaker">Speaker Wire</option>
-                                <option value="DALI">DALI Bus</option>
-                                <option value="KNX">KNX Bus</option>
+                                {getAllCableTypes().map(cable => (
+                                    <option key={cable.id} value={cable.id}>
+                                        {cable.name}
+                                    </option>
+                                ))}
                             </select>
 
                             <div className="flex gap-1">
@@ -435,9 +433,11 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                                     onChange={(e) => setCableType(e.target.value)}
                                     className="w-full bg-transparent text-[9px] text-slate-300 font-mono py-1 focus:outline-none"
                                 >
-                                    <option value="Cat6">Cat6</option>
-                                    <option value="DALI">DALI</option>
-                                    <option value="KNX">KNX</option>
+                                    {getAllCableTypes().map(cable => (
+                                        <option key={cable.id} value={cable.id}>
+                                            {cable.name}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
 
@@ -611,28 +611,75 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
 
                                     {/* Conditional Metadata Fields */}
                                     {editingDevice.layerId === 'lighting' && (
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Lumens</label>
-                                                <input
-                                                    type="number"
-                                                    value={formData.metadata?.lumens || 0}
-                                                    onChange={(e) => handleFieldChange('metadata.lumens', parseInt(e.target.value) || 0)}
-                                                    onBlur={(e) => handleFieldBlur('metadata.lumens', parseInt(e.target.value) || 0)}
-                                                    className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
-                                                />
+                                        <>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div>
+                                                    <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Lumens</label>
+                                                    <input
+                                                        type="number"
+                                                        value={formData.metadata?.lumens || 0}
+                                                        onChange={(e) => handleFieldChange('metadata.lumens', parseInt(e.target.value) || 0)}
+                                                        onBlur={(e) => handleFieldBlur('metadata.lumens', parseInt(e.target.value) || 0)}
+                                                        className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Beam °</label>
+                                                    <input
+                                                        type="number"
+                                                        value={formData.metadata?.beamAngle || 0}
+                                                        onChange={(e) => handleFieldChange('metadata.beamAngle', parseInt(e.target.value) || 0)}
+                                                        onBlur={(e) => handleFieldBlur('metadata.beamAngle', parseInt(e.target.value) || 0)}
+                                                        className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
+                                                    />
+                                                </div>
                                             </div>
-                                            <div>
-                                                <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Beam °</label>
-                                                <input
-                                                    type="number"
-                                                    value={formData.metadata?.beamAngle || 0}
-                                                    onChange={(e) => handleFieldChange('metadata.beamAngle', parseInt(e.target.value) || 0)}
-                                                    onBlur={(e) => handleFieldBlur('metadata.beamAngle', parseInt(e.target.value) || 0)}
-                                                    className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
-                                                />
+
+                                            {/* Configuration Section */}
+                                            <div className="pt-2 border-t border-slate-800/50">
+                                                <h4 className="text-[8px] text-slate-500 uppercase font-bold mb-2 tracking-wider">Configuration</h4>
+                                                <div className="space-y-2">
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Driver</label>
+                                                        <select
+                                                            value={formData.metadata?.driver || 'LD2'}
+                                                            onChange={(e) => handleFieldChange('metadata.driver', e.target.value)}
+                                                            onBlur={(e) => handleFieldBlur('metadata.driver', e.target.value)}
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
+                                                        >
+                                                            <option value="LD2">LD2</option>
+                                                            <option value="0-10V">0-10V</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Mount</label>
+                                                        <select
+                                                            value={formData.metadata?.mount || 'Trimless Mud-in'}
+                                                            onChange={(e) => handleFieldChange('metadata.mount', e.target.value)}
+                                                            onBlur={(e) => handleFieldBlur('metadata.mount', e.target.value)}
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
+                                                        >
+                                                            <option value="Trimless Mud-in">Trimless Mud-in</option>
+                                                            <option value="Flanged">Flanged</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">CCT</label>
+                                                        <select
+                                                            value={formData.metadata?.cct || 'Tunable'}
+                                                            onChange={(e) => handleFieldChange('metadata.cct', e.target.value)}
+                                                            onBlur={(e) => handleFieldBlur('metadata.cct', e.target.value)}
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
+                                                        >
+                                                            <option value="Tunable">Tunable</option>
+                                                            <option value="Fixed">Fixed</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
+                                        </>
                                     )}
 
                                     {editingDevice.layerId === 'network' && (

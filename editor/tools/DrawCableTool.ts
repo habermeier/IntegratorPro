@@ -3,6 +3,7 @@ import { Tool } from '../systems/ToolSystem';
 import { ToolType, Vector2, Cable, VectorLayerContent } from '../models/types';
 import { FloorPlanEditor } from '../FloorPlanEditor';
 import { AddCableCommand } from '../commands/AddCableCommand';
+import { remoteDebug, remoteWarn } from '../../src/utils/logger';
 
 export class DrawCableTool implements Tool {
     public type: ToolType = 'draw-cable';
@@ -215,7 +216,7 @@ export class DrawCableTool implements Tool {
 
     private finalizeCable(): void {
         if (this.points.length < 2) {
-            console.warn('[DrawCableTool] Cannot finalize cable: < 2 points');
+            remoteWarn('Cannot finalize cable: < 2 points', 'DrawCableTool', { pointCount: this.points.length });
             return;
         }
 
@@ -236,7 +237,7 @@ export class DrawCableTool implements Tool {
         // Get or create cables layer
         let cablesLayer = this.editor.layerSystem.getLayer('cables');
         if (!cablesLayer) {
-            console.warn('[DrawCableTool] Cables layer not found, cannot save cable');
+            remoteWarn('Cables layer not found, cannot save cable', 'DrawCableTool');
             this.reset();
             return;
         }
@@ -247,6 +248,6 @@ export class DrawCableTool implements Tool {
         this.editor.setDirty();
 
         this.reset();
-        console.log('[DrawCableTool] Cable finalized:', cable);
+        remoteDebug('Cable finalized', 'DrawCableTool', { cableId: cable.id, pointCount: cable.points.length, cableType: cable.cableType });
     }
 }
