@@ -201,7 +201,13 @@ export const FloorPlanRenderer: React.FC = () => {
         if (isPanning || activeTool === 'pan') return 'PAN';
         if (activeTool === 'draw-mask') return 'SET MASK';
         if (activeTool === 'draw-room') return 'SET ROOM';
-        if (activeTool === 'place-symbol') return activeSymbol ? `PLACING: ${activeSymbol.replace(/^.*?-/, '').replace(/_/g, ' ').toUpperCase()}` : 'PLACING DEVICE';
+        if (activeTool === 'place-symbol') {
+            // Only show PLACING when a symbol is actually selected
+            if (activeSymbol) {
+                return `PLACING: ${activeSymbol.replace(/^.*?-/, '').replace(/_/g, ' ').toUpperCase()}`;
+            }
+            // No symbol selected - fall through to SELECT mode
+        }
         if (activeTool === 'measure') return 'MEASURE';
         if (activeTool === 'scale-calibrate') return 'CALIBRATE';
         return 'SELECT';

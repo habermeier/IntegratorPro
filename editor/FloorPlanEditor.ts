@@ -23,6 +23,8 @@ import { PlaceFurnitureTool } from './tools/PlaceFurnitureTool';
 import { MeasureTool } from './tools/MeasureTool';
 import { DrawCableTool } from './tools/DrawCableTool';
 import { DeleteSymbolCommand } from './commands/DeleteSymbolCommand';
+import { remoteDebug } from '../src/utils/logger';
+
 export class FloorPlanEditor {
     public scene: THREE.Scene;
     private renderer: THREE.WebGLRenderer;
@@ -75,7 +77,7 @@ export class FloorPlanEditor {
 
     constructor(container: HTMLElement) {
         const editorId = Math.random().toString(36).substring(7);
-        console.log(`[FloorPlanEditor] Initializing new instance: ${editorId} `);
+        remoteDebug(`Initializing new instance: ${editorId}`, 'FloorPlanEditor');
         this.container = container;
 
         // Initialize Three.js
@@ -156,7 +158,7 @@ export class FloorPlanEditor {
 
             // 1. Restore Visibility
             if (state.visibility) {
-                console.log('[FloorPlanEditor Debug] Restoring visibility from persistence:', JSON.stringify(state.visibility));
+                remoteDebug('Restoring visibility from persistence', 'FloorPlanEditor', { visibility: state.visibility });
                 const entries = Object.entries(state.visibility as Record<string, boolean>);
                 entries.forEach(([id, visible], index) => {
                     // We batch updates by skipping emit. The final state verification 
@@ -183,12 +185,12 @@ export class FloorPlanEditor {
 
             // 5. Restore Camera State
             if (state.camera) {
-                console.log('[📷 FloorPlanEditor] Restoring camera from localStorage...');
+                remoteDebug('Restoring camera from localStorage', 'FloorPlanEditor');
                 this.cameraSystem.setState(state.camera);
                 this.layerSystem.updateLabelScales(state.camera.zoom);
                 this.cameraSystem.logViewportDebug('After loadPersistentState');
             } else {
-                console.log('[📷 FloorPlanEditor] No camera state in localStorage, using defaults');
+                remoteDebug('No camera state in localStorage, using defaults', 'FloorPlanEditor');
                 this.cameraSystem.logViewportDebug('Default state (no saved camera)');
             }
 
@@ -267,7 +269,7 @@ export class FloorPlanEditor {
                         : Math.max(0, layer.opacity - opacityStep);
 
                     this.setLayerOpacity(targetLayerId, newOpacity);
-                    console.log(`[FloorPlanEditor] Adjusted ${layer.name} opacity: ${(newOpacity * 100).toFixed(0)}% `);
+                    remoteDebug(`Adjusted ${layer.name} opacity: ${(newOpacity * 100).toFixed(0)}%`, 'FloorPlanEditor');
                 }
             }
             return;
@@ -477,7 +479,7 @@ export class FloorPlanEditor {
         if (this.toolSystem.getActiveToolType() !== 'select') {
             const room = this.selectionSystem.getRoomAt(x, y, true); // true = Only Labels
             if (room) {
-                console.log(`[FloorPlanEditor] Fallback Double Click: Edit Room via Label`, room.name);
+                remoteDebug('Fallback Double Click: Edit Room via Label', 'FloorPlanEditor', { roomName: room.name });
                 this.emit('room-edit-requested', room);
             }
         }
@@ -610,7 +612,7 @@ export class FloorPlanEditor {
 
     public setLayerVisible(id: string, visible: boolean, skipSave: boolean = false, skipEmit: boolean = false): void {
         const layer = this.layerSystem.getLayer(id);
-        console.log(`[FloorPlanEditor Debug] setLayerVisible called for ${id}: ${visible}, skipSave: ${skipSave}`);
+        remoteDebug(`setLayerVisible called for ${id}: ${visible}`, 'FloorPlanEditor', { id, visible, skipSave });
 
         // Enforce mutual exclusivity for technical layers
         if (visible && layer?.category === 'technical') {
@@ -619,7 +621,7 @@ export class FloorPlanEditor {
                 if (l.category === 'technical' && l.id !== id) {
                     // Check if other technical layer is currently visible
                     if (l.visible) {
-                        console.log(`[FloorPlanEditor Debug] Mutex Check: Disabling ${l.id} because ${id} is becoming visible.`);
+                        remoteDebug(`Mutex Check: Disabling ${l.id} because ${id} is becoming visible`, 'FloorPlanEditor', { disabled: l.id, enabled: id });
                         this.layerSystem.setLayerVisible(l.id, false);
                     }
                 }
@@ -640,11 +642,11 @@ export class FloorPlanEditor {
     }
 
     public enforceTechnicalLayerMutex(): void {
-        console.log('[FloorPlanEditor Debug] 🛡️ STARTING MUTEX ENFORCEMENT 🛡️');
+        remoteDebug('🛡️ STARTING MUTEX ENFORCEMENT 🛡️', 'FloorPlanEditor');
         const layers = this.layerSystem.getAllLayers();
         const techLayers = layers.filter(l => l.category === 'technical' && l.visible);
 
-        console.log('[FloorPlanEditor Debug] Enforcing Mutex. Visible Tech Layers:', techLayers.map(l => l.id));
+        remoteDebug('Enforcing Mutex. Visible Tech Layers', 'FloorPlanEditor', { visibleLayers: techLayers.map(l => l.id) });
 
         if (techLayers.length > 1) {
             console.warn('[FloorPlanEditor] Mutex violation detected. Enforcing single technical layer.');
@@ -662,11 +664,11 @@ export class FloorPlanEditor {
             const lighting = techLayers.find(l => l.id === 'lighting');
             if (lighting) keptLayerId = 'lighting';
 
-            console.log(`[FloorPlanEditor Debug] Keeping ${keptLayerId} active, disabling others.`);
+            remoteDebug(`Keeping ${keptLayerId} active, disabling others`, 'FloorPlanEditor', { keptLayer: keptLayerId });
 
             techLayers.forEach(l => {
                 if (l.id !== keptLayerId) {
-                    console.log(`[FloorPlanEditor Debug] Auto-disabling layer ${l.id}`);
+                    remoteDebug(`Auto-disabling layer ${l.id}`, 'FloorPlanEditor', { layerId: l.id });
                     this.layerSystem.setLayerVisible(l.id, false);
                 }
             });
@@ -674,7 +676,7 @@ export class FloorPlanEditor {
             // Force fresh array for React
             this.emit('layers-changed', this.layerSystem.getAllLayers().map(l => ({ ...l })));
         } else {
-            console.log('[FloorPlanEditor Debug] No mutex violation found.');
+            remoteDebug('No mutex violation found', 'FloorPlanEditor');
         }
     }
 
@@ -727,7 +729,7 @@ export class FloorPlanEditor {
         }
 
         if (foundDevice && foundLayer) {
-            console.log(`[FloorPlanEditor] Focusing on device ${id} in layer ${foundLayer.id}`);
+            remoteDebug(`Focusing on device ${id} in layer ${foundLayer.id}`, 'FloorPlanEditor', { deviceId: id, layerId: foundLayer.id });
 
             // 1. Auto-show and activate layer (but don't shimmy)
             this.layerSystem.setLayerVisible(foundLayer.id, true);

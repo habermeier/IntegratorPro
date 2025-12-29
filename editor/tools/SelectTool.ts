@@ -4,6 +4,7 @@ import { ToolType, Vector2, Polygon, VectorLayerContent } from '../models/types'
 import { FloorPlanEditor } from '../FloorPlanEditor';
 import { DeletePolygonCommand } from '../commands/DeletePolygonCommand';
 import { ModifyPolygonCommand } from '../commands/ModifyPolygonCommand';
+import { remoteDebug } from '../../src/utils/logger';
 
 export class SelectTool implements Tool {
     public type: ToolType = 'select';
@@ -46,7 +47,7 @@ export class SelectTool implements Tool {
         const isMulti = event.shiftKey || event.ctrlKey || event.metaKey;
         const selectedIds = this.editor.selectionSystem.selectAt(x, y, isMulti);
 
-        console.log('SelectTool: Selected IDs', selectedIds);
+        remoteDebug('Selected IDs', 'SelectTool', { selectedIds });
         this.editor.emit('selection-changed', selectedIds);
         this.updateHandles();
         this.editor.layerSystem.markDirty('room');
@@ -109,13 +110,13 @@ export class SelectTool implements Tool {
     }
 
     public onDoubleClick(x: number, y: number, event: MouseEvent): void {
-        console.log('[SelectTool] onDoubleClick triggered at', x, y);
+        remoteDebug('onDoubleClick triggered', 'SelectTool', { x, y });
         const room = this.editor.selectionSystem.getRoomAt(x, y, false); // false = Allow Body
         if (room) {
-            console.log('[SelectTool] Double Click: Edit Room', room.name);
+            remoteDebug('Double Click: Edit Room', 'SelectTool', { roomName: room.name });
             this.editor.emit('room-edit-requested', room);
         } else {
-            console.log('[SelectTool] Double Click: No room hit');
+            remoteDebug('Double Click: No room hit', 'SelectTool');
         }
     }
 
@@ -189,7 +190,7 @@ export class SelectTool implements Tool {
         const width = renderer.domElement.clientWidth;
         const height = renderer.domElement.clientHeight;
         const threshold = 15; // Increased pixel threshold
-        console.log(`[SelectTool] HitTest Handles: Screen(${screenX}, ${screenY}) Canvas(${width}x${height}) Points: ${this.handleMetadata.length}`);
+        remoteDebug('HitTest Handles', 'SelectTool', { screen: { x: screenX, y: screenY }, canvas: { width, height }, points: this.handleMetadata.length });
 
         let closestIndex = -1;
         let minDistance = Infinity;
@@ -218,7 +219,7 @@ export class SelectTool implements Tool {
         }
 
         if (closestIndex !== -1) {
-            console.log(`[SelectTool] Hit found: Index ${closestIndex} Dist ${minDistance}`);
+            remoteDebug('Hit found', 'SelectTool', { index: closestIndex, distance: minDistance });
             return this.handleMetadata[closestIndex];
         }
 

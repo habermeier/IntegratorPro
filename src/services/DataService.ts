@@ -8,6 +8,7 @@
 import { Device } from '../models/Device';
 import { DeviceRegistry } from './DeviceRegistry';
 import { ProjectData, ProjectSettings as Settings, ElectricalOverlay, Polygon, Point, Furniture, ProjectMetadata, ScaleData, LayoutModule, FloorPlan } from '../../editor/models/types';
+import { remoteDebug } from '../utils/logger';
 
 // ============================================================================
 // TypeScript Interfaces
@@ -36,7 +37,7 @@ class DataService {
   private readonly MASTER_KEY = 'integrator-pro-master-tab';
 
   constructor() {
-    console.log(`[DataService] Initialized with Tab ID: ${this.tabId}`);
+    remoteDebug(`Initialized with Tab ID: ${this.tabId}`, 'DataService', { tabId: this.tabId });
     // Check if we are the first/only tab, if so claim baton
     if (typeof window !== 'undefined' && !localStorage.getItem(this.MASTER_KEY)) {
       this.claimBaton();
@@ -48,7 +49,7 @@ class DataService {
       // Auto-release baton on unload so we can reclaim it on reload
       window.addEventListener('beforeunload', () => {
         if (this.isPrimary()) {
-          console.log('[DataService] Releasing Master Baton on unload');
+          remoteDebug('Releasing Master Baton on unload', 'DataService');
           localStorage.removeItem(this.MASTER_KEY);
         }
       });
@@ -57,7 +58,7 @@ class DataService {
 
   private onStorageChange = (e: StorageEvent): void => {
     if (e.key === 'integrator-pro-last-save') {
-      console.log('[DataService] Detected external change, clearing cache');
+      remoteDebug('Detected external change, clearing cache', 'DataService');
       this.clearCache();
       // Dispatch event for components to reload
       if (typeof window !== 'undefined') {
@@ -83,7 +84,7 @@ class DataService {
   claimBaton(): void {
     if (typeof window === 'undefined') return;
     localStorage.setItem(this.MASTER_KEY, this.tabId);
-    console.log(`[DataService] Tab ${this.tabId} claimed Master Baton`);
+    remoteDebug(`Tab ${this.tabId} claimed Master Baton`, 'DataService', { tabId: this.tabId });
     window.dispatchEvent(new CustomEvent('master-baton-changed', { detail: { isPrimary: true } }));
   }
 
@@ -110,17 +111,17 @@ class DataService {
       (now - this.cacheTimestamp < this.CACHE_TTL);
 
     if (!forceReload && cacheValid) {
-      console.log('[DataService] Using cached project data (TTL valid)');
+      remoteDebug('Using cached project data (TTL valid)', 'DataService');
       return this.cache;
     }
 
     try {
       if (forceReload) {
-        console.log('[DataService] Force reload - bypassing cache');
+        remoteDebug('Force reload - bypassing cache', 'DataService');
       } else if (this.cache && !cacheValid) {
-        console.log('[DataService] Cache expired (TTL exceeded) - reloading');
+        remoteDebug('Cache expired (TTL exceeded) - reloading', 'DataService');
       } else {
-        console.log('[DataService] Loading project from server (no cache)');
+        remoteDebug('Loading project from server (no cache)', 'DataService');
       }
 
       const response = await fetch(`${this.baseUrl}/project/${id}`);
@@ -134,7 +135,7 @@ class DataService {
       // Capture version token
       if (projectData.versionToken) {
         this.versionToken = projectData.versionToken;
-        console.log(`[DataService] Project version token: ${this.versionToken}`);
+        remoteDebug('Project version token', 'DataService', { versionToken: this.versionToken });
       }
 
       // Apply migration if needed
@@ -148,7 +149,7 @@ class DataService {
       // Populate DeviceRegistry from loaded data
       const deviceRegistry = DeviceRegistry.getInstance();
       deviceRegistry.setDevices(this.cache.devices || []);
-      console.log(`[DataService] Loaded ${this.cache.devices?.length || 0} devices into registry`);
+      remoteDebug('Loaded devices into registry', 'DataService', { deviceCount: this.cache.devices?.length || 0 });
 
       return this.cache;
     } catch (error) {
@@ -195,7 +196,7 @@ class DataService {
         // Update token so the next attempt has a chance, even if this one failed
         if (errorData.serverToken) {
           this.versionToken = errorData.serverToken;
-          console.log(`[DataService] Token updated to server version: ${this.versionToken}`);
+          remoteDebug('Token updated to server version', 'DataService', { versionToken: this.versionToken });
         }
 
         // Dispatch event for UI to show conflict resolution
@@ -234,7 +235,7 @@ class DataService {
         }));
       }
 
-      console.log('✅ Project saved successfully with versioning');
+      remoteDebug('✅ Project saved successfully with versioning', 'DataService');
     } catch (error) {
       console.error('Error saving project:', error);
       throw error;
@@ -403,7 +404,7 @@ class DataService {
     this.cache = null;
     this.cacheTimestamp = null;
     this.versionToken = null;
-    console.log('[DataService] Cache cleared');
+    remoteDebug('Cache cleared', 'DataService');
   }
 
   /**
@@ -440,7 +441,7 @@ class DataService {
       }
 
       // Legacy device detected - perform migration
-      console.log(`[DataService] Migrating legacy device ${legacy.id || index}`);
+      remoteDebug(`Migrating legacy device ${legacy.id || index}`, 'DataService', { deviceId: legacy.id || index });
 
       // Extract position from legacy x/y or position object
       const position = {

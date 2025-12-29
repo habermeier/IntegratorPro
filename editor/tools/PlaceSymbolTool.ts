@@ -5,6 +5,7 @@ import { FloorPlanEditor } from '../FloorPlanEditor';
 import { SYMBOL_LIBRARY } from '../models/symbolLibrary';
 import { AddSymbolCommand } from '../commands/AddSymbolCommand';
 import { findRoomAt } from '../../utils/spatialUtils';
+import { remoteDebug } from '../../src/utils/logger';
 
 export class PlaceSymbolTool implements Tool {
     public type: ToolType = 'place-symbol';
@@ -30,13 +31,13 @@ export class PlaceSymbolTool implements Tool {
     public activate(): void {
         this.editor.scene.add(this.previewGroup);
         this.previewGroup.visible = false;
-        console.log('[PlaceSymbolTool] Activated');
+        remoteDebug('Activated', 'PlaceSymbolTool');
     }
 
     public deactivate(): void {
         this.editor.scene.remove(this.previewGroup);
         this.symbolType = null;
-        console.log('[PlaceSymbolTool] Deactivated');
+        remoteDebug('Deactivated', 'PlaceSymbolTool');
     }
 
     public setSymbolType(type: string): void {
@@ -97,9 +98,85 @@ export class PlaceSymbolTool implements Tool {
         this.editor.setDirty();
     }
 
-    public onMouseDown(x: number, y: number, event: MouseEvent): void {
-        if (event.button !== 0 || !this.symbolType) return;
+    /**
+     * Find device/symbol at the clicked position (read-only, no selection side effects)
+     * Returns device ID if found, null otherwise
+     */
+    private findDeviceAtPosition(screenX: number, screenY: number): string | null {
+        const worldPos = this.editor.cameraSystem.screenToWorld(screenX, screenY);
+        const cam = this.editor.cameraSystem.mainCamera;
 
+        const ndcX = (worldPos.x - (cam.left + cam.right) / 2) / ((cam.right - cam.left) / 2);
+        const ndcY = (worldPos.y - (cam.top + cam.bottom) / 2) / ((cam.top - cam.bottom) / 2);
+
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), cam);
+
+        const layers = this.editor.layerSystem.getAllLayers();
+        const hits: { id: string, zIndex: number, layerId: string }[] = [];
+
+        for (const layer of layers) {
+            if (!layer.visible) continue;
+            // Skip room and mask layers - we only want devices/symbols/furniture
+            if (layer.id === 'room' || layer.id === 'mask') continue;
+
+            const intersects = raycaster.intersectObject(layer.container, true);
+            remoteDebug(`Raycasting layer '${layer.id}': ${intersects.length} intersects`, 'PlaceSymbolTool');
+
+            for (const intersect of intersects) {
+                // Symbols use nested groups, we want the top-most object with userData.id
+                let obj = intersect.object;
+                while (obj && !obj.userData.id && obj.parent !== layer.container) {
+                    obj = obj.parent as any;
+                }
+
+                if (obj && obj.userData.id) {
+                    remoteDebug(`Found device in layer '${layer.id}': ${obj.userData.id}`, 'PlaceSymbolTool');
+                    hits.push({
+                        id: obj.userData.id,
+                        zIndex: layer.zIndex,
+                        layerId: layer.id
+                    });
+                    break;
+                }
+            }
+        }
+
+        remoteDebug(`Total hits found: ${hits.length}`, 'PlaceSymbolTool', hits);
+
+        if (hits.length > 0) {
+            // Return the hit from the highest zIndex layer
+            const topHit = hits.sort((a, b) => b.zIndex - a.zIndex)[0];
+            remoteDebug('Returning top hit', 'PlaceSymbolTool', topHit);
+            return topHit.id;
+        }
+
+        return null;
+    }
+
+    public onMouseDown(x: number, y: number, event: MouseEvent): void {
+        remoteDebug('onMouseDown called', 'PlaceSymbolTool', { x, y, button: event.button, symbolType: this.symbolType });
+
+        if (event.button !== 0 || !this.symbolType) {
+            remoteDebug('Ignoring click - wrong button or no symbol type', 'PlaceSymbolTool');
+            return;
+        }
+
+        // SMART PLACEMENT: Check if clicking on an existing device first (read-only check)
+        const deviceAtClick = this.findDeviceAtPosition(x, y);
+        remoteDebug(`Device detection result: ${deviceAtClick}`, 'PlaceSymbolTool');
+
+        if (deviceAtClick) {
+            // Found existing device - enter temporary edit mode
+            remoteDebug(`✓ Clicked on existing device, entering edit mode: ${deviceAtClick}`, 'PlaceSymbolTool');
+            this.editor.selectionSystem.select(deviceAtClick);
+            this.editor.emit('selection-changed', [deviceAtClick]);
+            // Don't place a new symbol - just select the existing one
+            return;
+        }
+
+        // No device found - proceed with normal placement
+        remoteDebug('✓ No device found, proceeding with placement', 'PlaceSymbolTool');
         const worldPos = this.editor.cameraSystem.screenToWorld(x, y);
         const def = SYMBOL_LIBRARY[this.symbolType];
 
@@ -132,6 +209,7 @@ export class PlaceSymbolTool implements Tool {
 
         const command = new AddSymbolCommand(def.category, symbol, this.editor.layerSystem);
         this.editor.commandManager.execute(command);
+        remoteDebug(`✓ Device placed successfully: ${symbol.id}`, 'PlaceSymbolTool', { id: symbol.id, position: worldPos, room: roomName });
         this.editor.emit('layers-changed', this.editor.layerSystem.getAllLayers());
         this.editor.setDirty();
     }

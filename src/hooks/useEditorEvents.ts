@@ -12,6 +12,7 @@ import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
 import { Layer, ToolType, VectorLayerContent } from '../../editor/models/types';
 import { dataService } from '../services/DataService';
 import { useApplyProjectData } from './useApplyProjectData';
+import { remoteDebug } from '../utils/logger';
 
 export interface EditorEventCallbacks {
   setActiveTool: (tool: ToolType) => void;
@@ -139,7 +140,7 @@ export function useEditorEvents(
     // Smooth Handover: Claim baton on interaction
     const handleInteraction = () => {
       if (!dataService.isPrimary()) {
-        console.log('[useEditorEvents] User interaction detected, claiming Master Baton');
+        remoteDebug('User interaction detected, claiming Master Baton', 'useEditorEvents');
         dataService.claimBaton();
       }
     };
@@ -149,7 +150,7 @@ export function useEditorEvents(
 
     // Wakeup: Check for updates on window focus
     const handleFocus = () => {
-      console.log('[useEditorEvents] Tab focused, checking for external updates');
+      remoteDebug('Tab focused, checking for external updates', 'useEditorEvents');
       // Trigger a check via project-data-changed logic if needed, 
       // or just trust the storage event which should have fired.
       // Actually, if we've been in the background, we might have missed storage events?
@@ -164,16 +165,16 @@ export function useEditorEvents(
       const wasRequestedByMaster = e?.detail?.isMaster;
 
       if (dataService.isPrimary() && isExternal) {
-        console.log('[useEditorEvents] Ignoring external change event because we are the Master tab');
+        remoteDebug('Ignoring external change event because we are the Master tab', 'useEditorEvents');
         return;
       }
 
       if (!isExternal) {
-        console.log('[useEditorEvents] Ignoring internal change event (we are the originator)');
+        remoteDebug('Ignoring internal change event (we are the originator)', 'useEditorEvents');
         return;
       }
 
-      console.log('[useEditorEvents] Detected project change, performing SILENT sync');
+      remoteDebug('Detected project change, performing SILENT sync', 'useEditorEvents');
       if (!editor) return;
 
       try {
@@ -187,7 +188,7 @@ export function useEditorEvents(
         // Update layers state to trigger re-render
         callbacks.setLayers([...editor.layerSystem.getAllLayers()]);
 
-        console.log('✅ Editor state synchronized silently');
+        remoteDebug('✅ Editor state synchronized silently', 'useEditorEvents');
       } catch (error) {
         console.error('Failed to reload project silently:', error);
       }

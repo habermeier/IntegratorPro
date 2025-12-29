@@ -11,6 +11,7 @@ import { useCallback, useRef } from 'react';
 import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
 import { VectorLayerContent } from '../../editor/models/types';
 import { dataService } from '../services/DataService';
+import { remoteDebug } from '../utils/logger';
 
 export interface AutoSaveHookReturn {
   debouncedSaveProject: (force?: boolean) => void;
@@ -135,7 +136,7 @@ export function useAutoSave(
       // 4. Perform Monolithic Save
       try {
         isSavingRef.current = true;
-        console.log('💾 [useAutoSave] Triggering MONOLITHIC save project...');
+        remoteDebug('💾 Triggering MONOLITHIC save project', 'useAutoSave');
 
         // We need to fetch the current project data to merge correctly if we only have fragmentation?
         // Actually DataService.saveProject already allows us to pass a partial/full object and it merges?
@@ -168,7 +169,7 @@ export function useAutoSave(
         lastSavedFurnitureRef.current = furnitureStr;
         lastSavedCablesRef.current = cablesStr;
 
-        console.log('✅ [useAutoSave] Monolithic project save successful');
+        remoteDebug('✅ Monolithic project save successful', 'useAutoSave');
       } catch (err) {
         if (err instanceof Error && err.message === 'VERSION_CONFLICT') {
           console.warn('[useAutoSave] Version conflict during monolithic save. Retrying will happen on next debounce or reload.');
@@ -188,7 +189,7 @@ export function useAutoSave(
   }, [editorInstanceRef, isInitializedRef, lastSavedPayloadRef, lastSavedSymbolsRef, lastSavedPolygonsRef, lastSavedFurnitureRef, lastSavedCablesRef, dataLossThreshold]);
 
   const resetAnchors = useCallback(() => {
-    console.log('[useAutoSave] Anchors reset');
+    remoteDebug('Anchors reset', 'useAutoSave');
     anchorCountRef.current = -1;
   }, []);
 

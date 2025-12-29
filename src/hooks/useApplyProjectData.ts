@@ -11,6 +11,7 @@
 import { useCallback } from 'react';
 import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
 import { ProjectData, PlacedSymbol, VectorLayerContent, Room, Furniture } from '../../editor/models/types';
+import { remoteDebug } from '../utils/logger';
 
 export function useApplyProjectData(
     lastSavedPayloadRef: React.MutableRefObject<string>,
@@ -20,7 +21,7 @@ export function useApplyProjectData(
     lastSavedCablesRef: React.MutableRefObject<string>
 ) {
     const applyProjectData = useCallback((editor: FloorPlanEditor, project: ProjectData) => {
-        console.log('[useApplyProjectData Debug] Incoming Project Data Keys:', Object.keys(project));
+        remoteDebug('Incoming Project Data Keys', 'useApplyProjectData', { keys: Object.keys(project) });
         // Check for suspicious payload issues
         if ((project as any).layers || (project as any).visibility) {
             console.warn('[useApplyProjectData Debug] ⚠️ WARNING: Server data contains "layers" or "visibility" root keys! This might overwrite local state.');
@@ -74,15 +75,15 @@ export function useApplyProjectData(
         // Clear and fill thematic layers
         const thematicLayers = ['lighting', 'sensors', 'security', 'network', 'lcps', 'hvac', 'receptacles', 'infrastructure'];
 
-        console.log(`[🔍 DEEP-TRACE] useApplyProjectData - Device distribution by category:`, Object.keys(devicesByCategory).map(k => `${k}: ${devicesByCategory[k].length}`).join(', '));
+        remoteDebug('Device distribution by category', 'useApplyProjectData', { distribution: Object.keys(devicesByCategory).map(k => `${k}: ${devicesByCategory[k].length}`).join(', ') });
 
         thematicLayers.forEach(id => {
             const layer = editor.layerSystem.getLayer(id);
             if (layer && layer.type === 'vector') {
                 const symbolsToAssign = devicesByCategory[id] || [];
-                console.log(`[🔍 DEEP-TRACE] Assigning ${symbolsToAssign.length} symbols to layer '${id}'`);
+                remoteDebug(`Assigning ${symbolsToAssign.length} symbols to layer '${id}'`, 'useApplyProjectData', { layerId: id, count: symbolsToAssign.length });
                 if (symbolsToAssign.length > 0) {
-                    console.log(`[🔍 DEEP-TRACE] Layer '${id}' symbols:`, symbolsToAssign.map(s => `{id:${s.id}, type:${s.type}, pos:(${s.x},${s.y})}`).join(', '));
+                    remoteDebug(`Layer '${id}' symbols`, 'useApplyProjectData', { layerId: id, symbols: symbolsToAssign.map(s => `{id:${s.id}, type:${s.type}, pos:(${s.x},${s.y})}`) });
                 }
                 (layer.content as VectorLayerContent).symbols = symbolsToAssign;
                 editor.layerSystem.markDirty(id);
@@ -154,7 +155,7 @@ export function useApplyProjectData(
         lastSavedFurnitureRef.current = JSON.stringify(furnitureData);
         lastSavedCablesRef.current = JSON.stringify(cablesData);
 
-        console.log(`[useApplyProjectData] applied ${devices.length} devices, ${allPolygons.length} polygons, ${furnitureData.length} furniture`);
+        remoteDebug('Applied project data', 'useApplyProjectData', { devices: devices.length, polygons: allPolygons.length, furniture: furnitureData.length });
     }, [lastSavedPayloadRef, lastSavedSymbolsRef, lastSavedPolygonsRef, lastSavedFurnitureRef, lastSavedCablesRef]);
 
     return applyProjectData;
