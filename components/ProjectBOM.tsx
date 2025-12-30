@@ -48,6 +48,9 @@ const CABLE_PRICING: Record<string, number> = {
 
 const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, highlightedModuleId, linkPrefix = 'dashboard' }) => {
     const [sortConfig, setSortConfig] = useState<SortConfig[]>([]);
+    const [units, setUnits] = useState<'METRIC' | 'IMPERIAL'>(() => {
+        return (localStorage.getItem('integrator-pro-units') as 'METRIC' | 'IMPERIAL') || 'IMPERIAL';
+    });
 
     // --- INTEGRATION: Fetch Cable Data from Layout ---
     const [layoutData, setLayoutData] = useState<any[]>([]);
@@ -59,6 +62,13 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                 setLayoutData(data || []);
             })
             .catch(err => console.error("BOM: Failed to load layout", err));
+
+        const handleUnitsChanged = () => {
+            const newUnits = (localStorage.getItem('integrator-pro-units') as 'METRIC' | 'IMPERIAL') || 'IMPERIAL';
+            setUnits(newUnits);
+        };
+        window.addEventListener('storage-units-changed', handleUnitsChanged);
+        return () => window.removeEventListener('storage-units-changed', handleUnitsChanged);
     }, []);
 
     const virtualCableModules = useMemo(() => {
@@ -76,17 +86,21 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
         return Object.entries(totals).map(([type, meters]) => {
             // Apply 15% wastage
             const billableMeters = Math.ceil(meters * 1.15);
+            const billableFeet = Math.ceil(billableMeters * 3.28084);
+
             return {
                 id: `virtual-cable-${type}`,
                 name: `${type} Cable`,
                 manufacturer: 'Generic',
-                description: `Bulk Cable run (${meters.toFixed(1)}m + 15%)`,
+                description: units === 'IMPERIAL'
+                    ? `Bulk Cable run (${(meters * 3.28084).toFixed(1)}ft + 15%)`
+                    : `Bulk Cable run (${meters.toFixed(1)}m + 15%)`,
                 type: ModuleType.ACCESSORY,
                 mountType: MountType.NA,
                 size: 0,
                 cost: CABLE_PRICING[type] || 1.00,
                 powerWatts: 0,
-                quantity: billableMeters,
+                quantity: billableMeters, // Keep as meters for base unit consistency in calc if needed, or adjust
                 url: '',
                 linkStatus: 'MARKET',
                 genericRole: 'Cabling'
@@ -133,16 +147,16 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                 powerWatts: firstDevice.metadata?.powerWatts || 0,
                 quantity: devicesInGroup.length,
                 url: firstDevice.metadata?.purchaseUrl || '',
-                linkStatus: firstDevice.metadata?.purchaseUrl ? 'PREFERRED' : 'MARKET',
+                linkStatus: (firstDevice.metadata?.purchaseUrl ? 'PREFERRED' : 'MARKET') as 'PREFERRED' | 'MARKET',
                 genericRole: category,
                 instances: devicesInGroup.map(d => ({
                     id: d.id,
                     location: d.roomId || 'Unknown',
                     notes: '',
                     position: d.position,
-                    universe: d.busAssignment || undefined
+                    universe: d.busAssignment ? (parseInt(d.busAssignment.replace(/\D/g, '')) || 0) : undefined
                 }))
-            } as HardwareModule;
+            } as any as HardwareModule;
         });
     }, []); // Computed once per render - deviceRegistry is singleton
 

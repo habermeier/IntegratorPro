@@ -560,6 +560,30 @@ export class LayerSystem {
                         group.add(labelSprite);
                     }
 
+                    // Add height annotation (RED) if installation height differs from room default
+                    if (symbolData.installationHeight != null) {
+                        const roomLayer = this.getLayer('room');
+                        let roomCeilingHeight = 2.74; // Standard ceiling height in meters
+
+                        if (roomLayer && roomLayer.type === 'vector') {
+                            const roomContent = roomLayer.content as VectorLayerContent;
+                            const room = (roomContent.rooms || []).find(r => r.name === symbolData.room);
+                            if (room && room.ceilingHeight) {
+                                roomCeilingHeight = room.ceilingHeight;
+                            }
+                        }
+
+                        // Only show height annotation if it differs from room ceiling
+                        if (Math.abs(symbolData.installationHeight - roomCeilingHeight) > 0.01) {
+                            const heightText = `${symbolData.installationHeight.toFixed(2)}m`;
+                            const heightLabel = this.createHeightLabel(heightText);
+                            heightLabel.name = 'height-label';
+                            // Offset to bottom-left of symbol (-10 units X, -10 units Y)
+                            heightLabel.position.set(-10, -10, 0.5);
+                            group.add(heightLabel);
+                        }
+                    }
+
                     remoteLog(`✅ Adding NEW symbol ${symbolData.id} to layer.container for layer ${layer.id} at position (${(symbolData.x ?? 0).toFixed(2)}, ${(symbolData.y ?? 0).toFixed(2)})`, 'debug', '🔍 DEEP-TRACE');
                     layer.container.add(group);
                     this.meshCache.set(cacheKey, group);
@@ -753,6 +777,57 @@ export class LayerSystem {
             ctx.strokeText(area, centerX, centerY - lineHeight * (totalLines - 1) * 0.5 + lineHeight * 2);
             ctx.fillText(area, centerX, centerY - lineHeight * (totalLines - 1) * 0.5 + lineHeight * 2);
         }
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.minFilter = THREE.LinearFilter;
+
+        const material = new THREE.SpriteMaterial({ map: texture, depthTest: false });
+        const sprite = new THREE.Sprite(material);
+
+        const scale = 0.5;
+        const initialX = canvas.width * scale;
+        const initialY = canvas.height * scale;
+
+        sprite.scale.set(initialX, initialY, 1);
+        sprite.userData = { baseScale: { x: initialX, y: initialY } };
+
+        return sprite;
+    }
+
+    private createHeightLabel(heightText: string): THREE.Sprite {
+        const canvas = document.createElement('canvas');
+        const fontSize = 20;
+        const font = `bold ${fontSize}px Inter, sans-serif`;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return new THREE.Sprite();
+
+        // Measure dimensions
+        ctx.font = font;
+        const textMetrics = ctx.measureText(heightText);
+        const textWidth = textMetrics.width;
+        const lineHeight = fontSize * 1.2;
+
+        // Resize Canvas
+        canvas.width = textWidth + 20; // Small padding
+        canvas.height = lineHeight + 10;
+
+        // Render Text in RED
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        ctx.shadowBlur = 3;
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'black';
+        ctx.fillStyle = '#FF0000'; // RED
+
+        ctx.font = font;
+        ctx.strokeText(heightText, centerX, centerY);
+        ctx.fillText(heightText, centerX, centerY);
 
         const texture = new THREE.CanvasTexture(canvas);
         texture.minFilter = THREE.LinearFilter;

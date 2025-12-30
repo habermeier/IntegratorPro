@@ -5,6 +5,7 @@ interface SymbolIconProps {
     color: string;
     size?: number;
     showShorthand?: boolean;
+    secondaryLabel?: string;
 }
 
 /**
@@ -15,7 +16,8 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
     symbolType,
     color,
     size = 32,
-    showShorthand = true
+    showShorthand = true,
+    secondaryLabel
 }) => {
     const strokeWidth = size / 16; // Proportional stroke width
     const fontSize = size * 0.3; // Shorthand text size (slightly smaller)
@@ -89,6 +91,21 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
                         fill="#000"
                     >
                         {getShorthand()}
+                    </text>
+                )}
+
+                {/* Secondary label at bottom-left corner (RED) */}
+                {secondaryLabel && (
+                    <text
+                        x={center - squareHalf - 2}
+                        y={center + squareHalf + 2}
+                        textAnchor="end"
+                        dominantBaseline="hanging"
+                        fontSize={fontSize}
+                        fontWeight="bold"
+                        fill="#FF0000"
+                    >
+                        {secondaryLabel}
                     </text>
                 )}
             </svg>

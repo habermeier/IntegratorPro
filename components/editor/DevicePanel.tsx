@@ -1,6 +1,6 @@
 import React from 'react';
 import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
-import { SYMBOL_CATEGORIES, SYMBOL_LIBRARY } from '../../editor/models/symbolLibrary';
+import { SYMBOL_CATEGORIES, SYMBOL_LIBRARY, SymbolDefinition } from '../../editor/models/symbolLibrary';
 import { CABLE_LIBRARY, getAllCableTypes } from '../../editor/models/cableLibrary';
 import { SymbolPalette } from './SymbolPalette';
 import { PlaceSymbolTool } from '../../editor/tools/PlaceSymbolTool';
@@ -16,7 +16,7 @@ interface DevicePanelProps {
     activeTool?: ToolType;
 }
 
-export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, activeTool }) => {
+const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) => {
     // Load sticky selection from localStorage
     const [selectedCategory, setSelectedCategory] = React.useState<string>(() => {
         return localStorage.getItem('integrator-pro-last-category') || 'lighting';
@@ -24,6 +24,7 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
     const [selectedSymbolType, setSelectedSymbolType] = React.useState<string | null>(() => {
         return localStorage.getItem('integrator-pro-last-symbol-type') || null;
     });
+
     const [productId, setProductId] = React.useState<string>('generic-product');
     const [defaultHeight, setDefaultHeight] = React.useState<number>(2.4);
     const [busAssignment, setBusAssignment] = React.useState<string>('Bus 1');
@@ -36,6 +37,11 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
     const [beamCode, setBeamCode] = React.useState<string>('M');
     const [symbolCode, setSymbolCode] = React.useState<string>('L15-M');
     const [unitPreference, setUnitPreference] = React.useState<'IMPERIAL' | 'METRIC'>('METRIC');
+    const [mountType, setMountType] = React.useState<'Ceiling' | 'Wall'>('Ceiling');
+    const [heightOffset, setHeightOffset] = React.useState<number>(-0.15); // Default -6" in meters
+    const [defaultCeilingHeight, setDefaultCeilingHeight] = React.useState<number>(2.74); // Default 9' in meters
+    const [hInput, setHInput] = React.useState('');
+    const [oInput, setOInput] = React.useState('');
 
     // UI State
     const [activeTab, setActiveTab] = React.useState<'library' | 'placed'>('library');
@@ -53,6 +59,10 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
     // Get all devices from registry
     const { devices, getDevice, updateDevice } = useDevices();
 
+    const isRoomMode = activeTool === 'draw-room' || (selectedRoom && !editingDevice);
+    const isMaskMode = activeTool === 'draw-mask';
+    const isDrawingMode = activeTool === 'draw-room' || activeTool === 'draw-mask' || activeTool === 'draw-cable' || activeTool === 'place-symbol' || activeTool === 'place-furniture';
+
     // Unit conversion helpers
     const metersToFeetInches = (meters: number): { feet: number; inches: number; display: string } => {
         const totalInches = meters * 39.3701; // 1 meter = 39.3701 inches
@@ -67,32 +77,68 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
     };
 
     const parseHeightInput = (input: string): number | null => {
+        if (!input || input.trim() === '') return null;
+
+        // Handle negative numbers for offset
+        const isNegative = input.trim().startsWith('-');
+        const cleanInput = input.trim().replace(/^-/, '');
+
         // Try to parse formats like: "8' 0\"", "8'", "8' 6\"", "8", "2.4"
-        const feetInchesMatch = input.match(/(\d+)'\s*(\d+)"?/);
+        const feetInchesMatch = cleanInput.match(/(\d+)'\s*(\d+)"?/);
         if (feetInchesMatch) {
             const feet = parseInt(feetInchesMatch[1]);
             const inches = parseInt(feetInchesMatch[2] || '0');
-            return feetInchesToMeters(feet, inches);
+            const meters = feetInchesToMeters(feet, inches);
+            return isNegative ? -meters : meters;
         }
 
-        const feetOnlyMatch = input.match(/(\d+)'/);
+        const feetOnlyMatch = cleanInput.match(/(\d+)'/);
         if (feetOnlyMatch) {
             const feet = parseInt(feetOnlyMatch[1]);
-            return feetInchesToMeters(feet, 0);
+            const meters = feetInchesToMeters(feet, 0);
+            return isNegative ? -meters : meters;
         }
 
         // If no feet/inches format, treat as decimal number (meters or feet depending on context)
-        const decimal = parseFloat(input);
+        const decimal = parseFloat(cleanInput);
         if (!isNaN(decimal)) {
-            // If imperial mode and plain number, assume feet
-            if (unitPreference === 'IMPERIAL' && !input.includes('.')) {
-                return feetInchesToMeters(decimal, 0);
+            let meters;
+            // If imperial mode, assume feet unless it looks like meters (e.g. includes "m")
+            if (unitPreference === 'IMPERIAL' && !input.toLowerCase().includes('m')) {
+                meters = feetInchesToMeters(decimal, 0);
+            } else {
+                meters = decimal;
             }
-            // Otherwise assume meters
-            return decimal;
+            return isNegative ? -meters : meters;
+        }
+        return null;
+    };
+
+    // Get current room ceiling height
+    const getCurrentRoomCeilingHeight = (): number => {
+        if (!editor || currentRoom === '—' || currentRoom === 'External') {
+            return defaultCeilingHeight;
         }
 
-        return null;
+        const roomLayer = editor.layerSystem.getLayer('room');
+        if (!roomLayer || roomLayer.type !== 'vector') {
+            return defaultCeilingHeight;
+        }
+
+        const rooms = (roomLayer.content as VectorLayerContent).rooms || [];
+        const room = rooms.find(r => r.name === currentRoom);
+
+        return room?.ceilingHeight || defaultCeilingHeight;
+    };
+
+    // Compute absolute height based on mount type
+    const getComputedHeight = (): number => {
+        if (mountType === 'Ceiling') {
+            const ceilingHeight = getCurrentRoomCeilingHeight();
+            return ceilingHeight + heightOffset; // heightOffset is negative for ceiling mounts
+        } else {
+            return defaultHeight; // Wall mount uses absolute height
+        }
     };
 
     // Throttled room detection to save CPU
@@ -170,20 +216,62 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
         }
     }, [selectedSymbolType]);
 
-    // Load unit preference from project settings
+    // Load unit preference and default ceiling height from project settings
     React.useEffect(() => {
-        const loadUnitPreference = async () => {
+        const loadProjectSettings = async () => {
             try {
                 const project = await dataService.loadProject();
-                if (project.settings?.units) {
+
+                // Prioritize localStorage for real-time responsiveness if it exists
+                const savedUnits = localStorage.getItem('integrator-pro-units') as 'IMPERIAL' | 'METRIC';
+                if (savedUnits) {
+                    setUnitPreference(savedUnits);
+                } else if (project.settings?.units) {
                     setUnitPreference(project.settings.units);
                 }
+
+                // Load default ceiling height from settings, fallback to 2.74m (9 feet)
+                if (project.settings?.defaultCeilingHeight !== undefined) {
+                    setDefaultCeilingHeight(Number(project.settings.defaultCeilingHeight));
+                }
             } catch (error) {
-                console.error('Failed to load unit preference:', error);
+                console.error('Failed to load project settings:', error);
             }
         };
-        loadUnitPreference();
+        loadProjectSettings();
+
+        // Listen for global unit changes from Settings component
+        const handleUnitsChanged = () => {
+            const newUnits = localStorage.getItem('integrator-pro-units') as 'IMPERIAL' | 'METRIC';
+            if (newUnits) setUnitPreference(newUnits);
+        };
+        window.addEventListener('storage-units-changed', handleUnitsChanged);
+        return () => window.removeEventListener('storage-units-changed', handleUnitsChanged);
     }, []);
+
+    // Update tool active attributes when placement settings change
+    React.useEffect(() => {
+        if (!editor || !selectedSymbolType) return;
+
+        const tool = editor.toolSystem.getTool<PlaceSymbolTool>('place-symbol');
+        if (tool && tool.setActiveAttributes) {
+            tool.setActiveAttributes({
+                productId,
+                defaultHeight: mountType === 'Ceiling' ? getComputedHeight() : defaultHeight,
+                busAssignment,
+                cableType,
+                lumens,
+                beamAngle,
+                range
+            });
+        }
+    }, [editor, selectedSymbolType, productId, defaultHeight, busAssignment, cableType, lumens, beamAngle, range, mountType, heightOffset, currentRoom]);
+
+    // Initial buffer sync
+    React.useEffect(() => {
+        setHInput(unitPreference === 'IMPERIAL' ? metersToFeetInches(defaultHeight).display : defaultHeight.toFixed(2));
+        setOInput(unitPreference === 'IMPERIAL' ? metersToFeetInches(heightOffset).display : heightOffset.toFixed(2));
+    }, [unitPreference]);
 
     // Subscribe to selection-changed event for device editing and room editing
     React.useEffect(() => {
@@ -222,7 +310,9 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                         setRoomFormData({
                             name: room.name,
                             roomType: room.roomType,
-                            ceilingHeight: room.ceilingHeight || 2.74
+                            ceilingHeight: unitPreference === 'IMPERIAL'
+                                ? metersToFeetInches(room.ceilingHeight || defaultCeilingHeight).display
+                                : (room.ceilingHeight || defaultCeilingHeight).toFixed(2)
                         });
                         return;
                     }
@@ -305,7 +395,7 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
             // Set default attributes when symbol is selected
             tool?.setActiveAttributes?.({
                 productId,
-                defaultHeight,
+                defaultHeight: mountType === 'Ceiling' ? getComputedHeight() : defaultHeight,
                 busAssignment,
                 cableType,
                 lumens,
@@ -389,21 +479,32 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
             return;
         }
 
-        // Prepare update object
         let updateObj: any = {};
         if (field.startsWith('metadata.')) {
             const metadataKey = field.split('.')[1];
             updateObj = {
-                metadata: { ...editingDevice.metadata, [metadataKey]: value }
+                metadata: {
+                    ...editingDevice.metadata,
+                    [metadataKey]: (field === 'metadata.range') ? (parseHeightInput(value) || 0) : value
+                }
             };
         } else {
-            updateObj = { [field]: value };
+            updateObj = {
+                [field]: (field === 'installationHeight') ? (parseHeightInput(value) || 0) : value
+            };
         }
 
         // Update DeviceRegistry
         const success = updateDevice(editingDevice.id, updateObj);
 
         if (success) {
+            // Reformat input if it was a numeric/unit field
+            if (field === 'installationHeight' || field === 'metadata.range') {
+                const numeric = parseHeightInput(value) || 0;
+                const reformatted = unitPreference === 'IMPERIAL' ? metersToFeetInches(numeric).display : numeric.toFixed(2);
+                handleFieldChange(field, reformatted);
+            }
+
             // Sync to layer symbol
             syncDeviceToSymbol(editingDevice.id);
 
@@ -429,10 +530,19 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
         const roomIndex = (content.rooms || []).findIndex(r => r.id === selectedRoom.id);
 
         if (roomIndex !== -1 && content.rooms) {
+            // Parse numeric fields if necessary
+            let finalValue = value;
+            if (field === 'ceilingHeight') {
+                finalValue = parseHeightInput(value) || defaultCeilingHeight;
+                // Reformat the form field to clean it up
+                const reformatted = unitPreference === 'IMPERIAL' ? metersToFeetInches(finalValue).display : finalValue.toFixed(2);
+                handleRoomFieldChange(field, reformatted);
+            }
+
             // Update room in layer
             content.rooms[roomIndex] = {
                 ...content.rooms[roomIndex],
-                [field]: value
+                [field]: finalValue
             };
 
             editor.layerSystem.markDirty('room');
@@ -447,24 +557,15 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
         const presetName = prompt('Enter preset name:', `${SYMBOL_LIBRARY[selectedSymbolType]?.name || selectedSymbolType} - ${symbolCode || 'Custom'}`);
         if (!presetName) return;
 
-        const customSymbol = {
+        const baseDef = SYMBOL_LIBRARY[selectedSymbolType];
+        if (!baseDef) return;
+
+        const customSymbol: SymbolDefinition = {
+            ...baseDef,
             id: `custom-${Date.now()}`,
             name: presetName,
-            baseType: selectedSymbolType,
-            category: SYMBOL_LIBRARY[selectedSymbolType]?.category || selectedCategory,
-            attributes: {
-                productId,
-                installationHeight: defaultHeight,
-                busAssignment,
-                cableType,
-                lumens,
-                beamAngle,
-                range,
-                lumensCode,
-                beamCode,
-                symbolCode
-            },
-            createdAt: new Date().toISOString()
+            // We store the custom attributes in description since SymbolDefinition doesn't have an attributes field
+            description: `${baseDef.name} Preset: ${presetName}. Product: ${productId}, Bus: ${busAssignment}, Cable: ${cableType}`
         };
 
         try {
@@ -510,28 +611,18 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
         };
     }, [selectedRoom]);
 
-    // Update tool attributes when they change
-    React.useEffect(() => {
-        if (editor && selectedSymbolType) {
-            const tool = editor.toolSystem.getTool<PlaceSymbolTool>('place-symbol');
-            tool?.setActiveAttributes?.({
-                productId,
-                defaultHeight,
-                busAssignment,
-                cableType,
-                lumens,
-                beamAngle,
-                range
-            });
-        }
-    }, [editor, selectedSymbolType, productId, defaultHeight, busAssignment, cableType, lumens, beamAngle, range]);
+    // Consolidated tool attribute update is handled by the useEffect earlier in the component
 
     return (
         <div className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col z-20 shadow-[10px_0_30px_rgba(0,0,0,0.3)]">
             <div className="p-3 border-b border-slate-800 space-y-1.5">
                 <div className="flex justify-between items-center">
-                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Devices</h3>
-                    <span className="text-[9px] text-slate-600 font-mono">{devices.length} Total</span>
+                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        {isRoomMode ? 'Room Editor' : isMaskMode ? 'Mask Editor' : 'Devices'}
+                    </h3>
+                    <span className="text-[9px] text-slate-600 font-mono">
+                        {isRoomMode ? 'Vector' : `${devices.length} Total`}
+                    </span>
                 </div>
                 <div className="flex items-center justify-between px-1.5 py-1 bg-slate-950 rounded border border-slate-800">
                     <span className="text-[8px] text-slate-500 uppercase font-bold tracking-tighter">Loc</span>
@@ -540,7 +631,7 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
             </div>
 
             {/* Active Product Specs or Cable Specs - MOVED UP */}
-            {(activeTool === 'draw-cable' || selectedSymbolType) && (
+            {((activeTool === 'draw-cable' || selectedSymbolType) && !isRoomMode && !isMaskMode) && (
                 <div className="p-2 bg-slate-950 border-t border-b border-slate-800">
                     {activeTool === 'draw-cable' ? (
                         <div className="space-y-1.5">
@@ -624,6 +715,19 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                                     />
                                 </div>
 
+                                {/* Mount Type */}
+                                <div className="flex items-center bg-slate-50 rounded border border-slate-300 px-1.5">
+                                    <span className="text-[7px] text-slate-600 mr-1 font-bold">MOUNT</span>
+                                    <select
+                                        value={mountType}
+                                        onChange={(e) => setMountType(e.target.value as 'Ceiling' | 'Wall')}
+                                        className="w-full bg-transparent text-[9px] text-slate-900 font-mono py-1 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                    >
+                                        <option value="Ceiling">Ceiling</option>
+                                        <option value="Wall">Wall</option>
+                                    </select>
+                                </div>
+
                                 {/* Lumens, Beam, Range */}
                                 <div className="grid grid-cols-3 gap-1">
                                     <div className="flex flex-col bg-slate-50 rounded border border-slate-300 px-1.5 py-0.5">
@@ -663,30 +767,56 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                                     <span className="text-[7px] text-slate-600 font-mono">Instance</span>
                                 </div>
 
-                                {/* Height */}
-                                <div className="flex items-center bg-slate-900 rounded border border-slate-800 px-1.5">
-                                    <span className="text-[7px] text-slate-500 mr-1 font-bold">HEIGHT</span>
-                                    <input
-                                        type="text"
-                                        value={unitPreference === 'IMPERIAL' ? metersToFeetInches(defaultHeight).display : defaultHeight.toFixed(2)}
-                                        onChange={(e) => {
-                                            const input = e.target.value;
-                                            if (unitPreference === 'IMPERIAL') {
-                                                const meters = parseHeightInput(input);
-                                                if (meters !== null) {
-                                                    setDefaultHeight(meters);
-                                                }
-                                            } else {
-                                                const meters = parseFloat(input);
-                                                if (!isNaN(meters)) {
-                                                    setDefaultHeight(meters);
-                                                }
-                                            }
-                                        }}
-                                        className="w-full bg-transparent text-[9px] text-slate-300 font-mono py-1 focus:outline-none"
-                                        placeholder={unitPreference === 'IMPERIAL' ? "8' 0\"" : "2.4 m"}
-                                    />
-                                </div>
+                                {/* Height/Offset based on Mount Type */}
+                                {mountType === 'Ceiling' ? (
+                                    <>
+                                        <div className="flex items-center bg-slate-900 rounded border border-slate-800 px-1.5">
+                                            <span className="text-[7px] text-slate-500 mr-1 font-bold">OFFSET</span>
+                                            <input
+                                                type="text"
+                                                value={oInput}
+                                                onChange={(e) => {
+                                                    setOInput(e.target.value);
+                                                    const meters = parseHeightInput(e.target.value);
+                                                    if (meters !== null) setHeightOffset(meters);
+                                                }}
+                                                onBlur={() => {
+                                                    setOInput(unitPreference === 'IMPERIAL' ? metersToFeetInches(heightOffset).display : heightOffset.toFixed(2));
+                                                }}
+                                                className="w-full bg-transparent text-[9px] text-slate-300 font-mono py-1 focus:outline-none"
+                                                placeholder={unitPreference === 'IMPERIAL' ? "-6\"" : "-0.15"}
+                                            />
+                                        </div>
+                                        <div className="flex items-center bg-slate-900 rounded border border-slate-800 px-1.5">
+                                            <span className="text-[7px] text-slate-500 mr-1 font-bold">HEIGHT</span>
+                                            <input
+                                                type="text"
+                                                value={unitPreference === 'IMPERIAL' ? metersToFeetInches(getComputedHeight()).display : getComputedHeight().toFixed(2)}
+                                                readOnly
+                                                className="w-full bg-transparent text-[9px] text-blue-400 font-mono py-1 focus:outline-none"
+                                                title={`Ceiling: ${unitPreference === 'IMPERIAL' ? metersToFeetInches(getCurrentRoomCeilingHeight()).display : getCurrentRoomCeilingHeight().toFixed(2)}`}
+                                            />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="flex items-center bg-slate-900 rounded border border-slate-800 px-1.5">
+                                        <span className="text-[7px] text-slate-500 mr-1 font-bold">HEIGHT</span>
+                                        <input
+                                            type="text"
+                                            value={hInput}
+                                            onChange={(e) => {
+                                                setHInput(e.target.value);
+                                                const meters = parseHeightInput(e.target.value);
+                                                if (meters !== null) setDefaultHeight(meters);
+                                            }}
+                                            onBlur={() => {
+                                                setHInput(unitPreference === 'IMPERIAL' ? metersToFeetInches(defaultHeight).display : defaultHeight.toFixed(2));
+                                            }}
+                                            className="w-full bg-transparent text-[9px] text-slate-300 font-mono py-1 focus:outline-none"
+                                            placeholder={unitPreference === 'IMPERIAL' ? "8' 0\"" : "2.4 m"}
+                                        />
+                                    </div>
+                                )}
 
                                 {/* Room (Read-only display) */}
                                 <div className="flex items-center bg-slate-900 rounded border border-slate-800 px-1.5">
@@ -742,31 +872,211 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                 </div>
             )}
 
-            {/* Tab Switcher */}
-            <div className="flex p-1 bg-slate-950 border-b border-slate-800">
-                <button
-                    onClick={() => setActiveTab('library')}
-                    className={`flex-1 flex items-center justify-center space-x-1.5 py-1.5 rounded transition-all ${activeTab === 'library'
-                        ? 'bg-slate-800 text-blue-400 font-bold shadow-inner'
-                        : 'text-slate-500 hover:text-slate-300'}`}
-                >
-                    <Box className="w-3 h-3" />
-                    <span className="text-[9px] uppercase tracking-wider">Library</span>
-                </button>
-                <button
-                    onClick={() => setActiveTab('placed')}
-                    className={`flex-1 flex items-center justify-center space-x-1.5 py-1.5 rounded transition-all ${activeTab === 'placed'
-                        ? 'bg-slate-800 text-blue-400 font-bold shadow-inner'
-                        : 'text-slate-500 hover:text-slate-300'}`}
-                >
-                    <Database className="w-3 h-3" />
-                    <span className="text-[9px] uppercase tracking-wider">Placed</span>
-                </button>
-            </div>
+            {/* Tab Switcher - Hidden in Room/Mask modes */}
+            {(!isRoomMode && !isMaskMode) && (
+                <div className="flex p-1 bg-slate-950 border-b border-slate-800">
+                    <button
+                        onClick={() => setActiveTab('library')}
+                        className={`flex-1 flex items-center justify-center space-x-1.5 py-1.5 rounded transition-all ${activeTab === 'library'
+                            ? 'bg-slate-800 text-blue-400 font-bold shadow-inner'
+                            : 'text-slate-500 hover:text-slate-300'}`}
+                    >
+                        <Box className="w-3 h-3" />
+                        <span className="text-[9px] uppercase tracking-wider">Library</span>
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('placed')}
+                        className={`flex-1 flex items-center justify-center space-x-1.5 py-1.5 rounded transition-all ${activeTab === 'placed'
+                            ? 'bg-slate-800 text-blue-400 font-bold shadow-inner'
+                            : 'text-slate-500 hover:text-slate-300'}`}
+                    >
+                        <Database className="w-3 h-3" />
+                        <span className="text-[9px] uppercase tracking-wider">Placed</span>
+                    </button>
+                </div>
+            )}
 
-            {/* Device Selection Section / Placed List */}
+            {/* Main Content Area */}
             <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
-                {activeTab === 'library' ? (
+                {isRoomMode ? (
+                    <>
+                        {selectedRoom ? (
+                            // Room Properties Form - shown when single room selected
+                            <div className="p-1 space-y-3">
+                                {/* Header */}
+                                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                                    <h3 className="text-[10px] font-bold text-green-400 uppercase tracking-widest">Editing Room</h3>
+                                    <button
+                                        onClick={() => {
+                                            editor?.selectionSystem.clearSelection();
+                                            editor?.emit('selection-changed', []);
+                                        }}
+                                        className="text-[8px] px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors uppercase font-bold"
+                                    >
+                                        Clear
+                                    </button>
+                                </div>
+
+                                {/* Read-only Info */}
+                                <div className="space-y-2 p-2 bg-slate-950/50 rounded border border-slate-800/50">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[7px] text-slate-600 uppercase font-bold">Name</span>
+                                        <span className="text-[9px] text-slate-300 font-mono">{selectedRoom.name}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[7px] text-slate-600 uppercase font-bold">Type</span>
+                                        <span className="text-[9px] text-slate-300 font-mono capitalize">{selectedRoom.roomType}</span>
+                                    </div>
+                                </div>
+
+                                {/* Editable Fields */}
+                                <div className="space-y-2">
+                                    <div>
+                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">
+                                            Ceiling Height ({unitPreference === 'IMPERIAL' ? 'ft' : 'm'})
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={roomFormData.ceilingHeight || ''}
+                                            onChange={(e) => handleRoomFieldChange('ceilingHeight', e.target.value)}
+                                            onBlur={(e) => handleRoomFieldBlur('ceilingHeight', e.target.value)}
+                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-green-500 focus:outline-none"
+                                        />
+                                        {unitPreference === 'METRIC' && (
+                                            <div className="text-[7px] text-slate-600 mt-0.5 italic">
+                                                {((roomFormData.ceilingHeight || defaultCeilingHeight) * 3.28084).toFixed(2)} ft
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Calculated Stats */}
+                                <div className="space-y-2 p-2 bg-green-950/20 rounded border border-green-900/30">
+                                    <h4 className="text-[8px] text-green-500 uppercase font-bold tracking-wider mb-2">Dimensions</h4>
+
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[7px] text-slate-600 uppercase font-bold">Area</span>
+                                        <div className="text-right">
+                                            <div className="text-[9px] text-slate-300 font-mono">
+                                                {unitPreference === 'IMPERIAL'
+                                                    ? `${calculateRoomStats.areaFt.toFixed(1)} ft²`
+                                                    : `${calculateRoomStats.area.toFixed(2)} m²`}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[7px] text-slate-600 uppercase font-bold">Width × Height</span>
+                                        <div className="text-right">
+                                            <div className="text-[9px] text-slate-300 font-mono">
+                                                {unitPreference === 'IMPERIAL'
+                                                    ? `${(calculateRoomStats.width * 3.28084).toFixed(2)} × ${(calculateRoomStats.height * 3.28084).toFixed(2)} ft`
+                                                    : `${calculateRoomStats.width.toFixed(2)} × ${calculateRoomStats.height.toFixed(2)} m`}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[7px] text-slate-600 uppercase font-bold">Volume</span>
+                                        <div className="text-right">
+                                            <div className="text-[9px] text-slate-300 font-mono">
+                                                {(() => {
+                                                    const currentH = parseHeightInput(roomFormData.ceilingHeight?.toString() || '') ||
+                                                        (typeof roomFormData.ceilingHeight === 'number' ? roomFormData.ceilingHeight : defaultCeilingHeight);
+                                                    return unitPreference === 'IMPERIAL'
+                                                        ? `${(calculateRoomStats.areaFt * (currentH * 3.28084)).toFixed(1)} ft³`
+                                                        : `${(calculateRoomStats.area * currentH).toFixed(2)} m³`;
+                                                })()}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            // Room Drawing Mode list / Instructions
+                            <div className="space-y-3 flex flex-col h-full">
+                                {/* Header */}
+                                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                                    <h3 className="text-[10px] font-bold text-green-400 uppercase tracking-widest">Room Drawing</h3>
+                                    <span className="text-[7px] text-slate-500 font-mono">Draw Mode</span>
+                                </div>
+
+                                {/* Instructions */}
+                                <div className="bg-green-950/20 rounded border border-green-900/30 p-3 space-y-2">
+                                    <h4 className="text-[8px] text-green-500 uppercase font-bold tracking-wider">How to Draw</h4>
+                                    <ul className="text-[8px] text-slate-400 space-y-1 list-disc list-inside">
+                                        <li>Click to place corner points</li>
+                                        <li>Double-click/Enter to close</li>
+                                        <li>Press Escape to cancel</li>
+                                        <li>Select rooms to edit specs</li>
+                                    </ul>
+                                </div>
+
+                                {/* Existing Rooms List */}
+                                <div className="flex-1 overflow-y-auto space-y-2">
+                                    <h4 className="text-[8px] text-slate-500 uppercase font-bold tracking-wider px-1">Existing Rooms</h4>
+                                    {(() => {
+                                        const roomLayer = editor?.layerSystem.getLayer('room');
+                                        const rooms = (roomLayer && roomLayer.type === 'vector')
+                                            ? ((roomLayer.content as VectorLayerContent).rooms || [])
+                                            : [];
+
+                                        return rooms.length === 0 ? (
+                                            <div className="text-center py-6 text-slate-700 text-[9px] uppercase font-bold tracking-widest">
+                                                No rooms yet
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-1">
+                                                {rooms.map(room => (
+                                                    <div
+                                                        key={room.id}
+                                                        onClick={() => {
+                                                            editor?.selectionSystem.select(room.id);
+                                                            editor?.emit('selection-changed', [room.id]);
+                                                        }}
+                                                        className="group flex items-center justify-between p-2 rounded bg-slate-800/40 hover:bg-slate-800 border border-transparent hover:border-green-700/50 transition-all cursor-pointer"
+                                                    >
+                                                        <div className="flex-1">
+                                                            <div className="text-[9px] font-bold text-slate-200">
+                                                                {room.name}
+                                                            </div>
+                                                            <div className="text-[7px] text-slate-500 capitalize mt-0.5">
+                                                                {room.roomType}
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-[7px] text-slate-600 font-mono">
+                                                            {room.ceilingHeight
+                                                                ? (unitPreference === 'IMPERIAL'
+                                                                    ? metersToFeetInches(room.ceilingHeight).display
+                                                                    : `${room.ceilingHeight.toFixed(2)}m`)
+                                                                : '—'}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
+                            </div>
+                        )}
+                    </>
+                ) : isMaskMode ? (
+                    <div className="space-y-3 flex flex-col h-full p-3">
+                        <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                            <h3 className="text-[10px] font-bold text-orange-400 uppercase tracking-widest">Mask Drawing</h3>
+                            <span className="text-[7px] text-slate-500 font-mono">Draw Mode</span>
+                        </div>
+                        <div className="bg-orange-950/20 rounded border border-orange-900/30 p-3 space-y-2">
+                            <h4 className="text-[8px] text-orange-500 uppercase font-bold tracking-wider">Instructions</h4>
+                            <p className="text-[8px] text-slate-400">Draw polygons to define areas for the Lighting Wizard to place symbols.</p>
+                            <ul className="text-[8px] text-slate-400 space-y-1 list-disc list-inside">
+                                <li>Click to place corner points</li>
+                                <li>Double-click to close</li>
+                                <li>Masks are layer-independent</li>
+                            </ul>
+                        </div>
+                    </div>
+                ) : activeTab === 'library' ? (
                     <>
                         {/* Category Selector (Thematic) */}
                         <div className="space-y-1">
@@ -853,13 +1163,14 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
 
                                     <div className="grid grid-cols-2 gap-2">
                                         <div>
-                                            <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Height (m)</label>
+                                            <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">
+                                                Height ({unitPreference === 'IMPERIAL' ? 'ft' : 'm'})
+                                            </label>
                                             <input
-                                                type="number"
-                                                step="0.1"
-                                                value={formData.installationHeight || 0}
-                                                onChange={(e) => handleFieldChange('installationHeight', parseFloat(e.target.value) || 0)}
-                                                onBlur={(e) => handleFieldBlur('installationHeight', parseFloat(e.target.value) || 0)}
+                                                type="text"
+                                                value={formData.installationHeight || ''}
+                                                onChange={(e) => handleFieldChange('installationHeight', e.target.value)}
+                                                onBlur={(e) => handleFieldBlur('installationHeight', e.target.value)}
                                                 className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
                                             />
                                         </div>
@@ -1057,101 +1368,18 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
 
                                     {editingDevice.layerId === 'network' && (
                                         <div>
-                                            <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Range (m)</label>
+                                            <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">
+                                                Range ({unitPreference === 'IMPERIAL' ? 'ft' : 'm'})
+                                            </label>
                                             <input
-                                                type="number"
-                                                step="0.5"
-                                                value={formData.metadata?.range || 0}
-                                                onChange={(e) => handleFieldChange('metadata.range', parseFloat(e.target.value) || 0)}
-                                                onBlur={(e) => handleFieldBlur('metadata.range', parseFloat(e.target.value) || 0)}
+                                                type="text"
+                                                value={formData.metadata?.range || ''}
+                                                onChange={(e) => handleFieldChange('metadata.range', e.target.value)}
+                                                onBlur={(e) => handleFieldBlur('metadata.range', e.target.value)}
                                                 className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
                                             />
                                         </div>
                                     )}
-                                </div>
-                            </div>
-                        ) : selectedRoom ? (
-                            // Room Properties Form - shown when single room selected
-                            <div className="p-3 space-y-3">
-                                {/* Header */}
-                                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                                    <h3 className="text-[10px] font-bold text-green-400 uppercase tracking-widest">Editing Room</h3>
-                                    <button
-                                        onClick={() => {
-                                            editor?.selectionSystem.clearSelection();
-                                            editor?.emit('selection-changed', []);
-                                        }}
-                                        className="text-[8px] px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors uppercase font-bold"
-                                    >
-                                        Clear
-                                    </button>
-                                </div>
-
-                                {/* Read-only Info */}
-                                <div className="space-y-2 p-2 bg-slate-950/50 rounded border border-slate-800/50">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[7px] text-slate-600 uppercase font-bold">Name</span>
-                                        <span className="text-[9px] text-slate-300 font-mono">{selectedRoom.name}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[7px] text-slate-600 uppercase font-bold">Type</span>
-                                        <span className="text-[9px] text-slate-300 font-mono capitalize">{selectedRoom.roomType}</span>
-                                    </div>
-                                </div>
-
-                                {/* Editable Fields */}
-                                <div className="space-y-2">
-                                    <div>
-                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Ceiling Height (m)</label>
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            value={roomFormData.ceilingHeight || 2.74}
-                                            onChange={(e) => handleRoomFieldChange('ceilingHeight', parseFloat(e.target.value) || 2.74)}
-                                            onBlur={(e) => handleRoomFieldBlur('ceilingHeight', parseFloat(e.target.value) || 2.74)}
-                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-green-500 focus:outline-none"
-                                        />
-                                        <div className="text-[7px] text-slate-600 mt-0.5 italic">
-                                            {((roomFormData.ceilingHeight || 2.74) * 3.28084).toFixed(2)} ft
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Calculated Stats */}
-                                <div className="space-y-2 p-2 bg-green-950/20 rounded border border-green-900/30">
-                                    <h4 className="text-[8px] text-green-500 uppercase font-bold tracking-wider mb-2">Dimensions</h4>
-
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[7px] text-slate-600 uppercase font-bold">Area</span>
-                                        <div className="text-right">
-                                            <div className="text-[9px] text-slate-300 font-mono">{calculateRoomStats.area.toFixed(2)} m²</div>
-                                            <div className="text-[7px] text-slate-500 font-mono">{calculateRoomStats.areaFt.toFixed(2)} ft²</div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[7px] text-slate-600 uppercase font-bold">Width × Height</span>
-                                        <div className="text-right">
-                                            <div className="text-[9px] text-slate-300 font-mono">
-                                                {calculateRoomStats.width.toFixed(2)} × {calculateRoomStats.height.toFixed(2)} m
-                                            </div>
-                                            <div className="text-[7px] text-slate-500 font-mono">
-                                                {(calculateRoomStats.width * 3.28084).toFixed(2)} × {(calculateRoomStats.height * 3.28084).toFixed(2)} ft
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[7px] text-slate-600 uppercase font-bold">Volume</span>
-                                        <div className="text-right">
-                                            <div className="text-[9px] text-slate-300 font-mono">
-                                                {(calculateRoomStats.area * (roomFormData.ceilingHeight || 2.74)).toFixed(2)} m³
-                                            </div>
-                                            <div className="text-[7px] text-slate-500 font-mono">
-                                                {(calculateRoomStats.areaFt * ((roomFormData.ceilingHeight || 2.74) * 3.28084)).toFixed(2)} ft³
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         ) : (
@@ -1251,4 +1479,6 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
             </div>
         </div>
     );
-});
+};
+
+export const DevicePanel = React.memo(DevicePanelContent);
