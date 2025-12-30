@@ -391,7 +391,7 @@ export function formatRoomType(type: string): string {
  * @returns The area in square units (matching the input coordinate system)
  */
 export function calculatePolygonArea(points: Vector2[]): number {
-    if (points.length < 3) return 0;
+    if (!points || points.length < 3) return 0;
 
     let area = 0;
     for (let i = 0; i < points.length; i++) {
@@ -401,6 +401,21 @@ export function calculatePolygonArea(points: Vector2[]): number {
     }
 
     return Math.abs(area) / 2;
+}
+
+/**
+ * Calculates the room area in square meters and square feet, taking calibration into account.
+ * @param points Polygon vertices
+ * @param pixelsMeter Pixels per meter calibration factor
+ */
+export function calculateRoomArea(points: Vector2[], pixelsMeter: number): { meters: number, feet: number } {
+    const areaPx = calculatePolygonArea(points);
+    // areaPx is in pixels^2
+    // 1 meter = pixelsMeter pixels
+    // 1 square meter = pixelsMeter^2 square pixels
+    const meters = areaPx / (pixelsMeter * pixelsMeter);
+    const feet = meters * 10.7639104; // Precise conversion factor
+    return { meters, feet };
 }
 
 /**

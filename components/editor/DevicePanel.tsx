@@ -6,7 +6,7 @@ import { SymbolPalette } from './SymbolPalette';
 import { PlaceSymbolTool } from '../../editor/tools/PlaceSymbolTool';
 import { useDevices } from '../../src/hooks/useDevices';
 import { VectorLayerContent, Vector2, ToolType } from '../../editor/models/types';
-import { isPointInPolygon, findRoomAt, throttle } from '../../utils/spatialUtils';
+import { isPointInPolygon, findRoomAt, throttle, calculateRoomArea } from '../../utils/spatialUtils';
 import { Search, Target, Box, Database, MapPin, Trash2, ChevronLeft, ChevronRight, Save } from 'lucide-react';
 import { dataService } from '../../src/services/DataService';
 import catalog from '../../catalog.json';
@@ -248,6 +248,15 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
         window.addEventListener('storage-units-changed', handleUnitsChanged);
         return () => window.removeEventListener('storage-units-changed', handleUnitsChanged);
     }, []);
+
+    // Switch to 'placed' tab when in select mode or when something is selected
+    React.useEffect(() => {
+        if (activeTool === 'select' || editingDevice || selectedRoom) {
+            setActiveTab('placed');
+        } else if (activeTool === 'place-symbol' || activeTool === 'place-furniture') {
+            setActiveTab('library');
+        }
+    }, [activeTool, editingDevice, selectedRoom]);
 
     // Update tool active attributes when placement settings change
     React.useEffect(() => {
@@ -578,38 +587,28 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
     };
 
     // Calculate room area and dimensions
+    // Calculate room area and dimensions using centralized logic
     const calculateRoomStats = React.useMemo(() => {
         if (!selectedRoom || !selectedRoom.points || selectedRoom.points.length < 3) {
             return { area: 0, areaFt: 0, width: 0, height: 0 };
         }
 
-        // Calculate area using Shoelace formula
-        let area = 0;
-        const points = selectedRoom.points;
-        for (let i = 0; i < points.length; i++) {
-            const j = (i + 1) % points.length;
-            area += points[i].x * points[j].y;
-            area -= points[j].x * points[i].y;
-        }
-        area = Math.abs(area / 2);
+        const pixelsMeter = editor?.pixelsMeter || 39.3701;
+        const { meters: areaMeters, feet: areaFeet } = calculateRoomArea(selectedRoom.points, pixelsMeter);
 
         // Calculate bounding box for approximate dimensions
-        const xs = points.map((p: any) => p.x);
-        const ys = points.map((p: any) => p.y);
+        const xs = selectedRoom.points.map((p: any) => p.x);
+        const ys = selectedRoom.points.map((p: any) => p.y);
         const width = Math.max(...xs) - Math.min(...xs);
         const height = Math.max(...ys) - Math.min(...ys);
-
-        // Convert square pixels to square meters (assuming 1 pixel = 1 inch, then convert)
-        const areaMeters = area / (39.3701 * 39.3701); // inches² to m²
-        const areaFeet = areaMeters * 10.7639; // m² to ft²
 
         return {
             area: areaMeters,
             areaFt: areaFeet,
-            width: width / 39.3701, // inches to meters
-            height: height / 39.3701
+            width: width / pixelsMeter,
+            height: height / pixelsMeter
         };
-    }, [selectedRoom]);
+    }, [selectedRoom, editor?.pixelsMeter]);
 
     // Consolidated tool attribute update is handled by the useEffect earlier in the component
 
@@ -1382,8 +1381,25 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                     )}
                                 </div>
                             </div>
+                        ) : activeTool === 'select' ? (
+                            // EMPTY STATE for SELECT MODE
+                            <div className="flex flex-col items-center justify-center h-full py-12 px-4 text-center">
+                                <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center mb-4 border border-slate-700">
+                                    <Target className="w-6 h-6 text-slate-500" />
+                                </div>
+                                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-widest mb-2">Selection Mode</h4>
+                                <p className="text-[10px] text-slate-500 leading-relaxed mb-6">
+                                    Click on a device or room in the floor plan to view or edit its properties.
+                                </p>
+                                <button
+                                    onClick={() => setActiveTab('library')}
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold uppercase tracking-wider rounded transition-colors shadow-lg shadow-blue-900/20"
+                                >
+                                    Open Device Library
+                                </button>
+                            </div>
                         ) : (
-                            // Device List - shown when no selection
+                            // Device List - shown when no selection and NOT in select mode
                             <div className="space-y-2 flex flex-col h-full">
                                 <div className="flex items-center gap-1 mb-2">
                                     <div className="relative flex-1">

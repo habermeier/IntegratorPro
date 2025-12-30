@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Layer, LayerConfig, Transform, VectorLayerContent, Polygon, PlacedSymbol, Furniture, Room } from '../models/types';
 import { SYMBOL_LIBRARY } from '../models/symbolLibrary';
-import { calculatePolygonArea } from '../../utils/spatialUtils';
+import { calculatePolygonArea, calculateRoomArea } from '../../utils/spatialUtils';
 import { remoteLog } from '../../src/utils/logger';
 import { calculateCoverage, getEffectiveHeight, coverageToPixels } from '../../src/utils/lightingUtils';
 
@@ -366,11 +366,9 @@ export class LayerSystem {
                     const roomType = (poly as any).roomType || 'other';
                     const displayType = this.formatRoomType(roomType);
 
-                    // Calculate Area
-                    const areaPx = calculatePolygonArea(poly.points);
-                    const pixelsPerMeter = (this.scene.userData.editor as any)?.pixelsMeter || 1;
-                    const areaM2 = areaPx / (pixelsPerMeter * pixelsPerMeter);
-                    const areaSqFt = areaM2 * 10.764;
+                    // Calculate Area via centralized utility (DRY)
+                    const pixelsPerMeter = (this.scene.userData.editor as any)?.pixelsMeter || 39.3701;
+                    const { meters: areaM2, feet: areaSqFt } = calculateRoomArea(poly.points, pixelsPerMeter);
                     const areaLabel = `${Math.round(areaSqFt)} sqft`;
 
                     const labelSprite = this.createLabel(roomName, displayType, areaLabel);
@@ -466,10 +464,8 @@ export class LayerSystem {
                     const rType = (poly as any).roomType || 'other';
 
                     // Re-calculate area to see if it changed (via pointsHash check)
-                    const areaPx = calculatePolygonArea(poly.points);
-                    const pixelsPerMeter = (this.scene.userData.editor as any)?.pixelsMeter || 1;
-                    const areaM2 = areaPx / (pixelsPerMeter * pixelsPerMeter);
-                    const areaSqFt = areaM2 * 10.764;
+                    const pixelsPerMeter = (this.scene.userData.editor as any)?.pixelsMeter || 39.3701;
+                    const { meters: areaM2, feet: areaSqFt } = calculateRoomArea(poly.points, pixelsPerMeter);
                     const areaLabel = `${Math.round(areaSqFt)} sqft`;
 
                     if (group.userData.labelName !== rName || group.userData.labelType !== rType || group.userData.areaLabel !== areaLabel) {
@@ -977,8 +973,8 @@ export class LayerSystem {
             // Update existing circle if parameters changed
             const oldData = circle.userData as any;
             const changed = Math.abs(oldData.radiusX - radiusX) > 0.01 ||
-                          Math.abs(oldData.radiusY - radiusY) > 0.01 ||
-                          Math.abs((oldData.offsetX || 0) - offsetX) > 0.01;
+                Math.abs(oldData.radiusY - radiusY) > 0.01 ||
+                Math.abs((oldData.offsetX || 0) - offsetX) > 0.01;
 
             if (changed) {
                 const curve = new THREE.EllipseCurve(
