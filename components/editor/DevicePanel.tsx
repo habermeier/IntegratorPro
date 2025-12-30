@@ -32,6 +32,10 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
     const [lumens, setLumens] = React.useState<number>(800);
     const [beamAngle, setBeamAngle] = React.useState<number>(60);
     const [range, setRange] = React.useState<number>(10);
+    const [lumensCode, setLumensCode] = React.useState<string>('L15');
+    const [beamCode, setBeamCode] = React.useState<string>('M');
+    const [symbolCode, setSymbolCode] = React.useState<string>('L15-M');
+    const [unitPreference, setUnitPreference] = React.useState<'IMPERIAL' | 'METRIC'>('METRIC');
 
     // UI State
     const [activeTab, setActiveTab] = React.useState<'library' | 'placed'>('library');
@@ -48,6 +52,48 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
 
     // Get all devices from registry
     const { devices, getDevice, updateDevice } = useDevices();
+
+    // Unit conversion helpers
+    const metersToFeetInches = (meters: number): { feet: number; inches: number; display: string } => {
+        const totalInches = meters * 39.3701; // 1 meter = 39.3701 inches
+        const feet = Math.floor(totalInches / 12);
+        const inches = Math.round(totalInches % 12);
+        return { feet, inches, display: `${feet}' ${inches}"` };
+    };
+
+    const feetInchesToMeters = (feet: number, inches: number): number => {
+        const totalInches = feet * 12 + inches;
+        return totalInches / 39.3701;
+    };
+
+    const parseHeightInput = (input: string): number | null => {
+        // Try to parse formats like: "8' 0\"", "8'", "8' 6\"", "8", "2.4"
+        const feetInchesMatch = input.match(/(\d+)'\s*(\d+)"?/);
+        if (feetInchesMatch) {
+            const feet = parseInt(feetInchesMatch[1]);
+            const inches = parseInt(feetInchesMatch[2] || '0');
+            return feetInchesToMeters(feet, inches);
+        }
+
+        const feetOnlyMatch = input.match(/(\d+)'/);
+        if (feetOnlyMatch) {
+            const feet = parseInt(feetOnlyMatch[1]);
+            return feetInchesToMeters(feet, 0);
+        }
+
+        // If no feet/inches format, treat as decimal number (meters or feet depending on context)
+        const decimal = parseFloat(input);
+        if (!isNaN(decimal)) {
+            // If imperial mode and plain number, assume feet
+            if (unitPreference === 'IMPERIAL' && !input.includes('.')) {
+                return feetInchesToMeters(decimal, 0);
+            }
+            // Otherwise assume meters
+            return decimal;
+        }
+
+        return null;
+    };
 
     // Throttled room detection to save CPU
     const throttledDetectRoom = React.useMemo(() =>
@@ -123,6 +169,21 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
             localStorage.setItem('integrator-pro-last-symbol-type', selectedSymbolType);
         }
     }, [selectedSymbolType]);
+
+    // Load unit preference from project settings
+    React.useEffect(() => {
+        const loadUnitPreference = async () => {
+            try {
+                const project = await dataService.loadProject();
+                if (project.settings?.units) {
+                    setUnitPreference(project.settings.units);
+                }
+            } catch (error) {
+                console.error('Failed to load unit preference:', error);
+            }
+        };
+        loadUnitPreference();
+    }, []);
 
     // Subscribe to selection-changed event for device editing and room editing
     React.useEffect(() => {
@@ -383,7 +444,7 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
     const handleSavePreset = async () => {
         if (!selectedSymbolType) return;
 
-        const presetName = prompt('Enter preset name:', `${SYMBOL_LIBRARY[selectedSymbolType]?.name || selectedSymbolType} - ${productId || 'Custom'}`);
+        const presetName = prompt('Enter preset name:', `${SYMBOL_LIBRARY[selectedSymbolType]?.name || selectedSymbolType} - ${symbolCode || 'Custom'}`);
         if (!presetName) return;
 
         const customSymbol = {
@@ -398,7 +459,10 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                 cableType,
                 lumens,
                 beamAngle,
-                range
+                range,
+                lumensCode,
+                beamCode,
+                symbolCode
             },
             createdAt: new Date().toISOString()
         };
@@ -603,12 +667,24 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                                 <div className="flex items-center bg-slate-900 rounded border border-slate-800 px-1.5">
                                     <span className="text-[7px] text-slate-500 mr-1 font-bold">HEIGHT</span>
                                     <input
-                                        type="number"
-                                        value={defaultHeight}
-                                        onChange={(e) => setDefaultHeight(parseFloat(e.target.value) || 0)}
-                                        step="0.1"
+                                        type="text"
+                                        value={unitPreference === 'IMPERIAL' ? metersToFeetInches(defaultHeight).display : defaultHeight.toFixed(2)}
+                                        onChange={(e) => {
+                                            const input = e.target.value;
+                                            if (unitPreference === 'IMPERIAL') {
+                                                const meters = parseHeightInput(input);
+                                                if (meters !== null) {
+                                                    setDefaultHeight(meters);
+                                                }
+                                            } else {
+                                                const meters = parseFloat(input);
+                                                if (!isNaN(meters)) {
+                                                    setDefaultHeight(meters);
+                                                }
+                                            }
+                                        }}
                                         className="w-full bg-transparent text-[9px] text-slate-300 font-mono py-1 focus:outline-none"
-                                        placeholder="m"
+                                        placeholder={unitPreference === 'IMPERIAL' ? "8' 0\"" : "2.4 m"}
                                     />
                                 </div>
 
@@ -875,6 +951,67 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                                             <div className="pt-2 border-t border-slate-800/50">
                                                 <h4 className="text-[8px] text-slate-500 uppercase font-bold mb-2 tracking-wider">Configuration</h4>
                                                 <div className="space-y-2">
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div>
+                                                            <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Lumens</label>
+                                                            <select
+                                                                value={formData.metadata?.lumensCode || 'L15'}
+                                                                onChange={(e) => {
+                                                                    const code = e.target.value;
+                                                                    const lumensMap: Record<string, number> = { L5: 500, L15: 1500 };
+                                                                    handleFieldChange('metadata.lumensCode', code);
+                                                                    handleFieldChange('metadata.lumens', lumensMap[code] || 1500);
+                                                                }}
+                                                                onBlur={(e) => {
+                                                                    const code = e.target.value;
+                                                                    const lumensMap: Record<string, number> = { L5: 500, L15: 1500 };
+                                                                    handleFieldBlur('metadata.lumensCode', code);
+                                                                    handleFieldBlur('metadata.lumens', lumensMap[code] || 1500);
+                                                                }}
+                                                                className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                            >
+                                                                <option value="L5">L5 (500lm)</option>
+                                                                <option value="L15">L15 (1500lm)</option>
+                                                            </select>
+                                                        </div>
+
+                                                        <div>
+                                                            <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Beam</label>
+                                                            <select
+                                                                value={formData.metadata?.beamCode || 'M'}
+                                                                onChange={(e) => {
+                                                                    const code = e.target.value;
+                                                                    const beamMap: Record<string, number> = { N: 20, M: 30, W: 50 };
+                                                                    handleFieldChange('metadata.beamCode', code);
+                                                                    handleFieldChange('metadata.beamAngle', beamMap[code] || 30);
+                                                                }}
+                                                                onBlur={(e) => {
+                                                                    const code = e.target.value;
+                                                                    const beamMap: Record<string, number> = { N: 20, M: 30, W: 50 };
+                                                                    handleFieldBlur('metadata.beamCode', code);
+                                                                    handleFieldBlur('metadata.beamAngle', beamMap[code] || 30);
+                                                                }}
+                                                                className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                            >
+                                                                <option value="N">N (20°)</option>
+                                                                <option value="M">M (30°)</option>
+                                                                <option value="W">W (50°)</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Symbol Code</label>
+                                                        <input
+                                                            type="text"
+                                                            value={formData.metadata?.symbolCode || `${formData.metadata?.lumensCode || 'L15'}-${formData.metadata?.beamCode || 'M'}`}
+                                                            onChange={(e) => handleFieldChange('metadata.symbolCode', e.target.value)}
+                                                            onBlur={(e) => handleFieldBlur('metadata.symbolCode', e.target.value)}
+                                                            placeholder="e.g., L15-M"
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
+                                                        />
+                                                    </div>
+
                                                     <div>
                                                         <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Driver</label>
                                                         <select
