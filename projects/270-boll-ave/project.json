@@ -1,11 +1,11 @@
 {
   "version": "1.0",
-  "timestamp": "2025-12-29T00:17:07.594Z",
+  "timestamp": "2025-12-30T00:07:11.629Z",
   "metadata": {
     "name": "270 Boll Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2025-12-29T00:17:07.289Z"
+    "modified": "2025-12-30T00:07:11.289Z"
   },
   "floorPlan": {
     "scale": {
@@ -3974,58 +3974,7 @@
       }
     }
   ],
-  "devices": [
-    {
-      "id": "lighting-1766959641235",
-      "deviceTypeId": "recessed-light",
-      "productId": "generic-product",
-      "name": "recessed-light ligh",
-      "position": {
-        "x": 198.0045166015625,
-        "y": 571.5192108154297
-      },
-      "rotation": 0,
-      "roomId": "Family Room Open Area",
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": 1766959641235
-    },
-    {
-      "id": "lighting-1766967425785",
-      "deviceTypeId": "recessed-light",
-      "productId": "generic-product",
-      "name": "recessed-light ligh",
-      "position": {
-        "x": -2327.087809585491,
-        "y": 1220.2664785227512
-      },
-      "rotation": 0,
-      "roomId": "Primary Bedroom",
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": 1766967425785
-    }
-  ],
+  "devices": [],
   "cables": [],
   "lcps": [],
   "settings": {

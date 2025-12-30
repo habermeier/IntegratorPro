@@ -7,7 +7,9 @@ import { PlaceSymbolTool } from '../../editor/tools/PlaceSymbolTool';
 import { useDevices } from '../../src/hooks/useDevices';
 import { VectorLayerContent, Vector2, ToolType } from '../../editor/models/types';
 import { isPointInPolygon, findRoomAt, throttle } from '../../utils/spatialUtils';
-import { Search, Target, Box, Database, MapPin, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Target, Box, Database, MapPin, Trash2, ChevronLeft, ChevronRight, Save } from 'lucide-react';
+import { dataService } from '../../src/services/DataService';
+import catalog from '../../catalog.json';
 
 interface DevicePanelProps {
     editor: FloorPlanEditor | null;
@@ -39,6 +41,10 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
     const [selectedDeviceIds, setSelectedDeviceIds] = React.useState<string[]>([]);
     const [editingDevice, setEditingDevice] = React.useState<any>(null);
     const [formData, setFormData] = React.useState<Partial<any>>({});
+
+    // Room selection state
+    const [selectedRoom, setSelectedRoom] = React.useState<any>(null);
+    const [roomFormData, setRoomFormData] = React.useState<Partial<any>>({});
 
     // Get all devices from registry
     const { devices, getDevice, updateDevice } = useDevices();
@@ -118,18 +124,22 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
         }
     }, [selectedSymbolType]);
 
-    // Subscribe to selection-changed event for device editing
+    // Subscribe to selection-changed event for device editing and room editing
     React.useEffect(() => {
         if (!editor) return;
 
         const handleSelectionChange = (selectedIds: string[]) => {
             setSelectedDeviceIds(selectedIds);
 
-            // Only edit single device selections
+            // Only handle single selections
             if (selectedIds.length === 1) {
-                const device = getDevice(selectedIds[0]);
+                const selectedId = selectedIds[0];
+
+                // First check if it's a device
+                const device = getDevice(selectedId);
                 if (device) {
                     setEditingDevice(device);
+                    setSelectedRoom(null);
                     setFormData({
                         name: device.name,
                         productId: device.productId,
@@ -137,13 +147,33 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                         busAssignment: device.busAssignment,
                         metadata: { ...device.metadata }
                     });
-                } else {
-                    // Non-device selection (furniture, room, etc.)
-                    setEditingDevice(null);
+                    return;
                 }
+
+                // Check if it's a room
+                const roomLayer = editor.layerSystem.getLayer('room');
+                if (roomLayer && roomLayer.type === 'vector') {
+                    const content = roomLayer.content as VectorLayerContent;
+                    const room = (content.rooms || []).find(r => r.id === selectedId);
+                    if (room) {
+                        setSelectedRoom(room);
+                        setEditingDevice(null);
+                        setRoomFormData({
+                            name: room.name,
+                            roomType: room.roomType,
+                            ceilingHeight: room.ceilingHeight || 2.74
+                        });
+                        return;
+                    }
+                }
+
+                // Non-device, non-room selection (furniture, etc.)
+                setEditingDevice(null);
+                setSelectedRoom(null);
             } else {
                 // Multi or no selection
                 setEditingDevice(null);
+                setSelectedRoom(null);
             }
         };
 
@@ -162,6 +192,13 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
         });
         return counts;
     }, [devices]);
+
+    // Filter catalog items based on selected category
+    const filteredCatalog = React.useMemo(() => {
+        // Map category ID to catalog type (e.g., 'lighting' -> 'LIGHTING')
+        const catalogType = selectedCategory.toUpperCase();
+        return catalog.filter(item => item.type === catalogType);
+    }, [selectedCategory]);
 
     // Enhanced filtering and grouping for the Placed tab
     const filteredDevices = React.useMemo(() => {
@@ -257,8 +294,9 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                 productId: device.productId,
                 installationHeight: device.installationHeight,
                 busAssignment: device.busAssignment,
+                rotation: device.rotation,
                 metadata: device.metadata,
-                // CRITICAL: Preserve scale, x, y, rotation for rendering
+                // CRITICAL: Preserve scale, x, y for rendering
             };
 
             editor.layerSystem.markDirty(device.layerId);
@@ -315,6 +353,99 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
         }
     };
 
+    // Room property change handlers
+    const handleRoomFieldChange = (field: string, value: any) => {
+        setRoomFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleRoomFieldBlur = (field: string, value: any) => {
+        if (!selectedRoom || !editor) return;
+
+        const roomLayer = editor.layerSystem.getLayer('room');
+        if (!roomLayer || roomLayer.type !== 'vector') return;
+
+        const content = roomLayer.content as VectorLayerContent;
+        const roomIndex = (content.rooms || []).findIndex(r => r.id === selectedRoom.id);
+
+        if (roomIndex !== -1 && content.rooms) {
+            // Update room in layer
+            content.rooms[roomIndex] = {
+                ...content.rooms[roomIndex],
+                [field]: value
+            };
+
+            editor.layerSystem.markDirty('room');
+            editor.emit('layers-changed', editor.layerSystem.getAllLayers());
+        }
+    };
+
+    // Save current attributes as a custom symbol preset
+    const handleSavePreset = async () => {
+        if (!selectedSymbolType) return;
+
+        const presetName = prompt('Enter preset name:', `${SYMBOL_LIBRARY[selectedSymbolType]?.name || selectedSymbolType} - ${productId || 'Custom'}`);
+        if (!presetName) return;
+
+        const customSymbol = {
+            id: `custom-${Date.now()}`,
+            name: presetName,
+            baseType: selectedSymbolType,
+            category: SYMBOL_LIBRARY[selectedSymbolType]?.category || selectedCategory,
+            attributes: {
+                productId,
+                installationHeight: defaultHeight,
+                busAssignment,
+                cableType,
+                lumens,
+                beamAngle,
+                range
+            },
+            createdAt: new Date().toISOString()
+        };
+
+        try {
+            await dataService.addCustomSymbol(customSymbol);
+            alert(`Preset "${presetName}" saved successfully!`);
+        } catch (error) {
+            console.error('Failed to save preset:', error);
+            alert('Failed to save preset. Please try again.');
+        }
+    };
+
+    // Calculate room area and dimensions
+    const calculateRoomStats = React.useMemo(() => {
+        if (!selectedRoom || !selectedRoom.points || selectedRoom.points.length < 3) {
+            return { area: 0, areaFt: 0, width: 0, height: 0 };
+        }
+
+        // Calculate area using Shoelace formula
+        let area = 0;
+        const points = selectedRoom.points;
+        for (let i = 0; i < points.length; i++) {
+            const j = (i + 1) % points.length;
+            area += points[i].x * points[j].y;
+            area -= points[j].x * points[i].y;
+        }
+        area = Math.abs(area / 2);
+
+        // Calculate bounding box for approximate dimensions
+        const xs = points.map((p: any) => p.x);
+        const ys = points.map((p: any) => p.y);
+        const width = Math.max(...xs) - Math.min(...xs);
+        const height = Math.max(...ys) - Math.min(...ys);
+
+        // Convert square pixels to square meters (assuming 1 pixel = 1 inch, then convert)
+        const areaMeters = area / (39.3701 * 39.3701); // inches² to m²
+        const areaFeet = areaMeters * 10.7639; // m² to ft²
+
+        return {
+            area: areaMeters,
+            areaFt: areaFeet,
+            width: width / 39.3701, // inches to meters
+            height: height / 39.3701
+        };
+    }, [selectedRoom]);
+
     // Update tool attributes when they change
     React.useEffect(() => {
         if (editor && selectedSymbolType) {
@@ -357,7 +488,7 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                             <select
                                 value={cableType}
                                 onChange={(e) => setCableType(e.target.value)}
-                                className="w-full text-[9px] text-slate-300 font-mono px-1.5 py-1 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
+                                className="w-full text-[9px] text-slate-300 font-mono px-1.5 py-1 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
                             >
                                 {getAllCableTypes().map(cable => (
                                     <option key={cable.id} value={cable.id}>
@@ -387,7 +518,8 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                             </div>
                         </div>
                     ) : (
-                        <div className="space-y-1.5">
+                        <div className="space-y-2">
+                            {/* Header */}
                             <div className="flex items-center justify-between gap-1">
                                 <span className="text-[9px] text-slate-400 font-bold uppercase truncate">
                                     {SYMBOL_LIBRARY[selectedSymbolType]?.name || selectedSymbolType}
@@ -395,81 +527,140 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                                 <span className="text-[8px] text-blue-500 font-black px-1 rounded bg-blue-500/10">PLACE</span>
                             </div>
 
-                            <input
-                                type="text"
-                                value={productId}
-                                onChange={(e) => setProductId(e.target.value)}
-                                className="w-full text-[9px] text-slate-300 font-mono px-1.5 py-1 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
-                                placeholder="Product ID"
-                            />
+                            {/* PRODUCT SPEC (White Background) */}
+                            <div className="bg-white rounded-md p-2 space-y-1.5 border border-slate-300">
+                                <div className="flex items-center justify-between mb-1">
+                                    <span className="text-[8px] text-slate-700 font-black uppercase tracking-wider">Product Spec</span>
+                                    <span className="text-[7px] text-slate-500 font-mono">Type</span>
+                                </div>
 
-                            <div className="flex gap-1">
-                                <div className="flex-1 flex items-center bg-slate-900 rounded border border-slate-800 px-1.5">
-                                    <span className="text-[7px] text-slate-600 mr-1 font-bold">H</span>
+                                {/* Product Selector */}
+                                <select
+                                    value={productId}
+                                    onChange={(e) => setProductId(e.target.value)}
+                                    className="w-full text-[9px] text-slate-900 font-mono px-1.5 py-1 bg-slate-50 rounded border border-slate-300 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                >
+                                    <option value="">Select Product...</option>
+                                    {filteredCatalog.map(item => (
+                                        <option key={item.id} value={item.id}>
+                                            {item.name}
+                                        </option>
+                                    ))}
+                                </select>
+
+                                {/* Symbol Code (NEW) */}
+                                <div className="flex items-center bg-slate-50 rounded border border-slate-300 px-1.5">
+                                    <span className="text-[7px] text-slate-600 mr-1 font-bold">CODE</span>
+                                    <input
+                                        type="text"
+                                        value={selectedSymbolType || ''}
+                                        readOnly
+                                        className="w-full bg-transparent text-[9px] text-slate-700 font-mono py-1 focus:outline-none"
+                                        placeholder="Symbol Code"
+                                    />
+                                </div>
+
+                                {/* Lumens, Beam, Range */}
+                                <div className="grid grid-cols-3 gap-1">
+                                    <div className="flex flex-col bg-slate-50 rounded border border-slate-300 px-1.5 py-0.5">
+                                        <span className="text-[7px] text-slate-600 font-bold uppercase">Lumens</span>
+                                        <input
+                                            type="number"
+                                            value={lumens}
+                                            onChange={(e) => setLumens(parseInt(e.target.value) || 0)}
+                                            className="w-full bg-transparent text-[9px] text-slate-900 font-mono focus:outline-none"
+                                        />
+                                    </div>
+                                    <div className="flex flex-col bg-slate-50 rounded border border-slate-300 px-1.5 py-0.5">
+                                        <span className="text-[7px] text-slate-600 font-bold uppercase">Beam</span>
+                                        <input
+                                            type="number"
+                                            value={beamAngle}
+                                            onChange={(e) => setBeamAngle(parseInt(e.target.value) || 0)}
+                                            className="w-full bg-transparent text-[9px] text-slate-900 font-mono focus:outline-none"
+                                        />
+                                    </div>
+                                    <div className="flex flex-col bg-slate-50 rounded border border-slate-300 px-1.5 py-0.5">
+                                        <span className="text-[7px] text-slate-600 font-bold uppercase">Range</span>
+                                        <input
+                                            type="number"
+                                            value={range}
+                                            onChange={(e) => setRange(parseInt(e.target.value) || 0)}
+                                            className="w-full bg-transparent text-[9px] text-slate-900 font-mono focus:outline-none"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* PLACEMENT SETTINGS (Dark Background) */}
+                            <div className="bg-slate-950 rounded-md p-2 space-y-1.5 border border-slate-800">
+                                <div className="flex items-center justify-between mb-1">
+                                    <span className="text-[8px] text-slate-400 font-black uppercase tracking-wider">Placement Settings</span>
+                                    <span className="text-[7px] text-slate-600 font-mono">Instance</span>
+                                </div>
+
+                                {/* Height */}
+                                <div className="flex items-center bg-slate-900 rounded border border-slate-800 px-1.5">
+                                    <span className="text-[7px] text-slate-500 mr-1 font-bold">HEIGHT</span>
                                     <input
                                         type="number"
                                         value={defaultHeight}
                                         onChange={(e) => setDefaultHeight(parseFloat(e.target.value) || 0)}
                                         step="0.1"
                                         className="w-full bg-transparent text-[9px] text-slate-300 font-mono py-1 focus:outline-none"
+                                        placeholder="m"
                                     />
                                 </div>
-                                <div className="flex-1 flex items-center bg-slate-900 rounded border border-slate-800 px-1.5">
-                                    <span className="text-[7px] text-slate-600 mr-1 font-bold">B</span>
+
+                                {/* Room (Read-only display) */}
+                                <div className="flex items-center bg-slate-900 rounded border border-slate-800 px-1.5">
+                                    <span className="text-[7px] text-slate-500 mr-1 font-bold">ROOM</span>
+                                    <input
+                                        type="text"
+                                        value={currentRoom}
+                                        readOnly
+                                        className="w-full bg-transparent text-[9px] text-blue-400 font-mono py-1 focus:outline-none"
+                                    />
+                                </div>
+
+                                {/* Bus */}
+                                <div className="flex items-center bg-slate-900 rounded border border-slate-800 px-1.5">
+                                    <span className="text-[7px] text-slate-500 mr-1 font-bold">BUS</span>
                                     <input
                                         type="text"
                                         value={busAssignment}
                                         onChange={(e) => setBusAssignment(e.target.value)}
                                         className="w-full bg-transparent text-[9px] text-slate-300 font-mono py-1 focus:outline-none"
-                                        placeholder="Bus"
+                                        placeholder="Bus Assignment"
                                     />
+                                </div>
+
+                                {/* Cable */}
+                                <div className="flex items-center bg-slate-900 rounded border border-slate-800 px-1.5">
+                                    <span className="text-[7px] text-slate-500 mr-1 font-bold">CABLE</span>
+                                    <select
+                                        value={cableType}
+                                        onChange={(e) => setCableType(e.target.value)}
+                                        className="w-full bg-transparent text-[9px] text-slate-300 font-mono py-1 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                    >
+                                        {getAllCableTypes().map(cable => (
+                                            <option key={cable.id} value={cable.id}>
+                                                {cable.name}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
 
-                            <div className="flex items-center bg-slate-900 rounded border border-slate-800 px-1.5">
-                                <span className="text-[7px] text-slate-600 mr-1 font-bold">CABLE</span>
-                                <select
-                                    value={cableType}
-                                    onChange={(e) => setCableType(e.target.value)}
-                                    className="w-full bg-transparent text-[9px] text-slate-300 font-mono py-1 focus:outline-none"
-                                >
-                                    {getAllCableTypes().map(cable => (
-                                        <option key={cable.id} value={cable.id}>
-                                            {cable.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-1">
-                                <div className="flex flex-col bg-slate-900 rounded border border-slate-800 px-1.5 py-0.5">
-                                    <span className="text-[7px] text-slate-600 font-bold uppercase">Lumens</span>
-                                    <input
-                                        type="number"
-                                        value={lumens}
-                                        onChange={(e) => setLumens(parseInt(e.target.value) || 0)}
-                                        className="w-full bg-transparent text-[9px] text-slate-300 font-mono focus:outline-none"
-                                    />
-                                </div>
-                                <div className="flex flex-col bg-slate-900 rounded border border-slate-800 px-1.5 py-0.5">
-                                    <span className="text-[7px] text-slate-600 font-bold uppercase">Beam</span>
-                                    <input
-                                        type="number"
-                                        value={beamAngle}
-                                        onChange={(e) => setBeamAngle(parseInt(e.target.value) || 0)}
-                                        className="w-full bg-transparent text-[9px] text-slate-300 font-mono focus:outline-none"
-                                    />
-                                </div>
-                                <div className="flex flex-col bg-slate-900 rounded border border-slate-800 px-1.5 py-0.5">
-                                    <span className="text-[7px] text-slate-600 font-bold uppercase">Range</span>
-                                    <input
-                                        type="number"
-                                        value={range}
-                                        onChange={(e) => setRange(parseInt(e.target.value) || 0)}
-                                        className="w-full bg-transparent text-[9px] text-slate-300 font-mono focus:outline-none"
-                                    />
-                                </div>
-                            </div>
+                            {/* Save Preset Button */}
+                            <button
+                                onClick={handleSavePreset}
+                                className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white border border-slate-700 hover:border-blue-500 transition-all text-[9px] font-bold uppercase tracking-wider"
+                                title="Save current settings as a preset"
+                            >
+                                <Save className="w-3 h-3" />
+                                <span>Save Preset</span>
+                            </button>
                         </div>
                     )}
                 </div>
@@ -507,7 +698,7 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                             <select
                                 value={selectedCategory}
                                 onChange={(e) => setSelectedCategory(e.target.value)}
-                                className="w-full text-[10px] text-slate-200 font-semibold px-2 py-1 bg-slate-800 rounded border border-slate-700 focus:border-blue-500 focus:outline-none"
+                                className="w-full text-[10px] text-slate-200 font-semibold px-2 py-1 bg-slate-800 rounded border border-slate-700 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
                             >
                                 {SYMBOL_CATEGORIES.map(category => (
                                     <option key={category.id} value={category.id}>
@@ -624,13 +815,58 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Beam °</label>
+                                                    <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Beam Angle</label>
+                                                    <select
+                                                        value={formData.metadata?.beamAngle || 60}
+                                                        onChange={(e) => handleFieldChange('metadata.beamAngle', parseInt(e.target.value))}
+                                                        onBlur={(e) => handleFieldBlur('metadata.beamAngle', parseInt(e.target.value))}
+                                                        className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                    >
+                                                        <option value="15">15°</option>
+                                                        <option value="25">25°</option>
+                                                        <option value="40">40°</option>
+                                                        <option value="60">60°</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            {/* Adjustable Light Controls */}
+                                            <div className="space-y-2 pt-2 border-t border-slate-800/50">
+                                                <h4 className="text-[8px] text-slate-500 uppercase font-bold tracking-wider">Adjustable</h4>
+
+                                                {/* Tilt Slider */}
+                                                <div>
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold">Tilt</label>
+                                                        <span className="text-[9px] text-slate-400 font-mono">{formData.metadata?.tilt || 0}°</span>
+                                                    </div>
                                                     <input
-                                                        type="number"
-                                                        value={formData.metadata?.beamAngle || 0}
-                                                        onChange={(e) => handleFieldChange('metadata.beamAngle', parseInt(e.target.value) || 0)}
-                                                        onBlur={(e) => handleFieldBlur('metadata.beamAngle', parseInt(e.target.value) || 0)}
-                                                        className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
+                                                        type="range"
+                                                        min="0"
+                                                        max="35"
+                                                        step="1"
+                                                        value={formData.metadata?.tilt || 0}
+                                                        onChange={(e) => handleFieldChange('metadata.tilt', parseInt(e.target.value))}
+                                                        onMouseUp={(e) => handleFieldBlur('metadata.tilt', parseInt((e.target as HTMLInputElement).value))}
+                                                        className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                                    />
+                                                </div>
+
+                                                {/* Rotation Slider */}
+                                                <div>
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold">Rotation</label>
+                                                        <span className="text-[9px] text-slate-400 font-mono">{formData.rotation || 0}°</span>
+                                                    </div>
+                                                    <input
+                                                        type="range"
+                                                        min="0"
+                                                        max="360"
+                                                        step="1"
+                                                        value={formData.rotation || 0}
+                                                        onChange={(e) => handleFieldChange('rotation', parseInt(e.target.value))}
+                                                        onMouseUp={(e) => handleFieldBlur('rotation', parseInt((e.target as HTMLInputElement).value))}
+                                                        className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
                                                     />
                                                 </div>
                                             </div>
@@ -645,7 +881,7 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                                                             value={formData.metadata?.driver || 'LD2'}
                                                             onChange={(e) => handleFieldChange('metadata.driver', e.target.value)}
                                                             onBlur={(e) => handleFieldBlur('metadata.driver', e.target.value)}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
                                                         >
                                                             <option value="LD2">LD2</option>
                                                             <option value="0-10V">0-10V</option>
@@ -658,7 +894,7 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                                                             value={formData.metadata?.mount || 'Trimless Mud-in'}
                                                             onChange={(e) => handleFieldChange('metadata.mount', e.target.value)}
                                                             onBlur={(e) => handleFieldBlur('metadata.mount', e.target.value)}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
                                                         >
                                                             <option value="Trimless Mud-in">Trimless Mud-in</option>
                                                             <option value="Flanged">Flanged</option>
@@ -671,7 +907,7 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                                                             value={formData.metadata?.cct || 'Tunable'}
                                                             onChange={(e) => handleFieldChange('metadata.cct', e.target.value)}
                                                             onBlur={(e) => handleFieldBlur('metadata.cct', e.target.value)}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
                                                         >
                                                             <option value="Tunable">Tunable</option>
                                                             <option value="Fixed">Fixed</option>
@@ -695,6 +931,90 @@ export const DevicePanel: React.FC<DevicePanelProps> = React.memo(({ editor, act
                                             />
                                         </div>
                                     )}
+                                </div>
+                            </div>
+                        ) : selectedRoom ? (
+                            // Room Properties Form - shown when single room selected
+                            <div className="p-3 space-y-3">
+                                {/* Header */}
+                                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                                    <h3 className="text-[10px] font-bold text-green-400 uppercase tracking-widest">Editing Room</h3>
+                                    <button
+                                        onClick={() => {
+                                            editor?.selectionSystem.clearSelection();
+                                            editor?.emit('selection-changed', []);
+                                        }}
+                                        className="text-[8px] px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors uppercase font-bold"
+                                    >
+                                        Clear
+                                    </button>
+                                </div>
+
+                                {/* Read-only Info */}
+                                <div className="space-y-2 p-2 bg-slate-950/50 rounded border border-slate-800/50">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[7px] text-slate-600 uppercase font-bold">Name</span>
+                                        <span className="text-[9px] text-slate-300 font-mono">{selectedRoom.name}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[7px] text-slate-600 uppercase font-bold">Type</span>
+                                        <span className="text-[9px] text-slate-300 font-mono capitalize">{selectedRoom.roomType}</span>
+                                    </div>
+                                </div>
+
+                                {/* Editable Fields */}
+                                <div className="space-y-2">
+                                    <div>
+                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Ceiling Height (m)</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            value={roomFormData.ceilingHeight || 2.74}
+                                            onChange={(e) => handleRoomFieldChange('ceilingHeight', parseFloat(e.target.value) || 2.74)}
+                                            onBlur={(e) => handleRoomFieldBlur('ceilingHeight', parseFloat(e.target.value) || 2.74)}
+                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-green-500 focus:outline-none"
+                                        />
+                                        <div className="text-[7px] text-slate-600 mt-0.5 italic">
+                                            {((roomFormData.ceilingHeight || 2.74) * 3.28084).toFixed(2)} ft
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Calculated Stats */}
+                                <div className="space-y-2 p-2 bg-green-950/20 rounded border border-green-900/30">
+                                    <h4 className="text-[8px] text-green-500 uppercase font-bold tracking-wider mb-2">Dimensions</h4>
+
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[7px] text-slate-600 uppercase font-bold">Area</span>
+                                        <div className="text-right">
+                                            <div className="text-[9px] text-slate-300 font-mono">{calculateRoomStats.area.toFixed(2)} m²</div>
+                                            <div className="text-[7px] text-slate-500 font-mono">{calculateRoomStats.areaFt.toFixed(2)} ft²</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[7px] text-slate-600 uppercase font-bold">Width × Height</span>
+                                        <div className="text-right">
+                                            <div className="text-[9px] text-slate-300 font-mono">
+                                                {calculateRoomStats.width.toFixed(2)} × {calculateRoomStats.height.toFixed(2)} m
+                                            </div>
+                                            <div className="text-[7px] text-slate-500 font-mono">
+                                                {(calculateRoomStats.width * 3.28084).toFixed(2)} × {(calculateRoomStats.height * 3.28084).toFixed(2)} ft
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[7px] text-slate-600 uppercase font-bold">Volume</span>
+                                        <div className="text-right">
+                                            <div className="text-[9px] text-slate-300 font-mono">
+                                                {(calculateRoomStats.area * (roomFormData.ceilingHeight || 2.74)).toFixed(2)} m³
+                                            </div>
+                                            <div className="text-[7px] text-slate-500 font-mono">
+                                                {(calculateRoomStats.areaFt * ((roomFormData.ceilingHeight || 2.74) * 3.28084)).toFixed(2)} ft³
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         ) : (

@@ -8,6 +8,7 @@
 import { Device } from '../models/Device';
 import { DeviceRegistry } from './DeviceRegistry';
 import { ProjectData, ProjectSettings as Settings, ElectricalOverlay, Polygon, Point, Furniture, ProjectMetadata, ScaleData, LayoutModule, FloorPlan } from '../../editor/models/types';
+import { SymbolDefinition, SYMBOL_LIBRARY } from '../../editor/models/symbolLibrary';
 import { remoteDebug } from '../utils/logger';
 
 // ============================================================================
@@ -150,6 +151,14 @@ class DataService {
       const deviceRegistry = DeviceRegistry.getInstance();
       deviceRegistry.setDevices(this.cache.devices || []);
       remoteDebug('Loaded devices into registry', 'DataService', { deviceCount: this.cache.devices?.length || 0 });
+
+      // Merge custom symbols into runtime SYMBOL_LIBRARY
+      if (projectData.customSymbols && projectData.customSymbols.length > 0) {
+        projectData.customSymbols.forEach((symbol: SymbolDefinition) => {
+          SYMBOL_LIBRARY[symbol.id] = symbol;
+        });
+        remoteDebug('Merged custom symbols into SYMBOL_LIBRARY', 'DataService', { count: projectData.customSymbols.length });
+      }
 
       return this.cache;
     } catch (error) {
@@ -319,6 +328,56 @@ class DataService {
     if (!this.cache) await this.loadProject();
     this.cache!.settings = settings;
     await this.saveProject(this.cache!);
+  }
+
+  /**
+   * Add a custom symbol preset to the project
+   * @param customSymbol The custom symbol definition to add
+   */
+  async addCustomSymbol(customSymbol: SymbolDefinition): Promise<void> {
+    if (!this.cache) await this.loadProject();
+
+    // Initialize customSymbols array if it doesn't exist
+    if (!this.cache!.customSymbols) {
+      this.cache!.customSymbols = [];
+    }
+
+    // Check for duplicate IDs
+    const existingIndex = this.cache!.customSymbols.findIndex(s => s.id === customSymbol.id);
+    if (existingIndex >= 0) {
+      // Update existing preset
+      this.cache!.customSymbols[existingIndex] = customSymbol;
+      remoteDebug(`Updated custom symbol preset: ${customSymbol.id}`, 'DataService');
+    } else {
+      // Add new preset
+      this.cache!.customSymbols.push(customSymbol);
+      remoteDebug(`Added custom symbol preset: ${customSymbol.id}`, 'DataService');
+    }
+
+    await this.saveProject(this.cache!);
+  }
+
+  /**
+   * Get all custom symbol presets
+   * @returns Array of custom symbols
+   */
+  async getCustomSymbols(): Promise<SymbolDefinition[]> {
+    if (!this.cache) await this.loadProject();
+    return this.cache!.customSymbols || [];
+  }
+
+  /**
+   * Remove a custom symbol preset
+   * @param symbolId ID of the symbol to remove
+   */
+  async removeCustomSymbol(symbolId: string): Promise<void> {
+    if (!this.cache) await this.loadProject();
+
+    if (this.cache!.customSymbols) {
+      this.cache!.customSymbols = this.cache!.customSymbols.filter(s => s.id !== symbolId);
+      await this.saveProject(this.cache!);
+      remoteDebug(`Removed custom symbol preset: ${symbolId}`, 'DataService');
+    }
   }
 
   /**

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { SymbolDefinition } from './symbolLibrary';
 
 export type LayerType = 'image' | 'vector' | 'annotation';
 
@@ -49,6 +50,7 @@ export interface Polygon {
 export interface Room extends Polygon {
     name: string;
     roomType: RoomType;
+    ceilingHeight?: number; // Height in meters
 }
 
 export interface Mask extends Polygon { }
@@ -174,6 +176,28 @@ export interface ProjectSettings {
     [key: string]: unknown;
 }
 
+export interface CustomSymbol {
+    id: string;
+    name: string;
+    baseType: string;
+    category: string;
+    attributes: {
+        productId?: string;
+        installationHeight?: number;
+        busAssignment?: string;
+        cableType?: string;
+        lumens?: number;
+        beamAngle?: number;
+        range?: number;
+        driver?: string;
+        mount?: string;
+        cct?: string;
+        tilt?: number;
+        [key: string]: any;
+    };
+    createdAt: string;
+}
+
 export interface ProjectData {
     version: string;
     timestamp: string;
@@ -184,4 +208,5 @@ export interface ProjectData {
     cables: any[];
     lcps: any[];
     settings: ProjectSettings;
+    customSymbols?: SymbolDefinition[];
 }

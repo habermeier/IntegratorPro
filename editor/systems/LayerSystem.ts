@@ -3,6 +3,7 @@ import { Layer, LayerConfig, Transform, VectorLayerContent, Polygon, PlacedSymbo
 import { SYMBOL_LIBRARY } from '../models/symbolLibrary';
 import { calculatePolygonArea } from '../../utils/spatialUtils';
 import { remoteLog } from '../../src/utils/logger';
+import { calculateCoverage, getEffectiveHeight, coverageToPixels } from '../../src/utils/lightingUtils';
 
 export class LayerSystem {
     private layers: Map<string, Layer> = new Map();
@@ -814,35 +815,60 @@ export class LayerSystem {
         const COVERAGE_NAME = 'coverage-circle';
         let circle = group.getObjectByName(COVERAGE_NAME) as THREE.Line;
 
-        // Calculate radius
-        let radius = 0;
         const metadata = symbolData.metadata || {};
         const beamAngle = (metadata as any).beamAngle;
         const range = (metadata as any).range;
-        const height = symbolData.installationHeight || 2.4;
+        const tilt = (metadata as any).tilt || 0;
+
+        // Get effective height (from room if available)
+        let roomCeilingHeight: number | undefined;
+        if (symbolData.room) {
+            const roomLayer = this.getLayer('room');
+            if (roomLayer && roomLayer.type === 'vector') {
+                const content = roomLayer.content as VectorLayerContent;
+                const room = (content.rooms || []).find(r => r.id === symbolData.room);
+                if (room && room.ceilingHeight) {
+                    roomCeilingHeight = room.ceilingHeight;
+                }
+            }
+        }
+
+        const height = getEffectiveHeight(
+            roomCeilingHeight,
+            symbolData.installationHeight || 0,
+            2.74 // Default 9ft ceiling
+        );
+
+        let radiusX = 0;
+        let radiusY = 0;
+        let offsetX = 0;
 
         if (beamAngle && height) {
-            // Light coverage: radius = tan(beamAngle/2) * (height - 0.8)
-            const rad = (beamAngle * Math.PI) / 180;
-            radius = Math.tan(rad / 2) * (height - 0.8);
-            // Convert meters to world units
+            // Lighting coverage with physics
+            const coverage = calculateCoverage(height, beamAngle, tilt);
             const pixelsPerMeter = (this.scene.userData.editor as any)?.pixelsMeter || 1;
-            radius *= pixelsPerMeter;
+
+            radiusX = coverageToPixels(coverage.radiusX, pixelsPerMeter);
+            radiusY = coverageToPixels(coverage.radiusY, pixelsPerMeter);
+            offsetX = coverageToPixels(coverage.offsetX, pixelsPerMeter);
         } else if (range) {
-            // WiFi/RF coverage: radius = range (in meters)
+            // WiFi/RF coverage: circular pattern, no tilt
             const pixelsPerMeter = (this.scene.userData.editor as any)?.pixelsMeter || 1;
-            radius = range * pixelsPerMeter;
+            radiusX = range * pixelsPerMeter;
+            radiusY = range * pixelsPerMeter;
+            offsetX = 0;
         }
 
-        // Apply inverse symbol scale to radius so the circle world-size is correct
-        // since the circle is a child of the symbol group which is scaled.
+        // Apply inverse symbol scale so the circle world-size is correct
         // CRITICAL: Default scale to 1 (see docs/SCALE-BUG-POSTMORTEM.md)
         const scale = symbolData.scale ?? 1;
-        if (radius > 0 && scale > 0) {
-            radius /= scale;
+        if (scale > 0) {
+            radiusX /= scale;
+            radiusY /= scale;
+            offsetX /= scale;
         }
 
-        if (radius <= 0) {
+        if (radiusX <= 0 || radiusY <= 0) {
             if (circle) {
                 circle.visible = false;
             }
@@ -850,7 +876,13 @@ export class LayerSystem {
         }
 
         if (!circle) {
-            const curve = new THREE.EllipseCurve(0, 0, radius, radius, 0, 2 * Math.PI, false, 0);
+            // Create ellipse with offset center
+            const curve = new THREE.EllipseCurve(
+                offsetX, 0,        // Center (x, y) - offset in X direction for tilt
+                radiusX, radiusY,  // radiusX, radiusY
+                0, 2 * Math.PI,    // Start angle, end angle
+                false, 0           // Clockwise, rotation
+            );
             const points = curve.getPoints(64);
             const geometry = new THREE.BufferGeometry().setFromPoints(points);
             const material = new THREE.LineDashedMaterial({
@@ -864,18 +896,27 @@ export class LayerSystem {
             circle.computeLineDistances(); // Required for dashed lines
             circle.name = COVERAGE_NAME;
             circle.position.z = -0.1; // Slightly behind the symbol
-            circle.userData = { radius };
+            circle.userData = { radiusX, radiusY, offsetX };
             group.add(circle);
         } else {
-            // Update existing circle if radius changed
-            const oldRadius = (circle.userData as any)?.radius;
-            if (Math.abs(oldRadius - radius) > 0.01) {
-                const curve = new THREE.EllipseCurve(0, 0, radius, radius, 0, 2 * Math.PI, false, 0);
+            // Update existing circle if parameters changed
+            const oldData = circle.userData as any;
+            const changed = Math.abs(oldData.radiusX - radiusX) > 0.01 ||
+                          Math.abs(oldData.radiusY - radiusY) > 0.01 ||
+                          Math.abs((oldData.offsetX || 0) - offsetX) > 0.01;
+
+            if (changed) {
+                const curve = new THREE.EllipseCurve(
+                    offsetX, 0,
+                    radiusX, radiusY,
+                    0, 2 * Math.PI,
+                    false, 0
+                );
                 const points = curve.getPoints(64);
                 circle.geometry.dispose();
                 circle.geometry = new THREE.BufferGeometry().setFromPoints(points);
                 circle.computeLineDistances();
-                circle.userData.radius = radius;
+                circle.userData = { radiusX, radiusY, offsetX };
             }
             circle.visible = true;
         }
