@@ -9,9 +9,10 @@ interface EditorHUDProps {
     isEditMode: boolean;
     activeLayerName?: string;
     lastKey?: string;
+    isElectricalVisible?: boolean;
 }
 
-export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeTool, isEditMode, activeLayerName, lastKey }) => {
+export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeTool, isEditMode, activeLayerName, lastKey, isElectricalVisible }) => {
     const [isPrimary, setIsPrimary] = React.useState(() => dataService.isPrimary());
 
     React.useEffect(() => {
@@ -105,6 +106,23 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
                         <div className="flex flex-col">
                             <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest leading-none mb-1">Last Key</span>
                             <span className="text-sm text-white font-mono font-bold uppercase leading-none">{lastKey}</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Shimmy Guide Banner - Shows when Electrical Overlay is visible (AUTO-UI-SHIMMY-GUIDE-P17) */}
+            {isElectricalVisible && (
+                <div className="absolute top-[80px] left-1/2 transform -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
+                    <div className="bg-emerald-900/95 backdrop-blur-md border border-emerald-700 px-4 py-2 rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center space-x-3 border-l-4 border-l-emerald-500">
+                        <div className="text-emerald-400 text-lg">ℹ️</div>
+                        <div className="flex flex-col">
+                            <span className="text-[11px] text-white font-bold leading-tight">
+                                Press <kbd className="px-1.5 py-0.5 bg-slate-900/80 rounded text-emerald-400 font-mono">L</kbd> to toggle Alignment Mode
+                            </span>
+                            <span className="text-[9px] text-emerald-300/80 leading-tight mt-0.5">
+                                Use <span className="text-white font-semibold">Arrows</span> to move • <span className="text-white font-semibold">Ctrl+Arrows</span> to Rotate/Scale
+                            </span>
                         </div>
                     </div>
                 </div>
