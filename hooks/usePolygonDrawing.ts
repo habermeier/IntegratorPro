@@ -147,8 +147,13 @@ export const usePolygonDrawing = (config: PolygonDrawingConfig): PolygonDrawingS
         if (!enabled || !path) return;
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            // Ignore if typing in input
-            if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
+            // Ignore if typing in input/textarea/contentEditable
+            const target = e.target as HTMLElement;
+            if (target.tagName === 'INPUT' ||
+                target.tagName === 'TEXTAREA' ||
+                target.isContentEditable) {
+                return;
+            }
 
             if (e.code === 'Enter' && canClose()) {
                 e.preventDefault();

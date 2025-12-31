@@ -98,14 +98,46 @@ export function parseDistanceInput(input: string): number | null {
     return meters;
 }
 
+/**
+ * Converts meters to imperial components (feet and inches)
+ * Handles rounding overflow correctly: if inches round to 12, increments feet
+ * @param meters - Distance in meters
+ * @returns Object with feet, inches, and formatted display string
+ */
+export function metersToImperialComponents(meters: number): { feet: number; inches: number; display: string } {
+    const isNegative = meters < 0;
+    const absMeters = Math.abs(meters);
+    const totalInches = absMeters * 39.3701; // 1 meter = 39.3701 inches
+    
+    let feet = Math.floor(totalInches / 12);
+    let inches = Math.round(totalInches % 12);
+
+    // Handle overflow: if rounding gives us 12 inches, increment feet
+    if (inches >= 12) {
+        feet++;
+        inches = 0;
+    }
+
+    const sign = isNegative ? '-' : '';
+    return { 
+        feet: isNegative ? -feet : feet, 
+        inches: isNegative ? -inches : inches, 
+        display: `${sign}${feet}' ${inches}"` 
+    };
+}
+
 export function formatDistance(meters: number, unit: 'METRIC' | 'IMPERIAL'): string {
     if (isNaN(meters)) return "0";
 
     if (unit === 'METRIC') {
         return `${meters.toFixed(2)} m`;
     } else {
+        const isNegative = meters < 0;
+        const absMeters = Math.abs(meters);
+        const sign = isNegative ? '-' : '';
+
         // Convert to inches
-        let totalInches = meters / (CM_PER_INCH / 100);
+        let totalInches = absMeters / (CM_PER_INCH / 100);
 
         let feet = Math.floor(totalInches / 12);
         let inches = totalInches % 12;
@@ -137,9 +169,10 @@ export function formatDistance(meters: number, unit: 'METRIC' | 'IMPERIAL'): str
         }
 
         if (feet === 0 && inches === 0 && fraction === "") return "0\"";
-        if (feet === 0) return `${inches}${fraction}"`;
-        if (inches === 0 && fraction === "") return `${feet}'`;
+        
+        if (feet === 0) return `${sign}${inches}${fraction}"`;
+        if (inches === 0 && fraction === "") return `${sign}${feet}'`;
 
-        return `${feet}' ${inches}${fraction}"`;
+        return `${sign}${feet}' ${inches}${fraction}"`;
     }
 }

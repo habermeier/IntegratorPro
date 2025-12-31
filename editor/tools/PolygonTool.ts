@@ -192,14 +192,53 @@ export class PolygonTool implements Tool {
     public onMouseDown(x: number, y: number, event: MouseEvent): void {
         if (event.button !== 0) return; // Left click only
 
-        // 1. Vertex Dragging: Hit test handles first (ALWAYS highest priority)
-        const handleHit = this.hitTestHandles(x, y);
-        if (handleHit) {
-            this.draggingHandle = handleHit;
+        const isRoom = this.type === 'draw-room';
+        const isLocked = isRoom && this.editor.isRoomLayoutLocked;
+
+        // 1. LOCKED MODE: Selection Only
+        if (isLocked) {
+            const isMulti = event.shiftKey || event.ctrlKey || event.metaKey;
+            const selectedIds = this.editor.selectionSystem.selectAt(x, y, isMulti);
+            if (selectedIds.length > 0) {
+                this.editor.emit('selection-changed', selectedIds);
+            }
             return;
         }
 
-        // 2. Alt-Selection: Exclusive selection mode (skip vertex placement)
+        // 2. UNLOCKED MODE: Drawing & Editing Priority
+
+        // A. Hit test handles for dragging existing points
+        const handleHit = this.hitTestHandles(x, y);
+        if (handleHit) {
+            this.draggingHandle = handleHit;
+            // Auto-select the polygon when clicking its vertex
+            this.editor.selectionSystem.select(handleHit.polygonId);
+            this.editor.emit('selection-changed', [handleHit.polygonId]);
+            return;
+        }
+        const worldPos = this.editor.cameraSystem.screenToWorld(x, y);
+        let targetPos = worldPos;
+        let activeSnap: SnapInfo | null = null;
+
+        // B. Snapping (Unless Ctrl pressed)
+        if (!event.ctrlKey) {
+            activeSnap = this.getClosestSnapPoint(worldPos.x, worldPos.y);
+            if (activeSnap) {
+                targetPos = activeSnap.pos;
+            }
+        }
+
+        // C. SELECTION FALLBACK (When NOT actively drawing and NOT snapping)
+        if (this.points.length === 0 && !activeSnap) {
+            const isMulti = event.shiftKey || event.ctrlKey || event.metaKey || event.altKey;
+            const selectedIds = this.editor.selectionSystem.selectAt(x, y, isMulti);
+            if (selectedIds.length > 0) {
+                this.editor.emit('selection-changed', selectedIds);
+                return;
+            }
+        }
+
+        // D. Alt-Selection fallback
         if (event.altKey) {
             const isMulti = event.shiftKey || event.ctrlKey || event.metaKey;
             const selectedIds = this.editor.selectionSystem.selectAt(x, y, isMulti);
@@ -209,71 +248,36 @@ export class PolygonTool implements Tool {
             return;
         }
 
-        const worldPos = this.editor.cameraSystem.screenToWorld(x, y);
-        let targetPos = worldPos;
-        let activeSnap: SnapInfo | null = null;
-
-        // 3. Snapping (Unless Ctrl pressed)
-        // Taking precedence over Selection as requested
-        if (!event.ctrlKey) {
-            activeSnap = this.getClosestSnapPoint(worldPos.x, worldPos.y);
-            if (activeSnap) {
-                targetPos = activeSnap.pos;
-            }
-        }
-
-        // Store first point snap for trace logic
+        // E. Store first point snap for trace logic
         if (this.points.length === 0) {
             this.startSnap = activeSnap;
         }
 
-        // 3. Auto-Trace completion logic
+        // F. Auto-Trace completion logic
         if (this.points.length > 0 && activeSnap && this.startSnap && activeSnap.polyId === this.startSnap.polyId) {
-            // Guard: Don't auto-trace if we just clicked the exact same start point (trivial loop of length 0)
-            if (activeSnap.index === this.startSnap.index && activeSnap.pos.x === this.startSnap.pos.x && activeSnap.pos.y === this.startSnap.pos.y) {
-                // Do nothing, just wait for more points. Or treat as regular point add.
-            } else {
-                // First, add the point we just clicked
+            if (!(activeSnap.index === this.startSnap.index && activeSnap.pos.x === this.startSnap.pos.x && activeSnap.pos.y === this.startSnap.pos.y)) {
                 this.points.push(targetPos);
-
-                // AUTO-TRACE: Calculate path from CURRENT (End) back to START
                 const tracePoints = this.calculateTracePoints(activeSnap, this.startSnap);
-
                 if (tracePoints.length > 0) {
                     this.points.push(...tracePoints);
                 }
-
                 this.finishPolygon();
                 return;
             }
         }
 
-        // 4. Manual Closing (First Point Snap)
-        // We do this manually here or rely on the snapPoint matching the first point?
-        // Let's do explicit check for index 0 of current polygon to trigger 'finish'
+        // G. Manual Closing (First Point Snap)
         if (this.points.length >= 3) {
             const firstPoint = this.points[0];
             const dx = targetPos.x - firstPoint.x;
             const dy = targetPos.y - firstPoint.y;
-            // If strictly equal (snapped) or close enough
-            if (Math.abs(dx) < 1 && Math.abs(dy) < 1) { // Floating point tol
+            if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
                 this.finishPolygon();
                 return;
             }
         }
 
-        // 5. Normal Selection / Add Vertex
-        // If we snapped to an edge, we intend to draw/connect, NOT select the polygon underneath.
-        // User: "This should take precedence over me selecting another polygon"
-        if (!activeSnap) {
-            const isMulti = event.shiftKey || event.ctrlKey || event.metaKey;
-            const selectedIds = this.editor.selectionSystem.selectAt(x, y, isMulti);
-            if (selectedIds.length > 0) {
-                this.editor.emit('selection-changed', selectedIds);
-                return; // Selected something -> Don't add vertex
-            }
-        }
-
+        // H. Add Vertex (Default behavior for Creative mode)
         this.points.push(targetPos);
         this.updatePreview();
     }
@@ -314,16 +318,21 @@ export class PolygonTool implements Tool {
         const worldPos = this.editor.cameraSystem.screenToWorld(x, y);
         let targetPos = worldPos;
 
+        const isLocked = this.type === 'draw-room' && this.editor.isRoomLayoutLocked;
+
         if (!event.ctrlKey) {
             this.currentSnap = this.getClosestSnapPoint(worldPos.x, worldPos.y);
             if (this.currentSnap) {
                 targetPos = this.currentSnap.pos;
-                el.style.cursor = 'crosshair'; // Visual feedback for snap
-            } else {
-                el.style.cursor = 'default';
             }
         } else {
             this.currentSnap = null;
+        }
+
+        // Only show crosshair if not locked AND actively drawing
+        if (!isLocked && this.points.length > 0) {
+            el.style.cursor = 'crosshair';
+        } else {
             el.style.cursor = 'default';
         }
 
@@ -382,35 +391,9 @@ export class PolygonTool implements Tool {
                 this.reset();
             } else {
                 // Delete selected polygons
-                this.deleteSelected();
+                this.editor.deleteSelection();
             }
         }
-    }
-
-    private deleteSelected(): void {
-        const selectedIds = this.editor.selectionSystem.getSelectedIds();
-        if (selectedIds.length === 0) return;
-
-        selectedIds.forEach(id => {
-            const layers = this.editor.layerSystem.getAllLayers();
-            for (const layer of layers) {
-                if (layer.type !== 'vector') continue;
-                const content = layer.content as VectorLayerContent;
-                const room = (content.rooms || []).find(r => r.id === id);
-                const mask = (content.masks || []).find(m => m.id === id);
-                const poly = room || mask;
-
-                if (poly) {
-                    const command = new DeletePolygonCommand(layer.id, poly, this.editor.layerSystem);
-                    this.editor.commandManager.execute(command);
-                    this.editor.selectionSystem.clearSelection();
-                    this.editor.emit('selection-changed', []);
-                    this.editor.emit('layers-changed', this.editor.layerSystem.getAllLayers());
-                    this.editor.setDirty();
-                    break;
-                }
-            }
-        });
     }
 
     private updatePreview(): void {
@@ -620,8 +603,7 @@ export class PolygonTool implements Tool {
     }
 
     private hitTestHandles(screenX: number, screenY: number): { polygonId: string, layerId: string, index: number, originalPoints: Vector2[] } | null {
-        const selectedIds = this.editor.selectionSystem.getSelectedIds();
-        if (selectedIds.length === 0) return null;
+        if (this.type === 'draw-room' && this.editor.isRoomLayoutLocked) return null;
 
         const camera = this.editor.cameraSystem.mainCamera;
         const renderer = (this.editor as any).renderer as THREE.WebGLRenderer;
@@ -632,29 +614,30 @@ export class PolygonTool implements Tool {
         let closest: any = null;
         let minDistance = Infinity;
 
-        selectedIds.forEach(id => {
-            const layers = this.editor.layerSystem.getAllLayers();
-            for (const layer of layers) {
-                if (layer.type !== 'vector') continue;
-                const content = layer.content as VectorLayerContent;
-                const poly = (content.rooms || []).find(r => r.id === id) || (content.masks || []).find(m => m.id === id);
+        // Check ALL polygons in the current layer (not just selected ones)
+        const layers = this.editor.layerSystem.getAllLayers();
+        const targetLayerId = this.type === 'draw-room' ? 'room' : 'mask';
 
-                if (poly) {
-                    poly.points.forEach((p, index) => {
-                        const vec = new THREE.Vector3(p.x, p.y, 10);
-                        vec.project(camera);
-                        const px = (vec.x * 0.5 + 0.5) * width;
-                        const py = (-(vec.y * 0.5) + 0.5) * height;
-                        const dist = Math.sqrt(Math.pow(px - screenX, 2) + Math.pow(py - screenY, 2));
+        for (const layer of layers) {
+            if (layer.type !== 'vector' || layer.id !== targetLayerId) continue;
+            const content = layer.content as VectorLayerContent;
+            const polys = [...(content.rooms || []), ...(content.masks || [])];
 
-                        if (dist < threshold && dist < minDistance) {
-                            minDistance = dist;
-                            closest = { polygonId: poly.id, layerId: layer.id, index, originalPoints: [...poly.points.map(pt => ({ ...pt }))] };
-                        }
-                    });
-                }
-            }
-        });
+            polys.forEach(poly => {
+                poly.points.forEach((p, index) => {
+                    const vec = new THREE.Vector3(p.x, p.y, 10);
+                    vec.project(camera);
+                    const px = (vec.x * 0.5 + 0.5) * width;
+                    const py = (-(vec.y * 0.5) + 0.5) * height;
+                    const dist = Math.sqrt(Math.pow(px - screenX, 2) + Math.pow(py - screenY, 2));
+
+                    if (dist < threshold && dist < minDistance) {
+                        minDistance = dist;
+                        closest = { polygonId: poly.id, layerId: layer.id, index, originalPoints: [...poly.points.map(pt => ({ ...pt }))] };
+                    }
+                });
+            });
+        }
 
         return closest;
     }

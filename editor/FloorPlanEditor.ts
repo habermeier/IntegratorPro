@@ -23,9 +23,21 @@ import { PlaceFurnitureTool } from './tools/PlaceFurnitureTool';
 import { MeasureTool } from './tools/MeasureTool';
 import { DrawCableTool } from './tools/DrawCableTool';
 import { DeleteSymbolCommand } from './commands/DeleteSymbolCommand';
+import { DeletePolygonCommand } from './commands/DeletePolygonCommand';
 import { remoteDebug } from '../src/utils/logger';
 
 export class FloorPlanEditor {
+    /**
+     * Static helper to check if user is typing in an input field
+     * Use this in all keydown handlers to prevent event leakage
+     */
+    public static isUserTyping(e: KeyboardEvent): boolean {
+        const target = e.target as HTMLElement;
+        return target.tagName === 'INPUT' ||
+            target.tagName === 'TEXTAREA' ||
+            target.isContentEditable;
+    }
+
     public scene: THREE.Scene;
     private renderer: THREE.WebGLRenderer;
     private container: HTMLElement;
@@ -44,6 +56,7 @@ export class FloorPlanEditor {
     private needsRender: boolean = true;
     private pixelsPerMeter: number = 1;
     public fastZoomMultiplier: number = 3;
+    public isRoomLayoutLocked: boolean = true;
 
     // Panning State
     private isDragging: boolean = false;
@@ -99,6 +112,7 @@ export class FloorPlanEditor {
         this.scene.add(bgMesh);
 
         this.scene.userData.editor = this; // Link for systems polling
+        (window as any).editor = this; // Global access for CameraSystem cursor logic
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         this.renderer.setSize(width, height);
@@ -113,6 +127,7 @@ export class FloorPlanEditor {
         this.cameraSystem = new CameraSystem(width, height);
         this.toolSystem = new ToolSystem();
         this.commandManager = new CommandManager();
+        this.commandManager.setOnChanged(() => this.setDirty()); // Trigger repaint on undo/redo
         this.selectionSystem = new SelectionSystem(this.cameraSystem, this.layerSystem);
 
         // Register Tools
@@ -140,6 +155,7 @@ export class FloorPlanEditor {
             activeTool: this.toolSystem.getActiveToolType(),
             activeLayerId: this.activeLayerId,
             visibility,
+            isRoomLayoutLocked: this.isRoomLayoutLocked,
             preMaskVisibility: this.preMaskVisibility.size > 0
                 ? Object.fromEntries(this.preMaskVisibility)
                 : (JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}').preMaskVisibility || {}),
@@ -194,6 +210,10 @@ export class FloorPlanEditor {
                 this.cameraSystem.logViewportDebug('Default state (no saved camera)');
             }
 
+            if (state.isRoomLayoutLocked !== undefined) {
+                this.isRoomLayoutLocked = state.isRoomLayoutLocked;
+            }
+
             this.emit('layers-changed', this.layerSystem.getAllLayers());
             this.emit('edit-mode-changed', { isEditMode: this.isOverlayAlignmentMode, activeLayerId: this.activeLayerId });
         } catch (err) {
@@ -202,6 +222,9 @@ export class FloorPlanEditor {
     }
 
     private handleKeyDown = (e: KeyboardEvent) => {
+        // GLOBAL GUARD: Skip all editor shortcuts if user is typing in an input/textarea
+        if (FloorPlanEditor.isUserTyping(e)) return;
+
         // Spacebar Panning State (Skip repeats)
         if (e.code === 'Space') {
             if (e.repeat) return;
@@ -680,6 +703,13 @@ export class FloorPlanEditor {
         }
     }
 
+    public setRoomLayoutLocked(locked: boolean): void {
+        this.isRoomLayoutLocked = locked;
+        this.savePersistentState();
+        this.emit('room-layout-locked-changed', locked);
+        this.setDirty();
+    }
+
     public setLayerSolo(id: string): void {
         const layers = this.layerSystem.getAllLayers();
         const targetLayer = layers.find(l => l.id === id);
@@ -778,12 +808,8 @@ export class FloorPlanEditor {
             const command = new DeleteSymbolCommand(foundLayerId, foundDevice, this.layerSystem);
             this.commandManager.execute(command);
 
-            // Clear selection if it was deleted
-            if (this.selectionSystem.getSelectedIds().includes(id)) {
-                this.selectionSystem.clearSelection();
-                this.emit('selection-changed', []);
-            }
-
+            this.selectionSystem.clearSelection();
+            this.emit('selection-changed', []);
             this.emit('layers-changed', this.layerSystem.getAllLayers());
             this.setDirty();
         }
@@ -799,10 +825,38 @@ export class FloorPlanEditor {
             return; // Nothing selected
         }
 
-        // Delete each selected item
-        selectedIds.forEach(id => {
-            this.deleteDevice(id);
+        // Create a copy because we'll be clearing selection as we go
+        const idsToDelete = [...selectedIds];
+
+        idsToDelete.forEach(id => {
+            // Priority 1: Check for Rooms/Masks (Polygons)
+            const layers = this.layerSystem.getAllLayers();
+            let polyFound = false;
+            for (const layer of layers) {
+                if (layer.type !== 'vector') continue;
+                const content = layer.content as VectorLayerContent;
+                const poly = (content.rooms || []).find(r => r.id === id)
+                    || (content.masks || []).find(m => m.id === id);
+
+                if (poly) {
+                    const command = new DeletePolygonCommand(layer.id, poly, this.layerSystem);
+                    this.commandManager.execute(command);
+                    polyFound = true;
+                    break;
+                }
+            }
+
+            // Priority 2: Check for Symbols/Furniture
+            if (!polyFound) {
+                this.deleteDevice(id);
+            }
         });
+
+        // Final cleanup of UI state
+        this.selectionSystem.clearSelection();
+        this.emit('selection-changed', []);
+        this.emit('layers-changed', this.layerSystem.getAllLayers());
+        this.setDirty();
     }
 
     public cycleDevices(direction: 'next' | 'prev'): void {

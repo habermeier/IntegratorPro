@@ -4,6 +4,7 @@ export class CommandManager {
     private undoStack: Command[] = [];
     private redoStack: Command[] = [];
     private maxStackSize: number = 50;
+    private onChanged?: () => void;
 
     public execute(command: Command): void {
         console.log(`CommandManager: Executing ${command.type} - ${command.description}`);
@@ -22,6 +23,9 @@ export class CommandManager {
             console.log(`CommandManager: Undoing ${command.type}`);
             command.undo();
             this.redoStack.push(command);
+            if (this.onChanged) {
+                this.onChanged();
+            }
         }
     }
 
@@ -35,7 +39,14 @@ export class CommandManager {
                 command.execute();
             }
             this.undoStack.push(command);
+            if (this.onChanged) {
+                this.onChanged();
+            }
         }
+    }
+
+    public setOnChanged(callback: () => void): void {
+        this.onChanged = callback;
     }
 
     public canUndo(): boolean {

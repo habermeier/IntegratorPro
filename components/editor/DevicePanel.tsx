@@ -7,7 +7,8 @@ import { PlaceSymbolTool } from '../../editor/tools/PlaceSymbolTool';
 import { useDevices } from '../../src/hooks/useDevices';
 import { VectorLayerContent, Vector2, ToolType } from '../../editor/models/types';
 import { isPointInPolygon, findRoomAt, throttle, calculateRoomArea } from '../../utils/spatialUtils';
-import { Search, Target, Box, Database, MapPin, Trash2, ChevronLeft, ChevronRight, Save } from 'lucide-react';
+import { metersToImperialComponents } from '../../utils/measurementUtils';
+import { Search, Target, Box, Database, MapPin, Trash2, ChevronLeft, ChevronRight, Save, Lock, Unlock } from 'lucide-react';
 import { dataService } from '../../src/services/DataService';
 import catalog from '../../catalog.json';
 
@@ -55,6 +56,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
     // Room selection state
     const [selectedRoom, setSelectedRoom] = React.useState<any>(null);
     const [roomFormData, setRoomFormData] = React.useState<Partial<any>>({});
+    const [isRoomLayoutLocked, setIsRoomLayoutLocked] = React.useState(editor?.isRoomLayoutLocked ?? true);
 
     // Get all devices from registry
     const { devices, getDevice, updateDevice } = useDevices();
@@ -64,13 +66,6 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
     const isDrawingMode = activeTool === 'draw-room' || activeTool === 'draw-mask' || activeTool === 'draw-cable' || activeTool === 'place-symbol' || activeTool === 'place-furniture';
 
     // Unit conversion helpers
-    const metersToFeetInches = (meters: number): { feet: number; inches: number; display: string } => {
-        const totalInches = meters * 39.3701; // 1 meter = 39.3701 inches
-        const feet = Math.floor(totalInches / 12);
-        const inches = Math.round(totalInches % 12);
-        return { feet, inches, display: `${feet}' ${inches}"` };
-    };
-
     const feetInchesToMeters = (feet: number, inches: number): number => {
         const totalInches = feet * 12 + inches;
         return totalInches / 39.3701;
@@ -249,6 +244,15 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
         return () => window.removeEventListener('storage-units-changed', handleUnitsChanged);
     }, []);
 
+    // Sync room layout lock state
+    React.useEffect(() => {
+        if (!editor) return;
+        const handleLockChanged = (locked: boolean) => setIsRoomLayoutLocked(locked);
+        editor.on('room-layout-locked-changed', handleLockChanged);
+        setIsRoomLayoutLocked(editor.isRoomLayoutLocked);
+        return () => editor.off('room-layout-locked-changed', handleLockChanged);
+    }, [editor]);
+
     // Switch to 'placed' tab when in select mode or when something is selected
     React.useEffect(() => {
         if (activeTool === 'select' || editingDevice || selectedRoom) {
@@ -278,8 +282,8 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
 
     // Initial buffer sync
     React.useEffect(() => {
-        setHInput(unitPreference === 'IMPERIAL' ? metersToFeetInches(defaultHeight).display : defaultHeight.toFixed(2));
-        setOInput(unitPreference === 'IMPERIAL' ? metersToFeetInches(heightOffset).display : heightOffset.toFixed(2));
+        setHInput(unitPreference === 'IMPERIAL' ? metersToImperialComponents(defaultHeight).display : defaultHeight.toFixed(2));
+        setOInput(unitPreference === 'IMPERIAL' ? metersToImperialComponents(heightOffset).display : heightOffset.toFixed(2));
     }, [unitPreference]);
 
     // Subscribe to selection-changed event for device editing and room editing
@@ -320,7 +324,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                             name: room.name,
                             roomType: room.roomType,
                             ceilingHeight: unitPreference === 'IMPERIAL'
-                                ? metersToFeetInches(room.ceilingHeight || defaultCeilingHeight).display
+                                ? metersToImperialComponents(room.ceilingHeight || defaultCeilingHeight).display
                                 : (room.ceilingHeight || defaultCeilingHeight).toFixed(2)
                         });
                         return;
@@ -478,8 +482,13 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
     };
 
     // Handle field blur (validation + persistence)
-    const handleFieldBlur = (field: string, value: any) => {
-        if (!editingDevice) return;
+    // RACE CONDITION FIX: Accept deviceId as explicit argument to prevent stale state issues
+    const handleFieldBlur = (deviceId: string, field: string, value: any) => {
+        if (!editor) return;
+
+        // Get device by ID (not from state) to avoid race conditions
+        const device = getDevice(deviceId);
+        if (!device) return;
 
         // Validate field
         const error = validateField(field, value);
@@ -493,7 +502,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
             const metadataKey = field.split('.')[1];
             updateObj = {
                 metadata: {
-                    ...editingDevice.metadata,
+                    ...device.metadata,
                     [metadataKey]: (field === 'metadata.range') ? (parseHeightInput(value) || 0) : value
                 }
             };
@@ -504,23 +513,21 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
         }
 
         // Update DeviceRegistry
-        const success = updateDevice(editingDevice.id, updateObj);
+        const success = updateDevice(deviceId, updateObj);
 
         if (success) {
             // Reformat input if it was a numeric/unit field
             if (field === 'installationHeight' || field === 'metadata.range') {
                 const numeric = parseHeightInput(value) || 0;
-                const reformatted = unitPreference === 'IMPERIAL' ? metersToFeetInches(numeric).display : numeric.toFixed(2);
+                const reformatted = unitPreference === 'IMPERIAL' ? metersToImperialComponents(numeric).display : numeric.toFixed(2);
                 handleFieldChange(field, reformatted);
             }
 
             // Sync to layer symbol
-            syncDeviceToSymbol(editingDevice.id);
+            syncDeviceToSymbol(deviceId);
 
             // Trigger save
-            if (editor) {
-                editor.emit('layers-changed', editor.layerSystem.getAllLayers());
-            }
+            editor.emit('layers-changed', editor.layerSystem.getAllLayers());
         }
     };
 
@@ -529,14 +536,22 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
         setRoomFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    const handleRoomFieldBlur = (field: string, value: any) => {
-        if (!selectedRoom || !editor) return;
+    // Enter-to-save helper: triggers blur on Enter key
+    const handleEnterToSave = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        if (e.key === 'Enter') {
+            (e.target as HTMLElement).blur();
+        }
+    };
+
+    // RACE CONDITION FIX: Accept roomId as explicit argument to prevent stale state issues
+    const handleRoomFieldBlur = (roomId: string, field: string, value: any) => {
+        if (!editor) return;
 
         const roomLayer = editor.layerSystem.getLayer('room');
         if (!roomLayer || roomLayer.type !== 'vector') return;
 
         const content = roomLayer.content as VectorLayerContent;
-        const roomIndex = (content.rooms || []).findIndex(r => r.id === selectedRoom.id);
+        const roomIndex = (content.rooms || []).findIndex(r => r.id === roomId);
 
         if (roomIndex !== -1 && content.rooms) {
             // Parse numeric fields if necessary
@@ -544,15 +559,22 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
             if (field === 'ceilingHeight') {
                 finalValue = parseHeightInput(value) || defaultCeilingHeight;
                 // Reformat the form field to clean it up
-                const reformatted = unitPreference === 'IMPERIAL' ? metersToFeetInches(finalValue).display : finalValue.toFixed(2);
+                const reformatted = unitPreference === 'IMPERIAL' ? metersToImperialComponents(finalValue).display : finalValue.toFixed(2);
                 handleRoomFieldChange(field, reformatted);
             }
 
             // Update room in layer
-            content.rooms[roomIndex] = {
+            const updatedRoom = {
                 ...content.rooms[roomIndex],
                 [field]: finalValue
             };
+            content.rooms[roomIndex] = updatedRoom;
+
+            // Update selectedRoom state if this is still the selected room
+            // This ensures the UI reflects the updated value immediately and prevents stale data
+            if (selectedRoom && selectedRoom.id === roomId) {
+                setSelectedRoom(updatedRoom);
+            }
 
             editor.layerSystem.markDirty('room');
             editor.emit('layers-changed', editor.layerSystem.getAllLayers());
@@ -780,8 +802,9 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                     if (meters !== null) setHeightOffset(meters);
                                                 }}
                                                 onBlur={() => {
-                                                    setOInput(unitPreference === 'IMPERIAL' ? metersToFeetInches(heightOffset).display : heightOffset.toFixed(2));
+                                                    setOInput(unitPreference === 'IMPERIAL' ? metersToImperialComponents(heightOffset).display : heightOffset.toFixed(2));
                                                 }}
+                                                onKeyDown={handleEnterToSave}
                                                 className="w-full bg-transparent text-[9px] text-slate-300 font-mono py-1 focus:outline-none"
                                                 placeholder={unitPreference === 'IMPERIAL' ? "-6\"" : "-0.15"}
                                             />
@@ -790,10 +813,10 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                             <span className="text-[7px] text-slate-500 mr-1 font-bold">HEIGHT</span>
                                             <input
                                                 type="text"
-                                                value={unitPreference === 'IMPERIAL' ? metersToFeetInches(getComputedHeight()).display : getComputedHeight().toFixed(2)}
+                                                value={unitPreference === 'IMPERIAL' ? metersToImperialComponents(getComputedHeight()).display : getComputedHeight().toFixed(2)}
                                                 readOnly
                                                 className="w-full bg-transparent text-[9px] text-blue-400 font-mono py-1 focus:outline-none"
-                                                title={`Ceiling: ${unitPreference === 'IMPERIAL' ? metersToFeetInches(getCurrentRoomCeilingHeight()).display : getCurrentRoomCeilingHeight().toFixed(2)}`}
+                                                title={`Ceiling: ${unitPreference === 'IMPERIAL' ? metersToImperialComponents(getCurrentRoomCeilingHeight()).display : getCurrentRoomCeilingHeight().toFixed(2)}`}
                                             />
                                         </div>
                                     </>
@@ -809,8 +832,9 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                 if (meters !== null) setDefaultHeight(meters);
                                             }}
                                             onBlur={() => {
-                                                setHInput(unitPreference === 'IMPERIAL' ? metersToFeetInches(defaultHeight).display : defaultHeight.toFixed(2));
+                                                setHInput(unitPreference === 'IMPERIAL' ? metersToImperialComponents(defaultHeight).display : defaultHeight.toFixed(2));
                                             }}
+                                            onKeyDown={handleEnterToSave}
                                             className="w-full bg-transparent text-[9px] text-slate-300 font-mono py-1 focus:outline-none"
                                             placeholder={unitPreference === 'IMPERIAL' ? "8' 0\"" : "2.4 m"}
                                         />
@@ -898,7 +922,35 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
             {/* Main Content Area */}
             <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
                 {isRoomMode ? (
-                    <>
+                    <div className="space-y-3 flex flex-col h-full">
+                        {/* Layout Lock Toggle - Always visible in Room Mode (R) */}
+                        {activeTool === 'draw-room' && (
+                            <div className="p-2 border border-slate-800 rounded-lg bg-slate-900/50 flex flex-col gap-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Layout Protection</span>
+                                    <div className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase transition-colors ${isRoomLayoutLocked ? 'bg-amber-900/40 text-amber-500' : 'bg-blue-900/40 text-blue-500'}`}>
+                                        {isRoomLayoutLocked ? 'Locked' : 'Creative'}
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => editor?.setRoomLayoutLocked(!isRoomLayoutLocked)}
+                                    className={`w-full py-2 flex items-center justify-center gap-2 rounded border transition-all ${isRoomLayoutLocked
+                                        ? 'bg-amber-600/10 border-amber-600/30 text-amber-500 hover:bg-amber-600/20'
+                                        : 'bg-blue-600/10 border-blue-600/30 text-blue-500 hover:bg-blue-600/20'
+                                        }`}
+                                >
+                                    {isRoomLayoutLocked ? <Unlock size={14} /> : <Lock size={14} />}
+                                    <span className="text-[10px] font-bold uppercase tracking-wide">
+                                        {isRoomLayoutLocked ? 'Unlock Layout' : 'Lock Layout'}
+                                    </span>
+                                </button>
+                                <p className="text-[8px] text-slate-600 px-1 italic">
+                                    {isRoomLayoutLocked
+                                        ? "Drawing and vertex moving disabled. High speed selection mode active."
+                                        : "Fully editable mode. Caution: clicks in empty space start new rooms."}
+                                </p>
+                            </div>
+                        )}
                         {selectedRoom ? (
                             // Room Properties Form - shown when single room selected
                             <div className="p-1 space-y-3">
@@ -938,7 +990,8 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                             type="text"
                                             value={roomFormData.ceilingHeight || ''}
                                             onChange={(e) => handleRoomFieldChange('ceilingHeight', e.target.value)}
-                                            onBlur={(e) => handleRoomFieldBlur('ceilingHeight', e.target.value)}
+                                            onBlur={(e) => handleRoomFieldBlur(selectedRoom.id, 'ceilingHeight', e.target.value)}
+                                            onKeyDown={handleEnterToSave}
                                             className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-green-500 focus:outline-none"
                                         />
                                         {unitPreference === 'METRIC' && (
@@ -1004,9 +1057,13 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                 <div className="bg-green-950/20 rounded border border-green-900/30 p-3 space-y-2">
                                     <h4 className="text-[8px] text-green-500 uppercase font-bold tracking-wider">How to Draw</h4>
                                     <ul className="text-[8px] text-slate-400 space-y-1 list-disc list-inside">
-                                        <li>Click to place corner points</li>
-                                        <li>Double-click/Enter to close</li>
-                                        <li>Press Escape to cancel</li>
+                                        {!isRoomLayoutLocked && (
+                                            <>
+                                                <li>Click to place corner points</li>
+                                                <li>Double-click/Enter to close</li>
+                                                <li>Press Escape to cancel</li>
+                                            </>
+                                        )}
                                         <li>Select rooms to edit specs</li>
                                     </ul>
                                 </div>
@@ -1046,7 +1103,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                         <div className="text-[7px] text-slate-600 font-mono">
                                                             {room.ceilingHeight
                                                                 ? (unitPreference === 'IMPERIAL'
-                                                                    ? metersToFeetInches(room.ceilingHeight).display
+                                                                    ? metersToImperialComponents(room.ceilingHeight).display
                                                                     : `${room.ceilingHeight.toFixed(2)}m`)
                                                                 : '—'}
                                                         </div>
@@ -1058,7 +1115,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                 </div>
                             </div>
                         )}
-                    </>
+                    </div>
                 ) : isMaskMode ? (
                     <div className="space-y-3 flex flex-col h-full p-3">
                         <div className="flex items-center justify-between pb-2 border-b border-slate-800">
@@ -1144,7 +1201,8 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                             type="text"
                                             value={formData.name || ''}
                                             onChange={(e) => handleFieldChange('name', e.target.value)}
-                                            onBlur={(e) => handleFieldBlur('name', e.target.value)}
+                                            onBlur={(e) => handleFieldBlur(editingDevice.id, 'name', e.target.value)}
+                                            onKeyDown={handleEnterToSave}
                                             className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
                                         />
                                     </div>
@@ -1155,7 +1213,8 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                             type="text"
                                             value={formData.productId || ''}
                                             onChange={(e) => handleFieldChange('productId', e.target.value)}
-                                            onBlur={(e) => handleFieldBlur('productId', e.target.value)}
+                                            onBlur={(e) => handleFieldBlur(editingDevice.id, 'productId', e.target.value)}
+                                            onKeyDown={handleEnterToSave}
                                             className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
                                         />
                                     </div>
@@ -1169,7 +1228,8 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                 type="text"
                                                 value={formData.installationHeight || ''}
                                                 onChange={(e) => handleFieldChange('installationHeight', e.target.value)}
-                                                onBlur={(e) => handleFieldBlur('installationHeight', e.target.value)}
+                                                onBlur={(e) => handleFieldBlur(editingDevice.id, 'installationHeight', e.target.value)}
+                                                onKeyDown={handleEnterToSave}
                                                 className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
                                             />
                                         </div>
@@ -1180,7 +1240,8 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                 type="text"
                                                 value={formData.busAssignment || ''}
                                                 onChange={(e) => handleFieldChange('busAssignment', e.target.value)}
-                                                onBlur={(e) => handleFieldBlur('busAssignment', e.target.value)}
+                                                onBlur={(e) => handleFieldBlur(editingDevice.id, 'busAssignment', e.target.value)}
+                                                onKeyDown={handleEnterToSave}
                                                 className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
                                             />
                                         </div>
@@ -1196,7 +1257,8 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                         type="number"
                                                         value={formData.metadata?.lumens || 0}
                                                         onChange={(e) => handleFieldChange('metadata.lumens', parseInt(e.target.value) || 0)}
-                                                        onBlur={(e) => handleFieldBlur('metadata.lumens', parseInt(e.target.value) || 0)}
+                                                        onBlur={(e) => handleFieldBlur(editingDevice.id, 'metadata.lumens', parseInt(e.target.value) || 0)}
+                                                        onKeyDown={handleEnterToSave}
                                                         className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
                                                     />
                                                 </div>
@@ -1204,8 +1266,10 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                     <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Beam Angle</label>
                                                     <select
                                                         value={formData.metadata?.beamAngle || 60}
-                                                        onChange={(e) => handleFieldChange('metadata.beamAngle', parseInt(e.target.value))}
-                                                        onBlur={(e) => handleFieldBlur('metadata.beamAngle', parseInt(e.target.value))}
+                                                        onChange={(e) => {
+                                                            handleFieldChange('metadata.beamAngle', parseInt(e.target.value));
+                                                            handleFieldBlur(editingDevice.id, 'metadata.beamAngle', parseInt(e.target.value));
+                                                        }}
                                                         className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
                                                     >
                                                         <option value="15">15°</option>
@@ -1233,7 +1297,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                         step="1"
                                                         value={formData.metadata?.tilt || 0}
                                                         onChange={(e) => handleFieldChange('metadata.tilt', parseInt(e.target.value))}
-                                                        onMouseUp={(e) => handleFieldBlur('metadata.tilt', parseInt((e.target as HTMLInputElement).value))}
+                                                        onMouseUp={(e) => handleFieldBlur(editingDevice.id, 'metadata.tilt', parseInt((e.target as HTMLInputElement).value))}
                                                         className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
                                                     />
                                                 </div>
@@ -1251,7 +1315,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                         step="1"
                                                         value={formData.rotation || 0}
                                                         onChange={(e) => handleFieldChange('rotation', parseInt(e.target.value))}
-                                                        onMouseUp={(e) => handleFieldBlur('rotation', parseInt((e.target as HTMLInputElement).value))}
+                                                        onMouseUp={(e) => handleFieldBlur(editingDevice.id, 'rotation', parseInt((e.target as HTMLInputElement).value))}
                                                         className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
                                                     />
                                                 </div>
@@ -1271,12 +1335,8 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                                     const lumensMap: Record<string, number> = { L5: 500, L15: 1500 };
                                                                     handleFieldChange('metadata.lumensCode', code);
                                                                     handleFieldChange('metadata.lumens', lumensMap[code] || 1500);
-                                                                }}
-                                                                onBlur={(e) => {
-                                                                    const code = e.target.value;
-                                                                    const lumensMap: Record<string, number> = { L5: 500, L15: 1500 };
-                                                                    handleFieldBlur('metadata.lumensCode', code);
-                                                                    handleFieldBlur('metadata.lumens', lumensMap[code] || 1500);
+                                                                    handleFieldBlur(editingDevice.id, 'metadata.lumensCode', code);
+                                                                    handleFieldBlur(editingDevice.id, 'metadata.lumens', lumensMap[code] || 1500);
                                                                 }}
                                                                 className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
                                                             >
@@ -1294,12 +1354,8 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                                     const beamMap: Record<string, number> = { N: 20, M: 30, W: 50 };
                                                                     handleFieldChange('metadata.beamCode', code);
                                                                     handleFieldChange('metadata.beamAngle', beamMap[code] || 30);
-                                                                }}
-                                                                onBlur={(e) => {
-                                                                    const code = e.target.value;
-                                                                    const beamMap: Record<string, number> = { N: 20, M: 30, W: 50 };
-                                                                    handleFieldBlur('metadata.beamCode', code);
-                                                                    handleFieldBlur('metadata.beamAngle', beamMap[code] || 30);
+                                                                    handleFieldBlur(editingDevice.id, 'metadata.beamCode', code);
+                                                                    handleFieldBlur(editingDevice.id, 'metadata.beamAngle', beamMap[code] || 30);
                                                                 }}
                                                                 className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
                                                             >
@@ -1316,7 +1372,8 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                             type="text"
                                                             value={formData.metadata?.symbolCode || `${formData.metadata?.lumensCode || 'L15'}-${formData.metadata?.beamCode || 'M'}`}
                                                             onChange={(e) => handleFieldChange('metadata.symbolCode', e.target.value)}
-                                                            onBlur={(e) => handleFieldBlur('metadata.symbolCode', e.target.value)}
+                                                            onBlur={(e) => handleFieldBlur(editingDevice.id, 'metadata.symbolCode', e.target.value)}
+                                                            onKeyDown={handleEnterToSave}
                                                             placeholder="e.g., L15-M"
                                                             className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
                                                         />
@@ -1326,8 +1383,10 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                         <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Driver</label>
                                                         <select
                                                             value={formData.metadata?.driver || 'LD2'}
-                                                            onChange={(e) => handleFieldChange('metadata.driver', e.target.value)}
-                                                            onBlur={(e) => handleFieldBlur('metadata.driver', e.target.value)}
+                                                            onChange={(e) => {
+                                                                handleFieldChange('metadata.driver', e.target.value);
+                                                                handleFieldBlur(editingDevice.id, 'metadata.driver', e.target.value);
+                                                            }}
                                                             className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
                                                         >
                                                             <option value="LD2">LD2</option>
@@ -1339,8 +1398,10 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                         <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Mount</label>
                                                         <select
                                                             value={formData.metadata?.mount || 'Trimless Mud-in'}
-                                                            onChange={(e) => handleFieldChange('metadata.mount', e.target.value)}
-                                                            onBlur={(e) => handleFieldBlur('metadata.mount', e.target.value)}
+                                                            onChange={(e) => {
+                                                                handleFieldChange('metadata.mount', e.target.value);
+                                                                handleFieldBlur(editingDevice.id, 'metadata.mount', e.target.value);
+                                                            }}
                                                             className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
                                                         >
                                                             <option value="Trimless Mud-in">Trimless Mud-in</option>
@@ -1352,8 +1413,10 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                         <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">CCT</label>
                                                         <select
                                                             value={formData.metadata?.cct || 'Tunable'}
-                                                            onChange={(e) => handleFieldChange('metadata.cct', e.target.value)}
-                                                            onBlur={(e) => handleFieldBlur('metadata.cct', e.target.value)}
+                                                            onChange={(e) => {
+                                                                handleFieldChange('metadata.cct', e.target.value);
+                                                                handleFieldBlur(editingDevice.id, 'metadata.cct', e.target.value);
+                                                            }}
                                                             className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
                                                         >
                                                             <option value="Tunable">Tunable</option>
@@ -1374,7 +1437,8 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                 type="text"
                                                 value={formData.metadata?.range || ''}
                                                 onChange={(e) => handleFieldChange('metadata.range', e.target.value)}
-                                                onBlur={(e) => handleFieldBlur('metadata.range', e.target.value)}
+                                                onBlur={(e) => handleFieldBlur(editingDevice.id, 'metadata.range', e.target.value)}
+                                                onKeyDown={handleEnterToSave}
                                                 className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
                                             />
                                         </div>

@@ -129,55 +129,8 @@ export class SelectTool implements Tool {
             this.editor.layerSystem.markDirty('mask');
             this.editor.setDirty();
         } else if (key === 'Delete' || key === 'Backspace') {
-            this.deleteSelected();
+            this.editor.deleteSelection();
         }
-    }
-
-    private deleteSelected(): void {
-        const selectedIds = this.editor.selectionSystem.getSelectedIds();
-        if (selectedIds.length === 0) return;
-
-        selectedIds.forEach(id => {
-            // Find which layer this belongs to
-            const layers = this.editor.layerSystem.getAllLayers();
-            for (const layer of layers) {
-                if (layer.type !== 'vector') continue;
-                const content = layer.content as VectorLayerContent;
-
-                // 1. Check for Rooms/Masks
-                const room = (content.rooms || []).find(r => r.id === id);
-                const mask = (content.masks || []).find(m => m.id === id);
-                const poly = room || mask;
-
-                if (poly) {
-                    const command = new DeletePolygonCommand(layer.id, poly, this.editor.layerSystem);
-                    this.editor.commandManager.execute(command);
-                    this.editor.selectionSystem.clearSelection();
-                    this.editor.emit('selection-changed', []);
-                    this.editor.emit('layers-changed', this.editor.layerSystem.getAllLayers());
-                    this.updateHandles();
-                    this.editor.setDirty();
-                    break;
-                }
-
-                // 2. Check for Symbols/Furniture
-                const symbol = (content.symbols || []).find(s => s.id === id);
-                const furniture = (content.furniture || []).find(f => f.id === id);
-                const target = symbol || furniture;
-
-                if (target) {
-                    const { DeleteSymbolCommand } = require('../commands/DeleteSymbolCommand');
-                    const command = new DeleteSymbolCommand(layer.id, target, this.editor.layerSystem);
-                    this.editor.commandManager.execute(command);
-                    this.editor.selectionSystem.clearSelection();
-                    this.editor.emit('selection-changed', []);
-                    this.editor.emit('layers-changed', this.editor.layerSystem.getAllLayers());
-                    this.updateHandles();
-                    this.editor.setDirty();
-                    break;
-                }
-            }
-        });
     }
 
     private hitTestHandles(screenX: number, screenY: number): { polygonId: string, layerId: string, index: number, originalPoints: Vector2[] } | null {

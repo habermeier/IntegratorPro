@@ -102,9 +102,22 @@ export class CameraSystem {
         this.updateZoomCamera();
     }
 
-    public updateZoomCursor(screenX: number, screenY: number): void {
-        this.lastMousePos = { x: screenX, y: screenY };
-        this.updateZoomCamera();
+    public updateZoomCursor(screenX: number, screenY: number, forceHidden: boolean = false): void {
+        this.zoomCursorPosition = { x: screenX, y: screenY };
+
+        // DOM Cursor Control (Red Reticle)
+        const editor = (window as any).editor as any; // Late binding fallback or pass from FloorPlanEditor
+        const activeTool = editor?.toolSystem?.getActiveToolType();
+        const isDrawingTool = activeTool === 'draw-room' || activeTool === 'draw-mask' || activeTool === 'scale-calibrate' || activeTool === 'measure' || activeTool === 'draw-cable' || activeTool === 'place-symbol' || activeTool === 'place-furniture';
+
+        // Hide if locked OR not a drawing tool
+        const isLocked = editor?.isRoomLayoutLocked;
+        const shouldShow = isDrawingTool && !isLocked && !forceHidden;
+
+        if (this.zoomCursorRef && this.zoomCursorRef.current) {
+            this.zoomCursorRef.current.style.display = (screenX > 0 && shouldShow) ? 'block' : 'none';
+            this.zoomCursorRef.current.style.transform = `translate3d(${screenX - 62.5}px, ${screenY - 62.5}px, 0)`;
+        }
     }
 
     private updateZoomCamera(): void {

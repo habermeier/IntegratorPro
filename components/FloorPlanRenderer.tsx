@@ -233,8 +233,8 @@ export const FloorPlanRenderer: React.FC = () => {
                     />
                 )}
 
-                {/* 📱 Device Selection Panel (Left) */}
-                <DevicePanel editor={editor} activeTool={activeTool} />
+                {/* 📱 Device Selection Panel (Left) - Only render when editor is initialized */}
+                {editor && <DevicePanel editor={editor} activeTool={activeTool} />}
 
                 <div className={`flex-1 relative overflow-hidden flex flex-col ${isEditMode ? 'ring-[8px] ring-red-600/50 ring-inset' : ''}`}>
                     <ThreeCanvas
@@ -257,26 +257,28 @@ export const FloorPlanRenderer: React.FC = () => {
                     <ScaleRuler editor={editor} />
                 </div>
 
-                {/* 📑 Right Sidebar Area */}
-                <div className="flex flex-col relative border-l border-slate-800">
-                    {activeTool === 'place-furniture' ? (
-                        <FurnitureSidebar
-                            editor={editor}
-                            layers={layers}
-                            isEditMode={isEditMode}
-                        />
-                    ) : (
-                        <LayersSidebar
-                            editor={editor}
-                            layers={layers}
-                            activeLayerId={activeLayerId}
-                            isEditMode={isEditMode}
-                            selectedIds={selectedIds}
-                            setSelectedIds={setSelectedIds}
-                            activeTool={activeTool}
-                        />
-                    )}
-                </div>
+                {/* 📑 Right Sidebar Area - Only render when editor is initialized */}
+                {editor && (
+                    <div className="flex flex-col relative border-l border-slate-800">
+                        {activeTool === 'place-furniture' ? (
+                            <FurnitureSidebar
+                                editor={editor}
+                                layers={layers}
+                                isEditMode={isEditMode}
+                            />
+                        ) : (
+                            <LayersSidebar
+                                editor={editor}
+                                layers={layers}
+                                activeLayerId={activeLayerId}
+                                isEditMode={isEditMode}
+                                selectedIds={selectedIds}
+                                setSelectedIds={setSelectedIds}
+                                activeTool={activeTool}
+                            />
+                        )}
+                    </div>
+                )}
             </div>
 
             {calibrationData && (
