@@ -467,9 +467,10 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
         }
     };
 
-    // Handle field change (local state update for immediate feedback)
+    // Handle field change (local state update + IMMEDIATE PERSISTENCE)
+    // PROACTIVE PERSISTENCE: Save immediately on change (not on blur)
     const handleFieldChange = (field: string, value: any) => {
-        // Update local form state
+        // Update local form state for immediate UI feedback
         if (field.startsWith('metadata.')) {
             const metadataKey = field.split('.')[1];
             setFormData(prev => ({
@@ -479,24 +480,15 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
         } else {
             setFormData(prev => ({ ...prev, [field]: value }));
         }
-    };
 
-    // Handle field blur (validation + persistence)
-    // RACE CONDITION FIX: Accept deviceId as explicit argument to prevent stale state issues
-    const handleFieldBlur = (deviceId: string, field: string, value: any) => {
-        if (!editor) return;
+        // IMMEDIATE PERSISTENCE: Update DeviceRegistry and layer system
+        if (!editor || !editingDevice) return;
 
-        // Get device by ID (not from state) to avoid race conditions
+        const deviceId = editingDevice.id;
         const device = getDevice(deviceId);
         if (!device) return;
 
-        // Validate field
-        const error = validateField(field, value);
-        if (error) {
-            console.error(`Validation error for ${field}:`, error);
-            return;
-        }
-
+        // Prepare update object
         let updateObj: any = {};
         if (field.startsWith('metadata.')) {
             const metadataKey = field.split('.')[1];
@@ -516,13 +508,6 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
         const success = updateDevice(deviceId, updateObj);
 
         if (success) {
-            // Reformat input if it was a numeric/unit field
-            if (field === 'installationHeight' || field === 'metadata.range') {
-                const numeric = parseHeightInput(value) || 0;
-                const reformatted = unitPreference === 'IMPERIAL' ? metersToImperialComponents(numeric).display : numeric.toFixed(2);
-                handleFieldChange(field, reformatted);
-            }
-
             // Sync to layer symbol
             syncDeviceToSymbol(deviceId);
 
@@ -531,36 +516,48 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
         }
     };
 
-    // Room property change handlers
-    const handleRoomFieldChange = (field: string, value: any) => {
-        setRoomFormData(prev => ({ ...prev, [field]: value }));
-    };
+    // Visual reformatting ONLY (persistence already handled in onChange)
+    const handleFieldBlur = (deviceId: string, field: string, value: any) => {
+        // Reformat numeric/unit fields to clean display (e.g., "8" -> "8' 0\"")
+        if (field === 'installationHeight' || field === 'metadata.range') {
+            const numeric = parseHeightInput(value) || 0;
+            const reformatted = unitPreference === 'IMPERIAL'
+                ? metersToImperialComponents(numeric).display
+                : numeric.toFixed(2);
 
-    // Enter-to-save helper: triggers blur on Enter key
-    const handleEnterToSave = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        if (e.key === 'Enter') {
-            (e.target as HTMLElement).blur();
+            // Update form display only (actual data already saved in onChange)
+            if (field.startsWith('metadata.')) {
+                const metadataKey = field.split('.')[1];
+                setFormData(prev => ({
+                    ...prev,
+                    metadata: { ...prev.metadata, [metadataKey]: reformatted }
+                }));
+            } else {
+                setFormData(prev => ({ ...prev, [field]: reformatted }));
+            }
         }
     };
 
-    // RACE CONDITION FIX: Accept roomId as explicit argument to prevent stale state issues
-    const handleRoomFieldBlur = (roomId: string, field: string, value: any) => {
-        if (!editor) return;
+    // Room property change handlers
+    // PROACTIVE PERSISTENCE: Save immediately on change (not on blur)
+    const handleRoomFieldChange = (field: string, value: any) => {
+        // Update local form state for immediate UI feedback
+        setRoomFormData(prev => ({ ...prev, [field]: value }));
+
+        // IMMEDIATE PERSISTENCE: Update layer system
+        if (!editor || !selectedRoom) return;
 
         const roomLayer = editor.layerSystem.getLayer('room');
         if (!roomLayer || roomLayer.type !== 'vector') return;
 
         const content = roomLayer.content as VectorLayerContent;
-        const roomIndex = (content.rooms || []).findIndex(r => r.id === roomId);
+        const roomIndex = (content.rooms || []).findIndex(r => r.id === selectedRoom.id);
 
         if (roomIndex !== -1 && content.rooms) {
             // Parse numeric fields if necessary
             let finalValue = value;
             if (field === 'ceilingHeight') {
                 finalValue = parseHeightInput(value) || defaultCeilingHeight;
-                // Reformat the form field to clean it up
-                const reformatted = unitPreference === 'IMPERIAL' ? metersToImperialComponents(finalValue).display : finalValue.toFixed(2);
-                handleRoomFieldChange(field, reformatted);
             }
 
             // Update room in layer
@@ -570,14 +567,33 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
             };
             content.rooms[roomIndex] = updatedRoom;
 
-            // Update selectedRoom state if this is still the selected room
-            // This ensures the UI reflects the updated value immediately and prevents stale data
-            if (selectedRoom && selectedRoom.id === roomId) {
-                setSelectedRoom(updatedRoom);
-            }
+            // Update selectedRoom state to keep it in sync
+            setSelectedRoom(updatedRoom);
 
+            // Mark dirty and trigger save
             editor.layerSystem.markDirty('room');
             editor.emit('layers-changed', editor.layerSystem.getAllLayers());
+        }
+    };
+
+    // Enter-to-save helper: triggers blur on Enter key
+    const handleEnterToSave = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        if (e.key === 'Enter') {
+            (e.target as HTMLElement).blur();
+        }
+    };
+
+    // Visual reformatting ONLY (persistence already handled in onChange)
+    const handleRoomFieldBlur = (roomId: string, field: string, value: any) => {
+        // Reformat numeric fields to clean display (e.g., "8" -> "8' 0\"")
+        if (field === 'ceilingHeight') {
+            const numeric = parseHeightInput(value) || defaultCeilingHeight;
+            const reformatted = unitPreference === 'IMPERIAL'
+                ? metersToImperialComponents(numeric).display
+                : numeric.toFixed(2);
+
+            // Update form display only (actual data already saved in onChange)
+            setRoomFormData(prev => ({ ...prev, [field]: reformatted }));
         }
     };
 
