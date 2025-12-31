@@ -9,6 +9,8 @@ interface SymbolIconProps {
     customShorthand?: string;
 }
 
+import { getSymbolShorthand } from '../../editor/models/symbolLibrary';
+
 /**
  * SVG-based symbol icon renderer for device palette
  * Universal simplified design: black square with crosshairs
@@ -24,24 +26,7 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
     const strokeWidth = size / 16; // Proportional stroke width
     const fontSize = size * 0.3; // Shorthand text size (slightly smaller)
 
-    // Symbol type to shorthand mapping
-    const getShorthand = (): string => {
-        const shorthandMap: Record<string, string> = {
-            'recessed-light': '',
-            'focus-light': 'ADJ',
-            'adjustable-light': 'ADJ',
-            'pendant-light': 'CHN',
-            'motion-sensor': 'MOT',
-            'wifi-ap': 'AP',
-            'security-camera': 'CAM',
-            'ceiling-fan': 'FAN',
-            'exterior-light': 'OSC',
-            'knx-switch': 'LV',
-            'standard-outlet': 'OUT',
-            'lcp-panel': 'LCP'
-        };
-        return shorthandMap[symbolType] || '';
-    };
+    // Symbol type to shorthand is now centralized in symbolLibrary.ts
 
     // Universal symbol design for ALL types
     const renderSymbol = () => {
@@ -52,6 +37,34 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
 
         return (
             <svg width={size} height={size} viewBox="0 0 32 32" style={{ overflow: 'visible' }}>
+                {/* White Halos (Backgrounds) for high contrast */}
+                {/* Square Halo */}
+                <rect
+                    x={center - squareHalf - 1}
+                    y={center - squareHalf - 1}
+                    width={squareSize + 2}
+                    height={squareSize + 2}
+                    fill="#FFF"
+                />
+
+                {/* Crosshair Halos (wider white lines) */}
+                <line
+                    x1={center - squareHalf - crosshairExt - 1}
+                    y1={center}
+                    x2={center + squareHalf + crosshairExt + 1}
+                    y2={center}
+                    stroke="#FFF"
+                    strokeWidth={strokeWidth + 2}
+                />
+                <line
+                    x1={center}
+                    y1={center - squareHalf - crosshairExt - 1}
+                    x2={center}
+                    y2={center + squareHalf + crosshairExt + 1}
+                    stroke="#FFF"
+                    strokeWidth={strokeWidth + 2}
+                />
+
                 {/* Filled black square */}
                 <rect
                     x={center - squareHalf}
@@ -81,34 +94,64 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
                     strokeWidth={strokeWidth}
                 />
 
-                {/* Shorthand text at bottom-right corner */}
+                {/* Shorthand text with white halo */}
                 {showShorthand && (
-                    <text
-                        x={center + squareHalf + 2}
-                        y={center + squareHalf + 2}
-                        textAnchor="start"
-                        dominantBaseline="hanging"
-                        fontSize={fontSize}
-                        fontWeight="bold"
-                        fill="#000"
-                    >
-                        {customShorthand || getShorthand()}
-                    </text>
+                    <>
+                        <text
+                            x={center + squareHalf + 2}
+                            y={center + squareHalf + 2}
+                            textAnchor="start"
+                            dominantBaseline="hanging"
+                            fontSize={fontSize}
+                            fontWeight="bold"
+                            fill="#FFF"
+                            stroke="#FFF"
+                            strokeWidth={2}
+                        >
+                            {customShorthand || getSymbolShorthand(symbolType)}
+                        </text>
+                        <text
+                            x={center + squareHalf + 2}
+                            y={center + squareHalf + 2}
+                            textAnchor="start"
+                            dominantBaseline="hanging"
+                            fontSize={fontSize}
+                            fontWeight="bold"
+                            fill="#000"
+                        >
+                            {customShorthand || getSymbolShorthand(symbolType)}
+                        </text>
+                    </>
                 )}
 
-                {/* Secondary label at bottom-left corner (RED) */}
+                {/* Secondary label at bottom-left corner (RED with white halo) */}
                 {secondaryLabel && (
-                    <text
-                        x={center - squareHalf - 2}
-                        y={center + squareHalf + 2}
-                        textAnchor="end"
-                        dominantBaseline="hanging"
-                        fontSize={fontSize}
-                        fontWeight="bold"
-                        fill="#FF0000"
-                    >
-                        {secondaryLabel}
-                    </text>
+                    <>
+                        <text
+                            x={center - squareHalf - 2}
+                            y={center + squareHalf + 2}
+                            textAnchor="end"
+                            dominantBaseline="hanging"
+                            fontSize={fontSize}
+                            fontWeight="bold"
+                            fill="#FFF"
+                            stroke="#FFF"
+                            strokeWidth={2}
+                        >
+                            {secondaryLabel}
+                        </text>
+                        <text
+                            x={center - squareHalf - 2}
+                            y={center + squareHalf + 2}
+                            textAnchor="end"
+                            dominantBaseline="hanging"
+                            fontSize={fontSize}
+                            fontWeight="bold"
+                            fill="#FF0000"
+                        >
+                            {secondaryLabel}
+                        </text>
+                    </>
                 )}
             </svg>
         );

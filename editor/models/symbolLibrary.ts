@@ -34,7 +34,7 @@ export const createUniversalMesh = (width?: number, height?: number): THREE.Grou
     const group = new THREE.Group();
     const halfWidth = w / 2;
     const halfHeight = h / 2;
-    const crosshairExt = Math.max(halfWidth, halfHeight) * 0.5; // Extends 50% beyond rectangle
+    const crosshairExt = Math.max(halfWidth, halfHeight); // Extends 100% beyond rectangle (matches sidebar)
 
     // Filled BLACK rectangle (Blueprint style)
     const geometry = new THREE.PlaneGeometry(w, h);
@@ -46,11 +46,25 @@ export const createUniversalMesh = (width?: number, height?: number): THREE.Grou
     square.name = 'fill';
     group.add(square);
 
-    // Blue Lines (0x0055FF) for Crosshairs and Border
-    const lineColor = 0x0055FF;
+    // 1. Black Lines (0x000000) for Crosshairs and Border (Unified with Sidebar)
+    const lineColor = 0x000000;
     const lineMaterial = new THREE.LineBasicMaterial({ color: lineColor, linewidth: 2 });
 
-    // 1. Border Outline (New)
+    // 2. White Background Outline (1px halo for contrast)
+    // We draw slightly larger than the square and slightly larger than crosshairs
+    const haloOffset = 0.5; // "1 pixel" roughly in world units
+    const outlinePoints = [
+        new THREE.Vector3(-halfWidth - haloOffset, -halfHeight - haloOffset, 0.05),
+        new THREE.Vector3(halfWidth + haloOffset, -halfHeight - haloOffset, 0.05),
+        new THREE.Vector3(halfWidth + haloOffset, halfHeight + haloOffset, 0.05),
+        new THREE.Vector3(-halfWidth - haloOffset, halfHeight + haloOffset, 0.05),
+        new THREE.Vector3(-halfWidth - haloOffset, -halfHeight - haloOffset, 0.05)
+    ];
+    const outlineGeo = new THREE.BufferGeometry().setFromPoints(outlinePoints);
+    const outlineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 3 });
+    group.add(new THREE.Line(outlineGeo, outlineMaterial));
+
+    // 3. Border Outline (Black)
     const borderPoints = [
         new THREE.Vector3(-halfWidth, -halfHeight, 0.1),
         new THREE.Vector3(halfWidth, -halfHeight, 0.1),
@@ -61,20 +75,30 @@ export const createUniversalMesh = (width?: number, height?: number): THREE.Grou
     const borderGeo = new THREE.BufferGeometry().setFromPoints(borderPoints);
     group.add(new THREE.Line(borderGeo, lineMaterial));
 
-    // 2. Horizontal crosshair
+    // 4. Horizontal crosshair (Black with white backing)
     const pointsH = [
         new THREE.Vector3(-halfWidth - crosshairExt, 0, 0.1),
         new THREE.Vector3(halfWidth + crosshairExt, 0, 0.1)
     ];
     const geoH = new THREE.BufferGeometry().setFromPoints(pointsH);
+
+    // White backing for crosshairs
+    const lineBackingMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 4 });
+    const lineHBacking = new THREE.Line(geoH.clone(), lineBackingMaterial);
+    lineHBacking.position.z = 0.05;
+    group.add(lineHBacking);
     group.add(new THREE.Line(geoH, lineMaterial));
 
-    // 3. Vertical crosshair
+    // 5. Vertical crosshair (Black with white backing)
     const pointsV = [
         new THREE.Vector3(0, -halfHeight - crosshairExt, 0.1),
         new THREE.Vector3(0, halfHeight + crosshairExt, 0.1)
     ];
     const geoV = new THREE.BufferGeometry().setFromPoints(pointsV);
+
+    const lineVBacking = new THREE.Line(geoV.clone(), lineBackingMaterial);
+    lineVBacking.position.z = 0.05;
+    group.add(lineVBacking);
     group.add(new THREE.Line(geoV, lineMaterial));
 
     return group;
@@ -203,4 +227,24 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         size: { width: 40, height: 60 },
         createMesh: createUniversalMesh
     }
+};
+
+// --- SHORTHAND MAPPING (Source of Truth for sidebar and floor plan) ---
+export const SHORTHAND_MAP: Record<string, string> = {
+    'recessed-light': '',
+    'focus-light': 'ADJ',
+    'adjustable-light': 'ADJ',
+    'pendant-light': 'CHN',
+    'motion-sensor': 'MOT',
+    'wifi-ap': 'AP',
+    'security-camera': 'CAM',
+    'ceiling-fan': 'FAN',
+    'exterior-light': 'OSC',
+    'knx-switch': 'LV',
+    'standard-outlet': 'OUT',
+    'lcp-panel': 'LCP'
+};
+
+export const getSymbolShorthand = (symbolType: string): string => {
+    return SHORTHAND_MAP[symbolType] || '';
 };

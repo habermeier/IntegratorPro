@@ -1,11 +1,11 @@
 {
   "version": "1.0",
-  "timestamp": "2025-12-31T05:14:02.977Z",
+  "timestamp": "2025-12-31T19:10:17.716Z",
   "metadata": {
     "name": "270 Boll Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2025-12-31T05:14:02.629Z"
+    "modified": "2025-12-31T19:10:14.308Z"
   },
   "floorPlan": {
     "scale": {
@@ -3878,11 +3878,11 @@
       }
     ],
     "electricalOverlay": {
-      "x": -174,
-      "y": 416,
-      "scale": 1.5800000000000005,
+      "x": -78,
+      "y": 356,
+      "scale": 1.6800000000000006,
       "rotation": 0.008726646259971646,
-      "opacity": 0.7,
+      "opacity": 0.39,
       "locked": true
     }
   },
@@ -4088,6 +4088,206 @@
         "cableType": "Cat6"
       },
       "createdAt": 1767158041125
+    },
+    {
+      "id": "lighting-1767208181854",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "generic-product",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": 310.323263065502,
+        "y": 825.5231057215399
+      },
+      "rotation": 0,
+      "roomId": "Family Room Open Area",
+      "layerId": "lighting",
+      "installationHeight": 2.5900000000000003,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1767208181854
+    },
+    {
+      "id": "lighting-1767208186624",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "generic-product",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": 310.323263065502,
+        "y": 659.2733647036932
+      },
+      "rotation": 0,
+      "roomId": "Family Room Open Area",
+      "layerId": "lighting",
+      "installationHeight": 2.5900000000000003,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1767208186624
+    },
+    {
+      "id": "lighting-1767208188935",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "generic-product",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": 310.323263065502,
+        "y": 488.90172928044535
+      },
+      "rotation": 0,
+      "roomId": "Family Room Open Area",
+      "layerId": "lighting",
+      "installationHeight": 2.5900000000000003,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1767208188935
+    },
+    {
+      "id": "lighting-1767208197054",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "generic-product",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": 668.9280763354029,
+        "y": 831.0189649287415
+      },
+      "rotation": 0,
+      "roomId": "Family Room Open Area",
+      "layerId": "lighting",
+      "installationHeight": 2.5900000000000003,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1767208197054
+    },
+    {
+      "id": "lighting-1767208202131",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "generic-product",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": 664.8061819300017,
+        "y": 493.0236236858465
+      },
+      "rotation": 0,
+      "roomId": "Family Room Open Area",
+      "layerId": "lighting",
+      "installationHeight": 2.5900000000000003,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1767208202131
+    },
+    {
+      "id": "lighting-1767208207901",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "generic-product",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": 1028.9068544071042,
+        "y": 840.6367185413442
+      },
+      "rotation": 0,
+      "roomId": "Family Room Open Area",
+      "layerId": "lighting",
+      "installationHeight": 2.5900000000000003,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1767208207901
+    },
+    {
+      "id": "lighting-1767208210313",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "generic-product",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": 1028.9068544071042,
+        "y": 671.6390479198967
+      },
+      "rotation": 0,
+      "roomId": "Family Room Open Area",
+      "layerId": "lighting",
+      "installationHeight": 2.5900000000000003,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1767208210313
+    },
+    {
+      "id": "lighting-1767208212798",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "generic-product",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": 1028.9068544071042,
+        "y": 499.8934476948484
+      },
+      "rotation": 0,
+      "roomId": "Family Room Open Area",
+      "layerId": "lighting",
+      "installationHeight": 2.5900000000000003,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1767208212798
     }
   ],
   "cables": [],

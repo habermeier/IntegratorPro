@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Layer, LayerConfig, Transform, VectorLayerContent, Polygon, PlacedSymbol, Furniture, Room } from '../models/types';
-import { SYMBOL_LIBRARY } from '../models/symbolLibrary';
+import { SYMBOL_LIBRARY, getSymbolShorthand } from '../models/symbolLibrary';
 import { calculatePolygonArea, calculateRoomArea } from '../../utils/spatialUtils';
 import { remoteLog } from '../../src/utils/logger';
 import { calculateCoverage, getEffectiveHeight, coverageToPixels } from '../../src/utils/lightingUtils';
@@ -547,49 +547,40 @@ export class LayerSystem {
                     };
 
                     // Add label if symbol has label or productId
-                    if (symbolData.label || symbolData.productId) {
-                        const labelText = symbolData.label || symbolData.productId || '';
+                    // BUT hide 'generic-product' labels when no shorthand exists
+                    const metadata = symbolData.metadata || {};
+                    const hasShorthand = !!(metadata as any).shorthand;
+                    const isGenericProduct = symbolData.productId === 'generic-product';
+
+                    // Priority: label > productId > metadata.productId
+                    let labelText = symbolData.label || symbolData.productId || (metadata as any).productId;
+                    // Show label for ALL products if we have a name (including generic)
+                    const willShowRegularLabel = !!labelText;
+
+                    if (willShowRegularLabel) {
+                        // Strip "custom-" prefix if it's an ID-based name
+                        if (labelText.startsWith('custom-')) {
+                            labelText = labelText.replace('custom-', '').toUpperCase();
+                        }
+
                         const labelSprite = this.createLabel(labelText, def.name);
                         labelSprite.name = 'label';
-                        // Offset to bottom-right of symbol (+10 units X, -10 units Y)
-                        labelSprite.position.set(10, -10, 0.5);
+                        // Move label slightly more to the right for visibility
+                        labelSprite.position.set(20, -20, 0.5);
                         group.add(labelSprite);
                     }
 
-                    // Add shorthand annotation if present in metadata
-                    const metadata = symbolData.metadata || {};
-                    if ((metadata as any).shorthand) {
-                        const shorthandText = (metadata as any).shorthand;
-                        const shorthandLabel = this.createShorthandLabel(shorthandText);
+                    // Add shorthand annotation if present in metadata or fallback to library
+                    const fallbackShorthand = getSymbolShorthand(symbolData.type);
+                    const effectiveShorthand = (metadata as any).shorthand || fallbackShorthand;
+
+                    if (effectiveShorthand) {
+                        const shorthandLabel = this.createShorthandLabel(effectiveShorthand);
                         shorthandLabel.name = 'shorthand-label';
                         // Position at bottom-right corner of symbol (further right if there's a label)
-                        const xOffset = (symbolData.label || symbolData.productId) ? 30 : 15;
+                        const xOffset = willShowRegularLabel ? 30 : 15;
                         shorthandLabel.position.set(xOffset, -15, 0.6);
                         group.add(shorthandLabel);
-                    }
-
-                    // Add height annotation (RED) if installation height differs from room default
-                    if (symbolData.installationHeight != null) {
-                        const roomLayer = this.getLayer('room');
-                        let roomCeilingHeight = 2.74; // Standard ceiling height in meters
-
-                        if (roomLayer && roomLayer.type === 'vector') {
-                            const roomContent = roomLayer.content as VectorLayerContent;
-                            const room = (roomContent.rooms || []).find(r => r.name === symbolData.room);
-                            if (room && room.ceilingHeight) {
-                                roomCeilingHeight = room.ceilingHeight;
-                            }
-                        }
-
-                        // Only show height annotation if it differs from room ceiling
-                        if (Math.abs(symbolData.installationHeight - roomCeilingHeight) > 0.01) {
-                            const heightText = `${symbolData.installationHeight.toFixed(2)}m`;
-                            const heightLabel = this.createHeightLabel(heightText);
-                            heightLabel.name = 'height-label';
-                            // Offset to bottom-left of symbol (-10 units X, -10 units Y)
-                            heightLabel.position.set(-10, -10, 0.5);
-                            group.add(heightLabel);
-                        }
                     }
 
                     remoteLog(`✅ Adding NEW symbol ${symbolData.id} to layer.container for layer ${layer.id} at position (${(symbolData.x ?? 0).toFixed(2)}, ${(symbolData.y ?? 0).toFixed(2)})`, 'debug', '🔍 DEEP-TRACE');
@@ -764,11 +755,11 @@ export class LayerSystem {
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
 
-        ctx.shadowColor = 'rgba(0,0,0,0.8)';
-        ctx.shadowBlur = 4;
+        ctx.shadowColor = 'rgba(255,255,255,1.0)';
+        ctx.shadowBlur = 6;
         ctx.lineWidth = 3;
-        ctx.strokeStyle = 'black';
-        ctx.fillStyle = 'white';
+        ctx.strokeStyle = 'white';
+        ctx.fillStyle = 'black';
 
         // Line 1: Name
         ctx.font = font;
@@ -802,56 +793,6 @@ export class LayerSystem {
         return sprite;
     }
 
-    private createHeightLabel(heightText: string): THREE.Sprite {
-        const canvas = document.createElement('canvas');
-        const fontSize = 20;
-        const font = `bold ${fontSize}px Inter, sans-serif`;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return new THREE.Sprite();
-
-        // Measure dimensions
-        ctx.font = font;
-        const textMetrics = ctx.measureText(heightText);
-        const textWidth = textMetrics.width;
-        const lineHeight = fontSize * 1.2;
-
-        // Resize Canvas
-        canvas.width = textWidth + 20; // Small padding
-        canvas.height = lineHeight + 10;
-
-        // Render Text in RED
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-
-        ctx.shadowColor = 'rgba(0,0,0,0.8)';
-        ctx.shadowBlur = 3;
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = 'black';
-        ctx.fillStyle = '#FF0000'; // RED
-
-        ctx.font = font;
-        ctx.strokeText(heightText, centerX, centerY);
-        ctx.fillText(heightText, centerX, centerY);
-
-        const texture = new THREE.CanvasTexture(canvas);
-        texture.minFilter = THREE.LinearFilter;
-
-        const material = new THREE.SpriteMaterial({ map: texture, depthTest: false });
-        const sprite = new THREE.Sprite(material);
-
-        const scale = 0.5;
-        const initialX = canvas.width * scale;
-        const initialY = canvas.height * scale;
-
-        sprite.scale.set(initialX, initialY, 1);
-        sprite.userData = { baseScale: { x: initialX, y: initialY } };
-
-        return sprite;
-    }
 
     private createShorthandLabel(shorthandText: string): THREE.Sprite {
         const canvas = document.createElement('canvas');
@@ -878,11 +819,11 @@ export class LayerSystem {
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
 
-        ctx.shadowColor = 'rgba(255,255,255,0.8)';
-        ctx.shadowBlur = 2;
-        ctx.lineWidth = 2;
+        ctx.shadowColor = 'rgba(255,255,255,1.0)';
+        ctx.shadowBlur = 6;
+        ctx.lineWidth = 3;
         ctx.strokeStyle = 'white';
-        ctx.fillStyle = '#1a1a1a'; // Dark gray/black
+        ctx.fillStyle = 'black';
 
         ctx.font = font;
         ctx.strokeText(shorthandText, centerX, centerY);
@@ -1010,30 +951,44 @@ export class LayerSystem {
         }
 
         if (!circle) {
-            // Create ellipse with offset center
+            // Create white backing line (solid)
             const curve = new THREE.EllipseCurve(
-                offsetX, 0,        // Center (x, y) - offset in X direction for tilt
-                radiusX, radiusY,  // radiusX, radiusY
-                0, 2 * Math.PI,    // Start angle, end angle
-                false, 0           // Clockwise, rotation
+                offsetX, 0,
+                radiusX, radiusY,
+                0, 2 * Math.PI,
+                false, 0
             );
             const points = curve.getPoints(64);
             const geometry = new THREE.BufferGeometry().setFromPoints(points);
+
+            // 1. White Backing (Solid, slightly wider)
+            const backingMaterial = new THREE.LineBasicMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.8,
+                linewidth: 2
+            });
+            const backing = new THREE.Line(geometry.clone(), backingMaterial);
+            backing.name = `${COVERAGE_NAME}-backing`;
+            backing.position.z = -0.11;
+            group.add(backing);
+
+            // 2. Dashed Foreground (Dark)
             const material = new THREE.LineDashedMaterial({
-                color: 0x333333,
+                color: 0x000000,
                 dashSize: 10,
                 gapSize: 5,
-                opacity: 0.3,
+                opacity: 0.6,
                 transparent: true
             });
             circle = new THREE.Line(geometry, material);
-            circle.computeLineDistances(); // Required for dashed lines
+            circle.computeLineDistances();
             circle.name = COVERAGE_NAME;
-            circle.position.z = -0.1; // Slightly behind the symbol
+            circle.position.z = -0.1;
             circle.userData = { radiusX, radiusY, offsetX };
             group.add(circle);
         } else {
-            // Update existing circle if parameters changed
+            // Update existing circle and backing if parameters changed
             const oldData = circle.userData as any;
             const changed = Math.abs(oldData.radiusX - radiusX) > 0.01 ||
                 Math.abs(oldData.radiusY - radiusY) > 0.01 ||
@@ -1047,12 +1002,23 @@ export class LayerSystem {
                     false, 0
                 );
                 const points = curve.getPoints(64);
+                const newGeo = new THREE.BufferGeometry().setFromPoints(points);
+
                 circle.geometry.dispose();
-                circle.geometry = new THREE.BufferGeometry().setFromPoints(points);
+                circle.geometry = newGeo;
                 circle.computeLineDistances();
+
+                const backing = group.getObjectByName(`${COVERAGE_NAME}-backing`) as THREE.Line;
+                if (backing) {
+                    backing.geometry.dispose();
+                    backing.geometry = newGeo.clone();
+                }
+
                 circle.userData = { radiusX, radiusY, offsetX };
             }
             circle.visible = true;
+            const backing = group.getObjectByName(`${COVERAGE_NAME}-backing`);
+            if (backing) backing.visible = true;
         }
     }
 
