@@ -1,11 +1,11 @@
 {
   "version": "1.0",
-  "timestamp": "2025-12-31T00:37:10.606Z",
+  "timestamp": "2025-12-31T02:15:13.018Z",
   "metadata": {
     "name": "270 Boll Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2025-12-31T00:37:10.288Z"
+    "modified": "2025-12-31T02:15:12.686Z"
   },
   "floorPlan": {
     "scale": {
@@ -3882,7 +3882,7 @@
       "y": 416,
       "scale": 1.5800000000000005,
       "rotation": 0.008726646259971646,
-      "opacity": 0.62,
+      "opacity": 0.7,
       "locked": true
     }
   },

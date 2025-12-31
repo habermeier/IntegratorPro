@@ -6,6 +6,7 @@ interface SymbolIconProps {
     size?: number;
     showShorthand?: boolean;
     secondaryLabel?: string;
+    customShorthand?: string;
 }
 
 /**
@@ -17,7 +18,8 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
     color,
     size = 32,
     showShorthand = true,
-    secondaryLabel
+    secondaryLabel,
+    customShorthand
 }) => {
     const strokeWidth = size / 16; // Proportional stroke width
     const fontSize = size * 0.3; // Shorthand text size (slightly smaller)
@@ -90,7 +92,7 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
                         fontWeight="bold"
                         fill="#000"
                     >
-                        {getShorthand()}
+                        {customShorthand || getShorthand()}
                     </text>
                 )}
 

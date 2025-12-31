@@ -47,6 +47,29 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
     // UI State
     const [activeTab, setActiveTab] = React.useState<'library' | 'placed'>('library');
     const [searchQuery, setSearchQuery] = React.useState('');
+    const [isAddingNew, setIsAddingNew] = React.useState<boolean>(false);
+
+    // HE Williams 2DS Spec Builder State
+    const [specLumens, setSpecLumens] = React.useState<string>('L15');
+    const [specColor, setSpecColor] = React.useState<string>('9TW');
+    const [specDriver, setSpecDriver] = React.useState<string>('LD2');
+    const [specDistribution, setSpecDistribution] = React.useState<string>('M');
+    const [specFlange, setSpecFlange] = React.useState<string>('OF');
+    const [specReflectorFinish, setSpecReflectorFinish] = React.useState<string>('WH');
+    const [specOptions, setSpecOptions] = React.useState<string>('NONE');
+    const [specControl, setSpecControl] = React.useState<string>('STD');
+    const [specVoltage, setSpecVoltage] = React.useState<string>('120V');
+    const [specTrimType, setSpecTrimType] = React.useState<string>('SQ');
+    const [specTrimOptions, setSpecTrimOptions] = React.useState<string>('NONE');
+    const [specShorthand, setSpecShorthand] = React.useState<string>('');
+    const [specPdfUrl, setSpecPdfUrl] = React.useState<string>('');
+    const [specShoppingLink, setSpecShoppingLink] = React.useState<string>('');
+
+    // Manual Spec State (for generic lights)
+    const [manualOrderingCode, setManualOrderingCode] = React.useState<string>('');
+    const [manualShorthand, setManualShorthand] = React.useState<string>('');
+    const [manualPdfUrl, setManualPdfUrl] = React.useState<string>('');
+    const [manualShoppingLink, setManualShoppingLink] = React.useState<string>('');
 
     // Selection-based editing state
     const [selectedDeviceIds, setSelectedDeviceIds] = React.useState<string[]>([]);
@@ -149,6 +172,56 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
             const roomName = findRoomAt(worldPos, rooms);
             setCurrentRoom(roomName === 'external' ? 'External' : roomName);
         }, 100), [editor]);
+
+    // Generate HE Williams 2DS Ordering String
+    const generateOrderingString = (): string => {
+        // Format: 2DS - L15/9TW - LD2 - OPTIONS - CONTROL - VOLTAGE - OF - WH - M - TRIM TYPE - TRIM OPTIONS
+        return `2DS - ${specLumens}/${specColor} - ${specDriver} - ${specOptions} - ${specControl} - ${specVoltage} - ${specFlange} - ${specReflectorFinish} - ${specDistribution} - ${specTrimType} - ${specTrimOptions}`;
+    };
+
+    // Delete Device Type with Safety Guard
+    const handleDeleteDeviceType = async () => {
+        if (!selectedSymbolType || !selectedSymbolType.startsWith('custom-')) {
+            alert('Please select a custom fixture type to delete.');
+            return;
+        }
+
+        // Safety Guard: Check if any devices are using this symbol type
+        const devicesUsingType = devices.filter(d => d.symbolType === selectedSymbolType);
+
+        if (devicesUsingType.length > 0) {
+            const symbolDef = SYMBOL_LIBRARY[selectedSymbolType];
+            const typeName = symbolDef?.name || selectedSymbolType;
+            alert(`Cannot delete device type "${typeName}": ${devicesUsingType.length} instance(s) exist on the floor plan.\n\nPlease remove all instances before deleting this type.`);
+            return;
+        }
+
+        // Confirmation Dialog
+        const symbolDef = SYMBOL_LIBRARY[selectedSymbolType];
+        const typeName = symbolDef?.name || selectedSymbolType;
+        const confirmed = window.confirm(`Are you sure you want to delete the custom fixture type "${typeName}"?\n\nThis action cannot be undone.`);
+
+        if (!confirmed) return;
+
+        try {
+            await dataService.removeCustomSymbol(selectedSymbolType);
+            alert(`Custom fixture type "${typeName}" deleted successfully.`);
+
+            // Clear selection
+            setSelectedSymbolType(null);
+
+            // Find first symbol in current category to auto-select
+            const firstSymbolInCategory = Object.keys(SYMBOL_LIBRARY).find(
+                symbolType => SYMBOL_LIBRARY[symbolType].category === selectedCategory
+            );
+            if (firstSymbolInCategory) {
+                handleSelectSymbol(firstSymbolInCategory);
+            }
+        } catch (error) {
+            console.error('Failed to delete custom fixture type:', error);
+            alert('Failed to delete custom fixture type. Please try again.');
+        }
+    };
 
     // Subscribe to cursor movement to detect room
     React.useEffect(() => {
@@ -719,84 +792,6 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                 <span className="text-[8px] text-blue-500 font-black px-1 rounded bg-blue-500/10">PLACE</span>
                             </div>
 
-                            {/* PRODUCT SPEC (White Background) */}
-                            <div className="bg-white rounded-md p-2 space-y-1.5 border border-slate-300">
-                                <div className="flex items-center justify-between mb-1">
-                                    <span className="text-[8px] text-slate-700 font-black uppercase tracking-wider">Product Spec</span>
-                                    <span className="text-[7px] text-slate-500 font-mono">Type</span>
-                                </div>
-
-                                {/* Product Selector */}
-                                <select
-                                    value={productId}
-                                    onChange={(e) => setProductId(e.target.value)}
-                                    className="w-full text-[9px] text-slate-900 font-mono px-1.5 py-1 bg-slate-50 rounded border border-slate-300 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
-                                >
-                                    <option value="">Select Product...</option>
-                                    {filteredCatalog.map(item => (
-                                        <option key={item.id} value={item.id}>
-                                            {item.name}
-                                        </option>
-                                    ))}
-                                </select>
-
-                                {/* Symbol Code (NEW) */}
-                                <div className="flex items-center bg-slate-50 rounded border border-slate-300 px-1.5">
-                                    <span className="text-[7px] text-slate-600 mr-1 font-bold">CODE</span>
-                                    <input
-                                        type="text"
-                                        value={selectedSymbolType || ''}
-                                        readOnly
-                                        className="w-full bg-transparent text-[9px] text-slate-700 font-mono py-1 focus:outline-none"
-                                        placeholder="Symbol Code"
-                                    />
-                                </div>
-
-                                {/* Mount Type */}
-                                <div className="flex items-center bg-slate-50 rounded border border-slate-300 px-1.5">
-                                    <span className="text-[7px] text-slate-600 mr-1 font-bold">MOUNT</span>
-                                    <select
-                                        value={mountType}
-                                        onChange={(e) => setMountType(e.target.value as 'Ceiling' | 'Wall')}
-                                        className="w-full bg-transparent text-[9px] text-slate-900 font-mono py-1 focus:outline-none [&>option]:text-black [&>option]:bg-white"
-                                    >
-                                        <option value="Ceiling">Ceiling</option>
-                                        <option value="Wall">Wall</option>
-                                    </select>
-                                </div>
-
-                                {/* Lumens, Beam, Range */}
-                                <div className="grid grid-cols-3 gap-1">
-                                    <div className="flex flex-col bg-slate-50 rounded border border-slate-300 px-1.5 py-0.5">
-                                        <span className="text-[7px] text-slate-600 font-bold uppercase">Lumens</span>
-                                        <input
-                                            type="number"
-                                            value={lumens}
-                                            onChange={(e) => setLumens(parseInt(e.target.value) || 0)}
-                                            className="w-full bg-transparent text-[9px] text-slate-900 font-mono focus:outline-none"
-                                        />
-                                    </div>
-                                    <div className="flex flex-col bg-slate-50 rounded border border-slate-300 px-1.5 py-0.5">
-                                        <span className="text-[7px] text-slate-600 font-bold uppercase">Beam</span>
-                                        <input
-                                            type="number"
-                                            value={beamAngle}
-                                            onChange={(e) => setBeamAngle(parseInt(e.target.value) || 0)}
-                                            className="w-full bg-transparent text-[9px] text-slate-900 font-mono focus:outline-none"
-                                        />
-                                    </div>
-                                    <div className="flex flex-col bg-slate-50 rounded border border-slate-300 px-1.5 py-0.5">
-                                        <span className="text-[7px] text-slate-600 font-bold uppercase">Range</span>
-                                        <input
-                                            type="number"
-                                            value={range}
-                                            onChange={(e) => setRange(parseInt(e.target.value) || 0)}
-                                            className="w-full bg-transparent text-[9px] text-slate-900 font-mono focus:outline-none"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
                             {/* PLACEMENT SETTINGS (Dark Background) */}
                             <div className="bg-slate-950 rounded-md p-2 space-y-1.5 border border-slate-800">
                                 <div className="flex items-center justify-between mb-1">
@@ -1173,6 +1168,396 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                 onSelectSymbol={handleSelectSymbol}
                             />
                         </div>
+
+                        {/* Delete Type Button (only for custom fixtures) */}
+                        {selectedSymbolType && selectedSymbolType.startsWith('custom-') && (
+                            <div className="px-1 pt-2">
+                                <button
+                                    onClick={handleDeleteDeviceType}
+                                    className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded bg-red-600 hover:bg-red-500 text-white border border-red-500 transition-all text-[9px] font-bold uppercase tracking-wider"
+                                >
+                                    <Trash2 size={12} />
+                                    <span>Delete Fixture Type</span>
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Add New Fixture Button */}
+                        <div className="px-1 pt-2">
+                            <button
+                                onClick={() => setIsAddingNew(true)}
+                                className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded bg-blue-600 hover:bg-blue-500 text-white border border-blue-500 transition-all text-[9px] font-bold uppercase tracking-wider"
+                            >
+                                <span className="text-[14px] leading-none">+</span>
+                                <span>Add New Fixture</span>
+                            </button>
+                        </div>
+
+                        {/* Add New Workflow: Filtered Product Selector and Spec Builder */}
+                        {isAddingNew && (
+                            <div className="p-2 space-y-2 bg-slate-900/50 rounded-md border border-slate-800 mt-2">
+                                {/* Header with Close Button */}
+                                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                                    <h3 className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Add New Fixture</h3>
+                                    <button
+                                        onClick={() => setIsAddingNew(false)}
+                                        className="text-[8px] px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors uppercase font-bold"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+
+                                {/* Filtered Product Selector */}
+                                <div>
+                                    <label className="text-[8px] text-slate-500 uppercase font-bold block mb-1">Select Base Product</label>
+                                    <select
+                                        value={productId}
+                                        onChange={(e) => setProductId(e.target.value)}
+                                        className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                    >
+                                        <option value="">Select Product...</option>
+                                        {catalog
+                                            .filter(p => p.type === selectedCategory.toUpperCase())
+                                            .map(item => (
+                                                <option key={item.id} value={item.id}>
+                                                    {item.name}
+                                                </option>
+                                            ))}
+                                    </select>
+                                </div>
+
+                                {/* Unified Fixture Specification Section */}
+                                {productId && (() => {
+                                    const product = catalog.find(p => p.id === productId);
+                                    const isLighting = product && product.type === 'LIGHTING';
+                                    const hasSpecBuilder = product?.hasSpecBuilder;
+
+                                    if (!isLighting) return null;
+
+                                    return (
+                                        <div className="bg-slate-950 rounded-md p-2 space-y-1.5 border border-slate-800">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <span className="text-[8px] text-slate-400 font-black uppercase tracking-wider">Fixture Specification</span>
+                                                <span className="text-[7px] text-slate-600 font-mono">{hasSpecBuilder ? 'Builder' : 'Manual'}</span>
+                                            </div>
+
+                                            {/* HE WILLIAMS 2DS SPEC BUILDER */}
+                                            {productId === 'light-fix-dali' && hasSpecBuilder ? (
+                                                <div className="space-y-1.5">
+                                                    {/* Ordering String Display */}
+                                                    <div className="bg-slate-900 rounded border border-slate-800 p-2">
+                                                        <span className="text-[7px] text-slate-500 font-bold uppercase block mb-1">Ordering Code</span>
+                                                        <div className="text-[9px] text-slate-300 font-mono break-all">
+                                                            {generateOrderingString()}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Lumens Selection */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Lumens</label>
+                                                        <select
+                                                            value={specLumens}
+                                                            onChange={(e) => setSpecLumens(e.target.value)}
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                        >
+                                                            <option value="L5">L5 - 500 Lumens</option>
+                                                            <option value="L7">L7 - 700 Lumens</option>
+                                                            <option value="L10">L10 - 1000 Lumens</option>
+                                                            <option value="L12">L12 - 1200 Lumens</option>
+                                                            <option value="L15">L15 - 1500 Lumens</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Color Temperature */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Color Temperature</label>
+                                                        <select
+                                                            value={specColor}
+                                                            onChange={(e) => setSpecColor(e.target.value)}
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                        >
+                                                            <option value="27">27 - 2700K</option>
+                                                            <option value="30">30 - 3000K</option>
+                                                            <option value="35">35 - 3500K</option>
+                                                            <option value="40">40 - 4000K</option>
+                                                            <option value="9TW">9TW - Tunable White</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Driver */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Driver</label>
+                                                        <select
+                                                            value={specDriver}
+                                                            onChange={(e) => setSpecDriver(e.target.value)}
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                        >
+                                                            <option value="LD2">LD2 - DALI-2</option>
+                                                            <option value="0-10V">0-10V - 0-10V Dimming</option>
+                                                            <option value="NON-DIM">NON-DIM - Non-Dimming</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Options */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Options</label>
+                                                        <select
+                                                            value={specOptions}
+                                                            onChange={(e) => setSpecOptions(e.target.value)}
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                        >
+                                                            <option value="NONE">NONE - No Options</option>
+                                                            <option value="EM">EM - Emergency</option>
+                                                            <option value="OFDM">OFDM - Occupancy/Daylight</option>
+                                                            <option value="HO">HO - High Output</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Control */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Control</label>
+                                                        <select
+                                                            value={specControl}
+                                                            onChange={(e) => setSpecControl(e.target.value)}
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                        >
+                                                            <option value="STD">STD - Standard</option>
+                                                            <option value="DIM">DIM - Dimming</option>
+                                                            <option value="TW">TW - Tunable White</option>
+                                                            <option value="RGB">RGB - Color Changing</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Voltage */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Voltage</label>
+                                                        <select
+                                                            value={specVoltage}
+                                                            onChange={(e) => setSpecVoltage(e.target.value)}
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                        >
+                                                            <option value="120V">120V - 120 Volts</option>
+                                                            <option value="277V">277V - 277 Volts</option>
+                                                            <option value="UNV">UNV - Universal (120-277V)</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Flange */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Flange Type</label>
+                                                        <select
+                                                            value={specFlange}
+                                                            onChange={(e) => setSpecFlange(e.target.value)}
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                        >
+                                                            <option value="OF">OF - Open Flange</option>
+                                                            <option value="SF">SF - Square Flange</option>
+                                                            <option value="RF">RF - Round Flange</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Reflector Finish */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Reflector Finish</label>
+                                                        <select
+                                                            value={specReflectorFinish}
+                                                            onChange={(e) => setSpecReflectorFinish(e.target.value)}
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                        >
+                                                            <option value="WH">WH - White</option>
+                                                            <option value="BK">BK - Black</option>
+                                                            <option value="SV">SV - Silver</option>
+                                                            <option value="GD">GD - Gold</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Distribution */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Light Distribution</label>
+                                                        <select
+                                                            value={specDistribution}
+                                                            onChange={(e) => setSpecDistribution(e.target.value)}
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                        >
+                                                            <option value="N">N - Narrow</option>
+                                                            <option value="M">M - Medium</option>
+                                                            <option value="W">W - Wide</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Trim Type */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Trim Type</label>
+                                                        <select
+                                                            value={specTrimType}
+                                                            onChange={(e) => setSpecTrimType(e.target.value)}
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                        >
+                                                            <option value="SQ">SQ - Square</option>
+                                                            <option value="RD">RD - Round</option>
+                                                            <option value="TL">TL - Trimless</option>
+                                                            <option value="FL">FL - Flanged</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Trim Options */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Trim Options</label>
+                                                        <select
+                                                            value={specTrimOptions}
+                                                            onChange={(e) => setSpecTrimOptions(e.target.value)}
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                        >
+                                                            <option value="NONE">NONE - No Options</option>
+                                                            <option value="LENS">LENS - Lens</option>
+                                                            <option value="LOUVER">LOUVER - Louver</option>
+                                                            <option value="BAFFLE">BAFFLE - Baffle</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Shorthand (5-7 letters) */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Shorthand (5-7 letters)</label>
+                                                        <input
+                                                            type="text"
+                                                            value={specShorthand}
+                                                            onChange={(e) => setSpecShorthand(e.target.value.toUpperCase().slice(0, 7))}
+                                                            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+                                                            placeholder="e.g., 2DS-L15"
+                                                            maxLength={7}
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none uppercase"
+                                                        />
+                                                    </div>
+
+                                                    {/* Spec PDF URL */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Spec PDF URL</label>
+                                                        <input
+                                                            type="url"
+                                                            value={specPdfUrl}
+                                                            onChange={(e) => setSpecPdfUrl(e.target.value)}
+                                                            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+                                                            placeholder="https://..."
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
+                                                        />
+                                                    </div>
+
+                                                    {/* Shopping Link */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Shopping Link</label>
+                                                        <input
+                                                            type="url"
+                                                            value={specShoppingLink}
+                                                            onChange={(e) => setSpecShoppingLink(e.target.value)}
+                                                            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+                                                            placeholder="https://..."
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                /* MANUAL SPEC (For Generic Lights) */
+                                                <div className="space-y-1.5">
+                                                    {/* Ordering Code */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Ordering Code</label>
+                                                        <input
+                                                            type="text"
+                                                            value={manualOrderingCode}
+                                                            onChange={(e) => setManualOrderingCode(e.target.value)}
+                                                            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+                                                            placeholder="e.g., ABC-123-XYZ"
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
+                                                        />
+                                                    </div>
+
+                                                    {/* Shorthand (5-7 letters) */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Shorthand (5-7 letters)</label>
+                                                        <input
+                                                            type="text"
+                                                            value={manualShorthand}
+                                                            onChange={(e) => setManualShorthand(e.target.value.toUpperCase().slice(0, 7))}
+                                                            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+                                                            placeholder="e.g., DL-STD"
+                                                            maxLength={7}
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none uppercase"
+                                                        />
+                                                    </div>
+
+                                                    {/* Spec PDF URL */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Spec PDF URL</label>
+                                                        <input
+                                                            type="url"
+                                                            value={manualPdfUrl}
+                                                            onChange={(e) => setManualPdfUrl(e.target.value)}
+                                                            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+                                                            placeholder="https://..."
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
+                                                        />
+                                                    </div>
+
+                                                    {/* Shopping Link */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Shopping Link</label>
+                                                        <input
+                                                            type="url"
+                                                            value={manualShoppingLink}
+                                                            onChange={(e) => setManualShoppingLink(e.target.value)}
+                                                            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+                                                            placeholder="https://..."
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Save Fixture Type Button */}
+                                            <button
+                                                onClick={async () => {
+                                                    // Validation
+                                                    const shorthand = productId === 'light-fix-dali' ? specShorthand : manualShorthand;
+                                                    if (!shorthand || shorthand.trim().length === 0) {
+                                                        alert('Please enter a shorthand (5-7 letters) before saving.');
+                                                        return;
+                                                    }
+
+                                                    // Create custom symbol
+                                                    const baseDef = SYMBOL_LIBRARY[selectedSymbolType];
+                                                    if (!baseDef) {
+                                                        alert('Please select a symbol type from the palette first.');
+                                                        return;
+                                                    }
+
+                                                    const presetId = `custom-${shorthand.toLowerCase()}-${Date.now()}`;
+                                                    const customSymbol: SymbolDefinition = {
+                                                        ...baseDef,
+                                                        id: presetId,
+                                                        name: `${baseDef.name} - ${shorthand}`,
+                                                        description: `${baseDef.name} Preset - Shorthand: ${shorthand}. Product: ${productId}, Bus: ${busAssignment}, Cable: ${cableType}`
+                                                    };
+
+                                                    try {
+                                                        await dataService.addCustomSymbol(customSymbol);
+                                                        alert(`Fixture type "${shorthand}" saved successfully!`);
+                                                        setIsAddingNew(false);
+                                                        // Reset product selection
+                                                        setProductId('');
+                                                    } catch (error) {
+                                                        console.error('Failed to save fixture type:', error);
+                                                        alert('Failed to save fixture type. Please try again.');
+                                                    }
+                                                }}
+                                                className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded bg-green-600 hover:bg-green-500 text-white border border-green-500 transition-all text-[9px] font-bold uppercase tracking-wider mt-2"
+                                            >
+                                                <span>Save Fixture Type</span>
+                                            </button>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+                        )}
                     </>
                 ) : (
                     <>

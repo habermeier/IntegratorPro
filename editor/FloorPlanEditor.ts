@@ -861,27 +861,48 @@ export class FloorPlanEditor {
 
     public cycleDevices(direction: 'next' | 'prev'): void {
         const layers = this.layerSystem.getAllLayers();
-        const allDevices: { id: string, name: string, roomId: string }[] = [];
+        const allDevices: { id: string, name: string, roomId: string, x: number, y: number }[] = [];
 
         // Collect all devices from all vector layers
         layers.forEach(layer => {
             if (layer.type === 'vector') {
                 const content = layer.content as VectorLayerContent;
-                const symbols = (content.symbols || []).map(s => ({ id: s.id, name: s.label || s.type, roomId: s.room || 'Unassigned' }));
-                const furniture = (content.furniture || []).map(f => ({ id: f.id, name: f.label || f.type, roomId: f.room || 'Unassigned' }));
+                const symbols = (content.symbols || []).map(s => ({
+                    id: s.id,
+                    name: s.label || s.type,
+                    roomId: s.room || 'Unassigned',
+                    x: s.x,
+                    y: s.y
+                }));
+                const furniture = (content.furniture || []).map(f => ({
+                    id: f.id,
+                    name: f.label || f.type,
+                    roomId: f.room || 'Unassigned',
+                    x: f.x,
+                    y: f.y
+                }));
                 allDevices.push(...symbols, ...furniture);
             }
         });
 
         if (allDevices.length === 0) return;
 
-        // Sort by room then name (matching the UI list order roughly)
+        // Sort by room (alphabetical), then by geometry (y, then x)
         allDevices.sort((a, b) => {
+            // Unassigned always goes last
             if (a.roomId === 'Unassigned' && b.roomId !== 'Unassigned') return 1;
             if (a.roomId !== 'Unassigned' && b.roomId === 'Unassigned') return -1;
+
+            // Sort by room first
             const roomComp = a.roomId.localeCompare(b.roomId);
             if (roomComp !== 0) return roomComp;
-            return a.name.localeCompare(b.name);
+
+            // Within same room, sort by y (top to bottom)
+            const yComp = a.y - b.y;
+            if (Math.abs(yComp) > 1) return yComp; // Use threshold for "same row"
+
+            // For same row, sort by x (left to right)
+            return a.x - b.x;
         });
 
         // Find current index
@@ -899,6 +920,87 @@ export class FloorPlanEditor {
         }
 
         const targetDevice = allDevices[nextIndex];
+        if (targetDevice) {
+            this.focusOnDevice(targetDevice.id);
+        }
+    }
+
+    public getSortedDevices(productId: string): Array<{ id: string, name: string, roomId: string, x: number, y: number }> {
+        const layers = this.layerSystem.getAllLayers();
+        const filteredDevices: { id: string, name: string, roomId: string, x: number, y: number, productId?: string }[] = [];
+
+        // Collect all devices from all vector layers
+        layers.forEach(layer => {
+            if (layer.type === 'vector') {
+                const content = layer.content as VectorLayerContent;
+                const symbols = (content.symbols || [])
+                    .filter(s => s.productId === productId)
+                    .map(s => ({
+                        id: s.id,
+                        name: s.label || s.type,
+                        roomId: s.room || 'Unassigned',
+                        x: s.x,
+                        y: s.y,
+                        productId: s.productId
+                    }));
+                const furniture = (content.furniture || [])
+                    .filter(f => f.productId === productId)
+                    .map(f => ({
+                        id: f.id,
+                        name: f.label || f.type,
+                        roomId: f.room || 'Unassigned',
+                        x: f.x,
+                        y: f.y,
+                        productId: f.productId
+                    }));
+                filteredDevices.push(...symbols, ...furniture);
+            }
+        });
+
+        // Sort by room (alphabetical), then by geometry (y, then x)
+        filteredDevices.sort((a, b) => {
+            // Unassigned always goes last
+            if (a.roomId === 'Unassigned' && b.roomId !== 'Unassigned') return 1;
+            if (a.roomId !== 'Unassigned' && b.roomId === 'Unassigned') return -1;
+
+            // Sort by room first
+            const roomComp = a.roomId.localeCompare(b.roomId);
+            if (roomComp !== 0) return roomComp;
+
+            // Within same room, sort by y (top to bottom)
+            const yComp = a.y - b.y;
+            if (Math.abs(yComp) > 1) return yComp; // Use threshold for "same row"
+
+            // For same row, sort by x (left to right)
+            return a.x - b.x;
+        });
+
+        return filteredDevices;
+    }
+
+    public cycleDevicesByType(productId: string, direction: 'next' | 'prev'): void {
+        const devices = this.getSortedDevices(productId);
+
+        if (devices.length === 0) {
+            console.warn(`[FloorPlanEditor] No devices found with productId: ${productId}`);
+            return;
+        }
+
+        // Find current index
+        const selectedIds = this.selectionSystem.getSelectedIds();
+        let currentIndex = -1;
+        if (selectedIds.length > 0) {
+            currentIndex = devices.findIndex(d => d.id === selectedIds[0]);
+        }
+
+        let nextIndex: number;
+        if (direction === 'next') {
+            nextIndex = (currentIndex + 1) % devices.length;
+        } else {
+            nextIndex = (currentIndex - 1 + devices.length) % devices.length;
+        }
+
+        const targetDevice = devices[nextIndex];
         if (targetDevice) {
             this.focusOnDevice(targetDevice.id);
         }

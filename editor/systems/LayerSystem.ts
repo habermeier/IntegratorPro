@@ -556,6 +556,18 @@ export class LayerSystem {
                         group.add(labelSprite);
                     }
 
+                    // Add shorthand annotation if present in metadata
+                    const metadata = symbolData.metadata || {};
+                    if ((metadata as any).shorthand) {
+                        const shorthandText = (metadata as any).shorthand;
+                        const shorthandLabel = this.createShorthandLabel(shorthandText);
+                        shorthandLabel.name = 'shorthand-label';
+                        // Position at bottom-right corner of symbol (further right if there's a label)
+                        const xOffset = (symbolData.label || symbolData.productId) ? 30 : 15;
+                        shorthandLabel.position.set(xOffset, -15, 0.6);
+                        group.add(shorthandLabel);
+                    }
+
                     // Add height annotation (RED) if installation height differs from room default
                     if (symbolData.installationHeight != null) {
                         const roomLayer = this.getLayer('room');
@@ -832,6 +844,57 @@ export class LayerSystem {
         const sprite = new THREE.Sprite(material);
 
         const scale = 0.5;
+        const initialX = canvas.width * scale;
+        const initialY = canvas.height * scale;
+
+        sprite.scale.set(initialX, initialY, 1);
+        sprite.userData = { baseScale: { x: initialX, y: initialY } };
+
+        return sprite;
+    }
+
+    private createShorthandLabel(shorthandText: string): THREE.Sprite {
+        const canvas = document.createElement('canvas');
+        const fontSize = 18;
+        const font = `bold ${fontSize}px Inter, sans-serif`;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return new THREE.Sprite();
+
+        // Measure dimensions
+        ctx.font = font;
+        const textMetrics = ctx.measureText(shorthandText);
+        const textWidth = textMetrics.width;
+        const lineHeight = fontSize * 1.2;
+
+        // Resize Canvas
+        canvas.width = textWidth + 16; // Small padding
+        canvas.height = lineHeight + 8;
+
+        // Render Text (dark color for visibility)
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        ctx.shadowColor = 'rgba(255,255,255,0.8)';
+        ctx.shadowBlur = 2;
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'white';
+        ctx.fillStyle = '#1a1a1a'; // Dark gray/black
+
+        ctx.font = font;
+        ctx.strokeText(shorthandText, centerX, centerY);
+        ctx.fillText(shorthandText, centerX, centerY);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.minFilter = THREE.LinearFilter;
+
+        const material = new THREE.SpriteMaterial({ map: texture, depthTest: false });
+        const sprite = new THREE.Sprite(material);
+
+        const scale = 0.4;
         const initialX = canvas.width * scale;
         const initialY = canvas.height * scale;
 
