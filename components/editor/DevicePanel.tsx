@@ -50,17 +50,19 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
     const [isAddingNew, setIsAddingNew] = React.useState<boolean>(false);
 
     // HE Williams 2DS Spec Builder State
+    const [specMountingType, setSpecMountingType] = React.useState<string>('N');
     const [specLumens, setSpecLumens] = React.useState<string>('L15');
     const [specColor, setSpecColor] = React.useState<string>('9TW');
     const [specDriver, setSpecDriver] = React.useState<string>('LD2');
     const [specDistribution, setSpecDistribution] = React.useState<string>('M');
     const [specFlange, setSpecFlange] = React.useState<string>('OF');
-    const [specReflectorFinish, setSpecReflectorFinish] = React.useState<string>('WH');
+    const [specReflectorFinish, setSpecReflectorFinish] = React.useState<string>('CS');
     const [specOptions, setSpecOptions] = React.useState<string>('NONE');
     const [specControl, setSpecControl] = React.useState<string>('STD');
-    const [specVoltage, setSpecVoltage] = React.useState<string>('120V');
-    const [specTrimType, setSpecTrimType] = React.useState<string>('SQ');
+    const [specVoltage, setSpecVoltage] = React.useState<string>('UNV');
+    const [specTrimType, setSpecTrimType] = React.useState<string>('O');
     const [specTrimOptions, setSpecTrimOptions] = React.useState<string>('NONE');
+    const [specBracket, setSpecBracket] = React.useState<string>('F1');
     const [specShorthand, setSpecShorthand] = React.useState<string>('');
     const [specPdfUrl, setSpecPdfUrl] = React.useState<string>('');
     const [specShoppingLink, setSpecShoppingLink] = React.useState<string>('');
@@ -175,8 +177,23 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
 
     // Generate HE Williams 2DS Ordering String
     const generateOrderingString = (): string => {
-        // Format: 2DS - L15/9TW - LD2 - OPTIONS - CONTROL - VOLTAGE - OF - WH - M - TRIM TYPE - TRIM OPTIONS
-        return `2DS - ${specLumens}/${specColor} - ${specDriver} - ${specOptions} - ${specControl} - ${specVoltage} - ${specFlange} - ${specReflectorFinish} - ${specDistribution} - ${specTrimType} - ${specTrimOptions}`;
+        // Example: 2DS - L15/9TW - N - OPTIONS - CONTROL - LD2 - UNV - M - O - OF - CS - TRIM OPTIONS - F1
+        const parts = [
+            '2DS',
+            `${specLumens}/${specColor}`,
+            specMountingType,
+            specOptions !== 'NONE' ? specOptions : '',
+            specControl !== 'STD' ? specControl : '',
+            specDriver,
+            specVoltage,
+            specDistribution,
+            specTrimType,
+            specFlange,
+            specReflectorFinish,
+            specTrimOptions !== 'NONE' ? specTrimOptions : '',
+            specBracket
+        ];
+        return parts.filter(p => p !== '').join(' - ');
     };
 
     // Delete Device Type with Safety Guard
@@ -382,6 +399,50 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                         busAssignment: device.busAssignment,
                         metadata: { ...device.metadata }
                     });
+
+                    // Load HE Williams Spec Builder metadata if present
+                    if (device.metadata) {
+                        if (device.metadata.specLumens) setSpecLumens(device.metadata.specLumens);
+                        if (device.metadata.specColor) setSpecColor(device.metadata.specColor);
+                        if (device.metadata.specMountingType) setSpecMountingType(device.metadata.specMountingType);
+                        if (device.metadata.specDriver) setSpecDriver(device.metadata.specDriver);
+                        if (device.metadata.specOptions) setSpecOptions(device.metadata.specOptions);
+                        if (device.metadata.specControl) setSpecControl(device.metadata.specControl);
+                        if (device.metadata.specVoltage) setSpecVoltage(device.metadata.specVoltage);
+                        if (device.metadata.specFlange) setSpecFlange(device.metadata.specFlange);
+                        if (device.metadata.specReflectorFinish) setSpecReflectorFinish(device.metadata.specReflectorFinish);
+                        if (device.metadata.specDistribution) setSpecDistribution(device.metadata.specDistribution);
+                        if (device.metadata.specTrimType) setSpecTrimType(device.metadata.specTrimType);
+                        if (device.metadata.specTrimOptions) setSpecTrimOptions(device.metadata.specTrimOptions);
+                        if (device.metadata.specBracket) setSpecBracket(device.metadata.specBracket);
+
+                        // Load manual spec fields if present
+                        if (device.metadata.orderingCode && device.productId !== 'light-fix-dali') {
+                            setManualOrderingCode(device.metadata.orderingCode);
+                        }
+                        if (device.metadata.shorthand) {
+                            if (device.productId === 'light-fix-dali') {
+                                setSpecShorthand(device.metadata.shorthand);
+                            } else {
+                                setManualShorthand(device.metadata.shorthand);
+                            }
+                        }
+                        if (device.metadata.pdfUrl) {
+                            if (device.productId === 'light-fix-dali') {
+                                setSpecPdfUrl(device.metadata.pdfUrl);
+                            } else {
+                                setManualPdfUrl(device.metadata.pdfUrl);
+                            }
+                        }
+                        if (device.metadata.shoppingLink) {
+                            if (device.productId === 'light-fix-dali') {
+                                setSpecShoppingLink(device.metadata.shoppingLink);
+                            } else {
+                                setManualShoppingLink(device.metadata.shoppingLink);
+                            }
+                        }
+                    }
+
                     return;
                 }
 
@@ -1262,9 +1323,23 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                         >
                                                             <option value="L5">L5 - 500 Lumens</option>
                                                             <option value="L7">L7 - 700 Lumens</option>
-                                                            <option value="L10">L10 - 1000 Lumens</option>
+                                                            <option value="L9">L9 - 900 Lumens</option>
                                                             <option value="L12">L12 - 1200 Lumens</option>
                                                             <option value="L15">L15 - 1500 Lumens</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Mounting Type */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Mounting</label>
+                                                        <select
+                                                            value={specMountingType}
+                                                            onChange={(e) => setSpecMountingType(e.target.value)}
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                        >
+                                                            <option value="N">N - New Construction</option>
+                                                            <option value="I">I - IC-Rated New Construction</option>
+                                                            <option value="R">R - Remodel</option>
                                                         </select>
                                                     </div>
 
@@ -1276,11 +1351,23 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                             onChange={(e) => setSpecColor(e.target.value)}
                                                             className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
                                                         >
-                                                            <option value="27">27 - 2700K</option>
-                                                            <option value="30">30 - 3000K</option>
-                                                            <option value="35">35 - 3500K</option>
-                                                            <option value="40">40 - 4000K</option>
-                                                            <option value="9TW">9TW - Tunable White</option>
+                                                            <option value="9TW">9TW - Tunable White (2700K-5000K)</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Control */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Control</label>
+                                                        <select
+                                                            value={specControl}
+                                                            onChange={(e) => setSpecControl(e.target.value)}
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                        >
+                                                            <option value="STD">STD - Standard (0-10V)</option>
+                                                            <option value="AWNR">AWNR - Lutron Athena RF</option>
+                                                            <option value="DALI">DALI - DALI Prewired</option>
+                                                            <option value="DIM">DIM - 2x 0-10V (Level/CCT)</option>
+                                                            <option value="DMX">DMX - DMX Prewired</option>
                                                         </select>
                                                     </div>
 
@@ -1292,9 +1379,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                             onChange={(e) => setSpecDriver(e.target.value)}
                                                             className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
                                                         >
-                                                            <option value="LD2">LD2 - DALI-2</option>
-                                                            <option value="0-10V">0-10V - 0-10V Dimming</option>
-                                                            <option value="NON-DIM">NON-DIM - Non-Dimming</option>
+                                                            <option value="LD2">LD2 - Lutron DALI-2 (1%)</option>
                                                         </select>
                                                     </div>
 
@@ -1307,24 +1392,10 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                             className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
                                                         >
                                                             <option value="NONE">NONE - No Options</option>
-                                                            <option value="EM">EM - Emergency</option>
-                                                            <option value="OFDM">OFDM - Occupancy/Daylight</option>
-                                                            <option value="HO">HO - High Output</option>
-                                                        </select>
-                                                    </div>
-
-                                                    {/* Control */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Control</label>
-                                                        <select
-                                                            value={specControl}
-                                                            onChange={(e) => setSpecControl(e.target.value)}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
-                                                        >
-                                                            <option value="STD">STD - Standard</option>
-                                                            <option value="DIM">DIM - Dimming</option>
-                                                            <option value="TW">TW - Tunable White</option>
-                                                            <option value="RGB">RGB - Color Changing</option>
+                                                            <option value="ATH">ATH - Airtight</option>
+                                                            <option value="F">F - Fuse Kit</option>
+                                                            <option value="CP">CP - Chicago Plenum</option>
+                                                            <option value="AM">AM - Anti-microbial</option>
                                                         </select>
                                                     </div>
 
@@ -1336,44 +1407,13 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                             onChange={(e) => setSpecVoltage(e.target.value)}
                                                             className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
                                                         >
-                                                            <option value="120V">120V - 120 Volts</option>
-                                                            <option value="277V">277V - 277 Volts</option>
                                                             <option value="UNV">UNV - Universal (120-277V)</option>
-                                                        </select>
-                                                    </div>
-
-                                                    {/* Flange */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Flange Type</label>
-                                                        <select
-                                                            value={specFlange}
-                                                            onChange={(e) => setSpecFlange(e.target.value)}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
-                                                        >
-                                                            <option value="OF">OF - Open Flange</option>
-                                                            <option value="SF">SF - Square Flange</option>
-                                                            <option value="RF">RF - Round Flange</option>
-                                                        </select>
-                                                    </div>
-
-                                                    {/* Reflector Finish */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Reflector Finish</label>
-                                                        <select
-                                                            value={specReflectorFinish}
-                                                            onChange={(e) => setSpecReflectorFinish(e.target.value)}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
-                                                        >
-                                                            <option value="WH">WH - White</option>
-                                                            <option value="BK">BK - Black</option>
-                                                            <option value="SV">SV - Silver</option>
-                                                            <option value="GD">GD - Gold</option>
                                                         </select>
                                                     </div>
 
                                                     {/* Distribution */}
                                                     <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Light Distribution</label>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Distribution</label>
                                                         <select
                                                             value={specDistribution}
                                                             onChange={(e) => setSpecDistribution(e.target.value)}
@@ -1382,6 +1422,27 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                             <option value="N">N - Narrow</option>
                                                             <option value="M">M - Medium</option>
                                                             <option value="W">W - Wide</option>
+                                                            <option value="WW">WW - Wall Wash</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Flange */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Flange Type</label>
+                                                        <select
+                                                            value={specFlange}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                setSpecFlange(val);
+                                                                // ZF doesn't support 'O' (Open) Trim
+                                                                if (val === 'ZF' && specTrimType === 'O') {
+                                                                    setSpecTrimType('L');
+                                                                }
+                                                            }}
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                        >
+                                                            <option value="OF">OF - 1/2" Standard Flange</option>
+                                                            <option value="ZF">ZF - Zero-Flange Mud-In</option>
                                                         </select>
                                                     </div>
 
@@ -1393,10 +1454,30 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                             onChange={(e) => setSpecTrimType(e.target.value)}
                                                             className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
                                                         >
-                                                            <option value="SQ">SQ - Square</option>
-                                                            <option value="RD">RD - Round</option>
-                                                            <option value="TL">TL - Trimless</option>
-                                                            <option value="FL">FL - Flanged</option>
+                                                            {specFlange !== 'ZF' && <option value="O">O - Open Reflector</option>}
+                                                            <option value="L">L - Flush Lens</option>
+                                                            <option value="R">R - Regressed Lens</option>
+                                                            <option value="A">A - Angled Lens</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Reflector Finish */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Reflector Finish</label>
+                                                        <select
+                                                            value={specReflectorFinish}
+                                                            onChange={(e) => setSpecReflectorFinish(e.target.value)}
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                        >
+                                                            <option value="CS">CS - Clear Semi-Specular</option>
+                                                            <option value="SG">SG - Satin-Glow</option>
+                                                            <option value="GD">GD - Gold</option>
+                                                            <option value="CG">CG - Champagne Gold</option>
+                                                            <option value="PW">PW - Pewter</option>
+                                                            <option value="SPC">SPC - Clear Specular</option>
+                                                            <option value="RG">RG - Rose Gold</option>
+                                                            <option value="WH">WH - White texture</option>
+                                                            <option value="BL">BL - Black texture</option>
                                                         </select>
                                                     </div>
 
@@ -1409,9 +1490,25 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                             className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
                                                         >
                                                             <option value="NONE">NONE - No Options</option>
-                                                            <option value="LENS">LENS - Lens</option>
-                                                            <option value="LOUVER">LOUVER - Louver</option>
-                                                            <option value="BAFFLE">BAFFLE - Baffle</option>
+                                                            <option value="MWT">MWT - Matte White Trim Flange</option>
+                                                            <option value="MB">MB - Black Splay/White Flange</option>
+                                                            <option value="AD">AD - Diffuse Acrylic Lens</option>
+                                                            <option value="PD">PD - Diffuse Polycarbonate Lens</option>
+                                                            <option value="WET/CC">WET/CC - Wet Location</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Bracket */}
+                                                    <div>
+                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Bracket</label>
+                                                        <select
+                                                            value={specBracket}
+                                                            onChange={(e) => setSpecBracket(e.target.value)}
+                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                        >
+                                                            <option value="F1">F1 - Fixed Pan Bracket</option>
+                                                            <option value="BA1">BA1 - Butterfly Pan Bracket</option>
+                                                            <option value="CA1">CA1 - Caterpillar Pan Bracket</option>
                                                         </select>
                                                     </div>
 
@@ -1535,14 +1632,36 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                         ...baseDef,
                                                         id: presetId,
                                                         name: `${baseDef.name} - ${shorthand}`,
-                                                        description: `${baseDef.name} Preset - Shorthand: ${shorthand}. Product: ${productId}, Bus: ${busAssignment}, Cable: ${cableType}`
+                                                        description: `${baseDef.name} Preset - Shorthand: ${shorthand}. Product: ${productId}, Bus: ${busAssignment}, Cable: ${cableType}`,
+                                                        metadata: {
+                                                            shorthand,
+                                                            productId,
+                                                            orderingCode: productId === 'light-fix-dali' ? generateOrderingString() : manualOrderingCode,
+                                                            pdfUrl: productId === 'light-fix-dali' ? specPdfUrl : manualPdfUrl,
+                                                            shoppingLink: productId === 'light-fix-dali' ? specShoppingLink : manualShoppingLink,
+                                                            // HE Williams specific fields
+                                                            ...(productId === 'light-fix-dali' ? {
+                                                                specLumens,
+                                                                specColor,
+                                                                specMountingType,
+                                                                specDriver,
+                                                                specOptions,
+                                                                specControl,
+                                                                specVoltage,
+                                                                specFlange,
+                                                                specReflectorFinish,
+                                                                specDistribution,
+                                                                specTrimType,
+                                                                specTrimOptions,
+                                                                specBracket
+                                                            } : {})
+                                                        }
                                                     };
 
                                                     try {
                                                         await dataService.addCustomSymbol(customSymbol);
                                                         alert(`Fixture type "${shorthand}" saved successfully!`);
                                                         setIsAddingNew(false);
-                                                        // Reset product selection
                                                         setProductId('');
                                                     } catch (error) {
                                                         console.error('Failed to save fixture type:', error);
@@ -1722,110 +1841,233 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                                                 </div>
                                             </div>
 
-                                            {/* Configuration Section */}
-                                            <div className="pt-2 border-t border-slate-800/50">
-                                                <h4 className="text-[8px] text-slate-500 uppercase font-bold mb-2 tracking-wider">Configuration</h4>
-                                                <div className="space-y-2">
-                                                    <div className="grid grid-cols-2 gap-2">
+                                            {/* Configuration Section - HE Williams or Generic */}
+                                            {formData.productId === 'light-fix-dali' ? (
+                                                /* HE WILLIAMS 2DS SPEC BUILDER - EDITING MODE */
+                                                <div className="pt-2 border-t border-slate-800/50">
+                                                    <h4 className="text-[8px] text-slate-500 uppercase font-bold mb-2 tracking-wider flex items-center gap-1">
+                                                        <span>HE Williams 2DS Spec</span>
+                                                        <span className="text-[7px] text-blue-400 font-mono">(Editing)</span>
+                                                    </h4>
+                                                    <div className="space-y-1.5">
+                                                        {/* Ordering String Display */}
+                                                        <div className="bg-slate-900 rounded border border-slate-800 p-2">
+                                                            <span className="text-[7px] text-slate-500 font-bold uppercase block mb-1">Ordering Code</span>
+                                                            <div className="text-[9px] text-slate-300 font-mono break-all">
+                                                                {generateOrderingString()}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Lumens Selection */}
                                                         <div>
                                                             <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Lumens</label>
                                                             <select
-                                                                value={formData.metadata?.lumensCode || 'L15'}
+                                                                value={specLumens}
                                                                 onChange={(e) => {
-                                                                    const code = e.target.value;
-                                                                    const lumensMap: Record<string, number> = { L5: 500, L15: 1500 };
-                                                                    handleFieldChange('metadata.lumensCode', code);
-                                                                    handleFieldChange('metadata.lumens', lumensMap[code] || 1500);
-                                                                    handleFieldBlur(editingDevice.id, 'metadata.lumensCode', code);
-                                                                    handleFieldBlur(editingDevice.id, 'metadata.lumens', lumensMap[code] || 1500);
+                                                                    setSpecLumens(e.target.value);
+                                                                    handleFieldChange('metadata.specLumens', e.target.value);
                                                                 }}
                                                                 className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
                                                             >
-                                                                <option value="L5">L5 (500lm)</option>
-                                                                <option value="L15">L15 (1500lm)</option>
+                                                                <option value="L5">L5 - 500 Lumens</option>
+                                                                <option value="L7">L7 - 700 Lumens</option>
+                                                                <option value="L9">L9 - 900 Lumens</option>
+                                                                <option value="L12">L12 - 1200 Lumens</option>
+                                                                <option value="L15">L15 - 1500 Lumens</option>
+                                                            </select>
+                                                        </div>
+
+                                                        {/* Mounting Type */}
+                                                        <div>
+                                                            <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Mounting</label>
+                                                            <select
+                                                                value={specMountingType}
+                                                                onChange={(e) => {
+                                                                    setSpecMountingType(e.target.value);
+                                                                    handleFieldChange('metadata.specMountingType', e.target.value);
+                                                                }}
+                                                                className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                            >
+                                                                <option value="N">N - New Construction</option>
+                                                                <option value="I">I - IC-Rated New Construction</option>
+                                                                <option value="R">R - Remodel</option>
+                                                            </select>
+                                                        </div>
+
+                                                        {/* Color Temperature */}
+                                                        <div>
+                                                            <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Color Temperature</label>
+                                                            <select
+                                                                value={specColor}
+                                                                onChange={(e) => {
+                                                                    setSpecColor(e.target.value);
+                                                                    handleFieldChange('metadata.specColor', e.target.value);
+                                                                }}
+                                                                className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                            >
+                                                                <option value="9TW">9TW - Tunable White (2700K-5000K)</option>
+                                                            </select>
+                                                        </div>
+
+                                                        {/* Driver */}
+                                                        <div>
+                                                            <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Driver</label>
+                                                            <select
+                                                                value={specDriver}
+                                                                onChange={(e) => {
+                                                                    setSpecDriver(e.target.value);
+                                                                    handleFieldChange('metadata.specDriver', e.target.value);
+                                                                }}
+                                                                className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                            >
+                                                                <option value="LD2">LD2 - Lutron DALI-2 (1%)</option>
+                                                            </select>
+                                                        </div>
+
+                                                        {/* Distribution */}
+                                                        <div>
+                                                            <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Distribution</label>
+                                                            <select
+                                                                value={specDistribution}
+                                                                onChange={(e) => {
+                                                                    setSpecDistribution(e.target.value);
+                                                                    handleFieldChange('metadata.specDistribution', e.target.value);
+                                                                }}
+                                                                className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                            >
+                                                                <option value="N">N - Narrow</option>
+                                                                <option value="M">M - Medium</option>
+                                                                <option value="W">W - Wide</option>
+                                                                <option value="WW">WW - Wall Wash</option>
+                                                            </select>
+                                                        </div>
+
+                                                        {/* Control */}
+                                                        <div>
+                                                            <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Control</label>
+                                                            <select
+                                                                value={specControl}
+                                                                onChange={(e) => {
+                                                                    setSpecControl(e.target.value);
+                                                                    handleFieldChange('metadata.specControl', e.target.value);
+                                                                }}
+                                                                className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                            >
+                                                                <option value="STD">STD - Standard (0-10V)</option>
+                                                                <option value="AWNR">AWNR - Lutron Athena RF</option>
+                                                                <option value="DALI">DALI - DALI Prewired</option>
+                                                                <option value="DIM">DIM - 2x 0-10V (Level/CCT)</option>
+                                                                <option value="DMX">DMX - DMX Prewired</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                /* GENERIC CONFIGURATION */
+                                                <div className="pt-2 border-t border-slate-800/50">
+                                                    <h4 className="text-[8px] text-slate-500 uppercase font-bold mb-2 tracking-wider">Configuration</h4>
+                                                    <div className="space-y-2">
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <div>
+                                                                <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Lumens</label>
+                                                                <select
+                                                                    value={formData.metadata?.lumensCode || 'L15'}
+                                                                    onChange={(e) => {
+                                                                        const code = e.target.value;
+                                                                        const lumensMap: Record<string, number> = { L5: 500, L15: 1500 };
+                                                                        handleFieldChange('metadata.lumensCode', code);
+                                                                        handleFieldChange('metadata.lumens', lumensMap[code] || 1500);
+                                                                        handleFieldBlur(editingDevice.id, 'metadata.lumensCode', code);
+                                                                        handleFieldBlur(editingDevice.id, 'metadata.lumens', lumensMap[code] || 1500);
+                                                                    }}
+                                                                    className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                                >
+                                                                    <option value="L5">L5 (500lm)</option>
+                                                                    <option value="L15">L15 (1500lm)</option>
+                                                                </select>
+                                                            </div>
+
+                                                            <div>
+                                                                <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Beam</label>
+                                                                <select
+                                                                    value={formData.metadata?.beamCode || 'M'}
+                                                                    onChange={(e) => {
+                                                                        const code = e.target.value;
+                                                                        const beamMap: Record<string, number> = { N: 20, M: 30, W: 50 };
+                                                                        handleFieldChange('metadata.beamCode', code);
+                                                                        handleFieldChange('metadata.beamAngle', beamMap[code] || 30);
+                                                                        handleFieldBlur(editingDevice.id, 'metadata.beamCode', code);
+                                                                        handleFieldBlur(editingDevice.id, 'metadata.beamAngle', beamMap[code] || 30);
+                                                                    }}
+                                                                    className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                                >
+                                                                    <option value="N">N (20°)</option>
+                                                                    <option value="M">M (30°)</option>
+                                                                    <option value="W">W (50°)</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        <div>
+                                                            <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Symbol Code</label>
+                                                            <input
+                                                                type="text"
+                                                                value={formData.metadata?.symbolCode || `${formData.metadata?.lumensCode || 'L15'}-${formData.metadata?.beamCode || 'M'}`}
+                                                                onChange={(e) => handleFieldChange('metadata.symbolCode', e.target.value)}
+                                                                onBlur={(e) => handleFieldBlur(editingDevice.id, 'metadata.symbolCode', e.target.value)}
+                                                                onKeyDown={handleEnterToSave}
+                                                                placeholder="e.g., L15-M"
+                                                                className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
+                                                            />
+                                                        </div>
+
+                                                        <div>
+                                                            <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Driver</label>
+                                                            <select
+                                                                value={formData.metadata?.driver || 'LD2'}
+                                                                onChange={(e) => {
+                                                                    handleFieldChange('metadata.driver', e.target.value);
+                                                                    handleFieldBlur(editingDevice.id, 'metadata.driver', e.target.value);
+                                                                }}
+                                                                className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                            >
+                                                                <option value="LD2">LD2</option>
+                                                                <option value="0-10V">0-10V</option>
                                                             </select>
                                                         </div>
 
                                                         <div>
-                                                            <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Beam</label>
+                                                            <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Mount</label>
                                                             <select
-                                                                value={formData.metadata?.beamCode || 'M'}
+                                                                value={formData.metadata?.mount || 'Trimless Mud-in'}
                                                                 onChange={(e) => {
-                                                                    const code = e.target.value;
-                                                                    const beamMap: Record<string, number> = { N: 20, M: 30, W: 50 };
-                                                                    handleFieldChange('metadata.beamCode', code);
-                                                                    handleFieldChange('metadata.beamAngle', beamMap[code] || 30);
-                                                                    handleFieldBlur(editingDevice.id, 'metadata.beamCode', code);
-                                                                    handleFieldBlur(editingDevice.id, 'metadata.beamAngle', beamMap[code] || 30);
+                                                                    handleFieldChange('metadata.mount', e.target.value);
+                                                                    handleFieldBlur(editingDevice.id, 'metadata.mount', e.target.value);
                                                                 }}
                                                                 className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
                                                             >
-                                                                <option value="N">N (20°)</option>
-                                                                <option value="M">M (30°)</option>
-                                                                <option value="W">W (50°)</option>
+                                                                <option value="Trimless Mud-in">Trimless Mud-in</option>
+                                                                <option value="Flanged">Flanged</option>
+                                                            </select>
+                                                        </div>
+
+                                                        <div>
+                                                            <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">CCT</label>
+                                                            <select
+                                                                value={formData.metadata?.cct || 'Tunable'}
+                                                                onChange={(e) => {
+                                                                    handleFieldChange('metadata.cct', e.target.value);
+                                                                    handleFieldBlur(editingDevice.id, 'metadata.cct', e.target.value);
+                                                                }}
+                                                                className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                                            >
+                                                                <option value="Tunable">Tunable</option>
+                                                                <option value="Fixed">Fixed</option>
                                                             </select>
                                                         </div>
                                                     </div>
-
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Symbol Code</label>
-                                                        <input
-                                                            type="text"
-                                                            value={formData.metadata?.symbolCode || `${formData.metadata?.lumensCode || 'L15'}-${formData.metadata?.beamCode || 'M'}`}
-                                                            onChange={(e) => handleFieldChange('metadata.symbolCode', e.target.value)}
-                                                            onBlur={(e) => handleFieldBlur(editingDevice.id, 'metadata.symbolCode', e.target.value)}
-                                                            onKeyDown={handleEnterToSave}
-                                                            placeholder="e.g., L15-M"
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
-                                                        />
-                                                    </div>
-
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Driver</label>
-                                                        <select
-                                                            value={formData.metadata?.driver || 'LD2'}
-                                                            onChange={(e) => {
-                                                                handleFieldChange('metadata.driver', e.target.value);
-                                                                handleFieldBlur(editingDevice.id, 'metadata.driver', e.target.value);
-                                                            }}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
-                                                        >
-                                                            <option value="LD2">LD2</option>
-                                                            <option value="0-10V">0-10V</option>
-                                                        </select>
-                                                    </div>
-
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Mount</label>
-                                                        <select
-                                                            value={formData.metadata?.mount || 'Trimless Mud-in'}
-                                                            onChange={(e) => {
-                                                                handleFieldChange('metadata.mount', e.target.value);
-                                                                handleFieldBlur(editingDevice.id, 'metadata.mount', e.target.value);
-                                                            }}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
-                                                        >
-                                                            <option value="Trimless Mud-in">Trimless Mud-in</option>
-                                                            <option value="Flanged">Flanged</option>
-                                                        </select>
-                                                    </div>
-
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">CCT</label>
-                                                        <select
-                                                            value={formData.metadata?.cct || 'Tunable'}
-                                                            onChange={(e) => {
-                                                                handleFieldChange('metadata.cct', e.target.value);
-                                                                handleFieldBlur(editingDevice.id, 'metadata.cct', e.target.value);
-                                                            }}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
-                                                        >
-                                                            <option value="Tunable">Tunable</option>
-                                                            <option value="Fixed">Fixed</option>
-                                                        </select>
-                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
                                         </>
                                     )}
 

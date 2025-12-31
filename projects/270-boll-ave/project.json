@@ -1,11 +1,11 @@
 {
   "version": "1.0",
-  "timestamp": "2025-12-31T02:15:13.018Z",
+  "timestamp": "2025-12-31T05:14:02.977Z",
   "metadata": {
     "name": "270 Boll Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2025-12-31T02:15:12.686Z"
+    "modified": "2025-12-31T05:14:02.629Z"
   },
   "floorPlan": {
     "scale": {
@@ -3988,7 +3988,108 @@
       }
     }
   ],
-  "devices": [],
+  "devices": [
+    {
+      "id": "lighting-1767158030541",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "generic-product",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": -2327.722921274985,
+        "y": 1219.3000714318205
+      },
+      "rotation": 0,
+      "roomId": "Primary Bedroom",
+      "layerId": "lighting",
+      "installationHeight": 2.5900000000000003,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1767158030541
+    },
+    {
+      "id": "lighting-1767158034294",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "generic-product",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": -1969.2401886078922,
+        "y": 1208.9772702293649
+      },
+      "rotation": 0,
+      "roomId": "Primary Bedroom",
+      "layerId": "lighting",
+      "installationHeight": 2.5900000000000003,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1767158034294
+    },
+    {
+      "id": "lighting-1767158037958",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "generic-product",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": -2319.2769930184304,
+        "y": 940.5844389655203
+      },
+      "rotation": 0,
+      "roomId": "Primary Bedroom",
+      "layerId": "lighting",
+      "installationHeight": 2.5900000000000003,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1767158037958
+    },
+    {
+      "id": "lighting-1767158041125",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "generic-product",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": -1961.732696824288,
+        "y": 939.6460024925699
+      },
+      "rotation": 0,
+      "roomId": "Primary Bedroom",
+      "layerId": "lighting",
+      "installationHeight": 2.5900000000000003,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1767158041125
+    }
+  ],
   "cables": [],
   "lcps": [],
   "settings": {
@@ -3996,5 +4097,38 @@
     "fastZoomMultiplier": 3,
     "dataLossThreshold": 0.5
   },
-  "force": false
+  "force": false,
+  "customSymbols": [
+    {
+      "id": "custom-2ds-l9-1767158007452",
+      "name": "Recessed Light - 2DS-L9",
+      "category": "lighting",
+      "description": "Recessed Light Preset - Shorthand: 2DS-L9. Product: light-fix-dali, Bus: Bus 1, Cable: Cat6",
+      "color": 0,
+      "size": {
+        "width": 16,
+        "height": 16
+      },
+      "metadata": {
+        "shorthand": "2DS-L9",
+        "productId": "light-fix-dali",
+        "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+        "shoppingLink": "",
+        "specLumens": "L9",
+        "specColor": "9TW",
+        "specMountingType": "N",
+        "specDriver": "LD2",
+        "specOptions": "NONE",
+        "specControl": "STD",
+        "specVoltage": "UNV",
+        "specFlange": "ZF",
+        "specReflectorFinish": "WH",
+        "specDistribution": "W",
+        "specTrimType": "R",
+        "specTrimOptions": "NONE",
+        "specBracket": "F1"
+      }
+    }
+  ]
 }

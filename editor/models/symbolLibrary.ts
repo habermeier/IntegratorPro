@@ -8,6 +8,7 @@ export interface SymbolDefinition {
     color: number;
     size: { width: number, height: number };
     createMesh: (width: number, height: number) => THREE.Group;
+    metadata?: any;
 }
 
 export const SYMBOL_CATEGORIES = [
@@ -27,7 +28,7 @@ export const SYMBOL_CATEGORIES = [
  * @param width - Width of the symbol in pixels (default: 16)
  * @param height - Height of the symbol in pixels (default: 16)
  */
-const createUniversalMesh = (width?: number, height?: number): THREE.Group => {
+export const createUniversalMesh = (width?: number, height?: number): THREE.Group => {
     const w = width || 16;
     const h = height || 16;
     const group = new THREE.Group();

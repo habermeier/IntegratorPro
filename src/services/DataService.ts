@@ -8,7 +8,7 @@
 import { Device } from '../models/Device';
 import { DeviceRegistry } from './DeviceRegistry';
 import { ProjectData, ProjectSettings as Settings, ElectricalOverlay, Polygon, Point, Furniture, ProjectMetadata, ScaleData, LayoutModule, FloorPlan } from '../../editor/models/types';
-import { SymbolDefinition, SYMBOL_LIBRARY } from '../../editor/models/symbolLibrary';
+import { SymbolDefinition, SYMBOL_LIBRARY, createUniversalMesh } from '../../editor/models/symbolLibrary';
 import { remoteDebug } from '../utils/logger';
 
 // ============================================================================
@@ -155,6 +155,8 @@ class DataService {
       // Merge custom symbols into runtime SYMBOL_LIBRARY
       if (projectData.customSymbols && projectData.customSymbols.length > 0) {
         projectData.customSymbols.forEach((symbol: SymbolDefinition) => {
+          // Re-attach createMesh function (lost during JSON serialization)
+          symbol.createMesh = createUniversalMesh;
           SYMBOL_LIBRARY[symbol.id] = symbol;
         });
         remoteDebug('Merged custom symbols into SYMBOL_LIBRARY', 'DataService', { count: projectData.customSymbols.length });
@@ -344,6 +346,11 @@ class DataService {
 
     // Check for duplicate IDs
     const existingIndex = this.cache!.customSymbols.findIndex(s => s.id === customSymbol.id);
+    
+    // Ensure createMesh is attached for runtime use
+    customSymbol.createMesh = createUniversalMesh;
+    SYMBOL_LIBRARY[customSymbol.id] = customSymbol;
+
     if (existingIndex >= 0) {
       // Update existing preset
       this.cache!.customSymbols[existingIndex] = customSymbol;
@@ -375,6 +382,7 @@ class DataService {
 
     if (this.cache!.customSymbols) {
       this.cache!.customSymbols = this.cache!.customSymbols.filter(s => s.id !== symbolId);
+      delete SYMBOL_LIBRARY[symbolId];
       await this.saveProject(this.cache!);
       remoteDebug(`Removed custom symbol preset: ${symbolId}`, 'DataService');
     }
