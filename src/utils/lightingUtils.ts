@@ -87,32 +87,38 @@ export function calculateCoverage(
 /**
  * Get effective height for lighting calculation
  *
- * Priority:
- * 1. Room ceiling height (if device is in a room)
- * 2. Device installation height
+ * CORRECTED Priority (AUTO-RENDER-RADIUS-P17):
+ * 1. Device installation height (explicit per-device height from floor)
+ * 2. Room ceiling height (assume ceiling-mounted if no device height)
  * 3. Default height (2.74m / 9ft standard ceiling)
  *
+ * This ensures:
+ * - Recessed lights use their specific installation height (e.g., 2.64m in a 2.74m room)
+ * - Wall-mounted fixtures use their mounting height (e.g., 2.0m)
+ * - Generic ceiling fixtures default to room ceiling height
+ *
  * @param roomCeilingHeight - Ceiling height from room polygon (if available)
- * @param deviceInstallationHeight - Device-specific installation height
+ * @param deviceInstallationHeight - Device-specific installation height from floor (meters)
  * @param defaultHeight - Fallback default height
- * @returns Effective height for lighting calculations
+ * @returns Effective height for lighting calculations (fixture-to-floor distance)
  */
 export function getEffectiveHeight(
     roomCeilingHeight: number | undefined,
     deviceInstallationHeight: number,
     defaultHeight: number = 2.74
 ): number {
-    // Priority 1: Room ceiling height
-    if (roomCeilingHeight && roomCeilingHeight > 0) {
-        return roomCeilingHeight;
-    }
-
-    // Priority 2: Device installation height
+    // Priority 1: Device installation height (explicit height from floor)
+    // This handles recessed lights, wall-mounted fixtures, and any custom heights
     if (deviceInstallationHeight && deviceInstallationHeight > 0) {
         return deviceInstallationHeight;
     }
 
-    // Priority 3: Default
+    // Priority 2: Room ceiling height (assume ceiling-mounted at ceiling height)
+    if (roomCeilingHeight && roomCeilingHeight > 0) {
+        return roomCeilingHeight;
+    }
+
+    // Priority 3: Default (fallback for devices without room or installation height)
     return defaultHeight;
 }
 
