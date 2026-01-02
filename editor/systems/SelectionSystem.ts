@@ -12,15 +12,18 @@ export class SelectionSystem {
         this.cameraSystem = cameraSystem;
         this.layerSystem = layerSystem;
         this.raycaster = new THREE.Raycaster();
+        this.raycaster.params.Line.threshold = 5; // Easier to hit thin lines
     }
 
     public selectAt(screenX: number, screenY: number, multiSelect: boolean = false): string[] {
-        const worldPos = this.cameraSystem.screenToWorld(screenX, screenY);
+        const renderer = (this.layerSystem.scene.userData.editor as any).renderer as THREE.WebGLRenderer;
+        if (!renderer) return Array.from(this.selectedIds);
+
+        const rect = renderer.domElement.getBoundingClientRect();
+        const ndcX = ((screenX) / rect.width) * 2 - 1;
+        const ndcY = -((screenY) / rect.height) * 2 + 1;
+
         const cam = this.cameraSystem.mainCamera;
-
-        const ndcX = (worldPos.x - (cam.left + cam.right) / 2) / ((cam.right - cam.left) / 2);
-        const ndcY = (worldPos.y - (cam.top + cam.bottom) / 2) / ((cam.top - cam.bottom) / 2);
-
         this.raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), cam);
 
         const layers = this.layerSystem.getAllLayers();
@@ -35,16 +38,19 @@ export class SelectionSystem {
             for (const intersect of intersects) {
                 // Symbols use nested groups, we want the top-most object with userData.id
                 let obj = intersect.object;
-                while (obj && !obj.userData.id && obj.parent !== layer.container) {
+                
+                // Climb up until we find a userData.id or reach the layer container
+                while (obj && !obj.userData.id && obj.parent && obj.parent !== layer.container) {
                     obj = obj.parent as any;
                 }
 
+                // Check both the object and its direct children if it's a group we found
                 if (obj && obj.userData.id) {
                     hits.push({
                         id: obj.userData.id,
                         zIndex: layer.zIndex
                     });
-                    break; // Only take the first hit per layer for efficiency, or could take all
+                    break; 
                 }
             }
         }

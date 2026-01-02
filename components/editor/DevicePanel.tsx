@@ -349,26 +349,44 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
             setActiveTab('placed');
         } else if (activeTool === 'place-symbol' || activeTool === 'place-furniture') {
             setActiveTab('library');
+
+            // AUTO-SELECT SYMBOL IF NONE SELECTED (Ensures 'p' key works)
+            if (activeTool === 'place-symbol' && !selectedSymbolType) {
+                const firstSymbolInCategory = Object.keys(SYMBOL_LIBRARY).find(
+                    symbolType => SYMBOL_LIBRARY[symbolType].category === selectedCategory
+                );
+                if (firstSymbolInCategory) {
+                    handleSelectSymbol(firstSymbolInCategory);
+                }
+            }
         }
-    }, [activeTool, editingDevice, selectedRoom]);
+    }, [activeTool, editingDevice, selectedRoom, selectedSymbolType, selectedCategory]);
 
     // Update tool active attributes when placement settings change
     React.useEffect(() => {
         if (!editor || !selectedSymbolType) return;
 
         const tool = editor.toolSystem.getTool<PlaceSymbolTool>('place-symbol');
-        if (tool && tool.setActiveAttributes) {
-            tool.setActiveAttributes({
-                productId,
-                defaultHeight: mountType === 'Ceiling' ? getComputedHeight() : defaultHeight,
-                busAssignment,
-                cableType,
-                lumens,
-                beamAngle,
-                range
-            });
+        if (tool) {
+            // SYNC SYMBOL TYPE
+            tool.setSymbolType(selectedSymbolType);
+
+            if (tool.setActiveAttributes) {
+                tool.setActiveAttributes({
+                    productId,
+                    defaultHeight: mountType === 'Ceiling' ? getComputedHeight() : defaultHeight,
+                    busAssignment,
+                    cableType,
+                    lumens,
+                    beamAngle,
+                    range,
+                    driver: activeDriver,
+                    mount: activeMount,
+                    cct: activeCCT
+                });
+            }
         }
-    }, [editor, selectedSymbolType, productId, defaultHeight, busAssignment, cableType, lumens, beamAngle, range, mountType, heightOffset, currentRoom]);
+    }, [editor, selectedSymbolType, productId, defaultHeight, busAssignment, cableType, lumens, beamAngle, range, mountType, heightOffset, currentRoom, activeDriver, activeMount, activeCCT, activeTool]);
 
     // Initial buffer sync
     React.useEffect(() => {

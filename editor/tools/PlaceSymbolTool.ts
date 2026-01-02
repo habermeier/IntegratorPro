@@ -39,7 +39,6 @@ export class PlaceSymbolTool implements Tool {
 
     public deactivate(): void {
         this.editor.scene.remove(this.previewGroup);
-        this.symbolType = null;
         remoteDebug('Deactivated', 'PlaceSymbolTool');
     }
 
@@ -112,13 +111,16 @@ export class PlaceSymbolTool implements Tool {
      * Returns device ID if found, null otherwise
      */
     private findDeviceAtPosition(screenX: number, screenY: number): string | null {
-        const worldPos = this.editor.cameraSystem.screenToWorld(screenX, screenY);
+        const renderer = (this.editor as any).renderer as THREE.WebGLRenderer;
+        if (!renderer) return null;
+
+        const rect = renderer.domElement.getBoundingClientRect();
+        const ndcX = ((screenX) / rect.width) * 2 - 1;
+        const ndcY = -((screenY) / rect.height) * 2 + 1;
+
         const cam = this.editor.cameraSystem.mainCamera;
-
-        const ndcX = (worldPos.x - (cam.left + cam.right) / 2) / ((cam.right - cam.left) / 2);
-        const ndcY = (worldPos.y - (cam.top + cam.bottom) / 2) / ((cam.top - cam.bottom) / 2);
-
         const raycaster = new THREE.Raycaster();
+        raycaster.params.Line.threshold = 5; // Easier to hit thin crosshairs
         raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), cam);
 
         const layers = this.editor.layerSystem.getAllLayers();
@@ -135,7 +137,7 @@ export class PlaceSymbolTool implements Tool {
             for (const intersect of intersects) {
                 // Symbols use nested groups, we want the top-most object with userData.id
                 let obj = intersect.object;
-                while (obj && !obj.userData.id && obj.parent !== layer.container) {
+                while (obj && !obj.userData.id && obj.parent && obj.parent !== layer.container) {
                     obj = obj.parent as any;
                 }
 
@@ -166,12 +168,13 @@ export class PlaceSymbolTool implements Tool {
     public onMouseDown(x: number, y: number, event: MouseEvent): void {
         remoteDebug('onMouseDown called', 'PlaceSymbolTool', { x, y, button: event.button, symbolType: this.symbolType });
 
-        if (event.button !== 0 || !this.symbolType) {
-            remoteDebug('Ignoring click - wrong button or no symbol type', 'PlaceSymbolTool');
+        if (event.button !== 0) {
+            remoteDebug('Ignoring click - wrong button', 'PlaceSymbolTool');
             return;
         }
 
         // SMART PLACEMENT: Check if clicking on an existing device first (read-only check)
+        // This MUST happen before checking symbolType so users can select existing items
         const deviceAtClick = this.findDeviceAtPosition(x, y);
         remoteDebug(`Device detection result: ${deviceAtClick}`, 'PlaceSymbolTool');
 
@@ -181,6 +184,11 @@ export class PlaceSymbolTool implements Tool {
             this.editor.selectionSystem.select(deviceAtClick);
             this.editor.emit('selection-changed', [deviceAtClick]);
             // Don't place a new symbol - just select the existing one
+            return;
+        }
+
+        if (!this.symbolType) {
+            remoteDebug('Ignoring click - no symbol type selected for placement', 'PlaceSymbolTool');
             return;
         }
 

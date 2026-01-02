@@ -342,7 +342,6 @@ export const FloorPlanRenderer: React.FC = () => {
                 isEditMode={isEditMode}
                 activeLayerName={layers.find(l => l.id === activeLayerId)?.name}
                 lastKey={lastKey || ''}
-                isElectricalVisible={layers.find(l => l.id === 'electrical')?.visible || false}
                 isZoomCursorEnabled={editor?.cameraSystem.getZoomCursorEnabled() ?? true}
             />
 

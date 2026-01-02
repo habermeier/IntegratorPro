@@ -337,7 +337,10 @@ export class FloorPlanEditor {
                 case 'v': this.setActiveTool('select'); break;
                 case 'r': this.setActiveTool('draw-room'); break;
                 case 'm': this.setActiveTool('draw-mask'); break;
-                case 'p': this.setActiveTool('place-symbol'); break;
+                case 'p': 
+                    this.setActiveLayer('lighting', true);
+                    this.setActiveTool('place-symbol'); 
+                    break;
                 case 'f': this.setActiveTool('place-furniture'); break;
                 case 's': this.setActiveTool('scale-calibrate'); break;
                 case 'd': this.setActiveTool('measure'); break;
@@ -1140,9 +1143,17 @@ export class FloorPlanEditor {
                 this.preMaskVisibility.clear();
             }
 
-            // Re-lock all layers
+            // Re-lock ONLY foundational image layers by default
+            // Technical and Utility layers should remain interactive
             this.layerSystem.getAllLayers().forEach(layer => {
-                this.layerSystem.setLayerLocked(layer.id, true);
+                if (layer.category === 'foundation' && layer.type === 'image') {
+                    this.layerSystem.setLayerLocked(layer.id, true);
+                } else if (layer.type === 'vector') {
+                    // Vector layers are locked only if global room layout lock is ON
+                    // Exception: Cables/Lighting usually stay unlocked for device interaction
+                    const shouldLock = this.isRoomLayoutLocked && (layer.id === 'room' || layer.id === 'mask');
+                    this.layerSystem.setLayerLocked(layer.id, shouldLock);
+                }
             });
         }
         this.savePersistentState();
