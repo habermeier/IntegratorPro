@@ -3,6 +3,7 @@ import { HelpCircle } from 'lucide-react';
 import { ToolType } from '../../editor/models/types';
 import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
 import { dataService } from '../../src/services/DataService';
+import { getToolHint, getModeTheme } from '../../src/constants/toolHints';
 
 interface EditorHUDProps {
     editor: FloorPlanEditor | null;
@@ -16,57 +17,26 @@ interface EditorHUDProps {
 export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeTool, isEditMode, activeLayerName, lastKey, isZoomCursorEnabled }) => {
     const [isPrimary, setIsPrimary] = React.useState(() => dataService.isPrimary());
     const [showHelp, setShowHelp] = React.useState(false);
+    const [viewportWidth, setViewportWidth] = React.useState(() => window.innerWidth);
 
-    // Contextual hint logic (AUTO-HUD-CONSOLIDATE-P23, AUTO-HUD-POLISH-P24)
-    const commandHint = React.useMemo(() => {
-        let hint = '';
+    // Track viewport width for responsive hints (AUTO-ULTIMATE-POLISH-P25)
+    React.useEffect(() => {
+        const handleResize = () => setViewportWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
-        // Priority 1: Edit/Alignment mode (overrides tool hints)
-        if (isEditMode) {
-            hint = 'ALIGNMENT: Arrows to move • Ctrl+Arrows to Scale/Rotate • L to Exit';
-        }
-        // Priority 2: Tool-specific hints
-        else {
-            switch (activeTool) {
-                case 'select':
-                    hint = 'SELECT: Click to edit • Drag to move • Del to delete';
-                    break;
-                case 'pan':
-                    hint = 'PAN: Click and drag to navigate the floor plan';
-                    break;
-                case 'draw-room':
-                    hint = 'ROOM: Click to add point • Enter to finish • Esc to undo';
-                    break;
-                case 'draw-mask':
-                    hint = 'MASK: Click to define area • Double-click to finish';
-                    break;
-                case 'draw-cable':
-                    hint = 'CABLE: Click to add point • Enter to finish • Esc to undo';
-                    break;
-                case 'place-symbol':
-                    hint = 'SYMBOL: Click to place • Arrows to move • [ ] to hide menus';
-                    break;
-                case 'place-furniture':
-                    hint = 'FURNITURE: Click to place • Arrows to move • [ ] to hide menus';
-                    break;
-                case 'measure':
-                    hint = 'MEASURE: Click two points to see distance • Esc to clear';
-                    break;
-                case 'scale-calibrate':
-                    hint = 'SCALE: Click two points to calibrate map • Esc to cancel';
-                    break;
-                default:
-                    hint = 'READY: Choose a tool to begin';
-            }
-        }
+    // Contextual hint logic (AUTO-HUD-CONSOLIDATE-P23, AUTO-HUD-POLISH-P24, AUTO-ULTIMATE-POLISH-P25)
+    const commandHint = React.useMemo(
+        () => getToolHint(activeTool, isEditMode, isZoomCursorEnabled, viewportWidth),
+        [activeTool, isEditMode, isZoomCursorEnabled, viewportWidth]
+    );
 
-        // Prepend zoom indicator if enabled
-        if (isZoomCursorEnabled) {
-            hint = `🔍 ${hint}`;
-        }
-
-        return hint;
-    }, [activeTool, isEditMode, isZoomCursorEnabled]);
+    // Mode theming for Command Bar (AUTO-ULTIMATE-POLISH-P25)
+    const modeTheme = React.useMemo(
+        () => getModeTheme(activeTool, isEditMode),
+        [activeTool, isEditMode]
+    );
 
     React.useEffect(() => {
         const handleBatonChange = (e: any) => {
@@ -278,9 +248,9 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
                 </div>
             )}
 
-            {/* Unified Command Bar - Central bottom anchor for all contextual hints (AUTO-HUD-CONSOLIDATE-P23, AUTO-HUD-POLISH-P24) */}
+            {/* Unified Command Bar - Central bottom anchor for all contextual hints (AUTO-HUD-CONSOLIDATE-P23, AUTO-HUD-POLISH-P24, AUTO-ULTIMATE-POLISH-P25) */}
             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-40 w-full px-4">
-                <div className="bg-slate-900/90 backdrop-blur-md border-2 border-emerald-500/20 rounded-lg shadow-[0_10px_40px_rgba(0,0,0,0.4)] min-w-[280px] max-w-[90vw] md:max-w-[800px] mx-auto">
+                <div className={`bg-slate-900/90 backdrop-blur-md border-2 ${modeTheme.borderClass} rounded-lg shadow-[0_10px_40px_rgba(0,0,0,0.4)] min-w-[280px] max-w-[90vw] md:max-w-[800px] mx-auto transition-colors duration-300 ${modeTheme.shouldPulse ? 'animate-pulse' : ''}`}>
                     <div className="flex items-center justify-center space-x-2 md:space-x-4 px-2 md:px-4 py-2">
                         {/* Panel Toggle Hint */}
                         <div className="flex items-center space-x-2">
@@ -291,9 +261,9 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
                         {/* Divider */}
                         <div className="h-4 w-px bg-slate-700"></div>
 
-                        {/* Contextual hints based on active tool/mode (AUTO-HUD-CONSOLIDATE-P23, AUTO-HUD-POLISH-P24) */}
+                        {/* Contextual hints based on active tool/mode (AUTO-HUD-CONSOLIDATE-P23, AUTO-HUD-POLISH-P24, AUTO-ULTIMATE-POLISH-P25) */}
                         <div className="flex items-center space-x-2 text-[10px] flex-1 min-w-0">
-                            <span className={`font-bold uppercase tracking-wider truncate ${isEditMode ? 'text-emerald-400' : activeTool === 'draw-room' ? 'text-blue-400' : activeTool.startsWith('place-') ? 'text-purple-400' : 'text-blue-400/60 italic'}`}>
+                            <span className={`font-bold uppercase tracking-wider truncate ${modeTheme.textClass}`}>
                                 {commandHint}
                             </span>
                         </div>
