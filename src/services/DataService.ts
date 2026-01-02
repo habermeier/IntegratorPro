@@ -333,7 +333,7 @@ class DataService {
   }
 
   /**
-   * Add a custom symbol preset to the project
+   * Add a custom symbol preset to the project (AUTO-SPEC-SYSTEM-P26: "Save as New Type")
    * @param customSymbol The custom symbol definition to add
    */
   async addCustomSymbol(customSymbol: SymbolDefinition): Promise<void> {
@@ -346,7 +346,7 @@ class DataService {
 
     // Check for duplicate IDs
     const existingIndex = this.cache!.customSymbols.findIndex(s => s.id === customSymbol.id);
-    
+
     // Ensure createMesh is attached for runtime use
     customSymbol.createMesh = createUniversalMesh;
     SYMBOL_LIBRARY[customSymbol.id] = customSymbol;
@@ -362,6 +362,74 @@ class DataService {
     }
 
     await this.saveProject(this.cache!);
+  }
+
+  /**
+   * Update an existing global symbol type (AUTO-SPEC-SYSTEM-P26: "Update Global Type")
+   * Modifies the SymbolDefinition in SYMBOL_LIBRARY and persists to project
+   * This affects ALL instances of this type across the project
+   * @param symbolId ID of the symbol to update
+   * @param updates Partial SymbolDefinition with fields to update
+   */
+  async updateGlobalSymbolType(symbolId: string, updates: Partial<SymbolDefinition>): Promise<void> {
+    if (!this.cache) await this.loadProject();
+
+    // Initialize customSymbols array if it doesn't exist
+    if (!this.cache!.customSymbols) {
+      this.cache!.customSymbols = [];
+    }
+
+    // Find existing symbol
+    const existingIndex = this.cache!.customSymbols.findIndex(s => s.id === symbolId);
+
+    if (existingIndex >= 0) {
+      // Update existing custom symbol
+      const updatedSymbol = {
+        ...this.cache!.customSymbols[existingIndex],
+        ...updates,
+        id: symbolId // Ensure ID doesn't change
+      };
+
+      // Ensure createMesh is attached for runtime use
+      updatedSymbol.createMesh = createUniversalMesh;
+
+      // Update in cache
+      this.cache!.customSymbols[existingIndex] = updatedSymbol;
+
+      // Update in runtime SYMBOL_LIBRARY
+      SYMBOL_LIBRARY[symbolId] = updatedSymbol;
+
+      remoteDebug(`Updated global symbol type: ${symbolId}`, 'DataService', { updates });
+    } else if (SYMBOL_LIBRARY[symbolId]) {
+      // Symbol exists in SYMBOL_LIBRARY but not in customSymbols
+      // This is a built-in symbol being modified - create as custom
+      const builtInSymbol = SYMBOL_LIBRARY[symbolId];
+      const customizedSymbol = {
+        ...builtInSymbol,
+        ...updates,
+        id: symbolId,
+        createMesh: createUniversalMesh
+      };
+
+      // Add to customSymbols
+      this.cache!.customSymbols.push(customizedSymbol);
+
+      // Update runtime SYMBOL_LIBRARY
+      SYMBOL_LIBRARY[symbolId] = customizedSymbol;
+
+      remoteDebug(`Customized built-in symbol: ${symbolId}`, 'DataService', { updates });
+    } else {
+      throw new Error(`Symbol ${symbolId} not found in SYMBOL_LIBRARY`);
+    }
+
+    await this.saveProject(this.cache!);
+
+    // Dispatch event for UI components to react to the global type update
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('symbol-type-updated', {
+        detail: { symbolId, updates }
+      }));
+    }
   }
 
   /**

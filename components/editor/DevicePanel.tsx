@@ -775,28 +775,72 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
         }
     };
 
-    // NEW: Save current editing device configuration as a new fixture type
+    // AUTO-SPEC-SYSTEM-P26: Generate label from spec metadata (label enforcement)
+    const generateLabelFromSpec = (): { shorthand: string; orderingCode: string } => {
+        if (!editingDevice) return { shorthand: 'NEW-TYP', orderingCode: '' };
+
+        // Use spec metadata if available, otherwise use device metadata
+        const metadata = editingDevice.metadata || {};
+
+        // Build shorthand from spec fields (e.g., "2DS-L9" format)
+        let shorthand = metadata.shorthand || specShorthand || '';
+
+        // Build ordering code from spec configuration
+        const orderingParts: string[] = [];
+
+        if (specMountingType && specMountingType !== 'N') orderingParts.push(specMountingType);
+        if (specLumens) orderingParts.push(specLumens);
+        if (specColor) orderingParts.push(specColor);
+        if (specDriver) orderingParts.push(specDriver);
+        if (specDistribution && specDistribution !== 'M') orderingParts.push(specDistribution);
+        if (specFlange && specFlange !== 'OF') orderingParts.push(specFlange);
+        if (specReflectorFinish && specReflectorFinish !== 'CS') orderingParts.push(specReflectorFinish);
+        if (specTrimType && specTrimType !== 'O') orderingParts.push(specTrimType);
+        if (specOptions && specOptions !== 'NONE') orderingParts.push(specOptions);
+        if (specControl && specControl !== 'STD') orderingParts.push(specControl);
+        if (specVoltage && specVoltage !== 'UNV') orderingParts.push(specVoltage);
+
+        const orderingCode = orderingParts.join('-') || metadata.orderingCode || editingDevice.productId;
+
+        // If shorthand is still empty, generate from product ID
+        if (!shorthand) {
+            const productParts = editingDevice.productId.split('-');
+            shorthand = productParts.slice(0, 2).join('-').toUpperCase();
+        }
+
+        return { shorthand: shorthand.toUpperCase(), orderingCode };
+    };
+
+    // AUTO-SPEC-SYSTEM-P26: Save current device configuration as a NEW fixture type
     const handleSetAsType = async () => {
         if (!editingDevice) return;
 
         const presetName = prompt('Enter new fixture type name:', `${editingDevice.name} Type`);
         if (!presetName) return;
 
-        const shorthand = prompt('Enter shorthand (5-7 letters):', (editingDevice.metadata?.shorthand || 'NEW-TYP').toUpperCase());
-        if (!shorthand) return;
+        // Auto-generate label from spec metadata (label enforcement)
+        const { shorthand, orderingCode } = generateLabelFromSpec();
+
+        const shorthandInput = prompt('Enter shorthand (auto-generated from spec):', shorthand);
+        if (!shorthandInput) return;
 
         const baseDef = SYMBOL_LIBRARY[editingDevice.deviceTypeId] || SYMBOL_LIBRARY['recessed-light'];
-        
+
         const customSymbol: SymbolDefinition = {
             ...baseDef,
-            id: `custom-${shorthand.toLowerCase()}-${Date.now()}`,
+            id: `custom-${shorthandInput.toLowerCase()}-${Date.now()}`,
             name: presetName,
             description: `User defined type from ${editingDevice.id}`,
             metadata: {
                 ...editingDevice.metadata,
-                shorthand: shorthand.toUpperCase(),
+                shorthand: shorthandInput.toUpperCase(),
                 productId: editingDevice.productId,
-                orderingCode: editingDevice.metadata?.orderingCode || editingDevice.productId
+                orderingCode: orderingCode,
+                // Preserve spec configuration
+                ...(specDriver && { driver: specDriver }),
+                ...(specColor && { cct: specColor }),
+                ...(specMountingType && { mount: specMountingType }),
+                ...(specLumens && { lumens: parseInt(specLumens.replace(/\D/g, '')) || 0 })
             }
         };
 
@@ -805,9 +849,75 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
             // After creating the type, we update the current device to USE this new type
             handleUpdateDeviceType(customSymbol.id);
             alert(`Fixture type "${presetName}" created and applied to device.`);
+
+            // Trigger DeviceConversionModal (Worker 2) for mass updates
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('device-type-created', {
+                    detail: {
+                        oldTypeId: editingDevice.deviceTypeId,
+                        newTypeId: customSymbol.id,
+                        symbolDefinition: customSymbol
+                    }
+                }));
+            }
         } catch (error) {
             console.error('Failed to create fixture type:', error);
             alert('Failed to create fixture type. Please try again.');
+        }
+    };
+
+    // AUTO-SPEC-SYSTEM-P26: Update existing GLOBAL type (affects all instances)
+    const handleUpdateGlobalType = async () => {
+        if (!editingDevice) return;
+
+        const confirmed = confirm(
+            `Update GLOBAL type "${editingDevice.deviceTypeId}"?\n\n` +
+            `This will update ALL devices of this type across the entire project.\n\n` +
+            `To update only this device, use "Save as New Type" instead.`
+        );
+
+        if (!confirmed) return;
+
+        // Auto-generate label from spec metadata (label enforcement)
+        const { shorthand, orderingCode } = generateLabelFromSpec();
+
+        const updates: Partial<SymbolDefinition> = {
+            name: editingDevice.name || SYMBOL_LIBRARY[editingDevice.deviceTypeId]?.name,
+            metadata: {
+                ...SYMBOL_LIBRARY[editingDevice.deviceTypeId]?.metadata,
+                ...editingDevice.metadata,
+                shorthand: shorthand,
+                orderingCode: orderingCode,
+                productId: editingDevice.productId,
+                // Preserve spec configuration
+                ...(specDriver && { driver: specDriver }),
+                ...(specColor && { cct: specColor }),
+                ...(specMountingType && { mount: specMountingType }),
+                ...(specLumens && { lumens: parseInt(specLumens.replace(/\D/g, '')) || 0 })
+            }
+        };
+
+        try {
+            await dataService.updateGlobalSymbolType(editingDevice.deviceTypeId, updates);
+            alert(`Global type "${editingDevice.deviceTypeId}" updated successfully.\n\nAll instances will reflect the new configuration.`);
+
+            // Trigger DeviceConversionModal (Worker 2) to refresh all instances
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('symbol-type-updated', {
+                    detail: {
+                        symbolId: editingDevice.deviceTypeId,
+                        updates
+                    }
+                }));
+            }
+
+            // Refresh editor to show updated symbols
+            if (editor) {
+                editor.emit('layers-changed', editor.layerSystem.getAllLayers());
+            }
+        } catch (error) {
+            console.error('Failed to update global type:', error);
+            alert('Failed to update global type. Please try again.');
         }
     };
 
@@ -1796,7 +1906,16 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                                         title="Save this specific configuration as a new reusable fixture type"
                                     >
                                         <Save size={10} />
-                                        <span>Set as New Type</span>
+                                        <span>Save as New Type</span>
+                                    </button>
+
+                                    <button
+                                        onClick={handleUpdateGlobalType}
+                                        className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded bg-amber-600/20 hover:bg-amber-600 text-amber-400 hover:text-white border border-amber-500/30 hover:border-amber-500 transition-all text-[8px] font-black uppercase tracking-widest"
+                                        title="Update the global type definition (affects ALL devices of this type)"
+                                    >
+                                        <Save size={10} />
+                                        <span>Update Global Type</span>
                                     </button>
                                 </div>
 
