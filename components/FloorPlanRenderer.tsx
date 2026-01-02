@@ -145,6 +145,13 @@ export const FloorPlanRenderer: React.FC = () => {
         editorInitCallbacks
     );
 
+    // Wire up the zoom cursor ref to the editor
+    useEffect(() => {
+        if (editor) {
+            editor.setZoomCursorRef(zoomCursorRef);
+        }
+    }, [editor]);
+
     // Room management (extracted to useRoomManagement hook)
     const { handleSaveRoom, handleCancelRoom, existingRoomNames } = useRoomManagement(
         editor,
@@ -222,6 +229,7 @@ export const FloorPlanRenderer: React.FC = () => {
                 activeLayerName={layers.find(l => l.id === activeLayerId)?.name}
                 lastKey={lastKey || ''}
                 isElectricalVisible={layers.find(l => l.id === 'electrical')?.visible || false}
+                isZoomCursorEnabled={editor?.cameraSystem.getZoomCursorEnabled() ?? true}
             />
 
             <div className={`flex-1 flex overflow-hidden transition-all duration-500`}>

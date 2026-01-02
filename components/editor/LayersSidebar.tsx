@@ -1,6 +1,7 @@
 import React from 'react';
 import { Layer, ToolType } from '../../editor/models/types';
 import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
+import { dataService } from '../../src/services/DataService';
 
 interface LayersSidebarProps {
     editor: FloorPlanEditor | null;
@@ -22,11 +23,13 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
     activeTool
 }) => {
     const [lightingMode, setLightingMode] = React.useState<'circles' | 'intensity' | 'fixture'>(() => editor?.layerSystem.getLightingMode() || 'circles');
+    const [zoomCursorEnabled, setZoomCursorEnabled] = React.useState<boolean>(() => editor?.cameraSystem.getZoomCursorEnabled() ?? true);
 
     // Sync state if editor changes or system inits
     React.useEffect(() => {
         if (!editor) return;
         setLightingMode(editor.layerSystem.getLightingMode());
+        setZoomCursorEnabled(editor.cameraSystem.getZoomCursorEnabled());
     }, [editor]);
 
     // Grouping
@@ -61,6 +64,52 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                     }
                 });
                 break;
+        }
+    };
+
+    const handleExportProject = async () => {
+        try {
+            const projectData = await dataService.loadProject();
+            const jsonString = JSON.stringify(projectData, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `project-backup-${Date.now()}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Export failed:', error);
+            alert('Failed to export project. See console for details.');
+        }
+    };
+
+    const handleImportProject = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const confirmed = confirm(
+            'WARNING: This will overwrite all current project data. This action cannot be undone. Are you sure you want to continue?'
+        );
+
+        if (!confirmed) {
+            event.target.value = '';
+            return;
+        }
+
+        try {
+            const fileContent = await file.text();
+            const projectData = JSON.parse(fileContent);
+            await dataService.saveProject(projectData, true);
+            alert('Project imported successfully. Reloading page...');
+            window.location.reload();
+        } catch (error) {
+            console.error('Import failed:', error);
+            alert('Failed to import project. Please check the file format and try again.');
+        } finally {
+            event.target.value = '';
         }
     };
 
@@ -244,6 +293,24 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                         [CLEAR]
                     </button>
                 </div>
+                <div className="mt-2 pt-2 border-t border-slate-800/50">
+                    <div className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter mb-1">Debug</div>
+                    <button
+                        onClick={() => {
+                            const newValue = !zoomCursorEnabled;
+                            editor?.cameraSystem.setZoomCursorEnabled(newValue);
+                            setZoomCursorEnabled(newValue);
+                        }}
+                        className={`w-full px-2 py-1.5 text-[8px] font-bold rounded border transition-colors ${
+                            zoomCursorEnabled
+                                ? 'bg-blue-900/40 border-blue-500/50 text-blue-400 hover:bg-blue-900/60'
+                                : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
+                        }`}
+                        title="Toggle Zoom Cursor (Magnified Viewport)"
+                    >
+                        {zoomCursorEnabled ? '✓ ZOOM CURSOR' : 'ZOOM CURSOR OFF'}
+                    </button>
+                </div>
             </div>
 
             {/* Layer Stack */}
@@ -290,6 +357,32 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                 ) : (
                     <div className="text-[10px] italic text-slate-700">No selection</div>
                 )}
+
+                {/* Project Export/Import */}
+                <div className="mt-4 pt-4 border-t border-slate-800 space-y-2">
+                    <button
+                        onClick={handleExportProject}
+                        className="w-full px-3 py-2 bg-blue-900/30 hover:bg-blue-800/50 border border-blue-700/50 rounded text-[10px] font-bold text-blue-400 uppercase tracking-wide transition-all"
+                        title="Download project as JSON file"
+                    >
+                        Export Project
+                    </button>
+                    <label className="block">
+                        <input
+                            type="file"
+                            accept=".json"
+                            onChange={handleImportProject}
+                            className="hidden"
+                            id="import-project-file"
+                        />
+                        <span
+                            className="block w-full px-3 py-2 bg-orange-900/30 hover:bg-orange-800/50 border border-orange-700/50 rounded text-[10px] font-bold text-orange-400 uppercase tracking-wide transition-all cursor-pointer text-center"
+                            title="Load project from JSON file (overwrites current data)"
+                        >
+                            Import Project
+                        </span>
+                    </label>
+                </div>
             </div>
         </div>
     );

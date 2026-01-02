@@ -1149,6 +1149,10 @@ export class FloorPlanEditor {
         this.needsRender = true;
     }
 
+    public setZoomCursorRef(ref: React.RefObject<HTMLDivElement | null>): void {
+        this.cameraSystem.zoomCursorRef = ref;
+    }
+
     private update(): void {
         this.layerSystem.update();
     }

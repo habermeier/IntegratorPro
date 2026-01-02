@@ -204,7 +204,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
         }
 
         // Safety Guard: Check if any devices are using this symbol type
-        const devicesUsingType = devices.filter(d => d.symbolType === selectedSymbolType);
+        const devicesUsingType = devices.filter(d => d.deviceTypeId === selectedSymbolType);
 
         if (devicesUsingType.length > 0) {
             const symbolDef = SYMBOL_LIBRARY[selectedSymbolType];

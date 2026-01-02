@@ -132,6 +132,9 @@ export function useAutoSave(
       if (furniture.length === 0 && lastSavedFurnitureRef.current.length > 2 && !isFurnitureDirty) {
         console.warn('⚠️ Prevented mono-save of empty furniture (initialization guard)'); return;
       }
+      if (cables.length === 0 && lastSavedCablesRef.current.length > 2 && !isCablesDirty) {
+        console.warn('⚠️ Prevented mono-save of empty cables (initialization guard)'); return;
+      }
 
       // 4. Perform Monolithic Save
       try {

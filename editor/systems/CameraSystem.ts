@@ -18,6 +18,8 @@ export class CameraSystem {
     };
 
     private lastMousePos: Vector2 = { x: 0, y: 0 };
+    private zoomCursorPosition: Vector2 = { x: 0, y: 0 };
+    public zoomCursorRef: React.RefObject<HTMLDivElement | null> | null = null;
 
     constructor(width: number, height: number) {
         this.viewportWidth = width;
@@ -103,6 +105,7 @@ export class CameraSystem {
     }
 
     public updateZoomCursor(screenX: number, screenY: number, forceHidden: boolean = false): void {
+        this.lastMousePos = { x: screenX, y: screenY };
         this.zoomCursorPosition = { x: screenX, y: screenY };
 
         // DOM Cursor Control (Red Reticle)
@@ -222,6 +225,14 @@ export class CameraSystem {
         // This is used by the CameraSystem internally or by external zoom logic
         // We'll store it in the state for consistency
         (this.state as any).fastZoomMultiplier = multiplier;
+    }
+
+    public setZoomCursorEnabled(enabled: boolean): void {
+        this.state.zoomCursorEnabled = enabled;
+    }
+
+    public getZoomCursorEnabled(): boolean {
+        return this.state.zoomCursorEnabled;
     }
 
     public render(renderer: THREE.WebGLRenderer, scene: THREE.Scene): void {
