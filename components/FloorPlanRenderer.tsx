@@ -211,9 +211,16 @@ export const FloorPlanRenderer: React.FC = () => {
         };
     }, []);
 
-    // Mouse edge detection for auto-show sidebars
+    // Mouse edge detection for auto-show sidebars (AUTO-ULTIMATE-UX-P26: Throttled)
     useEffect(() => {
+        let lastRun = 0;
+        const throttleMs = 32; // ~30fps - optimized for performance
+
         const handleMouseMove = (e: MouseEvent) => {
+            const now = Date.now();
+            if (now - lastRun < throttleMs) return;
+            lastRun = now;
+
             const edgeThreshold = 20;
             const windowWidth = window.innerWidth;
 
@@ -345,7 +352,7 @@ export const FloorPlanRenderer: React.FC = () => {
                 isZoomCursorEnabled={editor?.cameraSystem.getZoomCursorEnabled() ?? true}
             />
 
-            <div className={`flex-1 flex overflow-hidden transition-all duration-500`}>
+            <div className={`flex-1 flex overflow-hidden transition-all duration-500 ease-out`}>
                 {/* 🛠️ Vertical Tool Palette - Hidden during place-symbol mode */}
                 {activeTool !== 'place-symbol' && (
                     <ToolPalette
@@ -361,7 +368,7 @@ export const FloorPlanRenderer: React.FC = () => {
                         {/* Mini-strip when collapsed - glows when mouse near edge */}
                         {!leftPanelOpen && (
                             <div
-                                className={`w-1 transition-all duration-200 cursor-pointer z-50 ${
+                                className={`w-1 transition-all duration-200 ease-out cursor-pointer z-50 ${
                                     leftEdgeHover
                                         ? 'bg-blue-500/70 shadow-[0_0_12px_rgba(59,130,246,0.6)]'
                                         : 'bg-blue-600/30 hover:bg-blue-500/50'
@@ -373,7 +380,8 @@ export const FloorPlanRenderer: React.FC = () => {
                         {/* Full panel when open */}
                         {leftPanelOpen && (
                             <div
-                                className="transition-all duration-300"
+                                className="h-full flex flex-col transition-all duration-300 ease-out animate-in fade-in slide-in-from-left-4 duration-500"
+                                style={{ animationDelay: '100ms' }}
                                 onMouseEnter={handleLeftPanelEnter}
                                 onMouseLeave={handleLeftPanelLeave}
                             >
@@ -412,10 +420,11 @@ export const FloorPlanRenderer: React.FC = () => {
                 {/* 📑 Right Sidebar Area - Auto-hide on hover */}
                 {editor && (
                     <>
-                        {/* Full panel when open */}
+                        {/* Full panel when open - AUTO-ULTIMATE-UX-P26: Staggered entry animation */}
                         {rightPanelOpen && (
                             <div
-                                className="flex flex-col relative border-l border-slate-800 transition-all duration-300"
+                                className="h-full flex flex-col relative border-l border-slate-800 transition-all duration-300 ease-out animate-in fade-in slide-in-from-right-4 duration-500"
+                                style={{ animationDelay: '200ms' }}
                                 onMouseEnter={handleRightPanelEnter}
                                 onMouseLeave={handleRightPanelLeave}
                             >
@@ -446,7 +455,7 @@ export const FloorPlanRenderer: React.FC = () => {
                         {/* Mini-strip when collapsed - glows when mouse near edge */}
                         {!rightPanelOpen && (
                             <div
-                                className={`w-1 transition-all duration-200 cursor-pointer z-50 ${
+                                className={`w-1 transition-all duration-200 ease-out cursor-pointer z-50 ${
                                     rightEdgeHover
                                         ? 'bg-slate-400/70 shadow-[0_0_12px_rgba(148,163,184,0.6)]'
                                         : 'bg-slate-600/30 hover:bg-slate-500/50'

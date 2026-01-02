@@ -445,10 +445,22 @@ export class FloorPlanEditor {
         }
     };
 
+    private lastMouseMoveTime: number = 0;
+    private readonly MOUSE_MOVE_THROTTLE_MS = 32; // ~30fps (AUTO-ULTIMATE-UX-P26)
+
     private handleMouseMove = (e: MouseEvent) => {
         // We need coords relative to container even if mouse is outside (for drag)
         // ensure rect is valid
         if (!this.container) return;
+
+        // Throttle check (AUTO-ULTIMATE-UX-P26: Performance optimization)
+        // Only throttle when spacebar is pressed (auto-pan mode)
+        const now = Date.now();
+        if (this.isSpacePressed && now - this.lastMouseMoveTime < this.MOUSE_MOVE_THROTTLE_MS) {
+            return;
+        }
+        this.lastMouseMoveTime = now;
+
         const { x, y } = this.getMouseCoords(e);
 
         if (this.isDragging) {
@@ -487,7 +499,7 @@ export class FloorPlanEditor {
         }
 
         this.cameraSystem.updateZoomCursor(x, y);
-        
+
         // Trigger re-render if zoom cursor is active
         if (this.cameraSystem.getZoomCursorEnabled()) {
             this.setDirty();

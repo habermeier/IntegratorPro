@@ -775,6 +775,61 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
         }
     };
 
+    // NEW: Save current editing device configuration as a new fixture type
+    const handleSetAsType = async () => {
+        if (!editingDevice) return;
+
+        const presetName = prompt('Enter new fixture type name:', `${editingDevice.name} Type`);
+        if (!presetName) return;
+
+        const shorthand = prompt('Enter shorthand (5-7 letters):', (editingDevice.metadata?.shorthand || 'NEW-TYP').toUpperCase());
+        if (!shorthand) return;
+
+        const baseDef = SYMBOL_LIBRARY[editingDevice.deviceTypeId] || SYMBOL_LIBRARY['recessed-light'];
+        
+        const customSymbol: SymbolDefinition = {
+            ...baseDef,
+            id: `custom-${shorthand.toLowerCase()}-${Date.now()}`,
+            name: presetName,
+            description: `User defined type from ${editingDevice.id}`,
+            metadata: {
+                ...editingDevice.metadata,
+                shorthand: shorthand.toUpperCase(),
+                productId: editingDevice.productId,
+                orderingCode: editingDevice.metadata?.orderingCode || editingDevice.productId
+            }
+        };
+
+        try {
+            await dataService.addCustomSymbol(customSymbol);
+            // After creating the type, we update the current device to USE this new type
+            handleUpdateDeviceType(customSymbol.id);
+            alert(`Fixture type "${presetName}" created and applied to device.`);
+        } catch (error) {
+            console.error('Failed to create fixture type:', error);
+            alert('Failed to create fixture type. Please try again.');
+        }
+    };
+
+    const handleUpdateDeviceType = (newTypeId: string) => {
+        if (!editingDevice || !editor) return;
+
+        const success = updateDevice(editingDevice.id, { deviceTypeId: newTypeId });
+        if (success) {
+            // Also need to sync the 3D representation
+            const layer = editor.layerSystem.getLayer(editingDevice.layerId);
+            if (layer && layer.type === 'vector') {
+                const content = layer.content as VectorLayerContent;
+                const symbol = (content.symbols || []).find(s => s.id === editingDevice.id);
+                if (symbol) {
+                    symbol.type = newTypeId;
+                    editor.layerSystem.markDirty(editingDevice.layerId);
+                }
+            }
+            editor.emit('layers-changed', editor.layerSystem.getAllLayers());
+        }
+    };
+
     // Calculate room area and dimensions
     // Calculate room area and dimensions using centralized logic
     const calculateRoomStats = React.useMemo(() => {
@@ -1718,12 +1773,35 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                                     </button>
                                 </div>
 
+                                {/* Type & Actions */}
+                                <div className="space-y-2 p-2 bg-slate-950/50 rounded border border-slate-800/50">
+                                    <div>
+                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Device Type</label>
+                                        <select
+                                            value={editingDevice.deviceTypeId}
+                                            onChange={(e) => handleUpdateDeviceType(e.target.value)}
+                                            className="w-full text-[9px] text-blue-400 font-mono px-2 py-1 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
+                                        >
+                                            {Object.keys(SYMBOL_LIBRARY).map(typeId => (
+                                                <option key={typeId} value={typeId}>
+                                                    {SYMBOL_LIBRARY[typeId].name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    
+                                    <button
+                                        onClick={handleSetAsType}
+                                        className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 hover:border-blue-500 transition-all text-[8px] font-black uppercase tracking-widest"
+                                        title="Save this specific configuration as a new reusable fixture type"
+                                    >
+                                        <Save size={10} />
+                                        <span>Set as New Type</span>
+                                    </button>
+                                </div>
+
                                 {/* Read-only Info */}
                                 <div className="space-y-2 p-2 bg-slate-950/50 rounded border border-slate-800/50">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[7px] text-slate-600 uppercase font-bold">Type</span>
-                                        <span className="text-[9px] text-slate-300 font-mono">{editingDevice.deviceTypeId}</span>
-                                    </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-[7px] text-slate-600 uppercase font-bold">Room</span>
                                         <span className="text-[9px] text-slate-300 font-mono">{editingDevice.roomId || 'Unassigned'}</span>

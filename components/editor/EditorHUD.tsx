@@ -58,11 +58,17 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
         };
     }, []);
 
-    // Handle ESC key to close help modal
+    // Handle keyboard shortcuts for help modal (AUTO-ULTIMATE-UX-P26)
     React.useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            // Close help modal with ESC
             if (e.key === 'Escape' && showHelp) {
                 setShowHelp(false);
+            }
+            // Open help modal with ? or F1
+            else if ((e.key === '?' || e.key === 'F1') && !showHelp) {
+                e.preventDefault(); // Prevent default F1 browser help
+                setShowHelp(true);
             }
         };
 
@@ -74,7 +80,7 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
     }, [showHelp]);
 
     return (
-        <div className="p-4 bg-slate-900/80 border-b border-slate-800 flex justify-between items-center z-10 relative">
+        <div className="p-4 bg-slate-900/80 border-b border-slate-800 flex justify-between items-center z-10 relative animate-in fade-in slide-in-from-top-4 duration-400">
             <div className="flex items-center space-x-6">
                 <div>
                     <div className="flex items-center space-x-2">
@@ -99,8 +105,9 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
                         {isEditMode && (
                             <button
                                 onClick={() => editor.setEditMode(false)}
-                                className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-[10px] font-black uppercase tracking-wider rounded-md transition-colors ml-2 border border-red-400/50"
+                                className="px-3 py-1 bg-red-600 hover:bg-red-700 focus:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 text-white text-[10px] font-black uppercase tracking-wider rounded-md transition-colors ml-2 border border-red-400/50"
                                 title="Exit Overlay Alignment Mode (L)"
+                                aria-label="Exit Overlay Alignment Mode"
                             >
                                 EXIT ALIGNMENT MODE
                             </button>
@@ -115,29 +122,33 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
                 <div className="flex space-x-1 border-l border-slate-800 pl-4">
                     <button
                         onClick={() => editor?.commandManager.undo()}
-                        className="p-2 hover:bg-slate-800 rounded-md text-slate-400 hover:text-white transition-colors text-lg"
+                        className="p-2 hover:bg-slate-800 focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md text-slate-400 hover:text-white transition-colors text-lg"
                         title="Undo (Ctrl+Z)"
+                        aria-label="Undo last action"
                     >
                         ↩️
                     </button>
                     <button
                         onClick={() => editor?.commandManager.redo()}
-                        className="p-2 hover:bg-slate-800 rounded-md text-slate-400 hover:text-white transition-colors text-lg"
+                        className="p-2 hover:bg-slate-800 focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md text-slate-400 hover:text-white transition-colors text-lg"
                         title="Redo (Ctrl+Shift+Z)"
+                        aria-label="Redo last action"
                     >
                         ↪️
                     </button>
                     <button
                         onClick={() => setShowHelp(!showHelp)}
-                        className="p-2 hover:bg-emerald-900/40 rounded-md text-emerald-500 hover:text-emerald-400 transition-colors"
-                        title="Keyboard Shortcuts"
+                        className="p-2 hover:bg-emerald-900/40 focus:bg-emerald-900/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded-md text-emerald-500 hover:text-emerald-400 transition-colors"
+                        title="Keyboard Shortcuts (Press ? or F1)"
+                        aria-label="Show keyboard shortcuts help"
                     >
                         <HelpCircle size={18} />
                     </button>
                     <button
                         onClick={() => window.dispatchEvent(new CustomEvent('test-purge-polygons'))}
-                        className="p-2 hover:bg-red-900/40 rounded-md text-red-500 hover:text-red-400 transition-colors text-lg"
+                        className="p-2 hover:bg-red-900/40 focus:bg-red-900/40 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-md text-red-500 hover:text-red-400 transition-colors text-lg"
                         title="DEBUG: Purge All Polygons (Test Data Protection)"
+                        aria-label="Debug: Purge all polygons"
                     >
                         🗑️
                     </button>
@@ -161,7 +172,8 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
                             </h3>
                             <button
                                 onClick={() => setShowHelp(false)}
-                                className="text-slate-500 hover:text-white transition-colors"
+                                className="text-slate-500 hover:text-white focus:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded transition-colors p-1"
+                                aria-label="Close keyboard shortcuts help"
                             >
                                 ✕
                             </button>
@@ -248,9 +260,14 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
                 </div>
             )}
 
-            {/* Unified Command Bar - Central bottom anchor for all contextual hints (AUTO-HUD-CONSOLIDATE-P23, AUTO-HUD-POLISH-P24, AUTO-ULTIMATE-POLISH-P25) */}
+            {/* Unified Command Bar - Central bottom anchor for all contextual hints (AUTO-HUD-CONSOLIDATE-P23, AUTO-HUD-POLISH-P24, AUTO-ULTIMATE-POLISH-P25, AUTO-ULTIMATE-UX-P26) */}
             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-40 w-full px-4">
-                <div className={`bg-slate-900/90 backdrop-blur-md border-2 ${modeTheme.borderClass} rounded-lg shadow-[0_10px_40px_rgba(0,0,0,0.4)] min-w-[280px] max-w-[90vw] md:max-w-[800px] mx-auto transition-colors duration-300 ${modeTheme.shouldPulse ? 'animate-pulse' : ''}`}>
+                <div
+                    className={`bg-slate-900/90 backdrop-blur-md border-2 ${modeTheme.borderClass} rounded-lg shadow-[0_10px_40px_rgba(0,0,0,0.4)] min-w-[280px] max-w-[90vw] md:max-w-[800px] mx-auto transition-colors duration-300 ${modeTheme.shouldPulse ? 'animate-pulse' : ''}`}
+                    role="status"
+                    aria-label="Current tool instructions and keyboard shortcuts"
+                    aria-live="polite"
+                >
                     <div className="flex items-center justify-center space-x-2 md:space-x-4 px-2 md:px-4 py-2">
                         {/* Panel Toggle Hint */}
                         <div className="flex items-center space-x-2">
