@@ -121,7 +121,7 @@ const App = () => {
             <p className="text-xs text-slate-500 mt-1">System Planning Suite v1.15</p>
           </div>
 
-          <nav className="flex-1 px-4 space-y-2">
+          <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
             {navItems.map((item) => (
               <NavItem key={item.label} path={item.path} icon={item.icon} label={item.label} />
             ))}

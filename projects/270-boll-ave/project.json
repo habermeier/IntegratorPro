@@ -1,11 +1,11 @@
 {
   "version": "1.0",
-  "timestamp": "2026-01-02T01:03:12.696Z",
+  "timestamp": "2026-01-02T04:50:58.881Z",
   "metadata": {
     "name": "270 Boll Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2026-01-02T01:03:12.939Z"
+    "modified": "2026-01-02T04:50:58.876Z"
   },
   "floorPlan": {
     "scale": {
@@ -3878,12 +3878,12 @@
       }
     ],
     "electricalOverlay": {
-      "x": -78,
-      "y": 356,
-      "scale": 1.6800000000000006,
-      "rotation": 0.008726646259971646,
+      "x": -144,
+      "y": 384,
+      "scale": 1.6100000000000005,
+      "rotation": 5.204170427930421e-18,
       "opacity": 0.7,
-      "locked": true
+      "locked": false
     }
   },
   "furniture": [

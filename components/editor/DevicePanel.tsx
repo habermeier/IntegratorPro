@@ -801,8 +801,10 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                 </div>
             </div>
 
-            {/* Active Product Specs or Cable Specs - MOVED UP */}
-            {((activeTool === 'draw-cable' || selectedSymbolType) && !isRoomMode && !isMaskMode) && (
+            {/* Main Content Area */}
+            <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
+                {/* Active Product Specs or Cable Specs */}
+                {((activeTool === 'draw-cable' || selectedSymbolType) && !isRoomMode && !isMaskMode) && (
                 <div className="p-2 bg-slate-950 border-t border-b border-slate-800">
                     {activeTool === 'draw-cable' ? (
                         <div className="space-y-1.5">
@@ -965,34 +967,33 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                         </div>
                     )}
                 </div>
-            )}
+                )}
 
-            {/* Tab Switcher - Hidden in Room/Mask modes */}
-            {(!isRoomMode && !isMaskMode) && (
-                <div className="flex p-1 bg-slate-950 border-b border-slate-800">
-                    <button
-                        onClick={() => setActiveTab('library')}
-                        className={`flex-1 flex items-center justify-center space-x-1.5 py-1.5 rounded transition-all ${activeTab === 'library'
-                            ? 'bg-slate-800 text-blue-400 font-bold shadow-inner'
-                            : 'text-slate-500 hover:text-slate-300'}`}
-                    >
-                        <Box className="w-3 h-3" />
-                        <span className="text-[9px] uppercase tracking-wider">Library</span>
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('placed')}
-                        className={`flex-1 flex items-center justify-center space-x-1.5 py-1.5 rounded transition-all ${activeTab === 'placed'
-                            ? 'bg-slate-800 text-blue-400 font-bold shadow-inner'
-                            : 'text-slate-500 hover:text-slate-300'}`}
-                    >
-                        <Database className="w-3 h-3" />
-                        <span className="text-[9px] uppercase tracking-wider">Placed</span>
-                    </button>
-                </div>
-            )}
+                {/* Tab Switcher - Hidden in Room/Mask modes */}
+                {(!isRoomMode && !isMaskMode) && (
+                    <div className="flex p-1 bg-slate-950 border-b border-slate-800">
+                        <button
+                            onClick={() => setActiveTab('library')}
+                            className={`flex-1 flex items-center justify-center space-x-1.5 py-1.5 rounded transition-all ${activeTab === 'library'
+                                ? 'bg-slate-800 text-blue-400 font-bold shadow-inner'
+                                : 'text-slate-500 hover:text-slate-300'}`}
+                        >
+                            <Box className="w-3 h-3" />
+                            <span className="text-[9px] uppercase tracking-wider">Library</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('placed')}
+                            className={`flex-1 flex items-center justify-center space-x-1.5 py-1.5 rounded transition-all ${activeTab === 'placed'
+                                ? 'bg-slate-800 text-blue-400 font-bold shadow-inner'
+                                : 'text-slate-500 hover:text-slate-300'}`}
+                        >
+                            <Database className="w-3 h-3" />
+                            <span className="text-[9px] uppercase tracking-wider">Placed</span>
+                        </button>
+                    </div>
+                )}
 
-            {/* Main Content Area */}
-            <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
+                {/* Main Content - Library/Placed/Room Mode */}
                 {isRoomMode ? (
                     <div className="space-y-3 flex flex-col h-full">
                         {/* Layout Lock Toggle - Always visible in Room Mode (R) */}

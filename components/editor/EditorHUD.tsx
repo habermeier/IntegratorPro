@@ -18,6 +18,31 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
     const [isPrimary, setIsPrimary] = React.useState(() => dataService.isPrimary());
     const [showHelp, setShowHelp] = React.useState(false);
 
+    // Contextual hint logic (AUTO-HUD-CONSOLIDATE-P23)
+    const commandHint = React.useMemo(() => {
+        let hint = '';
+
+        // Priority 1: Edit/Alignment mode (overrides tool hints)
+        if (isEditMode) {
+            hint = 'ALIGNMENT: Arrows to move • Ctrl+Arrows to Scale/Rotate • L to Exit';
+        }
+        // Priority 2: Tool-specific hints
+        else if (activeTool === 'draw-room') {
+            hint = 'ROOM: Click to add point • Enter to finish • Esc to undo';
+        } else if (activeTool === 'place-symbol' || activeTool === 'place-furniture' || activeTool === 'place-device') {
+            hint = 'SYMBOL: Click to place • Arrows to move • [ ] to hide menus';
+        } else {
+            hint = 'Ready';
+        }
+
+        // Prepend zoom indicator if enabled
+        if (isZoomCursorEnabled) {
+            hint = `🔍 ${hint}`;
+        }
+
+        return hint;
+    }, [activeTool, isEditMode, isZoomCursorEnabled]);
+
     React.useEffect(() => {
         const handleBatonChange = (e: any) => {
             setIsPrimary(e.detail.isPrimary);
@@ -124,45 +149,6 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
                 </div>
             </div>
 
-            {/* Floating Last Key Overlay (Absolute Positioned, No Layout Shift) */}
-            {lastKey && (
-                <div className="absolute top-[80px] right-6 z-50 animate-in fade-in slide-in-from-right-4 duration-300">
-                    <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700 px-3 py-2 rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center space-x-3 border-l-4 border-l-blue-600">
-                        <div className="flex flex-col">
-                            <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest leading-none mb-1">Last Key</span>
-                            <span className="text-sm text-white font-mono font-bold uppercase leading-none">{lastKey}</span>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Shimmy Guide Banner - Shows when Electrical Overlay is visible (AUTO-UI-SHIMMY-GUIDE-P17) */}
-            {isElectricalVisible && (
-                <div className="absolute top-[80px] left-1/2 transform -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
-                    <div className="bg-emerald-900/95 backdrop-blur-md border border-emerald-700 px-4 py-2 rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center space-x-3 border-l-4 border-l-emerald-500">
-                        <div className="text-emerald-400 text-lg">ℹ️</div>
-                        <div className="flex flex-col">
-                            <span className="text-[11px] text-white font-bold leading-tight">
-                                Press <kbd className="px-1.5 py-0.5 bg-slate-900/80 rounded text-emerald-400 font-mono">L</kbd> to toggle Alignment Mode
-                            </span>
-                            <span className="text-[9px] text-emerald-300/80 leading-tight mt-0.5">
-                                Use <span className="text-white font-semibold">Arrows</span> to move • <span className="text-white font-semibold">Ctrl+Arrows</span> to Rotate/Scale
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Zoom Cursor Indicator - Shows when zoom cursor is enabled (AUTO-FINAL-POLISH-P18) */}
-            {isZoomCursorEnabled && (
-                <div className="absolute top-[145px] right-6 z-50 animate-in fade-in slide-in-from-right-4 duration-300">
-                    <div className="bg-blue-900/95 backdrop-blur-md border border-blue-700 px-3 py-2 rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center space-x-2 border-l-4 border-l-blue-500">
-                        <div className="text-blue-400 text-sm">🔍</div>
-                        <span className="text-[10px] text-blue-300 font-black uppercase tracking-wider">ZOOM ACTIVE</span>
-                    </div>
-                </div>
-            )}
-
             {/* Keyboard Shortcuts Help Modal (AUTO-MAX-REAL-ESTATE-P21) */}
             {showHelp && (
                 <div
@@ -267,10 +253,37 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
                 </div>
             )}
 
-            {/* Panel Hint - Small text indicating [ ] shortcuts (AUTO-MAX-REAL-ESTATE-P21) */}
-            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-40">
-                <div className="bg-slate-900/80 backdrop-blur-sm border border-slate-700 px-2 py-1 rounded text-[9px] text-slate-400">
-                    Press <kbd className="px-1 py-0.5 bg-slate-800 rounded text-emerald-400 font-mono">[ ]</kbd> to hide menus
+            {/* Unified Command Bar - Central bottom anchor for all contextual hints (AUTO-HUD-CONSOLIDATE-P23) */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-40">
+                <div className="bg-slate-900/90 backdrop-blur-md border-2 border-emerald-500/20 rounded-lg shadow-[0_10px_40px_rgba(0,0,0,0.4)] min-w-[300px]">
+                    <div className="flex items-center justify-center space-x-4 px-4 py-2">
+                        {/* Panel Toggle Hint */}
+                        <div className="flex items-center space-x-2">
+                            <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Panels:</span>
+                            <kbd className="px-1.5 py-0.5 bg-slate-800/80 rounded text-emerald-400 font-mono text-[10px] border border-emerald-500/30">[ ]</kbd>
+                        </div>
+
+                        {/* Divider */}
+                        <div className="h-4 w-px bg-slate-700"></div>
+
+                        {/* Contextual hints based on active tool/mode (AUTO-HUD-CONSOLIDATE-P23) */}
+                        <div className="flex items-center space-x-2 text-[10px]">
+                            <span className={`font-bold uppercase tracking-wider ${isEditMode ? 'text-emerald-400' : activeTool === 'draw-room' ? 'text-blue-400' : activeTool.startsWith('place-') ? 'text-purple-400' : 'text-blue-400/60 italic'}`}>
+                                {commandHint}
+                            </span>
+                        </div>
+
+                        {/* Last Key Badge (integrated from removed floating overlay) */}
+                        {lastKey && (
+                            <>
+                                <div className="h-4 w-px bg-slate-700"></div>
+                                <div className="flex items-center space-x-1.5 bg-slate-800/60 px-2 py-1 rounded border border-slate-700">
+                                    <span className="text-[8px] text-slate-500 uppercase font-black tracking-wider">Key:</span>
+                                    <span className="text-[9px] text-white font-mono font-bold uppercase">{lastKey}</span>
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
