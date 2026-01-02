@@ -5,6 +5,11 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   return {
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: './tests/setup.ts',
+    },
     server: {
       host: true, // Listen on all addresses
       port: 3002, // Avoid 3000/3001 conflicts

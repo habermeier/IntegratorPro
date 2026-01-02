@@ -121,6 +121,9 @@ export class CameraSystem {
             this.zoomCursorRef.current.style.display = (screenX > 0 && shouldShow) ? 'block' : 'none';
             this.zoomCursorRef.current.style.transform = `translate3d(${screenX - 62.5}px, ${screenY - 62.5}px, 0)`;
         }
+
+        // Recalculate zoom camera bounds to follow mouse
+        this.updateZoomCamera();
     }
 
     private updateZoomCamera(): void {

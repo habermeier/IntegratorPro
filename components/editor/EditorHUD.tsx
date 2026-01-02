@@ -131,7 +131,7 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
 
             {/* Zoom Cursor Indicator - Shows when zoom cursor is enabled (AUTO-FINAL-POLISH-P18) */}
             {isZoomCursorEnabled && (
-                <div className="absolute top-[80px] right-6 z-50 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="absolute top-[145px] right-6 z-50 animate-in fade-in slide-in-from-right-4 duration-300">
                     <div className="bg-blue-900/95 backdrop-blur-md border border-blue-700 px-3 py-2 rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center space-x-2 border-l-4 border-l-blue-500">
                         <div className="text-blue-400 text-sm">🔍</div>
                         <span className="text-[10px] text-blue-300 font-black uppercase tracking-wider">ZOOM ACTIVE</span>

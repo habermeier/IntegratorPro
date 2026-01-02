@@ -67,6 +67,48 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
         }
     };
 
+    const validateProjectData = (data: any): { valid: boolean; error?: string } => {
+        // Check if data is an object
+        if (!data || typeof data !== 'object') {
+            return { valid: false, error: 'Invalid project file: not a valid JSON object' };
+        }
+
+        // Check metadata
+        if (!data.metadata || typeof data.metadata !== 'object') {
+            return { valid: false, error: 'Invalid project file: missing or invalid "metadata" object' };
+        }
+        if (!data.metadata.name || typeof data.metadata.name !== 'string') {
+            return { valid: false, error: 'Invalid project file: missing or invalid "metadata.name"' };
+        }
+
+        // Check floorPlan
+        if (!data.floorPlan || typeof data.floorPlan !== 'object') {
+            return { valid: false, error: 'Invalid project file: missing or invalid "floorPlan" object' };
+        }
+        if (!data.floorPlan.scale || typeof data.floorPlan.scale !== 'object') {
+            return { valid: false, error: 'Invalid project file: missing or invalid "floorPlan.scale"' };
+        }
+        if (!data.floorPlan.electricalOverlay || typeof data.floorPlan.electricalOverlay !== 'object') {
+            return { valid: false, error: 'Invalid project file: missing or invalid "floorPlan.electricalOverlay"' };
+        }
+        if (!Array.isArray(data.floorPlan.polygons)) {
+            return { valid: false, error: 'Invalid project file: missing or invalid "floorPlan.polygons" array' };
+        }
+
+        // Check required arrays
+        if (!Array.isArray(data.devices)) {
+            return { valid: false, error: 'Invalid project file: missing or invalid "devices" array' };
+        }
+        if (!Array.isArray(data.furniture)) {
+            return { valid: false, error: 'Invalid project file: missing or invalid "furniture" array' };
+        }
+        if (!Array.isArray(data.cables)) {
+            return { valid: false, error: 'Invalid project file: missing or invalid "cables" array' };
+        }
+
+        return { valid: true };
+    };
+
     const handleExportProject = async () => {
         try {
             const projectData = await dataService.loadProject();
@@ -101,13 +143,34 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
 
         try {
             const fileContent = await file.text();
-            const projectData = JSON.parse(fileContent);
+
+            // Parse JSON with specific error handling
+            let projectData: any;
+            try {
+                projectData = JSON.parse(fileContent);
+            } catch (parseError) {
+                console.error('JSON parse error:', parseError);
+                alert('Failed to import project: The file is not valid JSON. Please check the file format.');
+                event.target.value = '';
+                return;
+            }
+
+            // Validate project data structure
+            const validation = validateProjectData(projectData);
+            if (!validation.valid) {
+                console.error('Validation failed:', validation.error);
+                alert(`Failed to import project:\n\n${validation.error}\n\nPlease ensure you are uploading a valid project backup file.`);
+                event.target.value = '';
+                return;
+            }
+
+            // Validation passed - proceed with import
             await dataService.saveProject(projectData, true);
             alert('Project imported successfully. Reloading page...');
             window.location.reload();
         } catch (error) {
             console.error('Import failed:', error);
-            alert('Failed to import project. Please check the file format and try again.');
+            alert('Failed to import project. An unexpected error occurred. See console for details.');
         } finally {
             event.target.value = '';
         }

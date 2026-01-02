@@ -468,6 +468,12 @@ export class FloorPlanEditor {
         }
 
         this.cameraSystem.updateZoomCursor(x, y);
+        
+        // Trigger re-render if zoom cursor is active
+        if (this.cameraSystem.getZoomCursorEnabled()) {
+            this.setDirty();
+        }
+
         // Only trigger dirty if zoom cursor is visible or moving
         // But since it's world-space attached, we usually need it.
         // Let's at least emit move.
