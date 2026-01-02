@@ -36,70 +36,46 @@ export const createUniversalMesh = (width?: number, height?: number): THREE.Grou
     const halfHeight = h / 2;
     const crosshairExt = Math.max(halfWidth, halfHeight); // Extends 100% beyond rectangle (matches sidebar)
 
-    // Filled BLACK rectangle (Blueprint style)
-    const geometry = new THREE.PlaneGeometry(w, h);
-    const material = new THREE.MeshBasicMaterial({
-        color: 0x000000,
-        side: THREE.DoubleSide
-    });
-    const square = new THREE.Mesh(geometry, material);
+    const thickness = 1.0; // Precision 2px-equivalent at standard zoom
+    const haloThick = thickness + 1.2; // Tight white halo (slightly larger than black lines)
+
+    const blackMat = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide });
+    const whiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+
+    // 1. White Background Outline (tight 1px wrap)
+    const squareHaloGeo = new THREE.PlaneGeometry(w + 1.2, h + 1.2);
+    const squareHalo = new THREE.Mesh(squareHaloGeo, whiteMat);
+    squareHalo.position.z = 0.01;
+    group.add(squareHalo);
+
+    // 2. White Halo for Crosshairs
+    const crossHHaloGeo = new THREE.PlaneGeometry(w + (crosshairExt * 2) + 1.2, haloThick);
+    const crossHHalo = new THREE.Mesh(crossHHaloGeo, whiteMat);
+    crossHHalo.position.z = 0.01;
+    group.add(crossHHalo);
+
+    const crossVHaloGeo = new THREE.PlaneGeometry(haloThick, h + (crosshairExt * 2) + 1.2);
+    const crossVHalo = new THREE.Mesh(crossVHaloGeo, whiteMat);
+    crossVHalo.position.z = 0.01;
+    group.add(crossVHalo);
+
+    // 3. Black Fill Square
+    const squareGeo = new THREE.PlaneGeometry(w, h);
+    const square = new THREE.Mesh(squareGeo, blackMat);
     square.name = 'fill';
+    square.position.z = 0.05;
     group.add(square);
 
-    // 1. Black Lines (0x000000) for Crosshairs and Border (Unified with Sidebar)
-    const lineColor = 0x000000;
-    const lineMaterial = new THREE.LineBasicMaterial({ color: lineColor, linewidth: 2 });
+    // 4. Black Crosshairs
+    const crossHGeo = new THREE.PlaneGeometry(w + (crosshairExt * 2), thickness);
+    const crossH = new THREE.Mesh(crossHGeo, blackMat);
+    crossH.position.z = 0.1;
+    group.add(crossH);
 
-    // 2. White Background Outline (1px halo for contrast)
-    // We draw slightly larger than the square and slightly larger than crosshairs
-    const haloOffset = 0.5; // "1 pixel" roughly in world units
-    const outlinePoints = [
-        new THREE.Vector3(-halfWidth - haloOffset, -halfHeight - haloOffset, 0.05),
-        new THREE.Vector3(halfWidth + haloOffset, -halfHeight - haloOffset, 0.05),
-        new THREE.Vector3(halfWidth + haloOffset, halfHeight + haloOffset, 0.05),
-        new THREE.Vector3(-halfWidth - haloOffset, halfHeight + haloOffset, 0.05),
-        new THREE.Vector3(-halfWidth - haloOffset, -halfHeight - haloOffset, 0.05)
-    ];
-    const outlineGeo = new THREE.BufferGeometry().setFromPoints(outlinePoints);
-    const outlineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 3 });
-    group.add(new THREE.Line(outlineGeo, outlineMaterial));
-
-    // 3. Border Outline (Black)
-    const borderPoints = [
-        new THREE.Vector3(-halfWidth, -halfHeight, 0.1),
-        new THREE.Vector3(halfWidth, -halfHeight, 0.1),
-        new THREE.Vector3(halfWidth, halfHeight, 0.1),
-        new THREE.Vector3(-halfWidth, halfHeight, 0.1),
-        new THREE.Vector3(-halfWidth, -halfHeight, 0.1)
-    ];
-    const borderGeo = new THREE.BufferGeometry().setFromPoints(borderPoints);
-    group.add(new THREE.Line(borderGeo, lineMaterial));
-
-    // 4. Horizontal crosshair (Black with white backing)
-    const pointsH = [
-        new THREE.Vector3(-halfWidth - crosshairExt, 0, 0.1),
-        new THREE.Vector3(halfWidth + crosshairExt, 0, 0.1)
-    ];
-    const geoH = new THREE.BufferGeometry().setFromPoints(pointsH);
-
-    // White backing for crosshairs
-    const lineBackingMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 4 });
-    const lineHBacking = new THREE.Line(geoH.clone(), lineBackingMaterial);
-    lineHBacking.position.z = 0.05;
-    group.add(lineHBacking);
-    group.add(new THREE.Line(geoH, lineMaterial));
-
-    // 5. Vertical crosshair (Black with white backing)
-    const pointsV = [
-        new THREE.Vector3(0, -halfHeight - crosshairExt, 0.1),
-        new THREE.Vector3(0, halfHeight + crosshairExt, 0.1)
-    ];
-    const geoV = new THREE.BufferGeometry().setFromPoints(pointsV);
-
-    const lineVBacking = new THREE.Line(geoV.clone(), lineBackingMaterial);
-    lineVBacking.position.z = 0.05;
-    group.add(lineVBacking);
-    group.add(new THREE.Line(geoV, lineMaterial));
+    const crossVGeo = new THREE.PlaneGeometry(thickness, h + (crosshairExt * 2));
+    const crossV = new THREE.Mesh(crossVGeo, blackMat);
+    crossV.position.z = 0.1;
+    group.add(crossV);
 
     return group;
 };

@@ -4,6 +4,7 @@ import { SYMBOL_LIBRARY, getSymbolShorthand } from '../models/symbolLibrary';
 import { calculatePolygonArea, calculateRoomArea } from '../../utils/spatialUtils';
 import { remoteLog } from '../../src/utils/logger';
 import { calculateCoverage, getEffectiveHeight, coverageToPixels } from '../../src/utils/lightingUtils';
+import { calculatePointIntensity, calculateRoomLightingStats, LightIntensityStats } from '../../src/utils/lightModeling';
 
 export class LayerSystem {
     private layers: Map<string, Layer> = new Map();
@@ -12,6 +13,7 @@ export class LayerSystem {
     private isMaskEditMode: boolean = false;
     private textureLoader: THREE.TextureLoader = new THREE.TextureLoader();
     private vertexMaterial: THREE.SpriteMaterial | null = null;
+    private lightingMode: 'circles' | 'intensity' | 'fixture' = 'circles';
 
     // Cache to prevent recreating everything from scratch
     private meshCache: Map<string, THREE.Object3D> = new Map();
@@ -167,6 +169,16 @@ export class LayerSystem {
             this.markDirty('mask');
         }
     }
+    public getLightingMode(): 'circles' | 'intensity' | 'fixture' {
+        return this.lightingMode;
+    }
+
+    public setLightingMode(mode: 'circles' | 'intensity' | 'fixture'): void {
+        if (this.lightingMode !== mode) {
+            this.lightingMode = mode;
+            this.markDirty('lighting');
+        }
+    }
 
     public update(): void {
         const time = this.clock.getElapsedTime();
@@ -223,6 +235,126 @@ export class LayerSystem {
                 }
             }
         }
+
+        // 4. Update Lighting Visuals (Heatmaps & Modes)
+        this.updateLightingVisuals();
+    }
+
+    private updateLightingVisuals(): void {
+        const lightingLayer = this.layers.get('lighting');
+        const roomLayer = this.layers.get('room');
+        if (!lightingLayer || !roomLayer) return;
+
+        const lightingContent = lightingLayer.content as VectorLayerContent;
+        const roomContent = roomLayer.content as VectorLayerContent;
+        if (!lightingContent || !roomContent) return;
+
+        const fixtures = lightingContent.symbols || [];
+        const mode = this.lightingMode;
+
+        // Toggle Coverage Circle Visibility
+        lightingLayer.container.traverse(obj => {
+            if (obj.name === 'coverage-circle' || obj.name === 'coverage-circle-backing') {
+                obj.visible = (mode === 'circles');
+            }
+        });
+
+        // Update Rooms (Heatmap & Stats)
+        roomLayer.container.children.forEach(group => {
+            const roomId = group.userData.id;
+            const room = (roomContent.rooms || []).find(r => r.id === roomId);
+            if (!room) return;
+
+            const heatmap = group.getObjectByName('intensity-heatmap') as THREE.Mesh;
+            const label = group.getObjectByName('label') as THREE.Sprite;
+
+            if (mode === 'intensity') {
+                const fixturesInRoom = fixtures.filter(f => f.room === roomId);
+                const pixelsPerMeter = (this.scene.userData.editor as any)?.pixelsMeter || 39.3701;
+                const stats = calculateRoomLightingStats(room, fixturesInRoom, pixelsPerMeter);
+
+                // Update Heatmap Texture
+                if (heatmap) {
+                    heatmap.visible = true;
+                    this.updateHeatmapTexture(heatmap, room, fixturesInRoom, pixelsPerMeter, stats);
+                }
+
+                // Append Stats to Label
+                if (label && group.userData.labelName) {
+                    const statsText = `\nMin: ${stats.min} | Avg: ${stats.mean} | Max: ${stats.max} lm`;
+                    // Only update if stats changed significantly to avoid texture thrashing
+                    if (group.userData.statsText !== statsText) {
+                        const roomName = group.userData.labelName;
+                        const displayType = this.formatRoomType(group.userData.labelType);
+                        const areaLabel = group.userData.areaLabel;
+
+                        // We need a modified createLabel that supports the extra line or just concatenate
+                        const newLabel = this.createLabel(roomName, displayType, `${areaLabel}${statsText}`);
+                        newLabel.name = 'label';
+                        newLabel.position.copy(label.position);
+                        group.remove(label);
+                        group.add(newLabel);
+                        group.userData.statsText = statsText;
+                    }
+                }
+            } else {
+                if (heatmap) heatmap.visible = false;
+                // Revert label if it was showing stats
+                if (group.userData.statsText) {
+                    const roomName = group.userData.labelName;
+                    const displayType = this.formatRoomType(group.userData.labelType);
+                    const areaLabel = group.userData.areaLabel;
+                    const newLabel = this.createLabel(roomName, displayType, areaLabel);
+                    newLabel.name = 'label';
+                    newLabel.position.copy(label.position);
+                    group.remove(label);
+                    group.add(newLabel);
+                    delete group.userData.statsText;
+                }
+            }
+        });
+    }
+
+    private updateHeatmapTexture(mesh: THREE.Mesh, room: Room, fixtures: PlacedSymbol[], pixelsPerMeter: number, stats: LightIntensityStats): void {
+        // Simple Canvas Implementation for the heatmap
+        const canvas = document.createElement('canvas');
+        const res = 64; // Low res for perf
+        canvas.width = res;
+        canvas.height = res;
+        const ctx = canvas.getContext('2d')!;
+
+        // Get bounding box of room
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        room.points.forEach(p => {
+            minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
+            maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y);
+        });
+
+        const rw = maxX - minX;
+        const rh = maxY - minY;
+
+        // Fill background
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        ctx.fillRect(0, 0, res, res);
+
+        // Draw intensity
+        for (let ix = 0; ix < res; ix++) {
+            for (let iy = 0; iy < res; iy++) {
+                const px = minX + (ix / res) * rw;
+                const py = minY + (iy / res) * rh;
+
+                const intensity = calculatePointIntensity({ x: px, y: py }, fixtures, pixelsPerMeter);
+                // Map intensity to color (Yellow/Orange)
+                const alpha = Math.min(0.6, intensity / (stats.max || 1));
+                ctx.fillStyle = `rgba(255, 230, 0, ${alpha})`;
+                ctx.fillRect(ix, iy, 1, 1);
+            }
+        }
+
+        const texture = new THREE.CanvasTexture(canvas);
+        if ((mesh.material as THREE.MeshBasicMaterial).map) (mesh.material as THREE.MeshBasicMaterial).map?.dispose();
+        (mesh.material as THREE.MeshBasicMaterial).map = texture;
+        (mesh.material as THREE.MeshBasicMaterial).needsUpdate = true;
     }
 
     private renderVectorLayer(layer: Layer): void {
@@ -383,6 +515,36 @@ export class LayerSystem {
                     labelSprite.position.set(cx, cy, 0.5); // On top of fill/border
                     group.add(labelSprite);
 
+                    // --- NEW: Lighting Intensity Heatmap (Visible in 'intensity' mode) ---
+                    const heatmapGeo = new THREE.ShapeGeometry(shape);
+                    const heatmapMat = new THREE.MeshBasicMaterial({
+                        transparent: true,
+                        opacity: 0.8,
+                        side: THREE.DoubleSide,
+                        depthWrite: false
+                    });
+                    const heatmap = new THREE.Mesh(heatmapGeo, heatmapMat);
+                    heatmap.name = 'intensity-heatmap';
+                    heatmap.position.z = 0.02; // Above room fill
+                    heatmap.visible = false;
+                    group.add(heatmap);
+
+                    // --- NEW: Stencil Mask for Clipping ---
+                    // This allows symbols to clip their coverage circles to this room
+                    const maskMat = new THREE.MeshBasicMaterial({
+                        color: 0xffffff,
+                        colorWrite: false,
+                        depthWrite: false,
+                        stencilWrite: true,
+                        stencilFunc: THREE.AlwaysStencilFunc,
+                        stencilRef: 1, // Simple 1-ref for now, could use room index if overlapping
+                        stencilZPass: THREE.ReplaceStencilOp
+                    });
+                    const mask = new THREE.Mesh(heatmapGeo.clone(), maskMat);
+                    mask.name = 'stencil-mask';
+                    mask.position.z = -0.05;
+                    group.add(mask);
+
                     // Cache name to avoid recreation
                     group.userData.labelName = roomName;
                     group.userData.labelType = roomType;
@@ -508,6 +670,35 @@ export class LayerSystem {
                     child.visible = showDetails;
                 }
             });
+
+            // Ensure room-specific lighting visuals exist (Post-Init/Update)
+            if (poly.polyType === 'room') {
+                if (!group.getObjectByName('intensity-heatmap')) {
+                    const shape = new THREE.Shape();
+                    shape.moveTo(poly.points[0].x, poly.points[0].y);
+                    for (let i = 1; i < poly.points.length; i++) shape.lineTo(poly.points[i].x, poly.points[i].y);
+                    shape.closePath();
+                    const heatmapGeo = new THREE.ShapeGeometry(shape);
+                    const heatmapMat = new THREE.MeshBasicMaterial({
+                        transparent: true, opacity: 0.8, side: THREE.DoubleSide, depthWrite: false
+                    });
+                    const heatmap = new THREE.Mesh(heatmapGeo, heatmapMat);
+                    heatmap.name = 'intensity-heatmap';
+                    heatmap.position.z = 0.02;
+                    heatmap.visible = false;
+                    group.add(heatmap);
+
+                    const maskMat = new THREE.MeshBasicMaterial({
+                        colorWrite: false, depthWrite: false, stencilWrite: true,
+                        stencilFunc: THREE.AlwaysStencilFunc, stencilRef: 1,
+                        stencilZPass: THREE.ReplaceStencilOp
+                    });
+                    const mask = new THREE.Mesh(heatmapGeo.clone(), maskMat);
+                    mask.name = 'stencil-mask';
+                    mask.position.z = -0.05;
+                    group.add(mask);
+                }
+            }
         });
 
         if (content.symbols) {
@@ -554,19 +745,27 @@ export class LayerSystem {
 
                     // Priority: label > productId > metadata.productId
                     let labelText = symbolData.label || symbolData.productId || (metadata as any).productId;
-                    // Show label for ALL products if we have a name (including generic)
-                    const willShowRegularLabel = !!labelText;
+
+                    // IMPROVEMENT: If the label is "generic-product", use the human-readable library name
+                    if (labelText === 'generic-product' && def.name) {
+                        labelText = def.name;
+                    }
+
+                    // Show label for ALL products if we have a name
+                    // User Request: Overkill to label "Recessed Light - 2DS-L9", just "2DS-L9" is enough.
+                    // Identifiers like 2DS-L9 are usually in productId.
+                    let identifier = labelText;
+                    if (labelText.includes(' - ')) {
+                        identifier = labelText.split(' - ').pop() || labelText;
+                    }
+
+                    const willShowRegularLabel = !!identifier;
 
                     if (willShowRegularLabel) {
-                        // Strip "custom-" prefix if it's an ID-based name
-                        if (labelText.startsWith('custom-')) {
-                            labelText = labelText.replace('custom-', '').toUpperCase();
-                        }
-
-                        const labelSprite = this.createLabel(labelText, def.name);
+                        const labelSprite = this.createLabel(identifier, "");
                         labelSprite.name = 'label';
-                        // Move label slightly more to the right for visibility
-                        labelSprite.position.set(20, -20, 0.5);
+                        // Move label to bottom-right (as requested)
+                        labelSprite.position.set(15, -15, 0.5);
                         group.add(labelSprite);
                     }
 
@@ -577,9 +776,11 @@ export class LayerSystem {
                     if (effectiveShorthand) {
                         const shorthandLabel = this.createShorthandLabel(effectiveShorthand);
                         shorthandLabel.name = 'shorthand-label';
-                        // Position at bottom-right corner of symbol (further right if there's a label)
-                        const xOffset = willShowRegularLabel ? 30 : 15;
-                        shorthandLabel.position.set(xOffset, -15, 0.6);
+                        // Position exactly at bottom-right corner of square
+                        // Square is 16x16, so 8 is the edge. Shorthand matches SymbolIcon.tsx logic (center+squareHalf+2)
+                        const xOffset = 10;
+                        const yOffset = -10;
+                        shorthandLabel.position.set(xOffset, yOffset, 0.6);
                         group.add(shorthandLabel);
                     }
 
@@ -741,7 +942,7 @@ export class LayerSystem {
 
         const textWidth = Math.max(nameMetrics.width, typeMetrics.width, areaMetrics.width);
         const lineHeight = fontSize * 1.2;
-        const totalLines = area ? 3 : 2;
+        const totalLines = area ? 3 : (type ? 2 : 1);
         const totalHeight = lineHeight * totalLines;
 
         // 2. Resize Canvas
@@ -756,8 +957,8 @@ export class LayerSystem {
         const centerY = canvas.height / 2;
 
         ctx.shadowColor = 'rgba(255,255,255,1.0)';
-        ctx.shadowBlur = 6;
-        ctx.lineWidth = 3;
+        ctx.shadowBlur = 2; // Reduced for cleaner look
+        ctx.lineWidth = 1.5; // Thinner stroke
         ctx.strokeStyle = 'white';
         ctx.fillStyle = 'black';
 
@@ -820,8 +1021,8 @@ export class LayerSystem {
         const centerY = canvas.height / 2;
 
         ctx.shadowColor = 'rgba(255,255,255,1.0)';
-        ctx.shadowBlur = 6;
-        ctx.lineWidth = 3;
+        ctx.shadowBlur = 2;
+        ctx.lineWidth = 1.5;
         ctx.strokeStyle = 'white';
         ctx.fillStyle = 'black';
 
@@ -979,12 +1180,23 @@ export class LayerSystem {
                 dashSize: 10,
                 gapSize: 5,
                 opacity: 0.6,
-                transparent: true
+                transparent: true,
+                stencilWrite: true,
+                stencilFunc: THREE.EqualStencilFunc,
+                stencilRef: 1
             });
             circle = new THREE.Line(geometry, material);
             circle.computeLineDistances();
             circle.name = COVERAGE_NAME;
             circle.position.z = -0.1;
+
+            // Updated Backing for Stencil
+            if (backing) {
+                (backing.material as THREE.LineBasicMaterial).stencilWrite = true;
+                (backing.material as THREE.LineBasicMaterial).stencilFunc = THREE.EqualStencilFunc;
+                (backing.material as THREE.LineBasicMaterial).stencilRef = 1;
+            }
+
             circle.userData = { radiusX, radiusY, offsetX };
             group.add(circle);
         } else {
@@ -1039,37 +1251,37 @@ export class LayerSystem {
         }
 
         remoteLog(`[debugLayer] ========== Layer: ${layerId} ==========`, 'info', '🔍 LAYER-DEBUG');
-        remoteLog(`[debugLayer] Layer Type: ${layer.type}, Visible: ${layer.visible}, Children Count: ${layer.container.children.length}`, 'info', '🔍 LAYER-DEBUG');
+        remoteLog(`[debugLayer] Layer Type: ${layer.type}, Visible: ${layer.visible}, Children Count: ${layer.container.children.length} `, 'info', '🔍 LAYER-DEBUG');
 
         layer.container.children.forEach((child, index) => {
-            remoteLog(`[debugLayer] --- Child ${index}: ${child.name || child.type} ---`, 'info', '🔍 LAYER-DEBUG');
-            remoteLog(`[debugLayer]   visible: ${child.visible}`, 'info', '🔍 LAYER-DEBUG');
+            remoteLog(`[debugLayer]-- - Child ${index}: ${child.name || child.type} --- `, 'info', '🔍 LAYER-DEBUG');
+            remoteLog(`[debugLayer]   visible: ${child.visible} `, 'info', '🔍 LAYER-DEBUG');
             remoteLog(`[debugLayer]   position: (${(child.position.x ?? 0).toFixed(2)}, ${(child.position.y ?? 0).toFixed(2)}, ${(child.position.z ?? 0).toFixed(2)})`, 'info', '🔍 LAYER-DEBUG');
             remoteLog(`[debugLayer]   scale: (${(child.scale.x ?? 0).toFixed(2)}, ${(child.scale.y ?? 0).toFixed(2)}, ${(child.scale.z ?? 0).toFixed(2)})`, 'info', '🔍 LAYER-DEBUG');
-            remoteLog(`[debugLayer]   userData: ${JSON.stringify(child.userData)}`, 'info', '🔍 LAYER-DEBUG');
+            remoteLog(`[debugLayer]   userData: ${JSON.stringify(child.userData)} `, 'info', '🔍 LAYER-DEBUG');
 
             if (child instanceof THREE.Mesh) {
                 const material = child.material;
                 const geometry = child.geometry;
 
                 if (material instanceof THREE.MeshBasicMaterial) {
-                    remoteLog(`[debugLayer]   [MESH] material.opacity: ${material.opacity}`, 'info', '🔍 LAYER-DEBUG');
-                    remoteLog(`[debugLayer]   [MESH] material.color: #${material.color.getHexString()}`, 'info', '🔍 LAYER-DEBUG');
-                    remoteLog(`[debugLayer]   [MESH] material.transparent: ${material.transparent}`, 'info', '🔍 LAYER-DEBUG');
+                    remoteLog(`[debugLayer][MESH] material.opacity: ${material.opacity} `, 'info', '🔍 LAYER-DEBUG');
+                    remoteLog(`[debugLayer][MESH] material.color: #${material.color.getHexString()} `, 'info', '🔍 LAYER-DEBUG');
+                    remoteLog(`[debugLayer][MESH] material.transparent: ${material.transparent} `, 'info', '🔍 LAYER-DEBUG');
                 } else if (Array.isArray(material)) {
-                    remoteLog(`[debugLayer]   [MESH] material: Array (${material.length} materials)`, 'info', '🔍 LAYER-DEBUG');
+                    remoteLog(`[debugLayer][MESH] material: Array(${material.length} materials)`, 'info', '🔍 LAYER-DEBUG');
                     material.forEach((mat, idx) => {
                         if (mat instanceof THREE.MeshBasicMaterial) {
-                            remoteLog(`[debugLayer]   [MESH] material[${idx}].opacity: ${mat.opacity}`, 'info', '🔍 LAYER-DEBUG');
-                            remoteLog(`[debugLayer]   [MESH] material[${idx}].color: #${mat.color.getHexString()}`, 'info', '🔍 LAYER-DEBUG');
-                            remoteLog(`[debugLayer]   [MESH] material[${idx}].transparent: ${mat.transparent}`, 'info', '🔍 LAYER-DEBUG');
+                            remoteLog(`[debugLayer][MESH] material[${idx}].opacity: ${mat.opacity} `, 'info', '🔍 LAYER-DEBUG');
+                            remoteLog(`[debugLayer][MESH] material[${idx}].color: #${mat.color.getHexString()} `, 'info', '🔍 LAYER-DEBUG');
+                            remoteLog(`[debugLayer][MESH] material[${idx}].transparent: ${mat.transparent} `, 'info', '🔍 LAYER-DEBUG');
                         }
                     });
                 } else {
-                    remoteLog(`[debugLayer]   [MESH] material.type: ${material.type}`, 'info', '🔍 LAYER-DEBUG');
+                    remoteLog(`[debugLayer][MESH] material.type: ${material.type} `, 'info', '🔍 LAYER-DEBUG');
                 }
 
-                remoteLog(`[debugLayer]   [MESH] geometry.type: ${geometry.type}`, 'info', '🔍 LAYER-DEBUG');
+                remoteLog(`[debugLayer][MESH] geometry.type: ${geometry.type} `, 'info', '🔍 LAYER-DEBUG');
             }
         });
 

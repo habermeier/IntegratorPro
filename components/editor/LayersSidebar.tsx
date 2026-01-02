@@ -21,6 +21,14 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
     setSelectedIds,
     activeTool
 }) => {
+    const [lightingMode, setLightingMode] = React.useState<'circles' | 'intensity' | 'fixture'>(() => editor?.layerSystem.getLightingMode() || 'circles');
+
+    // Sync state if editor changes or system inits
+    React.useEffect(() => {
+        if (!editor) return;
+        setLightingMode(editor.layerSystem.getLightingMode());
+    }, [editor]);
+
     // Grouping
     const foundationLayers = layers.filter(l => l.category === 'foundation').sort((a, b) => b.zIndex - a.zIndex);
     const technicalLayers = layers.filter(l => l.category === 'technical').sort((a, b) => b.zIndex - a.zIndex);
@@ -110,6 +118,27 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                             : 'text-slate-600'}`}>
                             {l.name}
                         </div>
+                        {l.id === 'lighting' && (
+                            <div className="flex items-center space-x-2 mt-1">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        const current = lightingMode;
+                                        const next = current === 'circles' ? 'intensity' : (current === 'intensity' ? 'fixture' : 'circles');
+                                        editor?.layerSystem.setLightingMode(next);
+                                        setLightingMode(next);
+                                    }}
+                                    className="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-[7px] text-blue-400 font-bold uppercase tracking-tighter"
+                                >
+                                    Mode: {lightingMode}
+                                </button>
+                                <div className="text-[7px] text-slate-500 font-mono italic">
+                                    {lightingMode === 'circles' && 'Circles Only'}
+                                    {lightingMode === 'intensity' && 'Heatmap + Stats'}
+                                    {lightingMode === 'fixture' && 'Fixture Only'}
+                                </div>
+                            </div>
+                        )}
                         <div className="text-[8px] text-slate-500 font-mono uppercase tracking-tighter leading-tight flex justify-between items-center">
                             <span>{(l.opacity * 100).toFixed(0)}% • Z:{l.zIndex}</span>
                             {l.locked && <span className="text-[7px] text-slate-700">LOCKED</span>}
