@@ -11,6 +11,8 @@ interface LayersSidebarProps {
     selectedIds: string[];
     setSelectedIds: React.Dispatch<React.SetStateAction<string[]>>;
     activeTool: ToolType;
+    isOpen?: boolean;
+    isLocked?: boolean;
 }
 
 export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
@@ -20,7 +22,9 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
     isEditMode,
     selectedIds,
     setSelectedIds,
-    activeTool
+    activeTool,
+    isOpen = true,
+    isLocked = false
 }) => {
     const [lightingMode, setLightingMode] = React.useState<'circles' | 'intensity' | 'fixture'>(() => editor?.layerSystem.getLightingMode() || 'circles');
     const [zoomCursorEnabled, setZoomCursorEnabled] = React.useState<boolean>(() => editor?.cameraSystem.getZoomCursorEnabled() ?? true);
@@ -331,7 +335,9 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
 
     return (
         <div className="w-60 bg-slate-900 border-l border-slate-800 flex flex-col z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.3)]">
-            <div className="p-4 border-b border-slate-800">
+            {/* Header - Auto-hide when panel is collapsed (AUTO-ULTIMATE-POLISH-P25) */}
+            {isLocked && (
+                <div className="p-4 border-b border-slate-800 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Quick Controls</h3>
                 <div className="grid grid-cols-3 gap-1">
                     <button
@@ -375,6 +381,7 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                     </button>
                 </div>
             </div>
+            )}
 
             {/* Layer Stack */}
             <div className="flex-1 overflow-y-auto bg-slate-950/50 pb-20">

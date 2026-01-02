@@ -8,9 +8,11 @@ interface FurnitureSidebarProps {
     editor: FloorPlanEditor | null;
     layers: any[]; // Using any[] for simplicity, typed as Layer[] normally
     isEditMode: boolean;
+    isOpen?: boolean;
+    isLocked?: boolean;
 }
 
-export const FurnitureSidebar: React.FC<FurnitureSidebarProps> = ({ editor, layers, isEditMode }) => {
+export const FurnitureSidebar: React.FC<FurnitureSidebarProps> = ({ editor, layers, isEditMode, isOpen = true, isLocked = false }) => {
     const [showCreateDialog, setShowCreateDialog] = useState(false);
 
     // Filter layout items directly from layers
@@ -42,7 +44,9 @@ export const FurnitureSidebar: React.FC<FurnitureSidebarProps> = ({ editor, laye
 
     return (
         <div className="w-80 bg-slate-900 border-l border-slate-800 flex flex-col z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.3)]">
-            <div className="p-4 border-b border-slate-800">
+            {/* Header - Auto-hide when panel is collapsed (AUTO-ULTIMATE-POLISH-P25) */}
+            {isLocked && (
+                <div className="p-4 border-b border-slate-800 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
                     <span>🪑 Furniture</span>
                     <span className="text-xs bg-slate-700 px-2 py-0.5 rounded-full text-slate-300">
@@ -57,6 +61,7 @@ export const FurnitureSidebar: React.FC<FurnitureSidebarProps> = ({ editor, laye
                     New Item
                 </button>
             </div>
+            )}
 
             <div className="flex-1 overflow-y-auto p-2 space-y-2">
                 {furnitureList.length === 0 ? (

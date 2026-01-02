@@ -15,9 +15,11 @@ import catalog from '../../catalog.json';
 interface DevicePanelProps {
     editor: FloorPlanEditor | null;
     activeTool?: ToolType;
+    isOpen?: boolean;
+    isLocked?: boolean;
 }
 
-const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) => {
+const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, isOpen = true, isLocked = false }) => {
     // Load sticky selection from localStorage
     const [selectedCategory, setSelectedCategory] = React.useState<string>(() => {
         return localStorage.getItem('integrator-pro-last-category') || 'lighting';
@@ -379,14 +381,11 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                     cableType,
                     lumens,
                     beamAngle,
-                    range,
-                    driver: activeDriver,
-                    mount: activeMount,
-                    cct: activeCCT
+                    range
                 });
             }
         }
-    }, [editor, selectedSymbolType, productId, defaultHeight, busAssignment, cableType, lumens, beamAngle, range, mountType, heightOffset, currentRoom, activeDriver, activeMount, activeCCT, activeTool]);
+    }, [editor, selectedSymbolType, productId, defaultHeight, busAssignment, cableType, lumens, beamAngle, range, mountType, heightOffset, currentRoom, activeTool]);
 
     // Initial buffer sync
     React.useEffect(() => {
@@ -804,7 +803,9 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
 
     return (
         <div className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col z-20 shadow-[10px_0_30px_rgba(0,0,0,0.3)]">
-            <div className="p-3 border-b border-slate-800 space-y-1.5">
+            {/* Header - Auto-hide when panel is collapsed (AUTO-ULTIMATE-POLISH-P25) */}
+            {isLocked && (
+                <div className="p-3 border-b border-slate-800 space-y-1.5 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
                 <div className="flex justify-between items-center">
                     <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                         {isRoomMode ? 'Room Editor' : isMaskMode ? 'Mask Editor' : 'Devices'}
@@ -818,6 +819,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool }) 
                     <span className="text-[10px] text-blue-400 font-mono truncate">{currentRoom}</span>
                 </div>
             </div>
+            )}
 
             {/* Main Content Area */}
             <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">

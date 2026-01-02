@@ -377,7 +377,12 @@ export const FloorPlanRenderer: React.FC = () => {
                                 onMouseEnter={handleLeftPanelEnter}
                                 onMouseLeave={handleLeftPanelLeave}
                             >
-                                <DevicePanel editor={editor} activeTool={activeTool} />
+                                <DevicePanel
+                                    editor={editor}
+                                    activeTool={activeTool}
+                                    isOpen={leftPanelOpen}
+                                    isLocked={leftPanelLocked}
+                                />
                             </div>
                         )}
                     </>
@@ -419,6 +424,8 @@ export const FloorPlanRenderer: React.FC = () => {
                                         editor={editor}
                                         layers={layers}
                                         isEditMode={isEditMode}
+                                        isOpen={rightPanelOpen}
+                                        isLocked={rightPanelLocked}
                                     />
                                 ) : (
                                     <LayersSidebar
@@ -429,6 +436,8 @@ export const FloorPlanRenderer: React.FC = () => {
                                         selectedIds={selectedIds}
                                         setSelectedIds={setSelectedIds}
                                         activeTool={activeTool}
+                                        isOpen={rightPanelOpen}
+                                        isLocked={rightPanelLocked}
                                     />
                                 )}
                             </div>
