@@ -64,6 +64,7 @@ export class FloorPlanEditor {
     // private dragStartY: number = 0;
     private lastX: number = 0;
     private lastY: number = 0;
+    private spaceHoverPanInitialized: boolean = false;
 
     private animationFrameId: number | null = null;
     private eventListeners: Map<string, Function[]> = new Map();
@@ -369,6 +370,7 @@ export class FloorPlanEditor {
     private handleKeyUp = (e: KeyboardEvent) => {
         if (e.code === 'Space') {
             this.isSpacePressed = false;
+            this.spaceHoverPanInitialized = false;
             this.updateCursor();
             this.emit('panning-changed', false);
         }
@@ -447,24 +449,38 @@ export class FloorPlanEditor {
         const { x, y } = this.getMouseCoords(e);
 
         if (this.isDragging) {
+            // Click-drag panning (existing behavior)
             const deltaX = e.clientX - this.lastX;
             const deltaY = e.clientY - this.lastY;
             this.cameraSystem.pan(deltaX, deltaY);
             this.lastX = e.clientX;
             this.lastY = e.clientY;
             this.setDirty();
+        } else if (this.isSpacePressed) {
+            // Spacebar hover-pan (new auto-pan behavior)
+            if (!this.spaceHoverPanInitialized) {
+                // First move with spacebar - initialize position tracking
+                this.lastX = e.clientX;
+                this.lastY = e.clientY;
+                this.spaceHoverPanInitialized = true;
+                this.updateCursor(); // Update to grabbing cursor
+            } else {
+                // Subsequent moves - pan based on delta
+                const deltaX = e.clientX - this.lastX;
+                const deltaY = e.clientY - this.lastY;
+                this.cameraSystem.pan(deltaX, deltaY);
+                this.lastX = e.clientX;
+                this.lastY = e.clientY;
+                this.setDirty();
+            }
         } else {
+            // Normal tool mode
             this.toolSystem.handleMouseMove(x, y, e);
             // Mouse move tool handles might need render
             const activeTool = this.toolSystem.getActiveToolType();
             if (activeTool === 'scale-calibrate' || activeTool === 'measure' || activeTool === 'place-symbol' || activeTool === 'place-furniture') {
                 this.setDirty();
             }
-        }
-
-        // Update Spacebar Panning cursor
-        if (this.isSpacePressed) {
-            // ...
         }
 
         this.cameraSystem.updateZoomCursor(x, y);
@@ -1170,13 +1186,15 @@ export class FloorPlanEditor {
     private updateCursor(): void {
         const el = this.renderer.domElement;
 
-        // Manual drag in progress (Panning)
-        // We check for actual dragging or just the spacebar intent
+        // Panning in progress (click-drag or spacebar hover-pan)
+        if (this.isDragging || (this.isSpacePressed && this.spaceHoverPanInitialized)) {
+            el.style.cursor = 'grabbing';
+            return;
+        }
+
+        // Spacebar held but not moving yet
         if (this.isSpacePressed) {
             el.style.cursor = 'grab';
-            // If mouse is down and we are dragging, it's grabbing
-            // But 'isDragging' is local to setupEventListeners...
-            // Let's rely on CSS and state for now.
             return;
         }
 

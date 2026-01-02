@@ -16,7 +16,7 @@ import FloorPlanRenderer from './components/FloorPlanRenderer';
 import Settings from './components/Settings';
 
 // Icons
-import { LayoutDashboard, Activity, Cpu, Map, FileText, Hammer, Menu, Settings as SettingsIcon } from 'lucide-react';
+import { LayoutDashboard, Activity, Cpu, Map, FileText, Hammer, Menu, Settings as SettingsIcon, Home } from 'lucide-react';
 
 import MobileNav from './components/MobileNav';
 import ConflictNotification from './components/editor/ConflictNotification';
@@ -39,6 +39,7 @@ const App = () => {
   };
 
   const currentMode = getCurrentMode(location.pathname);
+  const isZenMode = location.pathname.startsWith('/floorplan');
 
   // Raw Products (Grouped)
   const [products, setProducts] = useState<HardwareModule[]>(INITIAL_MODULES);
@@ -94,21 +95,24 @@ const App = () => {
       <div className="flex flex-col md:flex-row h-screen md:h-screen bg-slate-950 text-slate-200 overflow-hidden font-sans fixed inset-0">
 
         {/* Mobile Header */}
-        <div className="md:hidden h-16 bg-slate-950 border-b border-slate-800 flex items-center justify-between px-6 shrink-0 z-30">
-          <h1 className="text-xl font-bold tracking-tight text-white flex items-center">
-            <Activity className="text-blue-500 mr-2" size={20} />
-            Integrator<span className="text-blue-500">Pro</span>
-          </h1>
-          <button
-            onClick={() => setIsMobileMenuOpen(true)}
-            className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
-          >
-            <Menu size={24} />
-          </button>
-        </div>
+        {!isZenMode && (
+          <div className="md:hidden h-16 bg-slate-950 border-b border-slate-800 flex items-center justify-between px-6 shrink-0 z-30">
+            <h1 className="text-xl font-bold tracking-tight text-white flex items-center">
+              <Activity className="text-blue-500 mr-2" size={20} />
+              Integrator<span className="text-blue-500">Pro</span>
+            </h1>
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+            >
+              <Menu size={24} />
+            </button>
+          </div>
+        )}
 
         {/* Sidebar (Desktop) */}
-        <div className="hidden md:flex w-64 flex-col border-r border-slate-800 bg-slate-950 z-20">
+        {!isZenMode && (
+          <div className="hidden md:flex w-64 flex-col border-r border-slate-800 bg-slate-950 z-20">
           <div className="p-6">
             <h1 className="text-2xl font-bold tracking-tight text-white flex items-center">
               <Activity className="text-blue-500 mr-2" />
@@ -130,11 +134,13 @@ const App = () => {
             </div>
           </div>
         </div>
+        )}
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col overflow-hidden relative">
+        <div className={isZenMode ? "w-screen h-screen flex flex-col overflow-hidden relative" : "flex-1 flex flex-col overflow-hidden relative"}>
           {/* Top Header */}
-          <header className="h-16 border-b border-slate-800 bg-slate-950/50 backdrop-blur flex items-center justify-between px-4 md:px-8 z-10">
+          {!isZenMode && (
+            <header className="h-16 border-b border-slate-800 bg-slate-950/50 backdrop-blur flex items-center justify-between px-4 md:px-8 z-10">
             <h2 className="text-lg font-semibold text-white capitalize">
               {navItems.find(n => location.pathname.startsWith(n.path))?.label || 'Dashboard'}
             </h2>
@@ -145,6 +151,18 @@ const App = () => {
               </span>
             </div>
           </header>
+          )}
+
+          {/* Zen Mode Exit Button */}
+          {isZenMode && (
+            <button
+              onClick={() => navigate('/project-brief')}
+              className="fixed top-4 left-4 z-50 p-3 bg-slate-800/90 hover:bg-slate-700 border border-slate-600 rounded-lg shadow-lg transition-all backdrop-blur-sm"
+              title="Exit to Project Brief"
+            >
+              <Home size={20} className="text-slate-300" />
+            </button>
+          )}
 
           {/* Dynamic Viewport */}
           <main className="flex-1 flex flex-col min-w-0 min-h-0 bg-slate-950 text-slate-200 overflow-hidden relative">

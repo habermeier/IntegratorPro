@@ -52,10 +52,19 @@ export const FloorPlanRenderer: React.FC = () => {
     const [dataLossThreshold, setDataLossThreshold] = useState<number>(() => {
         return parseFloat(localStorage.getItem('integrator-pro-data-loss-threshold') || '0.5');
     });
-
+    const [leftPanelOpen, setLeftPanelOpen] = useState(true);
+    const [rightPanelOpen, setRightPanelOpen] = useState(true);
+    const [leftPanelLocked, setLeftPanelLocked] = useState(false);
+    const [rightPanelLocked, setRightPanelLocked] = useState(false);
+    const [leftPanelHover, setLeftPanelHover] = useState(false);
+    const [rightPanelHover, setRightPanelHover] = useState(false);
+    const [leftEdgeHover, setLeftEdgeHover] = useState(false);
+    const [rightEdgeHover, setRightEdgeHover] = useState(false);
 
     const zoomCursorRef = useRef<HTMLDivElement>(null);
     const coordsRef = useRef<HTMLSpanElement>(null);
+    const leftPanelCollapseTimer = useRef<NodeJS.Timeout | null>(null);
+    const rightPanelCollapseTimer = useRef<NodeJS.Timeout | null>(null);
 
     const editorInstanceRef = useRef<FloorPlanEditor | null>(null);
     const isInitializedRef = useRef(false);
@@ -178,6 +187,111 @@ export const FloorPlanRenderer: React.FC = () => {
         };
     }, [editor]);
 
+    // Keyboard shortcuts for toggling sidebars
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Ignore if user is typing in an input/textarea
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+                return;
+            }
+
+            if (e.key === '[') {
+                setLeftPanelOpen(prev => !prev);
+                setLeftPanelLocked(prev => !prev); // Lock state toggles with keyboard
+            } else if (e.key === ']') {
+                setRightPanelOpen(prev => !prev);
+                setRightPanelLocked(prev => !prev); // Lock state toggles with keyboard
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, []);
+
+    // Mouse edge detection for auto-show sidebars
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            const edgeThreshold = 20;
+            const windowWidth = window.innerWidth;
+
+            // Left edge detection
+            if (e.clientX <= edgeThreshold) {
+                setLeftEdgeHover(true);
+                if (!leftPanelLocked) {
+                    setLeftPanelOpen(true);
+                    setLeftPanelHover(true);
+                    if (leftPanelCollapseTimer.current) {
+                        clearTimeout(leftPanelCollapseTimer.current);
+                        leftPanelCollapseTimer.current = null;
+                    }
+                }
+            } else {
+                setLeftEdgeHover(false);
+            }
+
+            // Right edge detection
+            if (e.clientX >= windowWidth - edgeThreshold) {
+                setRightEdgeHover(true);
+                if (!rightPanelLocked) {
+                    setRightPanelOpen(true);
+                    setRightPanelHover(true);
+                    if (rightPanelCollapseTimer.current) {
+                        clearTimeout(rightPanelCollapseTimer.current);
+                        rightPanelCollapseTimer.current = null;
+                    }
+                }
+            } else {
+                setRightEdgeHover(false);
+            }
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            if (leftPanelCollapseTimer.current) clearTimeout(leftPanelCollapseTimer.current);
+            if (rightPanelCollapseTimer.current) clearTimeout(rightPanelCollapseTimer.current);
+        };
+    }, [leftPanelLocked, rightPanelLocked]);
+
+    // Handlers for sidebar hover/leave with delayed collapse
+    const handleLeftPanelEnter = () => {
+        if (leftPanelCollapseTimer.current) {
+            clearTimeout(leftPanelCollapseTimer.current);
+            leftPanelCollapseTimer.current = null;
+        }
+        setLeftPanelHover(true);
+    };
+
+    const handleLeftPanelLeave = () => {
+        if (!leftPanelLocked) {
+            setLeftPanelHover(false);
+            leftPanelCollapseTimer.current = setTimeout(() => {
+                setLeftPanelOpen(false);
+            }, 500);
+        }
+    };
+
+    const handleRightPanelEnter = () => {
+        if (rightPanelCollapseTimer.current) {
+            clearTimeout(rightPanelCollapseTimer.current);
+            rightPanelCollapseTimer.current = null;
+        }
+        setRightPanelHover(true);
+    };
+
+    const handleRightPanelLeave = () => {
+        if (!rightPanelLocked) {
+            setRightPanelHover(false);
+            rightPanelCollapseTimer.current = setTimeout(() => {
+                setRightPanelOpen(false);
+            }, 500);
+        }
+    };
+
     const handleCalibrate = async () => {
         if (!calibrationData) return;
 
@@ -242,8 +356,33 @@ export const FloorPlanRenderer: React.FC = () => {
                     />
                 )}
 
-                {/* 📱 Device Selection Panel (Left) - Only render when editor is initialized */}
-                {editor && <DevicePanel editor={editor} activeTool={activeTool} />}
+                {/* 📱 Device Selection Panel (Left) - Auto-hide on hover */}
+                {editor && (
+                    <>
+                        {/* Mini-strip when collapsed - glows when mouse near edge */}
+                        {!leftPanelOpen && (
+                            <div
+                                className={`w-1 transition-all duration-200 cursor-pointer z-50 ${
+                                    leftEdgeHover
+                                        ? 'bg-blue-500/70 shadow-[0_0_12px_rgba(59,130,246,0.6)]'
+                                        : 'bg-blue-600/30 hover:bg-blue-500/50'
+                                }`}
+                                title="Hover to reveal Device Panel (or press [)"
+                            />
+                        )}
+
+                        {/* Full panel when open */}
+                        {leftPanelOpen && (
+                            <div
+                                className="transition-all duration-300"
+                                onMouseEnter={handleLeftPanelEnter}
+                                onMouseLeave={handleLeftPanelLeave}
+                            >
+                                <DevicePanel editor={editor} activeTool={activeTool} />
+                            </div>
+                        )}
+                    </>
+                )}
 
                 <div className={`flex-1 relative overflow-hidden flex flex-col ${isEditMode ? 'ring-[8px] ring-red-600/50 ring-inset' : ''}`}>
                     <ThreeCanvas
@@ -266,27 +405,48 @@ export const FloorPlanRenderer: React.FC = () => {
                     <ScaleRuler editor={editor} />
                 </div>
 
-                {/* 📑 Right Sidebar Area - Only render when editor is initialized */}
+                {/* 📑 Right Sidebar Area - Auto-hide on hover */}
                 {editor && (
-                    <div className="flex flex-col relative border-l border-slate-800">
-                        {activeTool === 'place-furniture' ? (
-                            <FurnitureSidebar
-                                editor={editor}
-                                layers={layers}
-                                isEditMode={isEditMode}
-                            />
-                        ) : (
-                            <LayersSidebar
-                                editor={editor}
-                                layers={layers}
-                                activeLayerId={activeLayerId}
-                                isEditMode={isEditMode}
-                                selectedIds={selectedIds}
-                                setSelectedIds={setSelectedIds}
-                                activeTool={activeTool}
+                    <>
+                        {/* Full panel when open */}
+                        {rightPanelOpen && (
+                            <div
+                                className="flex flex-col relative border-l border-slate-800 transition-all duration-300"
+                                onMouseEnter={handleRightPanelEnter}
+                                onMouseLeave={handleRightPanelLeave}
+                            >
+                                {activeTool === 'place-furniture' ? (
+                                    <FurnitureSidebar
+                                        editor={editor}
+                                        layers={layers}
+                                        isEditMode={isEditMode}
+                                    />
+                                ) : (
+                                    <LayersSidebar
+                                        editor={editor}
+                                        layers={layers}
+                                        activeLayerId={activeLayerId}
+                                        isEditMode={isEditMode}
+                                        selectedIds={selectedIds}
+                                        setSelectedIds={setSelectedIds}
+                                        activeTool={activeTool}
+                                    />
+                                )}
+                            </div>
+                        )}
+
+                        {/* Mini-strip when collapsed - glows when mouse near edge */}
+                        {!rightPanelOpen && (
+                            <div
+                                className={`w-1 transition-all duration-200 cursor-pointer z-50 ${
+                                    rightEdgeHover
+                                        ? 'bg-slate-400/70 shadow-[0_0_12px_rgba(148,163,184,0.6)]'
+                                        : 'bg-slate-600/30 hover:bg-slate-500/50'
+                                }`}
+                                title="Hover to reveal Layers Panel (or press ])"
                             />
                         )}
-                    </div>
+                    </>
                 )}
             </div>
 

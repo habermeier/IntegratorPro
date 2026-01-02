@@ -1,4 +1,5 @@
 import React from 'react';
+import { HelpCircle } from 'lucide-react';
 import { ToolType } from '../../editor/models/types';
 import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
 import { dataService } from '../../src/services/DataService';
@@ -15,6 +16,7 @@ interface EditorHUDProps {
 
 export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeTool, isEditMode, activeLayerName, lastKey, isElectricalVisible, isZoomCursorEnabled }) => {
     const [isPrimary, setIsPrimary] = React.useState(() => dataService.isPrimary());
+    const [showHelp, setShowHelp] = React.useState(false);
 
     React.useEffect(() => {
         const handleBatonChange = (e: any) => {
@@ -35,6 +37,21 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
             window.removeEventListener('project-data-changed', handleProjectChange);
         };
     }, []);
+
+    // Handle ESC key to close help modal
+    React.useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && showHelp) {
+                setShowHelp(false);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [showHelp]);
 
     return (
         <div className="p-4 bg-slate-900/80 border-b border-slate-800 flex justify-between items-center z-10 relative">
@@ -91,6 +108,13 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
                         ↪️
                     </button>
                     <button
+                        onClick={() => setShowHelp(!showHelp)}
+                        className="p-2 hover:bg-emerald-900/40 rounded-md text-emerald-500 hover:text-emerald-400 transition-colors"
+                        title="Keyboard Shortcuts"
+                    >
+                        <HelpCircle size={18} />
+                    </button>
+                    <button
                         onClick={() => window.dispatchEvent(new CustomEvent('test-purge-polygons'))}
                         className="p-2 hover:bg-red-900/40 rounded-md text-red-500 hover:text-red-400 transition-colors text-lg"
                         title="DEBUG: Purge All Polygons (Test Data Protection)"
@@ -138,6 +162,117 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
                     </div>
                 </div>
             )}
+
+            {/* Keyboard Shortcuts Help Modal (AUTO-MAX-REAL-ESTATE-P21) */}
+            {showHelp && (
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+                    onClick={() => setShowHelp(false)}
+                >
+                    <div
+                        className="bg-slate-900/95 backdrop-blur-md border-2 border-emerald-500/30 rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] p-6 max-w-2xl w-full mx-4 animate-in zoom-in-95 duration-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-center justify-between mb-4 border-b border-slate-700 pb-3">
+                            <h3 className="text-lg font-bold text-emerald-400 flex items-center space-x-2">
+                                <HelpCircle size={20} />
+                                <span>Keyboard Shortcuts</span>
+                            </h3>
+                            <button
+                                onClick={() => setShowHelp(false)}
+                                className="text-slate-500 hover:text-white transition-colors"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            {/* Panel Controls */}
+                            <div className="space-y-2">
+                                <h4 className="text-xs font-black text-emerald-500 uppercase tracking-wider mb-2">Panel Controls</h4>
+                                <div className="flex justify-between items-center">
+                                    <kbd className="px-2 py-1 bg-slate-800 rounded text-white font-mono text-sm border border-slate-700">[</kbd>
+                                    <span className="text-sm text-slate-300 ml-3 flex-1">Toggle Left Panel</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <kbd className="px-2 py-1 bg-slate-800 rounded text-white font-mono text-sm border border-slate-700">]</kbd>
+                                    <span className="text-sm text-slate-300 ml-3 flex-1">Toggle Right Panel</span>
+                                </div>
+                            </div>
+
+                            {/* Navigation */}
+                            <div className="space-y-2">
+                                <h4 className="text-xs font-black text-emerald-500 uppercase tracking-wider mb-2">Navigation</h4>
+                                <div className="flex justify-between items-center">
+                                    <kbd className="px-2 py-1 bg-slate-800 rounded text-white font-mono text-sm border border-slate-700">Space + Move</kbd>
+                                    <span className="text-sm text-slate-300 ml-3 flex-1">Auto-Pan</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <kbd className="px-2 py-1 bg-slate-800 rounded text-white font-mono text-sm border border-slate-700">Shift + Scroll</kbd>
+                                    <span className="text-sm text-slate-300 ml-3 flex-1">Fast Zoom</span>
+                                </div>
+                            </div>
+
+                            {/* Alignment */}
+                            <div className="space-y-2">
+                                <h4 className="text-xs font-black text-emerald-500 uppercase tracking-wider mb-2">Overlay Alignment</h4>
+                                <div className="flex justify-between items-center">
+                                    <kbd className="px-2 py-1 bg-slate-800 rounded text-white font-mono text-sm border border-slate-700">L</kbd>
+                                    <span className="text-sm text-slate-300 ml-3 flex-1">Toggle Alignment Mode</span>
+                                </div>
+                            </div>
+
+                            {/* Tools */}
+                            <div className="space-y-2">
+                                <h4 className="text-xs font-black text-emerald-500 uppercase tracking-wider mb-2">Tool Shortcuts</h4>
+                                <div className="grid grid-cols-2 gap-1 text-xs">
+                                    <div className="flex items-center space-x-2">
+                                        <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-white font-mono border border-slate-700">V</kbd>
+                                        <span className="text-slate-300">Select</span>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-white font-mono border border-slate-700">R</kbd>
+                                        <span className="text-slate-300">Room</span>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-white font-mono border border-slate-700">M</kbd>
+                                        <span className="text-slate-300">Mask</span>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-white font-mono border border-slate-700">P</kbd>
+                                        <span className="text-slate-300">Pan</span>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-white font-mono border border-slate-700">F</kbd>
+                                        <span className="text-slate-300">Furniture</span>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-white font-mono border border-slate-700">S</kbd>
+                                        <span className="text-slate-300">Symbol</span>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-white font-mono border border-slate-700">D</kbd>
+                                        <span className="text-slate-300">Device</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-4 pt-3 border-t border-slate-700">
+                            <p className="text-xs text-slate-500 italic">
+                                Press <kbd className="px-1 py-0.5 bg-slate-800 rounded text-emerald-400 font-mono text-[10px]">Esc</kbd> or click outside to close
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Panel Hint - Small text indicating [ ] shortcuts (AUTO-MAX-REAL-ESTATE-P21) */}
+            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-40">
+                <div className="bg-slate-900/80 backdrop-blur-sm border border-slate-700 px-2 py-1 rounded text-[9px] text-slate-400">
+                    Press <kbd className="px-1 py-0.5 bg-slate-800 rounded text-emerald-400 font-mono">[ ]</kbd> to hide menus
+                </div>
+            </div>
         </div>
     );
 });
