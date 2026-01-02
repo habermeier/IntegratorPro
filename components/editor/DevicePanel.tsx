@@ -11,6 +11,10 @@ import { metersToImperialComponents } from '../../utils/measurementUtils';
 import { Search, Target, Box, Database, MapPin, Trash2, ChevronLeft, ChevronRight, Save, Lock, Unlock } from 'lucide-react';
 import { dataService } from '../../src/services/DataService';
 import catalog from '../../catalog.json';
+import { HEWilliams2DSBuilder, HEWilliams2DSSpec } from './spec-builders/HEWilliams2DSBuilder';
+import { GenericLightBuilder, GenericLightSpec } from './spec-builders/GenericLightBuilder';
+import { DeviceConversionModal } from './DeviceConversionModal';
+import { deviceRegistry } from '../../src/services/DeviceRegistry';
 
 interface DevicePanelProps {
     editor: FloorPlanEditor | null;
@@ -51,29 +55,8 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
     const [searchQuery, setSearchQuery] = React.useState('');
     const [isAddingNew, setIsAddingNew] = React.useState<boolean>(false);
 
-    // HE Williams 2DS Spec Builder State
-    const [specMountingType, setSpecMountingType] = React.useState<string>('N');
-    const [specLumens, setSpecLumens] = React.useState<string>('L15');
-    const [specColor, setSpecColor] = React.useState<string>('9TW');
-    const [specDriver, setSpecDriver] = React.useState<string>('LD2');
-    const [specDistribution, setSpecDistribution] = React.useState<string>('M');
-    const [specFlange, setSpecFlange] = React.useState<string>('OF');
-    const [specReflectorFinish, setSpecReflectorFinish] = React.useState<string>('CS');
-    const [specOptions, setSpecOptions] = React.useState<string>('NONE');
-    const [specControl, setSpecControl] = React.useState<string>('STD');
-    const [specVoltage, setSpecVoltage] = React.useState<string>('UNV');
-    const [specTrimType, setSpecTrimType] = React.useState<string>('O');
-    const [specTrimOptions, setSpecTrimOptions] = React.useState<string>('NONE');
-    const [specBracket, setSpecBracket] = React.useState<string>('F1');
-    const [specShorthand, setSpecShorthand] = React.useState<string>('');
-    const [specPdfUrl, setSpecPdfUrl] = React.useState<string>('');
-    const [specShoppingLink, setSpecShoppingLink] = React.useState<string>('');
-
-    // Manual Spec State (for generic lights)
-    const [manualOrderingCode, setManualOrderingCode] = React.useState<string>('');
-    const [manualShorthand, setManualShorthand] = React.useState<string>('');
-    const [manualPdfUrl, setManualPdfUrl] = React.useState<string>('');
-    const [manualShoppingLink, setManualShoppingLink] = React.useState<string>('');
+    // Modular Spec Builder State (AUTO-INTEGRATED-SPEC-P27)
+    const [draftMetadata, setDraftMetadata] = React.useState<HEWilliams2DSSpec | GenericLightSpec | null>(null);
 
     // Selection-based editing state
     const [selectedDeviceIds, setSelectedDeviceIds] = React.useState<string[]>([]);
@@ -84,6 +67,20 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
     const [selectedRoom, setSelectedRoom] = React.useState<any>(null);
     const [roomFormData, setRoomFormData] = React.useState<Partial<any>>({});
     const [isRoomLayoutLocked, setIsRoomLayoutLocked] = React.useState(editor?.isRoomLayoutLocked ?? true);
+
+    // Device Conversion Modal state (AUTO-INTEGRATED-SPEC-P27)
+    const [showConversionModal, setShowConversionModal] = React.useState(false);
+    const [conversionData, setConversionData] = React.useState<{
+        deviceId: string;
+        oldTypeId: string;
+        oldTypeName: string;
+        newTypeId: string;
+        newTypeName: string;
+        roomId: string | null;
+        roomName: string | null;
+        countInRoom: number;
+        countInProject: number;
+    } | null>(null);
 
     // Get all devices from registry
     const { devices, getDevice, updateDevice } = useDevices();
@@ -177,26 +174,8 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
             setCurrentRoom(roomName === 'external' ? 'External' : roomName);
         }, 100), [editor]);
 
-    // Generate HE Williams 2DS Ordering String
-    const generateOrderingString = (): string => {
-        // Example: 2DS - L15/9TW - N - OPTIONS - CONTROL - LD2 - UNV - M - O - OF - CS - TRIM OPTIONS - F1
-        const parts = [
-            '2DS',
-            `${specLumens}/${specColor}`,
-            specMountingType,
-            specOptions !== 'NONE' ? specOptions : '',
-            specControl !== 'STD' ? specControl : '',
-            specDriver,
-            specVoltage,
-            specDistribution,
-            specTrimType,
-            specFlange,
-            specReflectorFinish,
-            specTrimOptions !== 'NONE' ? specTrimOptions : '',
-            specBracket
-        ];
-        return parts.filter(p => p !== '').join(' - ');
-    };
+    // (AUTO-INTEGRATED-SPEC-P27: generateOrderingString removed - now in HEWilliams2DSBuilder)
+    // Worker 3: Use draftMetadata?.orderingCode instead
 
     // Delete Device Type with Safety Guard
     const handleDeleteDeviceType = async () => {
@@ -345,6 +324,53 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
         return () => editor.off('room-layout-locked-changed', handleLockChanged);
     }, [editor]);
 
+    // Listen for device type conversion events (AUTO-INTEGRATED-SPEC-P27)
+    React.useEffect(() => {
+        const handleDeviceTypeCreated = (e: CustomEvent) => {
+            const { oldTypeId, newTypeId, symbolDefinition } = e.detail;
+            if (!editingDevice) return;
+
+            // Calculate counts
+            const allDevices = deviceRegistry.getAllDevices();
+            const countInProject = allDevices.filter(d => d.deviceTypeId === oldTypeId).length;
+            const countInRoom = editingDevice.roomId
+                ? allDevices.filter(d => d.deviceTypeId === oldTypeId && d.roomId === editingDevice.roomId).length
+                : 0;
+
+            // Get room name
+            const roomPolygon = editingDevice.roomId ? editor?.polygonSystem.getPolygonById(editingDevice.roomId) : null;
+            const roomName = roomPolygon?.name || 'Unknown Room';
+
+            setConversionData({
+                deviceId: editingDevice.id,
+                oldTypeId,
+                oldTypeName: SYMBOL_LIBRARY[oldTypeId]?.name || oldTypeId,
+                newTypeId,
+                newTypeName: symbolDefinition.name,
+                roomId: editingDevice.roomId,
+                roomName,
+                countInRoom,
+                countInProject
+            });
+            setShowConversionModal(true);
+        };
+
+        const handleSymbolTypeUpdated = (e: CustomEvent) => {
+            // For symbol updates, just refresh the editor
+            if (editor) {
+                editor.emit('layers-changed', editor.layerSystem.getAllLayers());
+            }
+        };
+
+        window.addEventListener('device-type-created', handleDeviceTypeCreated as EventListener);
+        window.addEventListener('symbol-type-updated', handleSymbolTypeUpdated as EventListener);
+
+        return () => {
+            window.removeEventListener('device-type-created', handleDeviceTypeCreated as EventListener);
+            window.removeEventListener('symbol-type-updated', handleSymbolTypeUpdated as EventListener);
+        };
+    }, [editor, editingDevice]);
+
     // Switch to 'placed' tab when in select mode or when something is selected
     React.useEffect(() => {
         if (activeTool === 'select' || editingDevice || selectedRoom) {
@@ -417,48 +443,8 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                         metadata: { ...device.metadata }
                     });
 
-                    // Load HE Williams Spec Builder metadata if present
-                    if (device.metadata) {
-                        if (device.metadata.specLumens) setSpecLumens(device.metadata.specLumens);
-                        if (device.metadata.specColor) setSpecColor(device.metadata.specColor);
-                        if (device.metadata.specMountingType) setSpecMountingType(device.metadata.specMountingType);
-                        if (device.metadata.specDriver) setSpecDriver(device.metadata.specDriver);
-                        if (device.metadata.specOptions) setSpecOptions(device.metadata.specOptions);
-                        if (device.metadata.specControl) setSpecControl(device.metadata.specControl);
-                        if (device.metadata.specVoltage) setSpecVoltage(device.metadata.specVoltage);
-                        if (device.metadata.specFlange) setSpecFlange(device.metadata.specFlange);
-                        if (device.metadata.specReflectorFinish) setSpecReflectorFinish(device.metadata.specReflectorFinish);
-                        if (device.metadata.specDistribution) setSpecDistribution(device.metadata.specDistribution);
-                        if (device.metadata.specTrimType) setSpecTrimType(device.metadata.specTrimType);
-                        if (device.metadata.specTrimOptions) setSpecTrimOptions(device.metadata.specTrimOptions);
-                        if (device.metadata.specBracket) setSpecBracket(device.metadata.specBracket);
-
-                        // Load manual spec fields if present
-                        if (device.metadata.orderingCode && device.productId !== 'light-fix-dali') {
-                            setManualOrderingCode(device.metadata.orderingCode);
-                        }
-                        if (device.metadata.shorthand) {
-                            if (device.productId === 'light-fix-dali') {
-                                setSpecShorthand(device.metadata.shorthand);
-                            } else {
-                                setManualShorthand(device.metadata.shorthand);
-                            }
-                        }
-                        if (device.metadata.pdfUrl) {
-                            if (device.productId === 'light-fix-dali') {
-                                setSpecPdfUrl(device.metadata.pdfUrl);
-                            } else {
-                                setManualPdfUrl(device.metadata.pdfUrl);
-                            }
-                        }
-                        if (device.metadata.shoppingLink) {
-                            if (device.productId === 'light-fix-dali') {
-                                setSpecShoppingLink(device.metadata.shoppingLink);
-                            } else {
-                                setManualShoppingLink(device.metadata.shoppingLink);
-                            }
-                        }
-                    }
+                    // (AUTO-INTEGRATED-SPEC-P27: Spec state loading removed - builders handle their own state via initialMetadata prop)
+                    // Metadata will be passed to builders as initialMetadata
 
                     return;
                 }
@@ -963,6 +949,68 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
             height: height / pixelsMeter
         };
     }, [selectedRoom, editor?.pixelsMeter]);
+
+    // AUTO-INTEGRATED-SPEC-P27: Detect unsaved spec changes
+    const hasUnsavedSpecChanges = React.useMemo(() => {
+        if (!editingDevice || !draftMetadata) return false;
+
+        // Get current device's metadata from SYMBOL_LIBRARY
+        const currentSymbol = SYMBOL_LIBRARY[editingDevice.deviceTypeId];
+        if (!currentSymbol || !currentSymbol.metadata) return true; // If no current metadata, any draft is a change
+
+        const currentMetadata = currentSymbol.metadata;
+
+        // Compare draft with current (deep comparison via JSON stringify)
+        const draftJSON = JSON.stringify(draftMetadata);
+        const currentJSON = JSON.stringify(currentMetadata);
+
+        return draftJSON !== currentJSON;
+    }, [editingDevice, draftMetadata]);
+
+    // AUTO-INTEGRATED-SPEC-P27: Generate label preview from draft spec
+    const labelPreview = React.useMemo(() => {
+        if (!draftMetadata) return null;
+
+        // Build preview shorthand from draft metadata
+        const shorthand = (draftMetadata as any).shorthand || '';
+        const orderingCode = (draftMetadata as any).orderingCode || '';
+
+        // If we have spec configuration, build a preview
+        if (shorthand) {
+            return `${shorthand}${orderingCode ? ` (${orderingCode})` : ''}`;
+        }
+
+        return null;
+    }, [draftMetadata]);
+
+    // Handle device conversion confirmation (AUTO-INTEGRATED-SPEC-P27)
+    const handleConversionConfirm = (scope: 'instance' | 'room' | 'project') => {
+        if (!conversionData) return;
+
+        const { deviceId, oldTypeId, newTypeId, roomId } = conversionData;
+
+        if (scope === 'instance') {
+            // Update only this device
+            deviceRegistry.updateDevice(deviceId, { deviceTypeId: newTypeId });
+        } else if (scope === 'room' && roomId) {
+            // Batch update in room
+            const result = deviceRegistry.batchUpdateDeviceType(oldTypeId, newTypeId, roomId);
+            console.log(`Updated ${result.count} devices in room`);
+        } else if (scope === 'project') {
+            // Batch update project-wide
+            const result = deviceRegistry.batchUpdateDeviceType(oldTypeId, newTypeId, null);
+            console.log(`Updated ${result.count} devices across project`);
+        }
+
+        // Close modal
+        setShowConversionModal(false);
+        setConversionData(null);
+
+        // Refresh editor to show updates
+        if (editor) {
+            editor.emit('layers-changed', editor.layerSystem.getAllLayers());
+        }
+    };
 
     // Consolidated tool attribute update is handled by the useEffect earlier in the component
 
@@ -1488,312 +1536,18 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                                                 <span className="text-[7px] text-slate-600 font-mono">{hasSpecBuilder ? 'Builder' : 'Manual'}</span>
                                             </div>
 
-                                            {/* HE WILLIAMS 2DS SPEC BUILDER */}
+                                            {/* HE WILLIAMS 2DS SPEC BUILDER - MODULAR (AUTO-INTEGRATED-SPEC-P27) */}
                                             {productId === 'light-fix-dali' && hasSpecBuilder ? (
-                                                <div className="space-y-1.5">
-                                                    {/* Ordering String Display */}
-                                                    <div className="bg-slate-900 rounded border border-slate-800 p-2">
-                                                        <span className="text-[7px] text-slate-500 font-bold uppercase block mb-1">Ordering Code</span>
-                                                        <div className="text-[9px] text-slate-300 font-mono break-all">
-                                                            {generateOrderingString()}
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Lumens Selection */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Lumens</label>
-                                                        <select
-                                                            value={specLumens}
-                                                            onChange={(e) => setSpecLumens(e.target.value)}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
-                                                        >
-                                                            <option value="L5">L5 - 500 Lumens</option>
-                                                            <option value="L7">L7 - 700 Lumens</option>
-                                                            <option value="L9">L9 - 900 Lumens</option>
-                                                            <option value="L12">L12 - 1200 Lumens</option>
-                                                            <option value="L15">L15 - 1500 Lumens</option>
-                                                        </select>
-                                                    </div>
-
-                                                    {/* Mounting Type */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Mounting</label>
-                                                        <select
-                                                            value={specMountingType}
-                                                            onChange={(e) => setSpecMountingType(e.target.value)}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
-                                                        >
-                                                            <option value="N">N - New Construction</option>
-                                                            <option value="I">I - IC-Rated New Construction</option>
-                                                            <option value="R">R - Remodel</option>
-                                                        </select>
-                                                    </div>
-
-                                                    {/* Color Temperature */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Color Temperature</label>
-                                                        <select
-                                                            value={specColor}
-                                                            onChange={(e) => setSpecColor(e.target.value)}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
-                                                        >
-                                                            <option value="9TW">9TW - Tunable White (2700K-5000K)</option>
-                                                        </select>
-                                                    </div>
-
-                                                    {/* Control */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Control</label>
-                                                        <select
-                                                            value={specControl}
-                                                            onChange={(e) => setSpecControl(e.target.value)}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
-                                                        >
-                                                            <option value="STD">STD - Standard (0-10V)</option>
-                                                            <option value="AWNR">AWNR - Lutron Athena RF</option>
-                                                            <option value="DALI">DALI - DALI Prewired</option>
-                                                            <option value="DIM">DIM - 2x 0-10V (Level/CCT)</option>
-                                                            <option value="DMX">DMX - DMX Prewired</option>
-                                                        </select>
-                                                    </div>
-
-                                                    {/* Driver */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Driver</label>
-                                                        <select
-                                                            value={specDriver}
-                                                            onChange={(e) => setSpecDriver(e.target.value)}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
-                                                        >
-                                                            <option value="LD2">LD2 - Lutron DALI-2 (1%)</option>
-                                                        </select>
-                                                    </div>
-
-                                                    {/* Options */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Options</label>
-                                                        <select
-                                                            value={specOptions}
-                                                            onChange={(e) => setSpecOptions(e.target.value)}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
-                                                        >
-                                                            <option value="NONE">NONE - No Options</option>
-                                                            <option value="ATH">ATH - Airtight</option>
-                                                            <option value="F">F - Fuse Kit</option>
-                                                            <option value="CP">CP - Chicago Plenum</option>
-                                                            <option value="AM">AM - Anti-microbial</option>
-                                                        </select>
-                                                    </div>
-
-                                                    {/* Voltage */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Voltage</label>
-                                                        <select
-                                                            value={specVoltage}
-                                                            onChange={(e) => setSpecVoltage(e.target.value)}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
-                                                        >
-                                                            <option value="UNV">UNV - Universal (120-277V)</option>
-                                                        </select>
-                                                    </div>
-
-                                                    {/* Distribution */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Distribution</label>
-                                                        <select
-                                                            value={specDistribution}
-                                                            onChange={(e) => setSpecDistribution(e.target.value)}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
-                                                        >
-                                                            <option value="N">N - Narrow</option>
-                                                            <option value="M">M - Medium</option>
-                                                            <option value="W">W - Wide</option>
-                                                            <option value="WW">WW - Wall Wash</option>
-                                                        </select>
-                                                    </div>
-
-                                                    {/* Flange */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Flange Type</label>
-                                                        <select
-                                                            value={specFlange}
-                                                            onChange={(e) => {
-                                                                const val = e.target.value;
-                                                                setSpecFlange(val);
-                                                                // ZF doesn't support 'O' (Open) Trim
-                                                                if (val === 'ZF' && specTrimType === 'O') {
-                                                                    setSpecTrimType('L');
-                                                                }
-                                                            }}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
-                                                        >
-                                                            <option value="OF">OF - 1/2" Standard Flange</option>
-                                                            <option value="ZF">ZF - Zero-Flange Mud-In</option>
-                                                        </select>
-                                                    </div>
-
-                                                    {/* Trim Type */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Trim Type</label>
-                                                        <select
-                                                            value={specTrimType}
-                                                            onChange={(e) => setSpecTrimType(e.target.value)}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
-                                                        >
-                                                            {specFlange !== 'ZF' && <option value="O">O - Open Reflector</option>}
-                                                            <option value="L">L - Flush Lens</option>
-                                                            <option value="R">R - Regressed Lens</option>
-                                                            <option value="A">A - Angled Lens</option>
-                                                        </select>
-                                                    </div>
-
-                                                    {/* Reflector Finish */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Reflector Finish</label>
-                                                        <select
-                                                            value={specReflectorFinish}
-                                                            onChange={(e) => setSpecReflectorFinish(e.target.value)}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
-                                                        >
-                                                            <option value="CS">CS - Clear Semi-Specular</option>
-                                                            <option value="SG">SG - Satin-Glow</option>
-                                                            <option value="GD">GD - Gold</option>
-                                                            <option value="CG">CG - Champagne Gold</option>
-                                                            <option value="PW">PW - Pewter</option>
-                                                            <option value="SPC">SPC - Clear Specular</option>
-                                                            <option value="RG">RG - Rose Gold</option>
-                                                            <option value="WH">WH - White texture</option>
-                                                            <option value="BL">BL - Black texture</option>
-                                                        </select>
-                                                    </div>
-
-                                                    {/* Trim Options */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Trim Options</label>
-                                                        <select
-                                                            value={specTrimOptions}
-                                                            onChange={(e) => setSpecTrimOptions(e.target.value)}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
-                                                        >
-                                                            <option value="NONE">NONE - No Options</option>
-                                                            <option value="MWT">MWT - Matte White Trim Flange</option>
-                                                            <option value="MB">MB - Black Splay/White Flange</option>
-                                                            <option value="AD">AD - Diffuse Acrylic Lens</option>
-                                                            <option value="PD">PD - Diffuse Polycarbonate Lens</option>
-                                                            <option value="WET/CC">WET/CC - Wet Location</option>
-                                                        </select>
-                                                    </div>
-
-                                                    {/* Bracket */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Bracket</label>
-                                                        <select
-                                                            value={specBracket}
-                                                            onChange={(e) => setSpecBracket(e.target.value)}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none [&>option]:text-black [&>option]:bg-white"
-                                                        >
-                                                            <option value="F1">F1 - Fixed Pan Bracket</option>
-                                                            <option value="BA1">BA1 - Butterfly Pan Bracket</option>
-                                                            <option value="CA1">CA1 - Caterpillar Pan Bracket</option>
-                                                        </select>
-                                                    </div>
-
-                                                    {/* Shorthand (5-7 letters) */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Shorthand (5-7 letters)</label>
-                                                        <input
-                                                            type="text"
-                                                            value={specShorthand}
-                                                            onChange={(e) => setSpecShorthand(e.target.value.toUpperCase().slice(0, 7))}
-                                                            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-                                                            placeholder="e.g., 2DS-L15"
-                                                            maxLength={7}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none uppercase"
-                                                        />
-                                                    </div>
-
-                                                    {/* Spec PDF URL */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Spec PDF URL</label>
-                                                        <input
-                                                            type="url"
-                                                            value={specPdfUrl}
-                                                            onChange={(e) => setSpecPdfUrl(e.target.value)}
-                                                            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-                                                            placeholder="https://..."
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
-                                                        />
-                                                    </div>
-
-                                                    {/* Shopping Link */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Shopping Link</label>
-                                                        <input
-                                                            type="url"
-                                                            value={specShoppingLink}
-                                                            onChange={(e) => setSpecShoppingLink(e.target.value)}
-                                                            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-                                                            placeholder="https://..."
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
-                                                        />
-                                                    </div>
-                                                </div>
+                                                <HEWilliams2DSBuilder
+                                                    initialMetadata={{}}
+                                                    onChange={(spec) => setDraftMetadata(spec)}
+                                                />
                                             ) : (
-                                                /* MANUAL SPEC (For Generic Lights) */
-                                                <div className="space-y-1.5">
-                                                    {/* Ordering Code */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Ordering Code</label>
-                                                        <input
-                                                            type="text"
-                                                            value={manualOrderingCode}
-                                                            onChange={(e) => setManualOrderingCode(e.target.value)}
-                                                            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-                                                            placeholder="e.g., ABC-123-XYZ"
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
-                                                        />
-                                                    </div>
-
-                                                    {/* Shorthand (5-7 letters) */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Shorthand (5-7 letters)</label>
-                                                        <input
-                                                            type="text"
-                                                            value={manualShorthand}
-                                                            onChange={(e) => setManualShorthand(e.target.value.toUpperCase().slice(0, 7))}
-                                                            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-                                                            placeholder="e.g., DL-STD"
-                                                            maxLength={7}
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none uppercase"
-                                                        />
-                                                    </div>
-
-                                                    {/* Spec PDF URL */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Spec PDF URL</label>
-                                                        <input
-                                                            type="url"
-                                                            value={manualPdfUrl}
-                                                            onChange={(e) => setManualPdfUrl(e.target.value)}
-                                                            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-                                                            placeholder="https://..."
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
-                                                        />
-                                                    </div>
-
-                                                    {/* Shopping Link */}
-                                                    <div>
-                                                        <label className="text-[7px] text-slate-500 uppercase font-bold block mb-1">Shopping Link</label>
-                                                        <input
-                                                            type="url"
-                                                            value={manualShoppingLink}
-                                                            onChange={(e) => setManualShoppingLink(e.target.value)}
-                                                            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-                                                            placeholder="https://..."
-                                                            className="w-full text-[9px] text-slate-300 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-800 focus:border-blue-500 focus:outline-none"
-                                                        />
-                                                    </div>
-                                                </div>
+                                                /* MANUAL SPEC - MODULAR (AUTO-INTEGRATED-SPEC-P27) */
+                                                <GenericLightBuilder
+                                                    initialMetadata={{}}
+                                                    onChange={(spec) => setDraftMetadata(spec)}
+                                                />
                                             )}
 
                                             {/* Save Fixture Type Button */}
@@ -1899,11 +1653,32 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                                             ))}
                                         </select>
                                     </div>
-                                    
+
+                                    {/* AUTO-INTEGRATED-SPEC-P27: Label Preview */}
+                                    {labelPreview && (
+                                        <div className="p-2 bg-slate-900/50 rounded border border-slate-700/50">
+                                            <div className="text-[7px] text-slate-500 uppercase font-bold mb-1">Generated Label Preview</div>
+                                            <div className="text-[9px] text-emerald-400 font-mono font-bold">{labelPreview}</div>
+                                        </div>
+                                    )}
+
+                                    {/* AUTO-INTEGRATED-SPEC-P27: Unsaved Changes Warning */}
+                                    {hasUnsavedSpecChanges && (
+                                        <div className="flex items-center gap-1.5 p-2 bg-amber-500/10 rounded border border-amber-500/30 animate-pulse">
+                                            <div className="w-1.5 h-1.5 bg-amber-500 rounded-full"></div>
+                                            <span className="text-[8px] text-amber-400 font-black uppercase tracking-widest">Unsaved Spec Changes</span>
+                                        </div>
+                                    )}
+
                                     <button
                                         onClick={handleSetAsType}
-                                        className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 hover:border-blue-500 transition-all text-[8px] font-black uppercase tracking-widest"
-                                        title="Save this specific configuration as a new reusable fixture type"
+                                        disabled={!hasUnsavedSpecChanges}
+                                        className={`w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded transition-all text-[8px] font-black uppercase tracking-widest ${
+                                            hasUnsavedSpecChanges
+                                                ? 'bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 hover:border-blue-500 cursor-pointer'
+                                                : 'bg-slate-800/20 text-slate-600 border border-slate-700/30 cursor-not-allowed opacity-50'
+                                        }`}
+                                        title={hasUnsavedSpecChanges ? "Save this specific configuration as a new reusable fixture type" : "No changes to save"}
                                     >
                                         <Save size={10} />
                                         <span>Save as New Type</span>
@@ -1911,8 +1686,13 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
 
                                     <button
                                         onClick={handleUpdateGlobalType}
-                                        className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded bg-amber-600/20 hover:bg-amber-600 text-amber-400 hover:text-white border border-amber-500/30 hover:border-amber-500 transition-all text-[8px] font-black uppercase tracking-widest"
-                                        title="Update the global type definition (affects ALL devices of this type)"
+                                        disabled={!hasUnsavedSpecChanges}
+                                        className={`w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded transition-all text-[8px] font-black uppercase tracking-widest ${
+                                            hasUnsavedSpecChanges
+                                                ? 'bg-amber-600/20 hover:bg-amber-600 text-amber-400 hover:text-white border border-amber-500/30 hover:border-amber-500 cursor-pointer'
+                                                : 'bg-slate-800/20 text-slate-600 border border-slate-700/30 cursor-not-allowed opacity-50'
+                                        }`}
+                                        title={hasUnsavedSpecChanges ? "Update the global type definition (affects ALL devices of this type)" : "No changes to save"}
                                     >
                                         <Save size={10} />
                                         <span>Update Global Type</span>
@@ -2418,6 +2198,27 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                     </>
                 )}
             </div>
+
+            {/* Device Conversion Modal (AUTO-INTEGRATED-SPEC-P27) */}
+            {conversionData && (
+                <DeviceConversionModal
+                    isOpen={showConversionModal}
+                    deviceId={conversionData.deviceId}
+                    oldTypeId={conversionData.oldTypeId}
+                    oldTypeName={conversionData.oldTypeName}
+                    newTypeId={conversionData.newTypeId}
+                    newTypeName={conversionData.newTypeName}
+                    roomId={conversionData.roomId}
+                    roomName={conversionData.roomName}
+                    countInRoom={conversionData.countInRoom}
+                    countInProject={conversionData.countInProject}
+                    onConfirm={handleConversionConfirm}
+                    onCancel={() => {
+                        setShowConversionModal(false);
+                        setConversionData(null);
+                    }}
+                />
+            )}
         </div>
     );
 };
