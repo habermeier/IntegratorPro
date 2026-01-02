@@ -1,11 +1,11 @@
 {
   "version": "1.0",
-  "timestamp": "2026-01-02T07:03:15.211Z",
+  "timestamp": "2026-01-02T16:45:41.409Z",
   "metadata": {
     "name": "270 Boll Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2026-01-02T07:03:15.043Z"
+    "modified": "2026-01-02T16:45:41.291Z"
   },
   "floorPlan": {
     "scale": {
@@ -4288,6 +4288,56 @@
         "cableType": "Cat6"
       },
       "createdAt": 1767208212798
+    },
+    {
+      "id": "lighting-1767372326609",
+      "deviceTypeId": "recessed-light",
+      "productId": "generic-product",
+      "name": "recessed-light ligh",
+      "position": {
+        "x": -1015.3086759172697,
+        "y": 7.865606872900344
+      },
+      "rotation": 0,
+      "roomId": "Patio Other",
+      "layerId": "lighting",
+      "installationHeight": 2.5900000000000003,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1767372326609
+    },
+    {
+      "id": "lighting-1767372339775",
+      "deviceTypeId": "recessed-light",
+      "productId": "generic-product",
+      "name": "recessed-light ligh",
+      "position": {
+        "x": -1835.2345766383332,
+        "y": 330.4375187294652
+      },
+      "rotation": 0,
+      "roomId": "Primary Closet",
+      "layerId": "lighting",
+      "installationHeight": 2.5900000000000003,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1767372339775
     }
   ],
   "cables": [],

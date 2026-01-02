@@ -150,6 +150,53 @@ export class DeviceRegistry {
   }
 
   /**
+   * Batch update device type for multiple devices
+   * AUTO-SPEC-SYSTEM-P26: Mass conversion modal & logic
+   *
+   * @param oldTypeId - Current device type ID to match
+   * @param newTypeId - New device type ID to apply
+   * @param roomId - Optional room ID to limit scope (null = all rooms)
+   * @returns Object with count of devices updated and array of updated device IDs
+   */
+  public batchUpdateDeviceType(
+    oldTypeId: string,
+    newTypeId: string,
+    roomId?: string | null
+  ): { count: number; updatedDeviceIds: string[] } {
+    const updatedDeviceIds: string[] = [];
+
+    // Filter devices by oldTypeId and optional roomId
+    this.devices.forEach((device) => {
+      const matchesType = device.deviceTypeId === oldTypeId;
+      const matchesRoom = roomId === undefined || roomId === null || device.roomId === roomId;
+
+      if (matchesType && matchesRoom) {
+        // Update device type
+        const updatedDevice = { ...device, deviceTypeId: newTypeId };
+        this.devices.set(device.id, updatedDevice);
+        updatedDeviceIds.push(device.id);
+      }
+    });
+
+    // Emit change event for batch update
+    if (updatedDeviceIds.length > 0) {
+      this.emit('change', {
+        type: 'batch-update',
+        oldTypeId,
+        newTypeId,
+        roomId,
+        count: updatedDeviceIds.length,
+        deviceIds: updatedDeviceIds
+      });
+    }
+
+    return {
+      count: updatedDeviceIds.length,
+      updatedDeviceIds
+    };
+  }
+
+  /**
    * Subscribe to registry events
    * @param event - Event name to listen for
    * @param callback - Callback function to execute when event is emitted
