@@ -105,6 +105,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                 ...SYMBOL_LIBRARY[editingDevice.deviceTypeId],
                 id: `custom-${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
                 name,
+                productId: productId || editingDevice.productId,
                 metadata: { ...draftMetadata }
             };
             await dataService.addCustomSymbol(newType);

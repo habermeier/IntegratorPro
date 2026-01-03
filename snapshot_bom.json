@@ -449,6 +449,22 @@
       "total": 0,
       "description": "4-Channel 24V DMX Decoder (IP67)",
       "manufacturer": "LTech"
+    },
+    {
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "quantity": 20,
+      "cost": 0,
+      "total": 0,
+      "description": "Product: generic-product",
+      "manufacturer": "Unknown"
+    },
+    {
+      "name": "recessed-light ligh",
+      "quantity": 1,
+      "cost": 0,
+      "total": 0,
+      "description": "Product: generic-light",
+      "manufacturer": "Unknown"
     }
   ]
 }

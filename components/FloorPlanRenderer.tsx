@@ -192,24 +192,40 @@ export const FloorPlanRenderer: React.FC = () => {
     // Keyboard shortcuts for toggling sidebars
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            // Ignore if user is typing in an input/textarea
-            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+            // Ignore if user is typing in an input, textarea, or select
+            const target = e.target as HTMLElement;
+            if (['input', 'textarea', 'select'].includes(target.tagName.toLowerCase()) || target.isContentEditable) {
                 return;
             }
 
             if (e.key === '[') {
-                updatePanel('left', { open: !panels.left.open, locked: !panels.left.locked });
+                setPanels(prev => ({
+                    ...prev,
+                    left: { ...prev.left, open: !prev.left.open, locked: !prev.left.locked }
+                }));
             } else if (e.key === ']') {
-                updatePanel('right', { open: !panels.right.open, locked: !panels.right.locked });
+                setPanels(prev => ({
+                    ...prev,
+                    right: { ...prev.right, open: !prev.right.open, locked: !prev.right.locked }
+                }));
+            } else if (e.key === '/') {
+                // Toggle both sidebars
+                setPanels(prev => {
+                    const nextState = !prev.left.open; // Toggle based on left panel
+                    return {
+                        left: { ...prev.left, open: nextState, locked: nextState },
+                        right: { ...prev.right, open: nextState, locked: nextState }
+                    };
+                });
             }
         };
 
-        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keydown', handleKeyDown, true); // Use capture phase for better reliability
 
         return () => {
-            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keydown', handleKeyDown, true);
         };
-    }, []);
+    }, []); // Functional updates in setPanels keep this dependency-free
 
     // Mouse edge detection for auto-show sidebars (AUTO-ULTIMATE-UX-P26: Throttled)
     useEffect(() => {
@@ -254,13 +270,12 @@ export const FloorPlanRenderer: React.FC = () => {
         };
 
         window.addEventListener('mousemove', handleMouseMove);
-
         return () => {
             window.removeEventListener('mousemove', handleMouseMove);
             if (leftPanelCollapseTimer.current) clearTimeout(leftPanelCollapseTimer.current);
             if (rightPanelCollapseTimer.current) clearTimeout(rightPanelCollapseTimer.current);
         };
-    }, [panels.left.locked, panels.right.locked]);
+    }, [panels, updatePanel]); // panels dependency is REQUIRED here to avoid stale closures in lock check
 
     // Handlers for sidebar hover/leave with delayed collapse
     const handleLeftPanelEnter = () => {

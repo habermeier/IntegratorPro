@@ -18,10 +18,17 @@ export interface SpecBuilderProps {
 export const getSpecBuilder = (product: any): React.FC<SpecBuilderProps> | null => {
     if (!product) return null;
 
-    // Special Case: HE Williams 2DS Series
-    if (product.id === '2DS-L9' || product.id === 'light-fix-dali' || product.manufacturer === 'HE Williams') {
-        // We only use the 2DS builder for things that look like 2DS series
-        if (product.id?.includes('2DS') || product.name?.includes('2DS')) {
+    // Special Case: HE Williams Lighting Series
+    const isHEWilliams = product.manufacturer === 'HE Williams' || product.id?.includes('2DS') || product.id?.includes('2AS');
+
+    if (isHEWilliams && product.type === 'LIGHTING') {
+        // We use the 2DS/2AS builder for things that look like 2DS/2AS series or families
+        const isCompatibleSeries =
+            product.id?.includes('2DS') || product.name?.includes('2DS') || product.productFamily === '2DS' ||
+            product.id?.includes('2AS') || product.name?.includes('2AS') || product.productFamily === '2AS' ||
+            product.hasSpecBuilder; // Trust the catalog flag if present for HE Williams
+
+        if (isCompatibleSeries) {
             return HEWilliams2DSBuilder as any;
         }
     }

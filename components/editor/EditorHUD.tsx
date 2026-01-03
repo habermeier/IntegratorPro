@@ -1,5 +1,6 @@
 import React from 'react';
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, Menu, Home, ChevronLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { ToolType } from '../../editor/models/types';
 import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
 import { dataService } from '../../src/services/DataService';
@@ -15,6 +16,7 @@ interface EditorHUDProps {
 }
 
 export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeTool, isEditMode, activeLayerName, lastKey, isZoomCursorEnabled }) => {
+    const navigate = useNavigate();
     const [isPrimary, setIsPrimary] = React.useState(() => dataService.isPrimary());
     const [showHelp, setShowHelp] = React.useState(false);
     const [viewportWidth, setViewportWidth] = React.useState(() => window.innerWidth);
@@ -80,16 +82,28 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
     }, [showHelp]);
 
     return (
-        <div className="p-4 bg-slate-900/80 border-b border-slate-800 flex justify-between items-center z-10 relative animate-in fade-in slide-in-from-top-4 duration-400">
-            <div className="flex items-center space-x-6">
+        <div className="p-4 bg-slate-900/80 border-b border-slate-800 flex justify-between items-center z-10 relative animate-in fade-in slide-in-from-top-4 duration-400 h-16">
+            <div className="flex items-center space-x-4">
+                <button
+                    onClick={() => navigate('/project-brief')}
+                    className="p-2 hover:bg-slate-800 focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg text-slate-400 hover:text-white transition-all group flex items-center gap-1"
+                    title="Return to Project Dashboard"
+                    aria-label="Home"
+                >
+                    <Menu size={20} className="group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] font-black uppercase tracking-widest hidden md:inline opacity-0 group-hover:opacity-100 transition-opacity">Menu</span>
+                </button>
+
+                <div className="h-8 w-px bg-slate-800 mx-2" />
+
                 <div>
                     <div className="flex items-center space-x-2">
-                        <h2 className="text-lg font-bold text-white leading-none">IntegratorPro Editor</h2>
+                        <h2 className="text-lg font-bold text-white leading-none tracking-tight">IntegratorPro Editor</h2>
                         <span className={`text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-tighter ${isPrimary ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}`}>
                             {isPrimary ? 'Primary' : 'Secondary'}
                         </span>
                     </div>
-                    <p className="text-[10px] uppercase tracking-widest text-blue-500 font-bold mt-1">System Planning Suite</p>
+                    <p className="text-[10px] uppercase tracking-widest text-blue-500/70 font-bold mt-1">System Planning Suite</p>
                 </div>
             </div>
 
@@ -260,10 +274,10 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
                 </div>
             )}
 
-            {/* Unified Command Bar - Central bottom anchor for all contextual hints (AUTO-HUD-CONSOLIDATE-P23, AUTO-HUD-POLISH-P24, AUTO-ULTIMATE-POLISH-P25, AUTO-ULTIMATE-UX-P26) */}
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-40 w-full px-4">
+            {/* Unified Command Bar - Fixed at bottom for Zen Mode (AUTO-MAX-REAL-ESTATE-P21, AUTO-ULTIMATE-UX-P26) */}
+            <div className="fixed bottom-16 left-1/2 transform -translate-x-1/2 z-[60] w-full px-4 pointer-events-none">
                 <div
-                    className={`bg-slate-900/90 backdrop-blur-md border-2 ${modeTheme.borderClass} rounded-lg shadow-[0_10px_40px_rgba(0,0,0,0.4)] min-w-[280px] max-w-[90vw] md:max-w-[800px] mx-auto transition-colors duration-300 ${modeTheme.shouldPulse ? 'animate-pulse' : ''}`}
+                    className={`bg-slate-900/95 backdrop-blur-md border-2 ${modeTheme.borderClass} rounded-lg shadow-[0_10px_40px_rgba(0,0,0,0.6)] min-w-[320px] max-w-[90vw] md:max-w-2xl mx-auto transition-all duration-300 pointer-events-auto ${modeTheme.shouldPulse ? 'animate-pulse' : ''}`}
                     role="status"
                     aria-label="Current tool instructions and keyboard shortcuts"
                     aria-live="polite"

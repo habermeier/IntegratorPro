@@ -8,6 +8,7 @@ export interface SymbolDefinition {
     color: number;
     size: { width: number, height: number };
     createMesh: (width: number, height: number) => THREE.Group;
+    productId?: string;
     metadata?: any;
 }
 
@@ -89,7 +90,8 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         description: 'Filled black square with crosshairs',
         color: 0x000000,
         size: { width: 16, height: 16 },
-        createMesh: createUniversalMesh
+        createMesh: createUniversalMesh,
+        productId: 'generic-light'
     },
     // Fallback for migration/legacy data
     'generic-lighting': {
@@ -137,7 +139,8 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         description: 'Filled black square with crosshairs',
         color: 0x000000,
         size: { width: 16, height: 16 },
-        createMesh: createUniversalMesh
+        createMesh: createUniversalMesh,
+        productId: 'generic-switch'
     },
 
     // --- RECEPTACLES ---

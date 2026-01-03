@@ -227,11 +227,12 @@ export class PlaceSymbolTool implements Tool {
             rotation: this.currentRotation,
             scale: this.currentScale,
             room: roomName,
-            productId: this.activeProductId,
+            productId: def.productId || this.activeProductId,
             installationHeight: this.activeDefaultHeight,
             busAssignment: this.activeBusAssignment,
             metadata: {
-                productId: this.activeProductId,
+                ...(def.metadata || {}), // PRESERVE defined metadata (crucial for Spec Builders)
+                productId: def.productId || this.activeProductId,
                 lumens: this.activeLumens,
                 beamAngle: this.activeBeamAngle,
                 range: this.activeRange,

@@ -1392,5 +1392,24 @@
         "linkStatus": "MARKET",
         "genericRole": "DMX Decoder",
         "notes": "PHASE 2: Converts DMX512 to 4x PWM channels for non-DMX-native fixtures. Weatherproof housing. Quantity TBD."
+    },
+    {
+        "id": "acc-ssd-990pro-4tb",
+        "name": "Samsung 990 Pro 4TB Heatsink",
+        "manufacturer": "Samsung",
+        "description": "NVMe M.2 SSD with Heatsink (PCIe 4.0)",
+        "type": "ACCESSORY",
+        "mountType": "NA",
+        "size": 0,
+        "cost": 379.00,
+        "powerWatts": 0,
+        "quantity": 1,
+        "systemIds": [
+            "infra"
+        ],
+        "url": "https://geizhals.de/samsung-ssd-990-pro-4tb-mz-v9p4t0gw-a2798123.html",
+        "linkStatus": "MARKET",
+        "notes": "MPN: MZ-V9P4T0CW. Price verified on Geizhals.",
+        "location": "MDF"
     }
 ]

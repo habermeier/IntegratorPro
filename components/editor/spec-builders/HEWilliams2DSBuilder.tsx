@@ -66,10 +66,16 @@ export const HEWilliams2DSBuilder: React.FC<HEWilliams2DSBuilderProps> = ({ init
         }
     }, [initialMetadata]);
 
-    // Generate HE Williams 2DS Ordering String
+    // Detect series from initial metadata or default to 2DS
+    const [seriesPrefix, setSeriesPrefix] = useState<string>(() => {
+        if (initialMetadata?.orderingCode?.startsWith('2AS')) return '2AS';
+        return '2DS';
+    });
+
+    // Generate HE Williams Ordering String
     const generateOrderingString = (): string => {
         const parts = [
-            '2DS',
+            seriesPrefix,
             `${specLumens}/${specColor}`,
             specMountingType,
             specOptions !== 'NONE' ? specOptions : '',

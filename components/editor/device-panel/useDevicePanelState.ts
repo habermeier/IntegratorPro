@@ -80,6 +80,29 @@ export const useDevicePanelState = (editor: FloorPlanEditor | null) => {
         return () => editor.off('selection-changed', handleSelectionChange);
     }, [editor, getDevice]);
 
+    // Sync editingDevice if the underlying devices array changes (External sync)
+    React.useEffect(() => {
+        if (editingDevice) {
+            const latest = getDevice(editingDevice.id);
+            if (latest && JSON.stringify(latest) !== JSON.stringify(editingDevice)) {
+                setEditingDevice(latest);
+                setFormData({
+                    name: latest.name,
+                    productId: latest.productId,
+                    installationHeight: latest.installationHeight,
+                    busAssignment: latest.busAssignment,
+                    rotation: latest.rotation || 0,
+                    metadata: { ...latest.metadata }
+                });
+                // Only sync draftMetadata if it hasn't diverging significantly 
+                // (usually spec builders handle their own internal state, but we want a baseline sync)
+                if (!draftMetadata || Object.keys(draftMetadata).length === 0) {
+                    setDraftMetadata(latest.metadata || {});
+                }
+            }
+        }
+    }, [devices, getDevice, editingDevice, draftMetadata]);
+
     return {
         editingDevice,
         formData,

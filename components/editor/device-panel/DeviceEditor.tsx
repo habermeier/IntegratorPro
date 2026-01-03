@@ -35,7 +35,11 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
     const [isPlacementExpanded, setIsPlacementExpanded] = React.useState(true);
     const [isConfigExpanded, setIsConfigExpanded] = React.useState(true);
 
-    const product = catalog.find(p => p.id === (formData.productId || editingDevice.productId));
+    // Resolve product more robustly (check metadata and deviceTypeId if needed)
+    const effectiveProductId = formData.productId || editingDevice.metadata?.productId || editingDevice.productId;
+    const product = catalog.find(p => p.id === effectiveProductId) ||
+        catalog.find(p => (editingDevice.deviceTypeId && p.id === SYMBOL_LIBRARY[editingDevice.deviceTypeId]?.productId));
+
     const SpecBuilder = getSpecBuilder(product);
 
     return (

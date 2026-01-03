@@ -164,11 +164,14 @@ const App = () => {
           {isZenMode && (
             <button
               onClick={() => navigate('/project-brief')}
-              className="fixed top-4 left-4 z-50 p-3 bg-slate-800/90 hover:bg-slate-700 focus:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-slate-950 border border-slate-600 rounded-lg shadow-lg transition-all backdrop-blur-sm"
+              className="fixed top-4 right-4 z-[60] p-3 bg-slate-800/90 hover:bg-slate-700 focus:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-slate-950 border border-slate-600 rounded-lg shadow-lg transition-all backdrop-blur-sm group"
               title="Exit to Project Brief"
               aria-label="Exit Zen Mode and return to Project Brief"
             >
-              <Home size={20} className="text-slate-300" />
+              <div className="flex items-center space-x-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-white transition-colors">Exit Editor</span>
+                <Home size={20} className="text-slate-300 group-hover:text-white transition-colors" />
+              </div>
             </button>
           )}
 
