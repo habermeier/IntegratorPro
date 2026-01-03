@@ -3,6 +3,7 @@ import { HardwareModule, ModuleType, MountType } from '../types';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
 import { ShoppingCart, Zap, Thermometer, DollarSign, Activity, X, Search, FileText, ArrowUp, ArrowDown, ExternalLink, Info } from 'lucide-react';
 import { deviceRegistry } from '../src/services/DeviceRegistry';
+import { useDeviceRegistry } from '../src/hooks/useDeviceRegistry';
 import { Device } from '../src/models/Device';
 
 interface ProjectBOMProps {
@@ -110,55 +111,7 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
     }, [layoutData]);
 
     // --- INTEGRATION: Convert Devices from DeviceRegistry to BOM Modules (Grouped by SKU) ---
-    const deviceModules = useMemo(() => {
-        const devices = deviceRegistry.getAllDevices();
-        if (devices.length === 0) return [];
-
-        // Group devices by SKU (or fallback to productId)
-        const groupedMap = new Map<string, Device[]>();
-
-        devices.forEach(device => {
-            // Primary key: Use SKU if available, fallback to productId
-            const groupKey = device.metadata?.sku || device.productId;
-
-            if (!groupedMap.has(groupKey)) {
-                groupedMap.set(groupKey, []);
-            }
-            groupedMap.get(groupKey)!.push(device);
-        });
-
-        // Convert groups to HardwareModule entries
-        return Array.from(groupedMap.entries()).map(([groupKey, devicesInGroup]) => {
-            const firstDevice = devicesInGroup[0];
-            const sku = firstDevice.metadata?.sku;
-
-            // Determine module properties from first device in group
-            const category = firstDevice.layerId as ModuleType || ModuleType.ACCESSORY;
-
-            return {
-                id: `device-group-${groupKey}`,
-                name: firstDevice.name,
-                manufacturer: firstDevice.metadata?.manufacturer || 'Unknown',
-                description: sku ? `SKU: ${sku}` : `Product: ${firstDevice.productId}`,
-                type: category,
-                mountType: MountType.NA,
-                size: 0,
-                cost: firstDevice.metadata?.cost || 0,
-                powerWatts: firstDevice.metadata?.powerWatts || 0,
-                quantity: devicesInGroup.length,
-                url: firstDevice.metadata?.purchaseUrl || '',
-                linkStatus: (firstDevice.metadata?.purchaseUrl ? 'PREFERRED' : 'MARKET') as 'PREFERRED' | 'MARKET',
-                genericRole: category,
-                instances: devicesInGroup.map(d => ({
-                    id: d.id,
-                    location: d.roomId || 'Unknown',
-                    notes: '',
-                    position: d.position,
-                    universe: d.busAssignment ? (parseInt(d.busAssignment.replace(/\D/g, '')) || 0) : undefined
-                }))
-            } as any as HardwareModule;
-        });
-    }, []); // Computed once per render - deviceRegistry is singleton
+    const { deviceModules } = useDeviceRegistry();
 
     const allModules = useMemo(() => [...modules, ...virtualCableModules, ...deviceModules], [modules, virtualCableModules, deviceModules]);
 

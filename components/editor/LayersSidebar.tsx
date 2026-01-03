@@ -71,115 +71,6 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
         }
     };
 
-    const validateProjectData = (data: any): { valid: boolean; error?: string } => {
-        // Check if data is an object
-        if (!data || typeof data !== 'object') {
-            return { valid: false, error: 'Invalid project file: not a valid JSON object' };
-        }
-
-        // Check metadata
-        if (!data.metadata || typeof data.metadata !== 'object') {
-            return { valid: false, error: 'Invalid project file: missing or invalid "metadata" object' };
-        }
-        if (!data.metadata.name || typeof data.metadata.name !== 'string') {
-            return { valid: false, error: 'Invalid project file: missing or invalid "metadata.name"' };
-        }
-
-        // Check floorPlan
-        if (!data.floorPlan || typeof data.floorPlan !== 'object') {
-            return { valid: false, error: 'Invalid project file: missing or invalid "floorPlan" object' };
-        }
-        if (!data.floorPlan.scale || typeof data.floorPlan.scale !== 'object') {
-            return { valid: false, error: 'Invalid project file: missing or invalid "floorPlan.scale"' };
-        }
-        if (!data.floorPlan.electricalOverlay || typeof data.floorPlan.electricalOverlay !== 'object') {
-            return { valid: false, error: 'Invalid project file: missing or invalid "floorPlan.electricalOverlay"' };
-        }
-        if (!Array.isArray(data.floorPlan.polygons)) {
-            return { valid: false, error: 'Invalid project file: missing or invalid "floorPlan.polygons" array' };
-        }
-
-        // Check required arrays
-        if (!Array.isArray(data.devices)) {
-            return { valid: false, error: 'Invalid project file: missing or invalid "devices" array' };
-        }
-        if (!Array.isArray(data.furniture)) {
-            return { valid: false, error: 'Invalid project file: missing or invalid "furniture" array' };
-        }
-        if (!Array.isArray(data.cables)) {
-            return { valid: false, error: 'Invalid project file: missing or invalid "cables" array' };
-        }
-
-        return { valid: true };
-    };
-
-    const handleExportProject = async () => {
-        try {
-            const projectData = await dataService.loadProject();
-            const jsonString = JSON.stringify(projectData, null, 2);
-            const blob = new Blob([jsonString], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `project-backup-${Date.now()}.json`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error('Export failed:', error);
-            alert('Failed to export project. See console for details.');
-        }
-    };
-
-    const handleImportProject = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-
-        const confirmed = confirm(
-            'WARNING: This will overwrite all current project data. This action cannot be undone. Are you sure you want to continue?'
-        );
-
-        if (!confirmed) {
-            event.target.value = '';
-            return;
-        }
-
-        try {
-            const fileContent = await file.text();
-
-            // Parse JSON with specific error handling
-            let projectData: any;
-            try {
-                projectData = JSON.parse(fileContent);
-            } catch (parseError) {
-                console.error('JSON parse error:', parseError);
-                alert('Failed to import project: The file is not valid JSON. Please check the file format.');
-                event.target.value = '';
-                return;
-            }
-
-            // Validate project data structure
-            const validation = validateProjectData(projectData);
-            if (!validation.valid) {
-                console.error('Validation failed:', validation.error);
-                alert(`Failed to import project:\n\n${validation.error}\n\nPlease ensure you are uploading a valid project backup file.`);
-                event.target.value = '';
-                return;
-            }
-
-            // Validation passed - proceed with import
-            await dataService.saveProject(projectData, true);
-            alert('Project imported successfully. Reloading page...');
-            window.location.reload();
-        } catch (error) {
-            console.error('Import failed:', error);
-            alert('Failed to import project. An unexpected error occurred. See console for details.');
-        } finally {
-            event.target.value = '';
-        }
-    };
-
     const renderLayerItem = (l: Layer) => {
         const isFoundation = l.category === 'foundation';
         const isActive = activeLayerId === l.id && isEditMode;
@@ -338,49 +229,48 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
             {/* Header - Auto-hide when panel is collapsed (AUTO-ULTIMATE-POLISH-P25) */}
             {isLocked && (
                 <div className="p-4 border-b border-slate-800 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Quick Controls</h3>
-                <div className="grid grid-cols-3 gap-1">
-                    <button
-                        onClick={() => handleQuickAction('base')}
-                        className="px-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-[8px] font-bold rounded border border-slate-700 text-slate-300"
-                        title="Show only Base and Masking"
-                    >
-                        [BASE]
-                    </button>
-                    <button
-                        onClick={() => handleQuickAction('context')}
-                        className="px-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-[8px] font-bold rounded border border-slate-700 text-slate-300"
-                        title="Show all Foundational layers"
-                    >
-                        [CONTEXT]
-                    </button>
-                    <button
-                        onClick={() => handleQuickAction('clear')}
-                        className="px-1 py-1.5 bg-slate-800 hover:bg-red-900/30 text-[8px] font-bold rounded border border-slate-700 text-slate-400"
-                        title="Hide all Device data"
-                    >
-                        [CLEAR]
-                    </button>
-                </div>
-                <div className="mt-2 pt-2 border-t border-slate-800/50">
-                    <div className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter mb-1">Debug</div>
-                    <button
-                        onClick={() => {
-                            const newValue = !zoomCursorEnabled;
-                            editor?.cameraSystem.setZoomCursorEnabled(newValue);
-                            setZoomCursorEnabled(newValue);
-                        }}
-                        className={`w-full px-2 py-1.5 text-[8px] font-bold rounded border transition-colors ${
-                            zoomCursorEnabled
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Quick Controls</h3>
+                    <div className="grid grid-cols-3 gap-1">
+                        <button
+                            onClick={() => handleQuickAction('base')}
+                            className="px-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-[8px] font-bold rounded border border-slate-700 text-slate-300"
+                            title="Show only Base and Masking"
+                        >
+                            [BASE]
+                        </button>
+                        <button
+                            onClick={() => handleQuickAction('context')}
+                            className="px-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-[8px] font-bold rounded border border-slate-700 text-slate-300"
+                            title="Show all Foundational layers"
+                        >
+                            [CONTEXT]
+                        </button>
+                        <button
+                            onClick={() => handleQuickAction('clear')}
+                            className="px-1 py-1.5 bg-slate-800 hover:bg-red-900/30 text-[8px] font-bold rounded border border-slate-700 text-slate-400"
+                            title="Hide all Device data"
+                        >
+                            [CLEAR]
+                        </button>
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-slate-800/50">
+                        <div className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter mb-1">Debug</div>
+                        <button
+                            onClick={() => {
+                                const newValue = !zoomCursorEnabled;
+                                editor?.cameraSystem.setZoomCursorEnabled(newValue);
+                                setZoomCursorEnabled(newValue);
+                            }}
+                            className={`w-full px-2 py-1.5 text-[8px] font-bold rounded border transition-colors ${zoomCursorEnabled
                                 ? 'bg-blue-900/40 border-blue-500/50 text-blue-400 hover:bg-blue-900/60'
                                 : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
-                        }`}
-                        title="Toggle Zoom Cursor (Magnified Viewport)"
-                    >
-                        {zoomCursorEnabled ? '✓ ZOOM CURSOR' : 'ZOOM CURSOR OFF'}
-                    </button>
+                                }`}
+                            title="Toggle Zoom Cursor (Magnified Viewport)"
+                        >
+                            {zoomCursorEnabled ? '✓ ZOOM CURSOR' : 'ZOOM CURSOR OFF'}
+                        </button>
+                    </div>
                 </div>
-            </div>
             )}
 
             {/* Layer Stack */}
@@ -407,12 +297,9 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                 )}
             </div>
 
+            {/* Selection Details */}
             {/* Properties Footer */}
             <div className="p-4 bg-slate-900 border-t border-slate-800">
-                <div className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-2 flex justify-between">
-                    <span>Properties</span>
-                    <span className="text-slate-700 font-mono text-[8px] italic">Tab-Sync Active</span>
-                </div>
                 {selectedIds.length > 0 ? (
                     <div className="space-y-2">
                         <div className="flex justify-between">
@@ -427,32 +314,6 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                 ) : (
                     <div className="text-[10px] italic text-slate-700">No selection</div>
                 )}
-
-                {/* Project Export/Import */}
-                <div className="mt-4 pt-4 border-t border-slate-800 space-y-2">
-                    <button
-                        onClick={handleExportProject}
-                        className="w-full px-3 py-2 bg-blue-900/30 hover:bg-blue-800/50 border border-blue-700/50 rounded text-[10px] font-bold text-blue-400 uppercase tracking-wide transition-all"
-                        title="Download project as JSON file"
-                    >
-                        Export Project
-                    </button>
-                    <label className="block">
-                        <input
-                            type="file"
-                            accept=".json"
-                            onChange={handleImportProject}
-                            className="hidden"
-                            id="import-project-file"
-                        />
-                        <span
-                            className="block w-full px-3 py-2 bg-orange-900/30 hover:bg-orange-800/50 border border-orange-700/50 rounded text-[10px] font-bold text-orange-400 uppercase tracking-wide transition-all cursor-pointer text-center"
-                            title="Load project from JSON file (overwrites current data)"
-                        >
-                            Import Project
-                        </span>
-                    </label>
-                </div>
             </div>
         </div>
     );

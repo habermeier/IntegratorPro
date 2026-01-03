@@ -1,0 +1,86 @@
+[
+    {
+        "id": "c-nuc",
+        "fromId": "mdf-sw",
+        "toId": "mdf-nuc",
+        "type": "ETHERNET",
+        "cableType": "Cat6"
+    },
+    {
+        "id": "c-x915",
+        "fromId": "mdf-sw",
+        "toId": "field-ak-x915",
+        "type": "ETHERNET",
+        "isPoE": true,
+        "cableType": "Cat6a"
+    },
+    {
+        "id": "c-lcp1",
+        "fromId": "mdf-sw",
+        "toId": "lcp1-sys",
+        "type": "ETHERNET",
+        "cableType": "Cat6"
+    },
+    {
+        "id": "c-lcp2",
+        "fromId": "mdf-sw",
+        "toId": "lcp2-sys",
+        "type": "ETHERNET",
+        "cableType": "Cat6"
+    },
+    {
+        "id": "c-p-lcp1",
+        "fromId": "lcp1-enc",
+        "toId": "mw-sdr-480",
+        "type": "MAINS",
+        "notes": "120V Feed to Main Plant"
+    },
+    {
+        "id": "c-p-ecp",
+        "fromId": "mw-sdr-480",
+        "toId": "phoenix-cbm",
+        "type": "MAINS",
+        "notes": "24V High Current (Class 1)"
+    },
+    {
+        "id": "c-p-d1",
+        "fromId": "phoenix-cbm",
+        "toId": "eldo-dali-dim",
+        "type": "MAINS",
+        "notes": "96W Class 2 Branch 1"
+    },
+    {
+        "id": "c-p-d2",
+        "fromId": "phoenix-cbm",
+        "toId": "siemens-dali-gw",
+        "type": "MAINS",
+        "notes": "Aux Power"
+    },
+    {
+        "id": "c-str-1",
+        "fromId": "lcp2-acc-main",
+        "toId": "field-str",
+        "type": "SIGNAL",
+        "cableType": "18/4 Shielded",
+        "notes": "Secure Power via SR01"
+    },
+    {
+        "id": "c-k-1",
+        "fromId": "lcp1-sys",
+        "toId": "lcp1-gw1",
+        "type": "KNX"
+    },
+    {
+        "id": "c-k-2",
+        "fromId": "lcp1-sys",
+        "toId": "lcp1-inp",
+        "type": "KNX"
+    },
+    {
+        "id": "c-d-1",
+        "fromId": "lcp1-gw1",
+        "toId": "lcp1-dim-gar",
+        "type": "DALI",
+        "notes": "Universe 1"
+    }
+]

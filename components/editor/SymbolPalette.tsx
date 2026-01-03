@@ -37,7 +37,9 @@ export const SymbolPalette: React.FC<SymbolPaletteProps> = ({ activeCategory, on
         // Only take non-custom symbols from the base library to avoid duplication
         const baseSymbols = Object.values(SYMBOL_LIBRARY).filter(s => s.category === activeCategory && !s.id.startsWith('custom-'));
         const relevantCustom = customSymbols.filter(s => s.category === activeCategory);
-        return [...baseSymbols, ...relevantCustom];
+
+        // AUTO-SORT-CUSTOM-FIRST: Custom symbols are most important to users
+        return [...relevantCustom, ...baseSymbols];
     }, [activeCategory, customSymbols]);
 
     if (allSymbols.length === 0) return null;
@@ -54,8 +56,8 @@ export const SymbolPalette: React.FC<SymbolPaletteProps> = ({ activeCategory, on
                             key={symbol.id}
                             onClick={() => onSelectSymbol(symbol.id)}
                             className={`flex flex-col items-center justify-center p-2 rounded-md transition-all border ${selectedSymbolType === symbol.id
-                                    ? 'bg-blue-600/20 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
-                                    : 'bg-slate-900 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'
+                                ? 'bg-blue-600/20 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+                                : 'bg-slate-900 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'
                                 }`}
                             title={symbol.description}
                         >
@@ -68,9 +70,8 @@ export const SymbolPalette: React.FC<SymbolPaletteProps> = ({ activeCategory, on
                                     customShorthand={symbol.metadata?.shorthand}
                                 />
                             </div>
-                            <span className={`text-[9px] text-center font-bold leading-tight uppercase tracking-tighter ${
-                                selectedSymbolType === symbol.id ? 'text-blue-400' : 'text-slate-400'
-                            }`}>
+                            <span className={`text-[9px] text-center font-bold leading-tight uppercase tracking-tighter ${selectedSymbolType === symbol.id ? 'text-blue-400' : 'text-slate-400'
+                                }`}>
                                 {symbol.name}
                             </span>
                             {isCustom && (

@@ -11,6 +11,7 @@
 import { useCallback } from 'react';
 import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
 import { ProjectData, PlacedSymbol, VectorLayerContent, Room, Furniture } from '../../editor/models/types';
+import { SYSTEM_REGISTRY } from '../registry/SystemRegistry';
 import { remoteDebug } from '../utils/logger';
 
 export function useApplyProjectData(
@@ -22,10 +23,7 @@ export function useApplyProjectData(
 ) {
     const applyProjectData = useCallback((editor: FloorPlanEditor, project: ProjectData) => {
         remoteDebug('Incoming Project Data Keys', 'useApplyProjectData', { keys: Object.keys(project) });
-        // Check for suspicious payload issues
-        if ((project as any).layers || (project as any).visibility) {
-            console.warn('[useApplyProjectData Debug] ⚠️ WARNING: Server data contains "layers" or "visibility" root keys! This might overwrite local state.');
-        }
+
         // 1. Scale
         if (project.floorPlan.scale?.scaleFactor) {
             editor.pixelsMeter = project.floorPlan.scale.scaleFactor;
@@ -44,18 +42,10 @@ export function useApplyProjectData(
         const devicesByCategory: { [category: string]: PlacedSymbol[] } = {};
 
         devices.forEach((device: any) => {
-            // Use layerId as the primary grouping key, matching the Device model
             const layerId = device.layerId || device.category || 'lighting';
             if (!devicesByCategory[layerId]) devicesByCategory[layerId] = [];
 
-            // Fix: Map Device (nested) to PlacedSymbol (flat) structure for the Renderer
-            // Default to 'recessed-light' which is guaranteed to exist
             const rawType = device.deviceTypeId || device.type || 'recessed-light';
-
-            // Validate against library to prevent invisible symbols
-            // We can't import SYMBOL_LIBRARY directly here easily due to cycles/hook nature, 
-            // but we can trust the 'recessed-light' default we just set.
-
             const symbol: PlacedSymbol = {
                 ...device,
                 x: device.position?.x ?? device.x ?? 0,
@@ -65,30 +55,20 @@ export function useApplyProjectData(
             };
 
             if (symbol.type === 'generic-lighting') {
-                // Auto-migrate old generic types to recessed-light on load
                 symbol.type = 'recessed-light';
             }
 
             devicesByCategory[layerId].push(symbol);
         });
 
-        // Clear and fill thematic layers
-        const thematicLayers = ['lighting', 'sensors', 'security', 'network', 'lcps', 'hvac', 'receptacles', 'infrastructure'];
+        const thematicLayerIds = SYSTEM_REGISTRY.map(c => c.id);
 
-        remoteDebug('Device distribution by category', 'useApplyProjectData', { distribution: Object.keys(devicesByCategory).map(k => `${k}: ${devicesByCategory[k].length}`).join(', ') });
-
-        thematicLayers.forEach(id => {
+        thematicLayerIds.forEach(id => {
             const layer = editor.layerSystem.getLayer(id);
             if (layer && layer.type === 'vector') {
                 const symbolsToAssign = devicesByCategory[id] || [];
-                remoteDebug(`Assigning ${symbolsToAssign.length} symbols to layer '${id}'`, 'useApplyProjectData', { layerId: id, count: symbolsToAssign.length });
-                if (symbolsToAssign.length > 0) {
-                    remoteDebug(`Layer '${id}' symbols`, 'useApplyProjectData', { layerId: id, symbols: symbolsToAssign.map(s => `{id:${s.id}, type:${s.type}, pos:(${s.x},${s.y})}`) });
-                }
                 (layer.content as VectorLayerContent).symbols = symbolsToAssign;
                 editor.layerSystem.markDirty(id);
-            } else {
-                console.warn(`[🔍 DEEP-TRACE] Layer '${id}' not found or not vector type!`);
             }
         });
 
@@ -113,7 +93,6 @@ export function useApplyProjectData(
         const furnitureData = project.furniture || [];
         const furnitureLayer = editor.layerSystem.getLayer('furniture');
         if (furnitureLayer && furnitureLayer.type === 'vector') {
-            // Data format handles both flattened and nested position
             const mappedFurniture = furnitureData.map((f: any) => ({
                 ...f,
                 x: f.position?.x ?? f.x ?? 0,
@@ -131,8 +110,7 @@ export function useApplyProjectData(
             editor.layerSystem.markDirty('cables');
         }
 
-        // 7. Update Cache Refs to prevent immediate re-save
-        // IMPORTANT: These must match exactly what debouncedSave... strings look like
+        // 7. Update Cache Refs
         lastSavedPayloadRef.current = JSON.stringify({
             x: overlay.x || 0,
             y: overlay.y || 0,
@@ -142,7 +120,6 @@ export function useApplyProjectData(
             locked: !!overlay.locked
         });
 
-        // For symbols, we collect them back to verify the aggregation matches
         const aggregatedDevices: any[] = [];
         editor.layerSystem.getAllLayers().forEach(l => {
             if (l.type === 'vector') {
@@ -150,12 +127,17 @@ export function useApplyProjectData(
                 if (symbols.length > 0) aggregatedDevices.push(...symbols);
             }
         });
+
         lastSavedSymbolsRef.current = JSON.stringify(aggregatedDevices);
         lastSavedPolygonsRef.current = JSON.stringify(allPolygons);
         lastSavedFurnitureRef.current = JSON.stringify(furnitureData);
         lastSavedCablesRef.current = JSON.stringify(cablesData);
 
-        remoteDebug('Applied project data', 'useApplyProjectData', { devices: devices.length, polygons: allPolygons.length, furniture: furnitureData.length });
+        remoteDebug('Applied project data', 'useApplyProjectData', {
+            devices: aggregatedDevices.length,
+            polygons: allPolygons.length,
+            furniture: furnitureData.length
+        });
     }, [lastSavedPayloadRef, lastSavedSymbolsRef, lastSavedPolygonsRef, lastSavedFurnitureRef, lastSavedCablesRef]);
 
     return applyProjectData;

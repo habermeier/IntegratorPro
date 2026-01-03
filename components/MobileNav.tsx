@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { ViewMode } from '../types';
 import { X, Activity } from 'lucide-react';
+import { ProjectManagement } from './ProjectManagement';
 
 interface MobileNavProps {
     isOpen: boolean;
@@ -81,6 +82,10 @@ const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose, currentView, onN
                             </button>
                         ))}
                     </nav>
+
+                    <div className="py-4 border-t border-slate-800">
+                        <ProjectManagement />
+                    </div>
 
                     {/* Footer Info */}
                     <div className="p-4 border-t border-slate-800">

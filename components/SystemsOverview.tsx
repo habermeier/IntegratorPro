@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { HardwareModule, SystemDefinition, ViewMode } from '../types';
-import { INITIAL_SYSTEMS } from '../systems';
+import { HardwareModule, ViewMode } from '../types';
+import { SYSTEM_REGISTRY, SystemConfig } from '../src/registry/SystemRegistry';
 import ProjectBOM from './ProjectBOM';
 import { ChevronDown, ChevronRight, Share2, Info, AlertTriangle, Copy, Check } from 'lucide-react';
 
@@ -45,7 +45,7 @@ const SystemsOverview: React.FC<SystemsOverviewProps> = ({ modules, highlightedI
         }
     };
 
-    const generateMarkdown = (sys: SystemDefinition, systemModules: HardwareModule[]): string => {
+    const generateMarkdown = (sys: SystemConfig, systemModules: HardwareModule[]): string => {
         const totalCost = systemModules.reduce((acc, m) => acc + (m.cost * m.quantity), 0);
         const deepLink = `${window.location.origin}/systems/${sys.id}`;
 
@@ -72,7 +72,7 @@ const SystemsOverview: React.FC<SystemsOverviewProps> = ({ modules, highlightedI
         return markdown;
     };
 
-    const copyToMarkdown = async (sys: SystemDefinition, systemModules: HardwareModule[]) => {
+    const copyToMarkdown = async (sys: SystemConfig, systemModules: HardwareModule[]) => {
         const markdown = generateMarkdown(sys, systemModules);
 
         try {
@@ -91,7 +91,7 @@ const SystemsOverview: React.FC<SystemsOverviewProps> = ({ modules, highlightedI
             </h1>
 
             <div className="space-y-0 md:space-y-6">
-                {INITIAL_SYSTEMS.map(sys => {
+                {SYSTEM_REGISTRY.map(sys => {
                     const isExpanded = expandedSystemId === sys.id;
                     const systemModules = modules.filter(m => m.systemIds?.includes(sys.id));
                     const totalCost = systemModules.reduce((acc, m) => acc + (m.cost * m.quantity), 0);

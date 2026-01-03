@@ -48,6 +48,22 @@ export class PlaceSymbolTool implements Tool {
         this.editor.emit('active-symbol-changed', type);
     }
 
+    public setAttributes(attrs: any): void {
+        if (attrs.symbolType) {
+            this.symbolType = attrs.symbolType;
+            this.updatePreviewMesh();
+        }
+        if (attrs.productId) this.activeProductId = attrs.productId;
+        if (attrs.lumens) this.activeLumens = attrs.lumens;
+        if (attrs.beamAngle) this.activeBeamAngle = attrs.beamAngle;
+        if (attrs.range) this.activeRange = attrs.range;
+        if (attrs.cableType) this.activeCableType = attrs.cableType;
+        if (attrs.driver) this.activeDriver = attrs.driver;
+        if (attrs.mount) this.activeMount = attrs.mount;
+        if (attrs.cct) this.activeCCT = attrs.cct;
+        if (attrs.installationHeight) this.activeDefaultHeight = attrs.installationHeight;
+    }
+
     public setActiveAttributes(attrs: {
         productId: string;
         defaultHeight: number;

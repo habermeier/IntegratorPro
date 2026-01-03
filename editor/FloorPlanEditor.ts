@@ -337,9 +337,9 @@ export class FloorPlanEditor {
                 case 'v': this.setActiveTool('select'); break;
                 case 'r': this.setActiveTool('draw-room'); break;
                 case 'm': this.setActiveTool('draw-mask'); break;
-                case 'p': 
+                case 'p':
                     this.setActiveLayer('lighting', true);
-                    this.setActiveTool('place-symbol'); 
+                    this.setActiveTool('place-symbol');
                     break;
                 case 'f': this.setActiveTool('place-furniture'); break;
                 case 's': this.setActiveTool('scale-calibrate'); break;
@@ -615,7 +615,8 @@ export class FloorPlanEditor {
         this.setDirty();
     }
 
-    public setActiveLayer(id: string | null, internal: boolean = false, forceShimmy: boolean = false): void {
+    public setActiveLayer(id: string | null, internal: boolean = false, isEditMode: boolean = false): void {
+        const forceShimmy = isEditMode;
         // Toggle off if clicking the already active layer in alignment mode
         if (id === this.activeLayerId && !internal && this.isOverlayAlignmentMode && !forceShimmy) {
             this.setEditMode(false);
@@ -821,6 +822,32 @@ export class FloorPlanEditor {
             console.warn(`[FloorPlanEditor] Could not find device to focus: ${id}`);
         }
     }
+
+    public focusOnRoom(roomId: string): void {
+        const roomLayer = this.layerSystem.getLayer('room');
+        if (!roomLayer || roomLayer.type !== 'vector') return;
+
+        const rooms = (roomLayer.content as any).rooms || [];
+        const room = rooms.find((r: any) => r.id === roomId);
+
+        if (room && room.points && room.points.length > 0) {
+            // Simple bounding box center
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            room.points.forEach((p: any) => {
+                minX = Math.min(minX, p.x);
+                minY = Math.min(minY, p.y);
+                maxX = Math.max(maxX, p.x);
+                maxY = Math.max(maxY, p.y);
+            });
+
+            const centerX = (minX + maxX) / 2;
+            const centerY = (minY + maxY) / 2;
+
+            this.cameraSystem.centerOn(centerX, centerY, 1.5);
+            this.emit('camera-changed', this.cameraSystem.getState());
+        }
+    }
+
 
     public deleteDevice(id: string): void {
         // Find device and its layer

@@ -50,15 +50,21 @@ export class CameraSystem {
         const oldWidth = this.viewportWidth;
         const oldHeight = this.viewportHeight;
 
+        // 1. Capture current center before resizing
+        const cx = (this.mainCamera.left + this.mainCamera.right) / 2;
+        const cy = (this.mainCamera.top + this.mainCamera.bottom) / 2;
+
         this.viewportWidth = width;
         this.viewportHeight = height;
 
-        // Update main camera bounds while preserving world center and zoom
-        const widthDelta = width - oldWidth;
-        const heightDelta = height - oldHeight;
+        // 2. Calculate new bounds to maintain center
+        const halfWidth = (width / this.state.zoom) / 2;
+        const halfHeight = (height / this.state.zoom) / 2;
 
-        this.mainCamera.right = this.mainCamera.left + width / this.state.zoom;
-        this.mainCamera.top = this.mainCamera.bottom + height / this.state.zoom;
+        this.mainCamera.left = cx - halfWidth;
+        this.mainCamera.right = cx + halfWidth;
+        this.mainCamera.top = cy + halfHeight;
+        this.mainCamera.bottom = cy - halfHeight;
 
         this.mainCamera.updateProjectionMatrix();
     }

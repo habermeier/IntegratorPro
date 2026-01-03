@@ -38,7 +38,7 @@ export class SelectionSystem {
             for (const intersect of intersects) {
                 // Symbols use nested groups, we want the top-most object with userData.id
                 let obj = intersect.object;
-                
+
                 // Climb up until we find a userData.id or reach the layer container
                 while (obj && !obj.userData.id && obj.parent && obj.parent !== layer.container) {
                     obj = obj.parent as any;
@@ -50,7 +50,7 @@ export class SelectionSystem {
                         id: obj.userData.id,
                         zIndex: layer.zIndex
                     });
-                    break; 
+                    break;
                 }
             }
         }
@@ -59,14 +59,17 @@ export class SelectionSystem {
             // Pick the hit from the highest zIndex layer
             const topHit = hits.sort((a, b) => b.zIndex - a.zIndex)[0].id;
 
+            // Strict Single Select
             if (!multiSelect) {
                 this.selectedIds.clear();
-            }
-
-            if (this.selectedIds.has(topHit) && multiSelect) {
-                this.selectedIds.delete(topHit);
-            } else {
                 this.selectedIds.add(topHit);
+            } else {
+                // Multi Select Toggle
+                if (this.selectedIds.has(topHit)) {
+                    this.selectedIds.delete(topHit);
+                } else {
+                    this.selectedIds.add(topHit);
+                }
             }
         } else if (!multiSelect) {
             this.selectedIds.clear();

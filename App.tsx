@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { ViewMode, HardwareModule, Connection } from './types';
 import { INITIAL_MODULES, MOCK_CONNECTIONS } from './constants';
@@ -20,6 +20,8 @@ import { LayoutDashboard, Activity, Cpu, Map, FileText, Hammer, Menu, Settings a
 
 import MobileNav from './components/MobileNav';
 import ConflictNotification from './components/editor/ConflictNotification';
+import { ProjectManagement } from './components/ProjectManagement';
+import { useDeviceRegistry } from './src/hooks/useDeviceRegistry';
 
 const App = () => {
   console.log('IntegratorPro: App component rendering');
@@ -46,6 +48,7 @@ const App = () => {
 
   // Flattened Instances (for Visualizer/FloorPlan)
   const flatModules = useMemo(() => flattenModules(products), [products]);
+  const { totalCost: registryDevicesCost } = useDeviceRegistry();
 
   const [connections, setConnections] = useState<Connection[]>(MOCK_CONNECTIONS);
 
@@ -113,27 +116,31 @@ const App = () => {
         {/* Sidebar (Desktop) - AUTO-ULTIMATE-UX-P26: Smooth fade/slide transitions */}
         {!isZenMode && (
           <div className="hidden md:flex w-64 flex-col border-r border-slate-800 bg-slate-950 z-20 animate-in fade-in slide-in-from-left-4 duration-500">
-          <div className="p-6">
-            <h1 className="text-2xl font-bold tracking-tight text-white flex items-center">
-              <Activity className="text-blue-500 mr-2" />
-              Integrator<span className="text-blue-500">Pro</span>
-            </h1>
-            <p className="text-xs text-slate-500 mt-1">System Planning Suite v1.15</p>
-          </div>
+            <div className="p-6">
+              <h1 className="text-2xl font-bold tracking-tight text-white flex items-center">
+                <Activity className="text-blue-500 mr-2" />
+                Integrator<span className="text-blue-500">Pro</span>
+              </h1>
+              <p className="text-xs text-slate-500 mt-1">System Planning Suite v1.15</p>
+            </div>
 
-          <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
-            {navItems.map((item) => (
-              <NavItem key={item.label} path={item.path} icon={item.icon} label={item.label} />
-            ))}
-          </nav>
+            <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
+              {navItems.map((item) => (
+                <NavItem key={item.label} path={item.path} icon={item.icon} label={item.label} />
+              ))}
+            </nav>
 
-          <div className="p-4 border-t border-slate-800">
-            <div className="bg-slate-900 rounded p-3 text-xs text-slate-500">
-              Project: <span className="text-slate-300">270 Boll Ave</span><br />
-              Status: <span className="text-amber-500">Draft</span>
+            <div className="py-4 border-t border-slate-800">
+              <ProjectManagement />
+            </div>
+
+            <div className="p-4 border-t border-slate-800">
+              <div className="bg-slate-900 rounded p-3 text-xs text-slate-500">
+                Project: <span className="text-slate-300">270 Boll Ave</span><br />
+                Status: <span className="text-amber-500">Draft</span>
+              </div>
             </div>
           </div>
-        </div>
         )}
 
         {/* Main Content Area */}
@@ -141,16 +148,16 @@ const App = () => {
           {/* Top Header - AUTO-ULTIMATE-UX-P26: Smooth fade/slide transitions */}
           {!isZenMode && (
             <header className="h-16 border-b border-slate-800 bg-slate-950/50 backdrop-blur flex items-center justify-between px-4 md:px-8 z-10 animate-in fade-in slide-in-from-top-4 duration-400">
-            <h2 className="text-lg font-semibold text-white capitalize">
-              {navItems.find(n => location.pathname.startsWith(n.path))?.label || 'Dashboard'}
-            </h2>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-slate-400">Total BOM:</span>
-              <span className="text-lg font-bold text-emerald-400">
-                ${products.reduce((acc, m) => acc + (m.cost * m.quantity), 0).toLocaleString()}
-              </span>
-            </div>
-          </header>
+              <h2 className="text-lg font-semibold text-white capitalize">
+                {navItems.find(n => location.pathname.startsWith(n.path))?.label || 'Dashboard'}
+              </h2>
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-slate-400">Total BOM:</span>
+                <span className="text-lg font-bold text-emerald-400">
+                  ${(products.reduce((acc, m) => acc + (m.cost * m.quantity), 0) + registryDevicesCost).toLocaleString()}
+                </span>
+              </div>
+            </header>
           )}
 
           {/* Zen Mode Exit Button (AUTO-ULTIMATE-UX-P26) */}

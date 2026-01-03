@@ -52,14 +52,16 @@ export const FloorPlanRenderer: React.FC = () => {
     const [dataLossThreshold, setDataLossThreshold] = useState<number>(() => {
         return parseFloat(localStorage.getItem('integrator-pro-data-loss-threshold') || '0.5');
     });
-    const [leftPanelOpen, setLeftPanelOpen] = useState(true);
-    const [rightPanelOpen, setRightPanelOpen] = useState(true);
-    const [leftPanelLocked, setLeftPanelLocked] = useState(false);
-    const [rightPanelLocked, setRightPanelLocked] = useState(false);
-    const [leftPanelHover, setLeftPanelHover] = useState(false);
-    const [rightPanelHover, setRightPanelHover] = useState(false);
-    const [leftEdgeHover, setLeftEdgeHover] = useState(false);
-    const [rightEdgeHover, setRightEdgeHover] = useState(false);
+    const [panels, setPanels] = useState({
+        left: { open: true, locked: false, hover: false, edge: false },
+        right: { open: true, locked: false, hover: false, edge: false }
+    });
+    const updatePanel = (side: 'left' | 'right', delta: Partial<{ open: boolean, locked: boolean, hover: boolean, edge: boolean }>) => {
+        setPanels(prev => ({
+            ...prev,
+            [side]: { ...prev[side], ...delta }
+        }));
+    };
 
     const zoomCursorRef = useRef<HTMLDivElement>(null);
     const coordsRef = useRef<HTMLSpanElement>(null);
@@ -196,11 +198,9 @@ export const FloorPlanRenderer: React.FC = () => {
             }
 
             if (e.key === '[') {
-                setLeftPanelOpen(prev => !prev);
-                setLeftPanelLocked(prev => !prev); // Lock state toggles with keyboard
+                updatePanel('left', { open: !panels.left.open, locked: !panels.left.locked });
             } else if (e.key === ']') {
-                setRightPanelOpen(prev => !prev);
-                setRightPanelLocked(prev => !prev); // Lock state toggles with keyboard
+                updatePanel('right', { open: !panels.right.open, locked: !panels.right.locked });
             }
         };
 
@@ -226,32 +226,30 @@ export const FloorPlanRenderer: React.FC = () => {
 
             // Left edge detection
             if (e.clientX <= edgeThreshold) {
-                setLeftEdgeHover(true);
-                if (!leftPanelLocked) {
-                    setLeftPanelOpen(true);
-                    setLeftPanelHover(true);
+                updatePanel('left', { edge: true });
+                if (!panels.left.locked) {
+                    updatePanel('left', { open: true, hover: true });
                     if (leftPanelCollapseTimer.current) {
                         clearTimeout(leftPanelCollapseTimer.current);
                         leftPanelCollapseTimer.current = null;
                     }
                 }
             } else {
-                setLeftEdgeHover(false);
+                updatePanel('left', { edge: false });
             }
 
             // Right edge detection
             if (e.clientX >= windowWidth - edgeThreshold) {
-                setRightEdgeHover(true);
-                if (!rightPanelLocked) {
-                    setRightPanelOpen(true);
-                    setRightPanelHover(true);
+                updatePanel('right', { edge: true });
+                if (!panels.right.locked) {
+                    updatePanel('right', { open: true, hover: true });
                     if (rightPanelCollapseTimer.current) {
                         clearTimeout(rightPanelCollapseTimer.current);
                         rightPanelCollapseTimer.current = null;
                     }
                 }
             } else {
-                setRightEdgeHover(false);
+                updatePanel('right', { edge: false });
             }
         };
 
@@ -262,7 +260,7 @@ export const FloorPlanRenderer: React.FC = () => {
             if (leftPanelCollapseTimer.current) clearTimeout(leftPanelCollapseTimer.current);
             if (rightPanelCollapseTimer.current) clearTimeout(rightPanelCollapseTimer.current);
         };
-    }, [leftPanelLocked, rightPanelLocked]);
+    }, [panels.left.locked, panels.right.locked]);
 
     // Handlers for sidebar hover/leave with delayed collapse
     const handleLeftPanelEnter = () => {
@@ -270,14 +268,14 @@ export const FloorPlanRenderer: React.FC = () => {
             clearTimeout(leftPanelCollapseTimer.current);
             leftPanelCollapseTimer.current = null;
         }
-        setLeftPanelHover(true);
+        updatePanel('left', { hover: true });
     };
 
     const handleLeftPanelLeave = () => {
-        if (!leftPanelLocked) {
-            setLeftPanelHover(false);
+        if (!panels.left.locked) {
+            updatePanel('left', { hover: false });
             leftPanelCollapseTimer.current = setTimeout(() => {
-                setLeftPanelOpen(false);
+                updatePanel('left', { open: false });
             }, 500);
         }
     };
@@ -287,14 +285,14 @@ export const FloorPlanRenderer: React.FC = () => {
             clearTimeout(rightPanelCollapseTimer.current);
             rightPanelCollapseTimer.current = null;
         }
-        setRightPanelHover(true);
+        updatePanel('right', { hover: true });
     };
 
     const handleRightPanelLeave = () => {
-        if (!rightPanelLocked) {
-            setRightPanelHover(false);
+        if (!panels.right.locked) {
+            updatePanel('right', { hover: false });
             rightPanelCollapseTimer.current = setTimeout(() => {
-                setRightPanelOpen(false);
+                updatePanel('right', { open: false });
             }, 500);
         }
     };
@@ -366,19 +364,18 @@ export const FloorPlanRenderer: React.FC = () => {
                 {editor && (
                     <>
                         {/* Mini-strip when collapsed - glows when mouse near edge */}
-                        {!leftPanelOpen && (
+                        {!panels.left.open && (
                             <div
-                                className={`w-1 transition-all duration-200 ease-out cursor-pointer z-50 ${
-                                    leftEdgeHover
-                                        ? 'bg-blue-500/70 shadow-[0_0_12px_rgba(59,130,246,0.6)]'
-                                        : 'bg-blue-600/30 hover:bg-blue-500/50'
-                                }`}
+                                className={`w-1 transition-all duration-200 ease-out cursor-pointer z-50 ${panels.left.edge
+                                    ? 'bg-blue-500/70 shadow-[0_0_12px_rgba(59,130,246,0.6)]'
+                                    : 'bg-blue-600/30 hover:bg-blue-500/50'
+                                    }`}
                                 title="Hover to reveal Device Panel (or press [)"
                             />
                         )}
 
                         {/* Full panel when open */}
-                        {leftPanelOpen && (
+                        {panels.left.open && (
                             <div
                                 className="h-full flex flex-col transition-all duration-300 ease-out animate-in fade-in slide-in-from-left-4 duration-500"
                                 style={{ animationDelay: '100ms' }}
@@ -388,8 +385,8 @@ export const FloorPlanRenderer: React.FC = () => {
                                 <DevicePanel
                                     editor={editor}
                                     activeTool={activeTool}
-                                    isOpen={leftPanelOpen}
-                                    isLocked={leftPanelLocked}
+                                    isOpen={panels.left.open}
+                                    isLocked={panels.left.locked}
                                 />
                             </div>
                         )}
@@ -421,7 +418,7 @@ export const FloorPlanRenderer: React.FC = () => {
                 {editor && (
                     <>
                         {/* Full panel when open - AUTO-ULTIMATE-UX-P26: Staggered entry animation */}
-                        {rightPanelOpen && (
+                        {panels.right.open && (
                             <div
                                 className="h-full flex flex-col relative border-l border-slate-800 transition-all duration-300 ease-out animate-in fade-in slide-in-from-right-4 duration-500"
                                 style={{ animationDelay: '200ms' }}
@@ -433,8 +430,8 @@ export const FloorPlanRenderer: React.FC = () => {
                                         editor={editor}
                                         layers={layers}
                                         isEditMode={isEditMode}
-                                        isOpen={rightPanelOpen}
-                                        isLocked={rightPanelLocked}
+                                        isOpen={panels.right.open}
+                                        isLocked={panels.right.locked}
                                     />
                                 ) : (
                                     <LayersSidebar
@@ -445,21 +442,20 @@ export const FloorPlanRenderer: React.FC = () => {
                                         selectedIds={selectedIds}
                                         setSelectedIds={setSelectedIds}
                                         activeTool={activeTool}
-                                        isOpen={rightPanelOpen}
-                                        isLocked={rightPanelLocked}
+                                        isOpen={panels.right.open}
+                                        isLocked={panels.right.locked}
                                     />
                                 )}
                             </div>
                         )}
 
                         {/* Mini-strip when collapsed - glows when mouse near edge */}
-                        {!rightPanelOpen && (
+                        {!panels.right.open && (
                             <div
-                                className={`w-1 transition-all duration-200 ease-out cursor-pointer z-50 ${
-                                    rightEdgeHover
-                                        ? 'bg-slate-400/70 shadow-[0_0_12px_rgba(148,163,184,0.6)]'
-                                        : 'bg-slate-600/30 hover:bg-slate-500/50'
-                                }`}
+                                className={`w-1 transition-all duration-200 ease-out cursor-pointer z-50 ${panels.right.edge
+                                    ? 'bg-slate-400/70 shadow-[0_0_12px_rgba(148,163,184,0.6)]'
+                                    : 'bg-slate-600/30 hover:bg-slate-500/50'
+                                    }`}
                                 title="Hover to reveal Layers Panel (or press ])"
                             />
                         )}

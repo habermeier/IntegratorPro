@@ -13,6 +13,7 @@ import { dataService } from '../services/DataService';
 import { useApplyProjectData } from './useApplyProjectData';
 import { remoteLog } from '../utils/logger';
 import { Room } from '../../editor/models/types';
+import { SYSTEM_REGISTRY } from '../registry/SystemRegistry';
 import BASE_IMAGE from '../../images/floor-plan-clean.jpg';
 import ELECTRICAL_IMAGE from '../../images/electric-plan-plain-full-clean-2025-12-12.jpg';
 
@@ -142,121 +143,19 @@ export function useEditorInitialization(
         allowLayerEditing: false // Data layer - locked to base coordinates
       });
 
-      editorInstance.addLayer({
-        id: 'lighting',
-        name: 'Lighting',
-        type: 'vector',
-        category: 'technical',
-        zIndex: 90,
-        visible: true,
-        locked: false,
-        opacity: 1,
-        transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
-        allowLayerEditing: false // Data layer - locked to base coordinates
-      });
-
-      editorInstance.addLayer({
-        id: 'sensors',
-        name: 'Sensors',
-        type: 'vector',
-        category: 'technical',
-        zIndex: 80,
-        visible: false,
-        locked: false,
-        opacity: 1,
-        transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
-        allowLayerEditing: false // Data layer - locked to base coordinates
-      });
-
-      editorInstance.addLayer({
-        id: 'security',
-        name: 'Security',
-        type: 'vector',
-        category: 'technical',
-        zIndex: 75,
-        visible: false,
-        locked: false,
-        opacity: 1,
-        transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
-        allowLayerEditing: false // Data layer - locked to base coordinates
-      });
-
-      editorInstance.addLayer({
-        id: 'network',
-        name: 'Network',
-        type: 'vector',
-        category: 'technical',
-        zIndex: 70,
-        visible: false,
-        locked: false,
-        opacity: 1,
-        transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
-        allowLayerEditing: false // Data layer - locked to base coordinates
-      });
-
-      editorInstance.addLayer({
-        id: 'lcps',
-        name: 'LCPs',
-        type: 'vector',
-        category: 'technical',
-        zIndex: 65,
-        visible: false,
-        locked: false,
-        opacity: 1,
-        transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
-        allowLayerEditing: false // Data layer - locked to base coordinates
-      });
-
-      editorInstance.addLayer({
-        id: 'hvac',
-        name: 'HVAC',
-        type: 'vector',
-        category: 'technical',
-        zIndex: 60,
-        visible: false,
-        locked: false,
-        opacity: 1,
-        transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
-        allowLayerEditing: false // Data layer - locked to base coordinates
-      });
-
-      editorInstance.addLayer({
-        id: 'receptacles',
-        name: 'Receptacles',
-        type: 'vector',
-        category: 'technical',
-        zIndex: 55,
-        visible: false,
-        locked: false,
-        opacity: 1,
-        transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
-        allowLayerEditing: false // Data layer - locked to base coordinates
-      });
-
-      editorInstance.addLayer({
-        id: 'infrastructure',
-        name: 'Infrastructure',
-        type: 'vector',
-        category: 'technical',
-        zIndex: 50,
-        visible: false,
-        locked: false,
-        opacity: 1,
-        transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
-        allowLayerEditing: false // Data layer - locked to base coordinates
-      });
-
-      editorInstance.addLayer({
-        id: 'furniture',
-        name: 'Furniture',
-        type: 'vector',
-        category: 'technical',
-        zIndex: 45,
-        visible: false,
-        locked: false,
-        opacity: 1,
-        transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
-        allowLayerEditing: false // Data layer - locked to base coordinates
+      SYSTEM_REGISTRY.forEach(config => {
+        editorInstance.addLayer({
+          id: config.id,
+          name: config.title,
+          type: 'vector',
+          category: config.layerCategory,
+          zIndex: config.zIndex,
+          visible: config.defaultVisible,
+          locked: false,
+          opacity: 1,
+          transform: { position: { x: 0, y: 0 }, scale: { x: 1, y: 1 }, rotation: 0 },
+          allowLayerEditing: false
+        });
       });
 
       // 2. Load Images

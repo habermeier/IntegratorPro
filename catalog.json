@@ -13,6 +13,20 @@
         "instances": []
     },
     {
+        "id": "2DS-L9",
+        "name": "HE Williams 2DS",
+        "manufacturer": "HE Williams",
+        "description": "2\" Downlight",
+        "type": "LIGHTING",
+        "hasSpecBuilder": true,
+        "mountType": "CEILING",
+        "size": 0.5,
+        "cost": 150.00,
+        "quantity": 0,
+        "url": "",
+        "instances": []
+    },
+    {
         "id": "generic-switch",
         "name": "Generic Switch",
         "manufacturer": "Generic",
@@ -1057,8 +1071,13 @@
         "powerWatts": 2,
         "quantity": 1,
         "requiresMains": false,
-        "requiresBus": ["KNX"],
-        "systemIds": ["outdoor", "lighting"],
+        "requiresBus": [
+            "KNX"
+        ],
+        "systemIds": [
+            "outdoor",
+            "lighting"
+        ],
         "url": "https://www.google.com/search?q=Weinzierl+KNX+DMX+Gateway+544",
         "linkStatus": "PREFERRED",
         "genericRole": "KNX to DMX Gateway",
@@ -1077,7 +1096,10 @@
         "powerWatts": 2,
         "quantity": 1,
         "requiresMains": false,
-        "systemIds": ["outdoor", "lighting"],
+        "systemIds": [
+            "outdoor",
+            "lighting"
+        ],
         "url": "https://www.google.com/search?q=Enttec+DIN+RDS4+DMX+Splitter",
         "linkStatus": "PREFERRED",
         "genericRole": "DMX Splitter",
@@ -1096,7 +1118,10 @@
         "powerWatts": 30,
         "quantity": 1,
         "requiresMains": true,
-        "systemIds": ["outdoor", "lighting"],
+        "systemIds": [
+            "outdoor",
+            "lighting"
+        ],
         "url": "https://www.google.com/search?q=site:mouser.com+Mean+Well+HDR-30-24",
         "linkStatus": "PREFERRED",
         "location": "LCP-1",
@@ -1113,7 +1138,10 @@
         "cost": 85.00,
         "powerWatts": 0,
         "quantity": 1,
-        "systemIds": ["outdoor", "infra"],
+        "systemIds": [
+            "outdoor",
+            "infra"
+        ],
         "url": "https://www.google.com/search?q=Shielded+Cat5e+Direct+Burial+500ft",
         "linkStatus": "MARKET",
         "notes": "PHASE 1: USE BLUE PAIR ONLY for DMX+/DMX-. Foil shield provides noise immunity. Terminate unused pairs. Tape with 14/2 power wire every 3ft."
@@ -1129,7 +1157,10 @@
         "cost": 120.00,
         "powerWatts": 0,
         "quantity": 1,
-        "systemIds": ["outdoor", "infra"],
+        "systemIds": [
+            "outdoor",
+            "infra"
+        ],
         "url": "https://www.google.com/search?q=14/2+Landscape+Wire+Direct+Burial+500ft",
         "linkStatus": "MARKET",
         "notes": "PHASE 1: For fixture runs ≤100ft from driver. Bundle with Cat5e using electrical tape every 3ft (hybrid cable method)."
@@ -1145,7 +1176,10 @@
         "cost": 180.00,
         "powerWatts": 0,
         "quantity": 1,
-        "systemIds": ["outdoor", "infra"],
+        "systemIds": [
+            "outdoor",
+            "infra"
+        ],
         "url": "https://www.google.com/search?q=10/2+Landscape+Wire+Direct+Burial+250ft",
         "linkStatus": "MARKET",
         "notes": "PHASE 1: For runs >100ft (deep backyard/front curb). Reduces voltage drop on 24V DC. Bundle with Cat5e."
@@ -1161,7 +1195,9 @@
         "cost": 8.00,
         "powerWatts": 0,
         "quantity": 3,
-        "systemIds": ["outdoor"],
+        "systemIds": [
+            "outdoor"
+        ],
         "url": "https://www.google.com/search?q=Bell+5320-0+Weatherproof+Box",
         "linkStatus": "MARKET",
         "notes": "PHASE 1: Strategic splice points (mid-yard, facade wall, front gate). Bury with 6\" clearance above grade."
@@ -1177,7 +1213,9 @@
         "cost": 6.00,
         "powerWatts": 0,
         "quantity": 3,
-        "systemIds": ["outdoor"],
+        "systemIds": [
+            "outdoor"
+        ],
         "url": "https://www.google.com/search?q=Bell+Metal+Blank+Weatherproof+Cover",
         "linkStatus": "MARKET",
         "notes": "PHASE 1: Secure all splices inside boxes. Use gasket to maintain NEMA 3R rating."
@@ -1193,7 +1231,9 @@
         "cost": 25.00,
         "powerWatts": 0,
         "quantity": 1,
-        "systemIds": ["outdoor"],
+        "systemIds": [
+            "outdoor"
+        ],
         "url": "https://www.google.com/search?q=DryConn+Gel+Filled+Wire+Nuts",
         "linkStatus": "MARKET",
         "notes": "PHASE 1: MANDATORY for all outdoor splices. Standard wire nuts WILL fail outdoors."
@@ -1209,7 +1249,10 @@
         "cost": 30.00,
         "powerWatts": 0,
         "quantity": 1,
-        "systemIds": ["outdoor", "infra"],
+        "systemIds": [
+            "outdoor",
+            "infra"
+        ],
         "url": "https://www.google.com/search?q=3M+Temflex+1700+Electrical+Tape",
         "linkStatus": "MARKET",
         "notes": "PHASE 1: Tape Cat5e + Power wire every 3ft to create 'hybrid cable'. Label DMX runs with flags."
@@ -1226,7 +1269,9 @@
         "powerWatts": 15,
         "quantity": 0,
         "requiresMains": false,
-        "systemIds": ["outdoor"],
+        "systemIds": [
+            "outdoor"
+        ],
         "url": "https://www.google.com/search?q=Lumenpulse+Lumenbeam+Small+LBX-S",
         "linkStatus": "PREFERRED",
         "genericRole": "Tree Uplight / Accent Spot",
@@ -1244,7 +1289,9 @@
         "powerWatts": 20,
         "quantity": 0,
         "requiresMains": false,
-        "systemIds": ["outdoor"],
+        "systemIds": [
+            "outdoor"
+        ],
         "url": "https://www.google.com/search?q=Lumenpulse+Facade+Logic",
         "linkStatus": "PREFERRED",
         "genericRole": "Wall Grazer / Architecture",
@@ -1262,7 +1309,9 @@
         "powerWatts": 12,
         "quantity": 0,
         "requiresMains": false,
-        "systemIds": ["outdoor"],
+        "systemIds": [
+            "outdoor"
+        ],
         "url": "https://www.google.com/search?q=PureEdge+Outdoor+Bollard+DMX",
         "linkStatus": "PREFERRED",
         "genericRole": "Path Light / Bollard",
@@ -1280,7 +1329,9 @@
         "powerWatts": 320,
         "quantity": 0,
         "requiresMains": true,
-        "systemIds": ["outdoor"],
+        "systemIds": [
+            "outdoor"
+        ],
         "url": "https://www.google.com/search?q=site:mouser.com+Mean+Well+HLG-320H-24B",
         "linkStatus": "PREFERRED",
         "notes": "PHASE 2: Field power driver. Dimmable via 0-10V or PWM. Mount in weatherproof NEMA box buried in landscape. Quantity TBD."
@@ -1297,7 +1348,9 @@
         "powerWatts": 150,
         "quantity": 0,
         "requiresMains": true,
-        "systemIds": ["outdoor"],
+        "systemIds": [
+            "outdoor"
+        ],
         "url": "https://www.google.com/search?q=site:mouser.com+Mean+Well+HLG-150H-24A",
         "linkStatus": "PREFERRED",
         "notes": "PHASE 2: Secondary zones or backup. Same specs as HLG-320H but lower wattage. Quantity TBD."
@@ -1313,7 +1366,9 @@
         "cost": 75.00,
         "powerWatts": 0,
         "quantity": 0,
-        "systemIds": ["outdoor"],
+        "systemIds": [
+            "outdoor"
+        ],
         "url": "https://www.google.com/search?q=Bud+Industries+NBF-32026+NEMA+4X",
         "linkStatus": "MARKET",
         "notes": "PHASE 2: Must fit HLG-320H + terminal blocks. Include cable glands for sealed entries. Quantity TBD."
@@ -1330,7 +1385,9 @@
         "powerWatts": 1,
         "quantity": 0,
         "requiresMains": false,
-        "systemIds": ["outdoor"],
+        "systemIds": [
+            "outdoor"
+        ],
         "url": "https://www.google.com/search?q=LTech+LT-DMX-1809+DMX+Decoder",
         "linkStatus": "MARKET",
         "genericRole": "DMX Decoder",
