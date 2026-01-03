@@ -225,7 +225,7 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
     };
 
     return (
-        <div className="w-60 bg-slate-900 border-l border-slate-800 flex flex-col z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.3)]">
+        <div className="w-60 h-full bg-slate-900 border-l border-slate-800 flex flex-col z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.3)]">
             {/* Header - Auto-hide when panel is collapsed (AUTO-ULTIMATE-POLISH-P25) */}
             {isLocked && (
                 <div className="p-4 border-b border-slate-800 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
