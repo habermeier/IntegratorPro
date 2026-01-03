@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 interface HEWilliams2DSBuilderProps {
     initialMetadata?: Record<string, any>;
     onChange?: (spec: HEWilliams2DSSpec) => void;
+    deviceId?: string;
 }
 
 export interface HEWilliams2DSSpec {
@@ -25,7 +26,7 @@ export interface HEWilliams2DSSpec {
     specBracket: string;
 }
 
-export const HEWilliams2DSBuilder: React.FC<HEWilliams2DSBuilderProps> = ({ initialMetadata, onChange }) => {
+export const HEWilliams2DSBuilder: React.FC<HEWilliams2DSBuilderProps> = ({ initialMetadata, onChange, deviceId }) => {
     // HE Williams 2DS Spec State (AUTO-SPEC-SYSTEM-P26)
     const [specMountingType, setSpecMountingType] = useState<string>('N');
     const [specLumens, setSpecLumens] = useState<string>('L15');
@@ -44,27 +45,27 @@ export const HEWilliams2DSBuilder: React.FC<HEWilliams2DSBuilderProps> = ({ init
     const [specPdfUrl, setSpecPdfUrl] = useState<string>('');
     const [specShoppingLink, setSpecShoppingLink] = useState<string>('');
 
-    // Pre-populate from initial metadata (AUTO-SPEC-SYSTEM-P26)
+    // Pre-populate from initial metadata ONLY when device changes (prevents read-write loop)
     useEffect(() => {
         if (initialMetadata) {
-            if (initialMetadata.specLumens) setSpecLumens(initialMetadata.specLumens);
-            if (initialMetadata.specColor) setSpecColor(initialMetadata.specColor);
-            if (initialMetadata.specMountingType) setSpecMountingType(initialMetadata.specMountingType);
-            if (initialMetadata.specDriver) setSpecDriver(initialMetadata.specDriver);
-            if (initialMetadata.specOptions) setSpecOptions(initialMetadata.specOptions);
-            if (initialMetadata.specControl) setSpecControl(initialMetadata.specControl);
-            if (initialMetadata.specVoltage) setSpecVoltage(initialMetadata.specVoltage);
-            if (initialMetadata.specFlange) setSpecFlange(initialMetadata.specFlange);
-            if (initialMetadata.specReflectorFinish) setSpecReflectorFinish(initialMetadata.specReflectorFinish);
-            if (initialMetadata.specDistribution) setSpecDistribution(initialMetadata.specDistribution);
-            if (initialMetadata.specTrimType) setSpecTrimType(initialMetadata.specTrimType);
-            if (initialMetadata.specTrimOptions) setSpecTrimOptions(initialMetadata.specTrimOptions);
-            if (initialMetadata.specBracket) setSpecBracket(initialMetadata.specBracket);
-            if (initialMetadata.shorthand) setSpecShorthand(initialMetadata.shorthand);
-            if (initialMetadata.pdfUrl) setSpecPdfUrl(initialMetadata.pdfUrl);
-            if (initialMetadata.shoppingLink) setSpecShoppingLink(initialMetadata.shoppingLink);
+            setSpecLumens(initialMetadata.specLumens || 'L15');
+            setSpecColor(initialMetadata.specColor || '9TW');
+            setSpecMountingType(initialMetadata.specMountingType || 'N');
+            setSpecDriver(initialMetadata.specDriver || 'LD2');
+            setSpecOptions(initialMetadata.specOptions || 'NONE');
+            setSpecControl(initialMetadata.specControl || 'STD');
+            setSpecVoltage(initialMetadata.specVoltage || 'UNV');
+            setSpecFlange(initialMetadata.specFlange || 'OF');
+            setSpecReflectorFinish(initialMetadata.specReflectorFinish || 'CS');
+            setSpecDistribution(initialMetadata.specDistribution || 'M');
+            setSpecTrimType(initialMetadata.specTrimType || 'O');
+            setSpecTrimOptions(initialMetadata.specTrimOptions || 'NONE');
+            setSpecBracket(initialMetadata.specBracket || 'F1');
+            setSpecShorthand(initialMetadata.shorthand || '');
+            setSpecPdfUrl(initialMetadata.pdfUrl || '');
+            setSpecShoppingLink(initialMetadata.shoppingLink || '');
         }
-    }, [initialMetadata]);
+    }, [deviceId]); // Crucial: Only re-hydrate when selecting a DIFFERENT device
 
     // Detect series from initial metadata or default to 2DS
     const [seriesPrefix, setSeriesPrefix] = useState<string>(() => {

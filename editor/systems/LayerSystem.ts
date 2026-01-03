@@ -202,22 +202,104 @@ export class LayerSystem {
                 layer.container.children.forEach(group => {
                     const id = group.userData.id;
                     if (id && selectedIds.has(id)) {
+                        const itemType = group.userData.type; // 'symbol', 'furniture', 'mask', 'room'
+                        const isSymbol = itemType === 'symbol' || itemType === 'furniture';
+
+                        // 1. Color Pulse (Fill)
                         const fill = group.getObjectByName('fill') as THREE.Mesh;
-                        const itemType = group.userData.type;
-                        const isMaskItem = itemType === 'mask';
                         if (fill && fill.material instanceof THREE.MeshBasicMaterial) {
-                            // Pulse: Bright Golden (0xffd700) to Soft Yellow
-                            const r = 1.0;
-                            const g = 0.8 + pulse * 0.2;
-                            const b = 0.0;
-                            fill.material.color.setRGB(r, g, b);
-                            fill.material.opacity = isMaskItem ? 0.3 + pulse * 0.2 : 0.1 + pulse * 0.2;
+                            if (isSymbol) {
+                                // Symbols: Pulse Yellow/Gold
+                                const r = 1.0;
+                                const g = 0.8 + pulse * 0.2; // 0.8 to 1.0
+                                const b = 0.0;
+                                fill.material.color.setRGB(r, g, b);
+                                fill.material.opacity = 1.0; // Solid for symbols
+                            } else {
+                                // Rooms/Masks: Existing Logic
+                                const isMaskItem = itemType === 'mask';
+                                const r = 1.0;
+                                const g = 0.8 + pulse * 0.2;
+                                const b = 0.0;
+                                fill.material.color.setRGB(r, g, b);
+                                fill.material.opacity = isMaskItem ? 0.3 + pulse * 0.2 : 0.1 + pulse * 0.2;
+                            }
                         }
+
+                        // 2. Border Pulse
                         const border = group.getObjectByName('border') as THREE.Line;
                         if (border && border.material instanceof THREE.LineBasicMaterial) {
                             border.material.color.setRGB(1.0, 1.0, 0.0); // Yellow border
                             border.material.opacity = 0.8 + pulse * 0.2;
                         }
+
+                        // 3. Drop Shadow for Symbols
+                        if (isSymbol) {
+                            let shadow = group.getObjectByName('selection-shadow') as THREE.Mesh;
+                            if (!shadow) {
+                                const fillGeo = (fill?.geometry as THREE.PlaneGeometry);
+                                // Fallback size if fill not found (should usually be there for symbols)
+                                const w = (fillGeo && fillGeo.parameters) ? fillGeo.parameters.width : 16;
+                                const h = (fillGeo && fillGeo.parameters) ? fillGeo.parameters.height : 16;
+
+                                const shadowGeo = new THREE.PlaneGeometry(w, h);
+                                const shadowMat = new THREE.MeshBasicMaterial({
+                                    color: 0x000000,
+                                    transparent: true,
+                                    opacity: 0.5,
+                                    side: THREE.DoubleSide
+                                });
+                                shadow = new THREE.Mesh(shadowGeo, shadowMat);
+                                shadow.name = 'selection-shadow';
+                                // Offset shadow: +4px X, -4px Y, behind everything in group
+                                shadow.position.set(4, -4, -0.1);
+                                group.add(shadow);
+                            }
+                            shadow.visible = true;
+
+                            // Animate shadow opacity slightly too?
+                            const shadowMat = shadow.material as THREE.MeshBasicMaterial;
+                            if (shadowMat) {
+                                shadowMat.opacity = 0.4 + pulse * 0.1; // Breathe shadow
+                            }
+                        }
+                    } else {
+                        // Not Selected - Reset Visuals
+                        const fill = group.getObjectByName('fill') as THREE.Mesh;
+                        const itemType = group.userData.type;
+                        const isSymbol = itemType === 'symbol' || itemType === 'furniture';
+
+                        if (fill && fill.material instanceof THREE.MeshBasicMaterial) {
+                            if (isSymbol) {
+                                // Reset Symbol to Black (or defined color)
+                                fill.material.color.setHex(0x000000);
+                                fill.material.opacity = 1.0;
+                            } else {
+                                // Reset Room/Mask via renderVectorLayer (it handles hash check, but we need to reset temp overrides)
+                                // The loop in renderVectorLayer sets the base color. 
+                                // Here we just need to determine if we should revert.
+                                // It's safer to let renderVectorLayer normalize it, BUT update() runs every frame.
+                                // We must reset if we modified it in previous frames.
+                                const isDestructive = true; // We modified the material directly
+                                if (isDestructive) {
+                                    // Optimization: Store original color in userData? 
+                                    // Or just re-apply standard logic if not selected
+                                    const isMask = itemType === 'mask';
+                                    const baseColor = isMask ? (this.isMaskEditMode ? 0x94a3b8 : 0xffffff) : (group.userData.color || 0x3b82f6);
+                                    // Actually we don't store original color in userData.color easily here unless we check content.
+                                    // Re-rendering or resetting to a default is easiest.
+                                    // For now, let's just reset transparency/color to 'default blue' for rooms if we don't know better?
+                                    // Problem: We don't know the specific color of the polygon here without lookups.
+                                    // BUT: renderVectorLayer checks hash. If we just changed material props, hash might not change?
+                                    // Hash includes "isSelected". So if selected state changes, renderVectorLayer WILL re-run.
+                                    // So we just need to ensure we hide the shadow.
+                                }
+                            }
+                        }
+
+                        // Hide Shadow
+                        const shadow = group.getObjectByName('selection-shadow');
+                        if (shadow) shadow.visible = false;
                     }
                 });
             });

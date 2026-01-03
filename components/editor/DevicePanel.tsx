@@ -96,23 +96,58 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
     };
 
     const handleSaveAsNewType = async () => {
-        if (!editingDevice || !draftMetadata) return;
-        const name = prompt('New type name:', `${editingDevice.name} Custom`);
-        if (!name) return;
+        // Mode 1: Editing an existing device
+        if (editingDevice) {
+            const name = prompt('New type name:', `${editingDevice.name} Custom`);
+            if (!name) return;
 
-        try {
-            const newType: SymbolDefinition = {
-                ...SYMBOL_LIBRARY[editingDevice.deviceTypeId],
-                id: `custom-${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
-                name,
-                productId: productId || editingDevice.productId,
-                metadata: { ...draftMetadata }
-            };
-            await dataService.addCustomSymbol(newType);
-            handleUpdateType(newType.id);
-            alert('New fixture type created and applied.');
-        } catch (e) {
-            console.error(e);
+            // Robustly resolve Product ID from formData (user dropdown) or metadata
+            const effectiveProductId = formData.productId || editingDevice.metadata?.productId || editingDevice.productId || 'generic-product';
+
+            try {
+                const newType: SymbolDefinition = {
+                    ...SYMBOL_LIBRARY[editingDevice.deviceTypeId],
+                    id: `custom-${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
+                    name,
+                    productId: effectiveProductId,
+                    metadata: { ...draftMetadata }
+                };
+                await dataService.addCustomSymbol(newType);
+                handleUpdateType(newType.id);
+                // Also update the productId on the instance itself to match
+                if (updateDevice(editingDevice.id, { productId: effectiveProductId })) {
+                    editor?.emit('layers-changed', editor.layerSystem.getAllLayers());
+                }
+                alert('New fixture type created and applied.');
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        // Mode 2: Creating from Library (Add New)
+        else if (productId && isAddingNew) {
+            const product = await import('../../catalog.json').then(m => m.default.find(p => p.id === productId));
+            const name = prompt('New type name:', `${product?.name || 'New Fixture'} Custom`);
+            if (!name) return;
+
+            try {
+                // Use a default base symbol (e.g. generic-lighting) since we don't have a source symbol
+                // Or try to infer from category. For now, default to 'recessed-light' or similar.
+                const baseSymbol = SYMBOL_LIBRARY['recessed-light'];
+                const newType: SymbolDefinition = {
+                    ...baseSymbol,
+                    id: `custom-${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
+                    name,
+                    productId: productId,
+                    metadata: { ...draftMetadata }
+                };
+
+                await dataService.addCustomSymbol(newType);
+                setIsAddingNew(false);
+                setSelectedCategory(baseSymbol.category); // Switch to relevant category
+                alert('New fixture type added to library.');
+            } catch (e) {
+                console.error(e);
+            }
         }
     };
 
@@ -149,14 +184,14 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
 
     return (
         <div className="w-64 h-full bg-slate-900 border-r border-slate-800 flex flex-col z-20 shadow-xl overflow-x-hidden">
-            <div className="p-3 border-b border-slate-800 bg-slate-950 flex justify-between items-center h-10">
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">
+            <div className="p-3 border-b border-slate-700 bg-slate-950 flex justify-between items-center h-10">
+                <h3 className="text-[10px] font-black text-slate-200 uppercase tracking-widest leading-none">
                     {editingDevice ? 'Hardware Config' : selectedRoom ? 'Room Editor' : 'Devices'}
                 </h3>
             </div>
 
             {!editingDevice && !selectedRoom && (
-                <div className="flex p-1 bg-slate-950 border-b border-slate-800 h-9">
+                <div className="flex p-1 bg-slate-900 border-b border-slate-700 h-9">
                     <TabButton active={activeTab === 'library'} onClick={() => setActiveTab('library')} icon={<Box size={12} />} label="Library" />
                     <TabButton active={activeTab === 'placed'} onClick={() => setActiveTab('placed')} icon={<Database size={12} />} label="Placed" />
                 </div>
@@ -225,7 +260,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
 const TabButton: React.FC<{ active: boolean; onClick: () => void; icon: any; label: string }> = ({ active, onClick, icon, label }) => (
     <button
         onClick={onClick}
-        className={`flex-1 flex items-center justify-center gap-1.5 py-1 rounded transition-all ${active ? 'bg-slate-800 text-blue-400 font-bold' : 'text-slate-500 hover:text-slate-300'
+        className={`flex-1 flex items-center justify-center gap-1.5 py-1 rounded transition-all ${active ? 'bg-slate-800 text-blue-300 font-bold border border-slate-700 shadow-sm' : 'text-slate-400 hover:text-slate-200'
             }`}
     >
         {icon}

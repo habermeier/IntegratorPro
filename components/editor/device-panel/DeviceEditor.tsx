@@ -36,23 +36,38 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
     const [isConfigExpanded, setIsConfigExpanded] = React.useState(true);
 
     // Resolve product more robustly (check metadata and deviceTypeId if needed)
-    const effectiveProductId = formData.productId || editingDevice.metadata?.productId || editingDevice.productId;
-    const product = catalog.find(p => p.id === effectiveProductId) ||
-        catalog.find(p => (editingDevice.deviceTypeId && p.id === SYMBOL_LIBRARY[editingDevice.deviceTypeId]?.productId));
+    // Resolve product more robustly:
+    // 1. User manual selection (formData)
+    // 2. Symbol Definition (Source of Truth for Custom Types)
+    // 3. Metadata (Legacy/Instance specific)
+    // 4. Instance ID
+    const effectiveProductId =
+        (formData.productId && formData.productId !== 'generic-product' ? formData.productId : null) ||
+        (editingDevice.deviceTypeId && SYMBOL_LIBRARY[editingDevice.deviceTypeId]?.productId) ||
+        (editingDevice.metadata?.productId && editingDevice.metadata.productId !== 'generic-product' ? editingDevice.metadata.productId : null) ||
+        editingDevice.productId;
+
+    const product = catalog.find(p => p.id === effectiveProductId);
 
     const SpecBuilder = getSpecBuilder(product);
+
+    // Filter catalog for relevant items (simple match for now, or all)
+    // We want to allow re-assignment to any valid hardware.
+    const catalogOptions = React.useMemo(() => {
+        return catalog.sort((a, b) => (a.manufacturer + a.name).localeCompare(b.manufacturer + b.name));
+    }, []);
 
     return (
         <div className="p-3 space-y-3 pb-20 overflow-y-auto h-full custom-scrollbar">
             {/* Header */}
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800 sticky top-0 bg-slate-900 z-10">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-700 sticky top-0 bg-slate-900 z-10">
                 <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                    <h3 className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Editing Device</h3>
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                    <h3 className="text-[10px] font-bold text-blue-300 uppercase tracking-widest">Editing Device</h3>
                 </div>
                 <button
                     onClick={onClearSelection}
-                    className="text-[8px] px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors uppercase font-bold"
+                    className="text-[9px] px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors uppercase font-bold border border-slate-600"
                 >
                     Done
                 </button>
@@ -65,12 +80,32 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
                 toggle={() => setIsGeneralExpanded(!isGeneralExpanded)}
             >
                 <div className="p-2 space-y-2">
+                    {/* PRODUCT IDENTITY (Source of Truth) */}
                     <div>
-                        <label className="text-[7px] text-slate-400 uppercase font-bold block mb-1">Device Type</label>
+                        <label className="text-[9px] text-slate-300 uppercase font-bold block mb-1 text-emerald-400">Product Model</label>
+                        <select
+                            value={effectiveProductId || ''}
+                            onChange={(e) => onFieldChange('productId', e.target.value)}
+                            className="w-full text-[10px] text-slate-100 font-bold font-mono px-2 py-1.5 bg-slate-800 rounded border border-emerald-500/50 focus:border-emerald-400 focus:outline-none"
+                        >
+                            <option value="">-- Generic / None --</option>
+                            {catalogOptions.map(p => (
+                                <option key={p.id} value={p.id}>
+                                    {p.manufacturer} {p.name}
+                                </option>
+                            ))}
+                        </select>
+                        <p className="text-[7px] text-slate-500 mt-1">
+                            Assigning a product enables manufacturer-specific controls.
+                        </p>
+                    </div>
+
+                    <div className="border-t border-slate-800 my-2 pt-2">
+                        <label className="text-[9px] text-slate-300 uppercase font-bold block mb-1">Symbol Style</label>
                         <select
                             value={editingDevice.deviceTypeId}
                             onChange={(e) => onUpdateType(e.target.value)}
-                            className="w-full text-[9px] text-blue-300 font-mono px-2 py-1 bg-slate-950 rounded border border-slate-700 focus:border-blue-500 focus:outline-none"
+                            className="w-full text-[11px] text-blue-200 font-mono px-2 py-1 bg-slate-950 rounded border border-slate-600 focus:border-blue-500 focus:outline-none"
                         >
                             {Object.keys(SYMBOL_LIBRARY).map(typeId => (
                                 <option key={typeId} value={typeId}>
@@ -80,23 +115,23 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
                         </select>
                     </div>
                     <div>
-                        <label className="text-[7px] text-slate-400 uppercase font-bold block mb-1">Name</label>
+                        <label className="text-[9px] text-slate-300 uppercase font-bold block mb-1">Name</label>
                         <input
                             type="text"
                             value={formData.name || ''}
                             onChange={(e) => onFieldChange('name', e.target.value)}
                             onBlur={(e) => onFieldBlur('name', e.target.value)}
-                            className="w-full text-[9px] text-slate-100 font-mono px-2 py-1.5 bg-slate-950 rounded border border-slate-700 focus:border-blue-500 focus:outline-none"
+                            className="w-full text-[11px] text-slate-100 font-bold font-mono px-2 py-1.5 bg-slate-950 rounded border border-slate-600 focus:border-blue-500 focus:outline-none"
                         />
                     </div>
                     <div>
-                        <label className="text-[7px] text-slate-400 uppercase font-bold block mb-1">Bus Assignment</label>
+                        <label className="text-[9px] text-slate-300 uppercase font-bold block mb-1">Bus Assignment</label>
                         <input
                             type="text"
                             value={formData.busAssignment || ''}
                             onChange={(e) => onFieldChange('busAssignment', e.target.value)}
                             onBlur={(e) => onFieldBlur('busAssignment', e.target.value)}
-                            className="w-full text-[9px] text-slate-100 font-mono px-2 py-1.5 bg-slate-950 rounded border border-slate-700"
+                            className="w-full text-[11px] text-slate-100 font-mono px-2 py-1.5 bg-slate-950 rounded border border-slate-600"
                         />
                     </div>
                 </div>
@@ -111,7 +146,7 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
                 <div className="p-2 space-y-3">
                     <div className="grid grid-cols-2 gap-2">
                         <div>
-                            <label className="text-[7px] text-slate-400 uppercase font-bold block mb-1">
+                            <label className="text-[9px] text-slate-300 uppercase font-bold block mb-1">
                                 Height ({unitPreference === 'IMPERIAL' ? 'ft' : 'm'})
                             </label>
                             <input
@@ -119,11 +154,11 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
                                 value={formData.installationHeight || ''}
                                 onChange={(e) => onFieldChange('installationHeight', e.target.value)}
                                 onBlur={(e) => onFieldBlur('installationHeight', e.target.value)}
-                                className="w-full text-[9px] text-slate-100 font-mono px-2 py-1.5 bg-slate-950 rounded border border-slate-700"
+                                className="w-full text-[11px] text-slate-100 font-mono px-2 py-1.5 bg-slate-950 rounded border border-slate-600"
                             />
                         </div>
                         <div>
-                            <label className="text-[7px] text-slate-400 uppercase font-bold block mb-1">Rotation</label>
+                            <label className="text-[9px] text-slate-300 uppercase font-bold block mb-1">Rotation</label>
                             <div className="flex items-center gap-2">
                                 <input
                                     type="range"
@@ -131,15 +166,16 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
                                     max="360"
                                     value={formData.rotation || 0}
                                     onChange={(e) => onFieldChange('rotation', parseInt(e.target.value))}
-                                    className="flex-1 h-1 bg-slate-700 rounded appearance-none cursor-pointer accent-blue-500"
+                                    className="flex-1 h-1 bg-slate-600 rounded appearance-none cursor-pointer accent-blue-400"
                                 />
-                                <span className="text-[8px] text-slate-200 font-mono w-6 text-right">{formData.rotation}°</span>
+                                <span className="text-[9px] text-slate-200 font-mono w-6 text-right">{formData.rotation}°</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </CollapsibleSection>
 
+            {/* SECTION 3: SPECIFICATION */}
             {/* SECTION 3: SPECIFICATION */}
             <CollapsibleSection
                 title={SpecBuilder ? "Spec Builder" : "Specifications"}
@@ -148,9 +184,9 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
                 icon={<Box className="w-3 h-3 text-blue-300" />}
             >
                 <div className="p-2 space-y-3">
-                    <div className="text-[7px] text-slate-500 font-mono mb-2 flex justify-between">
+                    <div className="text-[9px] text-slate-400 font-mono mb-2 flex justify-between">
                         <span>{product?.name || "Generic Hardware"}</span>
-                        <span className={SpecBuilder ? "text-emerald-400" : "text-amber-400"}>
+                        <span className={SpecBuilder ? "text-emerald-400 font-bold" : "text-amber-400 font-bold"}>
                             {SpecBuilder ? 'BUILDER ACTIVE' : 'MANUAL'}
                         </span>
                     </div>
@@ -162,7 +198,7 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
                             onChange={(spec) => setDraftMetadata(spec)}
                         />
                     ) : (
-                        <div className="text-[8px] text-slate-500 italic p-4 text-center border border-dashed border-slate-800 rounded">
+                        <div className="text-[9px] text-slate-400 italic p-4 text-center border border-dashed border-slate-700 rounded bg-slate-900/50">
                             No specialized builder for this product.
                             Manual metadata can be edited in Advanced mode.
                         </div>
@@ -197,14 +233,14 @@ const CollapsibleSection: React.FC<{
     children: React.ReactNode;
     icon?: React.ReactNode;
 }> = ({ title, isExpanded, toggle, children, icon }) => (
-    <div className="border border-slate-700 rounded bg-slate-900/50 overflow-hidden">
+    <div className="border border-slate-700 rounded bg-slate-900/80 overflow-hidden">
         <button
             onClick={toggle}
-            className="w-full flex items-center justify-between p-2 bg-slate-800/30 hover:bg-slate-800/50 transition-colors"
+            className="w-full flex items-center justify-between p-2 bg-slate-800/80 hover:bg-slate-700 transition-colors border-b border-slate-700/50"
         >
             <div className="flex items-center gap-2">
                 {icon}
-                <span className="text-[8px] text-slate-300 uppercase font-bold tracking-wider">{title}</span>
+                <span className="text-[9px] text-slate-200 uppercase font-bold tracking-wider">{title}</span>
             </div>
             {isExpanded ? <ChevronLeft className="w-3 h-3 text-slate-400 rotate-270" /> : <ChevronRight className="w-3 h-3 text-slate-400 rotate-90" />}
         </button>

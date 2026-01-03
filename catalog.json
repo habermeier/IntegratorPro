@@ -985,8 +985,7 @@
             "Use insulated staples to prevent jacket damage",
             "Compatible with standard blue plastic boxes and metal conduit bodies"
         ],
-        "location": "Infra",
-        "linkStatus": "PREFERRED"
+        "location": "Infra"
     },
     {
         "id": "cable-cat6",

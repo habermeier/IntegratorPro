@@ -57,18 +57,30 @@ export class SelectionSystem {
 
         if (hits.length > 0) {
             // Pick the hit from the highest zIndex layer
-            const topHit = hits.sort((a, b) => b.zIndex - a.zIndex)[0].id;
+            const topHitId = hits.sort((a, b) => b.zIndex - a.zIndex)[0].id;
 
-            // Strict Single Select
-            if (!multiSelect) {
+            // Check if it's a device (symbol or furniture)
+            const isDevice = this.isDevice(topHitId);
+
+            // Bug fix: Only ever allow 1 device to be active
+            if (isDevice) {
                 this.selectedIds.clear();
-                this.selectedIds.add(topHit);
+                this.selectedIds.add(topHitId);
             } else {
-                // Multi Select Toggle
-                if (this.selectedIds.has(topHit)) {
-                    this.selectedIds.delete(topHit);
+                // Standard logic for non-devices
+                if (!multiSelect) {
+                    this.selectedIds.clear();
+                    this.selectedIds.add(topHitId);
                 } else {
-                    this.selectedIds.add(topHit);
+                    // Multi Select Toggle
+                    if (this.selectedIds.has(topHitId)) {
+                        this.selectedIds.delete(topHitId);
+                    } else {
+                        // If we are adding to selection, ensure we don't mix devices with other things?
+                        // Ideally if we enforce "1 device active", we should probably remove any other devices from selection
+                        // But for now, just clearing if new is device is handled above.
+                        this.selectedIds.add(topHitId);
+                    }
                 }
             }
         } else if (!multiSelect) {
@@ -76,6 +88,18 @@ export class SelectionSystem {
         }
 
         return Array.from(this.selectedIds);
+    }
+
+    private isDevice(id: string): boolean {
+        const layers = this.layerSystem.getAllLayers();
+        for (const layer of layers) {
+            if (layer.type === 'vector') {
+                const content = layer.content as any;
+                if ((content.symbols || []).find((s: any) => s.id === id)) return true;
+                if ((content.furniture || []).find((f: any) => f.id === id)) return true;
+            }
+        }
+        return false;
     }
 
     public getSelectedIds(): string[] {

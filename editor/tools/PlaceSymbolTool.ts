@@ -231,8 +231,13 @@ export class PlaceSymbolTool implements Tool {
             installationHeight: this.activeDefaultHeight,
             busAssignment: this.activeBusAssignment,
             metadata: {
-                ...(def.metadata || {}), // PRESERVE defined metadata (crucial for Spec Builders)
+                // Priority 1: Use specific ID from symbol definition if acts as custom type
                 productId: def.productId || this.activeProductId,
+
+                // Priority 2: Use metadata from symbol definition (e.g. shorthand, ordering codes)
+                ...(def.metadata || {}),
+
+                // Priority 3: Use active tool attributes (defaults) for legacy fields
                 lumens: this.activeLumens,
                 beamAngle: this.activeBeamAngle,
                 range: this.activeRange,
