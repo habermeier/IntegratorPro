@@ -206,7 +206,10 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                         onFieldChange={handleFieldChange}
                         onFieldBlur={() => { }}
                         onUpdateType={handleUpdateType}
-                        onClearSelection={() => editor?.selectionSystem.clearSelection()}
+                        onClearSelection={() => {
+                            editor?.selectionSystem.clearSelection();
+                            editor?.emit('selection-changed', []);
+                        }}
                         onSaveNewType={handleSaveAsNewType}
                         onUpdateGlobal={handleUpdateGlobalType}
                         setDraftMetadata={setDraftMetadata}
@@ -216,7 +219,10 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                     <RoomEditor
                         selectedRoom={selectedRoom}
                         calculateRoomStats={calculateRoomStats}
-                        onClearSelection={() => editor?.selectionSystem.clearSelection()}
+                        onClearSelection={() => {
+                            editor?.selectionSystem.clearSelection();
+                            editor?.emit('selection-changed', []);
+                        }}
                         onFocusRoom={(id) => editor?.focusOnRoom(id)}
                     />
                 ) : activeTab === 'library' ? (

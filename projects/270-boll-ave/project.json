@@ -1,11 +1,11 @@
 {
   "version": "1.0",
-  "timestamp": "2026-01-03T06:55:49.021Z",
+  "timestamp": "2026-01-03T07:13:59.115Z",
   "metadata": {
     "name": "270 Boll Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2026-01-03T06:55:49.012Z"
+    "modified": "2026-01-03T07:13:59.108Z"
   },
   "floorPlan": {
     "scale": {
@@ -3878,8 +3878,8 @@
       }
     ],
     "electricalOverlay": {
-      "x": -136,
-      "y": 384,
+      "x": -38,
+      "y": 396,
       "scale": 1.6100000000000005,
       "rotation": -0.013089969389957469,
       "opacity": 0.7,
@@ -4030,6 +4030,132 @@
         "cableType": "Cat6"
       },
       "createdAt": 1767423347510
+    },
+    {
+      "id": "lighting-1767424289529",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "generic-product",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": -2311.996428345414,
+        "y": 966.2148426813708
+      },
+      "rotation": 0,
+      "roomId": "Primary Bedroom",
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "light-fix-dali",
+        "shorthand": "2DS-L9",
+        "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+        "shoppingLink": "",
+        "specLumens": "L9",
+        "specColor": "9TW",
+        "specMountingType": "N",
+        "specDriver": "LD2",
+        "specOptions": "NONE",
+        "specControl": "STD",
+        "specVoltage": "UNV",
+        "specFlange": "ZF",
+        "specReflectorFinish": "WH",
+        "specDistribution": "W",
+        "specTrimType": "R",
+        "specTrimOptions": "NONE",
+        "specBracket": "F1",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1767424289530
+    },
+    {
+      "id": "lighting-1767424291679",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "generic-product",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": -1947.5999933350304,
+        "y": 956.1277441343706
+      },
+      "rotation": 0,
+      "roomId": "Primary Bedroom",
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "light-fix-dali",
+        "shorthand": "2DS-L9",
+        "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+        "shoppingLink": "",
+        "specLumens": "L9",
+        "specColor": "9TW",
+        "specMountingType": "N",
+        "specDriver": "LD2",
+        "specOptions": "NONE",
+        "specControl": "STD",
+        "specVoltage": "UNV",
+        "specFlange": "ZF",
+        "specReflectorFinish": "WH",
+        "specDistribution": "W",
+        "specTrimType": "R",
+        "specTrimOptions": "NONE",
+        "specBracket": "F1",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1767424291679
+    },
+    {
+      "id": "lighting-1767424293864",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "generic-product",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": -1948.8608806534055,
+        "y": 1233.5229541768772
+      },
+      "rotation": 0,
+      "roomId": "Primary Bedroom",
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "light-fix-dali",
+        "shorthand": "2DS-L9",
+        "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+        "shoppingLink": "",
+        "specLumens": "L9",
+        "specColor": "9TW",
+        "specMountingType": "N",
+        "specDriver": "LD2",
+        "specOptions": "NONE",
+        "specControl": "STD",
+        "specVoltage": "UNV",
+        "specFlange": "ZF",
+        "specReflectorFinish": "WH",
+        "specDistribution": "W",
+        "specTrimType": "R",
+        "specTrimOptions": "NONE",
+        "specBracket": "F1",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1767424293864
     }
   ],
   "cables": [],
