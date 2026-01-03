@@ -55,7 +55,7 @@ export const PlacedDevicesView: React.FC<PlacedDevicesViewProps> = ({
                     groupedDevices.map(cat => (
                         <div key={cat.id} className="space-y-2">
                             <div className="flex items-center gap-2 px-1 mb-1">
-                                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: `#${cat.color.toString(16).padStart(6, '0')}` }} />
                                 <span className="text-[7px] font-black text-slate-500 uppercase tracking-tighter">{cat.name}</span>
                                 <div className="h-[1px] flex-1 bg-slate-800" />
                                 <span className="text-[7px] font-mono text-slate-600">{cat.items.length}</span>

@@ -1093,8 +1093,8 @@ export class FloorPlanEditor {
         }
     }
 
-    public setActiveTool(type: ToolType): void {
-        this.toolSystem.setActiveTool(type);
+    public setActiveTool(type: ToolType, attributes?: any): void {
+        this.toolSystem.setActiveTool(type, attributes);
 
         // Auto-activate Focus Mode for specific tools
         if (type === 'draw-mask') {

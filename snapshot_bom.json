@@ -1,7 +1,31 @@
 {
-  "totalCost": 50220.08,
-  "totalPower": 2407,
+  "totalCost": 51030.53,
+  "totalPower": null,
   "items": [
+    {
+      "name": "Generic Light Fixture",
+      "quantity": 0,
+      "cost": 50,
+      "total": 0,
+      "description": "AI Detected Light Point",
+      "manufacturer": "Generic"
+    },
+    {
+      "name": "HE Williams 2DS",
+      "quantity": 0,
+      "cost": 150,
+      "total": 0,
+      "description": "2\" Downlight",
+      "manufacturer": "HE Williams"
+    },
+    {
+      "name": "Generic Switch",
+      "quantity": 0,
+      "cost": 35,
+      "total": 0,
+      "description": "AI Detected Switch",
+      "manufacturer": "Generic"
+    },
     {
       "name": "Saginaw SCE-24H2408LP",
       "quantity": 1,
@@ -11,28 +35,12 @@
       "manufacturer": "Saginaw"
     },
     {
-      "name": "Leviton 47605-42W",
+      "name": "Leviton 47605-21E",
       "quantity": 1,
-      "cost": 240,
-      "total": 240,
-      "description": "42\" Structured Media Enclosure (Steel) (Automation / KNX / DALI)",
+      "cost": 92.45,
+      "total": 92.45,
+      "description": "21\" Structured Media Enclosure",
       "manufacturer": "Leviton"
-    },
-    {
-      "name": "Legrand On-Q ENP3050-NA",
-      "quantity": 1,
-      "cost": 165,
-      "total": 165,
-      "description": "30\" Plastic Enclosure Kit (Network)",
-      "manufacturer": "Legrand"
-    },
-    {
-      "name": "Legrand AC1055 DIN Rail Kit",
-      "quantity": 4,
-      "cost": 12,
-      "total": 48,
-      "description": "DIN Rail Mounting Bracket for On-Q",
-      "manufacturer": "Legrand"
     },
     {
       "name": "KNX/DALI Gateway Twin N 141/03",
@@ -83,11 +91,11 @@
       "manufacturer": "Phoenix Contact"
     },
     {
-      "name": "HE Williams 2DS Square",
+      "name": "HE Williams 2DS Square Downlight",
       "quantity": 43,
-      "cost": 200,
-      "total": 8600,
-      "description": "2\" Tunable White Fixed Trimless Downlight (DALI-2)",
+      "cost": 245,
+      "total": 10535,
+      "description": "2\" Square Architectural Downlight - Configurable DALI-2 with Tunable White",
       "manufacturer": "HE Williams"
     },
     {
@@ -95,24 +103,8 @@
       "quantity": 29,
       "cost": 250,
       "total": 7250,
-      "description": "2\" Tunable White Adjustable Trimless (DALI-2)",
+      "description": "2\" Tunable White Mud-in Adjustable Trimless (DALI-2)",
       "manufacturer": "HE Williams"
-    },
-    {
-      "name": "HE Williams 4DS Adjustable (Alt)",
-      "quantity": 0,
-      "cost": 280,
-      "total": 0,
-      "description": "4.5\" Tunable White Adjustable (Alternative Option)",
-      "manufacturer": "HE Williams"
-    },
-    {
-      "name": "LED Strip Runs (TBD)",
-      "quantity": 0,
-      "cost": 0,
-      "total": 0,
-      "description": "Placeholder for all linear LED tape runs; lengths and watt/ft TBD.",
-      "manufacturer": "Project Input"
     },
     {
       "name": "HDR-150-24 PSU",
@@ -155,28 +147,12 @@
       "manufacturer": "Akuvox"
     },
     {
-      "name": "Akuvox S567G",
-      "quantity": 1,
-      "cost": 1200,
-      "total": 1200,
-      "description": "10\" Android Indoor Monitor (GMS)",
-      "manufacturer": "Akuvox"
-    },
-    {
       "name": "Binary Input 16-fold",
       "quantity": 2,
       "cost": 450,
       "total": 900,
       "description": "BE/S 16.20.2.1",
       "manufacturer": "ABB"
-    },
-    {
-      "name": "True Presence KNX",
-      "quantity": 4,
-      "cost": 265,
-      "total": 1060,
-      "description": "Breathing-level mmWave Presence Sensor",
-      "manufacturer": "Steinel"
     },
     {
       "name": "ASUS NUC 13 Pro",
@@ -192,30 +168,6 @@
       "cost": 799,
       "total": 799,
       "description": "Core Switch",
-      "manufacturer": "Ubiquiti"
-    },
-    {
-      "name": "UniFi Pro Max 16 PoE",
-      "quantity": 1,
-      "cost": 599,
-      "total": 599,
-      "description": "Edge Switch for LCP-2 Network Box",
-      "manufacturer": "Ubiquiti"
-    },
-    {
-      "name": "CyberPower SL750U",
-      "quantity": 1,
-      "cost": 99,
-      "total": 99,
-      "description": "Slimline 750VA UPS",
-      "manufacturer": "CyberPower"
-    },
-    {
-      "name": "10G SFP+ Module Pair",
-      "quantity": 1,
-      "cost": 140,
-      "total": 140,
-      "description": "2x SFP+ SR Modules + Duplex Fiber Patch",
       "manufacturer": "Ubiquiti"
     },
     {
@@ -317,9 +269,17 @@
     {
       "name": "Romex SIMpull PCS Duo",
       "quantity": 1,
-      "cost": 1250,
-      "total": 1250,
-      "description": "14/2 Power + 16/2 Control (NM-B-PCS)",
+      "cost": 1450,
+      "total": 1450,
+      "description": "12/2 Power + 16/2 Control (NM-B-PCS)",
+      "manufacturer": "Southwire"
+    },
+    {
+      "name": "DUO-12-AWG Hybrid Power/Control Cable",
+      "quantity": 1,
+      "cost": 1650,
+      "total": 1650,
+      "description": "12 AWG Power + 16 AWG Control Dual Cable (1000ft) - NM-B-PCS Rated",
       "manufacturer": "Southwire"
     },
     {
@@ -331,12 +291,12 @@
       "manufacturer": "TrueCable"
     },
     {
-      "name": "18/4 Solid Shielded FPLR",
+      "name": "KNX Bus Cable (UL)",
       "quantity": 1,
-      "cost": 280,
-      "total": 280,
-      "description": "18 AWG 4-Conductor Solid Core Shielded Fire Alarm Cable (FPLR Rated)",
-      "manufacturer": "Generic Fire Alarm Cable"
+      "cost": 850,
+      "total": 850,
+      "description": "20 AWG 4-Conductor (2-Pair) Green (UL Listed)",
+      "manufacturer": "KNX Supply / Unitronic"
     },
     {
       "name": "18/4 Shielded Security Wire",
@@ -353,22 +313,6 @@
       "total": 90,
       "description": "Red/Black Push-Wire (Box of 50)",
       "manufacturer": "Wago"
-    },
-    {
-      "name": "Wago 221-412 Lever Nuts",
-      "quantity": 2,
-      "cost": 18,
-      "total": 36,
-      "description": "2-Conductor Compact Splicing Connectors (25 pack)",
-      "manufacturer": "Wago"
-    },
-    {
-      "name": "22 AWG Solid Hook-Up Wire",
-      "quantity": 2,
-      "cost": 25,
-      "total": 50,
-      "description": "22 AWG Solid Core (Red + Black spools)",
-      "manufacturer": "Generic"
     },
     {
       "name": "Weinzierl 544 KNX DMX Gateway",

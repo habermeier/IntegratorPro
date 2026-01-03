@@ -23,13 +23,21 @@ export class ToolSystem {
         return this.tools.get(type) as T;
     }
 
-    public setActiveTool(type: ToolType): void {
-        if (this.activeTool?.type === type) return;
+    public setActiveTool(type: ToolType, attributes?: any): void {
+        if (this.activeTool?.type === type) {
+            if (attributes && (this.activeTool as any).setAttributes) {
+                (this.activeTool as any).setAttributes(attributes);
+            }
+            return;
+        }
 
         this.activeTool?.deactivate?.();
         const newTool = this.tools.get(type);
         if (newTool) {
             this.activeTool = newTool;
+            if (attributes && (this.activeTool as any).setAttributes) {
+                (this.activeTool as any).setAttributes(attributes);
+            }
             this.activeTool.activate?.();
         } else {
             this.activeTool = null;
