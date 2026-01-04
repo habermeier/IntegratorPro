@@ -434,6 +434,17 @@ export function findRoomAt(point: Vector2, rooms: Room[]): string {
     }
     return 'external';
 }
+/**
+ * Finds the actual Room object containing a given point.
+ */
+export function findRoomObjectAt(point: Vector2, rooms: Room[]): Room | null {
+    for (let i = rooms.length - 1; i >= 0; i--) {
+        if (isPointInPolygon(point, rooms[i].points)) {
+            return rooms[i];
+        }
+    }
+    return null;
+}
 
 // --- Performance Utilities: Throttle/Debounce ---
 

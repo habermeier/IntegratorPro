@@ -51,6 +51,7 @@ export interface Room extends Polygon {
     name: string;
     roomType: RoomType;
     ceilingHeight?: number; // Height in meters
+    targetLux?: number;     // Desired average illumination
 }
 
 export interface Mask extends Polygon { }
@@ -173,6 +174,7 @@ export interface ProjectSettings {
     units: 'IMPERIAL' | 'METRIC';
     fastZoomMultiplier?: number;
     dataLossThreshold?: number;
+    lightingTargets?: Record<string, number>; // Global defaults mapped by RoomType
     [key: string]: unknown;
 }
 

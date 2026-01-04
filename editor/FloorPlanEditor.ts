@@ -8,38 +8,41 @@ import {
     VectorLayerContent,
     PlacedSymbol,
     Furniture,
-    Layer
+    Layer,
+    Room
 } from './models/types';
 import { ToolSystem } from './systems/ToolSystem';
 import { ScaleCalibrateTool } from './tools/ScaleCalibrateTool';
 import { SelectTool } from './tools/SelectTool';
-import { CommandManager } from './systems/CommandManager';
-import { SelectionSystem } from './systems/SelectionSystem';
-import { OpacityCommand } from './commands/OpacityCommand';
-import { TransformLayerCommand } from './commands/TransformLayerCommand';
 import { PolygonTool } from './tools/PolygonTool';
 import { PlaceSymbolTool } from './tools/PlaceSymbolTool';
 import { PlaceFurnitureTool } from './tools/PlaceFurnitureTool';
 import { MeasureTool } from './tools/MeasureTool';
 import { DrawCableTool } from './tools/DrawCableTool';
+import { CommandManager } from './systems/CommandManager';
 import { DeleteSymbolCommand } from './commands/DeleteSymbolCommand';
 import { DeletePolygonCommand } from './commands/DeletePolygonCommand';
+import { OpacityCommand } from './commands/OpacityCommand';
+import { TransformLayerCommand } from './commands/TransformLayerCommand';
+import { SelectionSystem } from './systems/SelectionSystem';
 import { remoteDebug } from '../src/utils/logger';
+import { findRoomObjectAt } from '../utils/spatialUtils';
 
 export class FloorPlanEditor {
     /**
      * Static helper to check if user is typing in an input field
-     * Use this in all keydown handlers to prevent event leakage
      */
+    public static isTyping(): boolean {
+        const activeProp = document.activeElement?.tagName.toLowerCase();
+        return activeProp === 'input' || activeProp === 'textarea' || (document.activeElement as HTMLElement)?.isContentEditable === true;
+    }
+
     public static isUserTyping(e: KeyboardEvent): boolean {
-        const target = e.target as HTMLElement;
-        return target.tagName === 'INPUT' ||
-            target.tagName === 'TEXTAREA' ||
-            target.isContentEditable;
+        return FloorPlanEditor.isTyping();
     }
 
     public scene: THREE.Scene;
-    private renderer: THREE.WebGLRenderer;
+    public renderer: THREE.WebGLRenderer | null = null;
     private container: HTMLElement;
 
     public layerSystem: LayerSystem;
@@ -49,14 +52,16 @@ export class FloorPlanEditor {
     public selectionSystem: SelectionSystem;
 
     public isOverlayAlignmentMode: boolean = false;
-    private activeLayerId: string | null = null;
+    public activeLayerId: string | null = null;
+    public hoveredRoom: Room | null = null;
+    private lastContextRoom: Room | null = null;
+    public isRoomLayoutLocked: boolean = false;
     private isSpacePressed: boolean = false;
     private isAltPressed: boolean = false;
     private isShiftPressed: boolean = false;
     private needsRender: boolean = true;
     private pixelsPerMeter: number = 1;
     public fastZoomMultiplier: number = 3;
-    public isRoomLayoutLocked: boolean = true;
 
     // Panning State
     private isDragging: boolean = false;
@@ -91,7 +96,7 @@ export class FloorPlanEditor {
 
     constructor(container: HTMLElement) {
         const editorId = Math.random().toString(36).substring(7);
-        remoteDebug(`Initializing new instance: ${editorId}`, 'FloorPlanEditor');
+        remoteDebug(`Initializing new instance: ${editorId} `, 'FloorPlanEditor');
         this.container = container;
 
         // Initialize Three.js
@@ -115,7 +120,11 @@ export class FloorPlanEditor {
         this.scene.userData.editor = this; // Link for systems polling
         (window as any).editor = this; // Global access for CameraSystem cursor logic
 
-        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        this.renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            alpha: true,
+            stencil: true  // Enable stencil buffer for room clipping
+        });
         this.renderer.setSize(width, height);
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.autoClear = false;
@@ -293,7 +302,7 @@ export class FloorPlanEditor {
                         : Math.max(0, layer.opacity - opacityStep);
 
                     this.setLayerOpacity(targetLayerId, newOpacity);
-                    remoteDebug(`Adjusted ${layer.name} opacity: ${(newOpacity * 100).toFixed(0)}%`, 'FloorPlanEditor');
+                    remoteDebug(`Adjusted ${layer.name} opacity: ${(newOpacity * 100).toFixed(0)}% `, 'FloorPlanEditor');
                 }
             }
             return;
@@ -673,7 +682,7 @@ export class FloorPlanEditor {
 
     public setLayerVisible(id: string, visible: boolean, skipSave: boolean = false, skipEmit: boolean = false): void {
         const layer = this.layerSystem.getLayer(id);
-        remoteDebug(`setLayerVisible called for ${id}: ${visible}`, 'FloorPlanEditor', { id, visible, skipSave });
+        remoteDebug(`setLayerVisible called for ${id}: ${visible} `, 'FloorPlanEditor', { id, visible, skipSave });
 
         // Enforce mutual exclusivity for technical layers
         if (visible && layer?.category === 'technical') {
@@ -729,7 +738,7 @@ export class FloorPlanEditor {
 
             techLayers.forEach(l => {
                 if (l.id !== keptLayerId) {
-                    remoteDebug(`Auto-disabling layer ${l.id}`, 'FloorPlanEditor', { layerId: l.id });
+                    remoteDebug(`Auto - disabling layer ${l.id} `, 'FloorPlanEditor', { layerId: l.id });
                     this.layerSystem.setLayerVisible(l.id, false);
                 }
             });
@@ -797,7 +806,7 @@ export class FloorPlanEditor {
         }
 
         if (foundDevice && foundLayer) {
-            remoteDebug(`Focusing on device ${id} in layer ${foundLayer.id}`, 'FloorPlanEditor', { deviceId: id, layerId: foundLayer.id });
+            remoteDebug(`Focusing on device ${id} in layer ${foundLayer.id} `, 'FloorPlanEditor', { deviceId: id, layerId: foundLayer.id });
 
             // 1. Auto-show and activate layer (but don't shimmy)
             this.layerSystem.setLayerVisible(foundLayer.id, true);
@@ -819,7 +828,7 @@ export class FloorPlanEditor {
 
             this.setDirty();
         } else {
-            console.warn(`[FloorPlanEditor] Could not find device to focus: ${id}`);
+            console.warn(`[FloorPlanEditor] Could not find device to focus: ${id} `);
         }
     }
 
@@ -1046,7 +1055,7 @@ export class FloorPlanEditor {
         const devices = this.getSortedDevices(productId);
 
         if (devices.length === 0) {
-            console.warn(`[FloorPlanEditor] No devices found with productId: ${productId}`);
+            console.warn(`[FloorPlanEditor] No devices found with productId: ${productId} `);
             return;
         }
 
@@ -1094,7 +1103,9 @@ export class FloorPlanEditor {
     }
 
     public setActiveTool(type: ToolType, attributes?: any): void {
+        this.hoveredRoom = null;
         this.toolSystem.setActiveTool(type, attributes);
+        this.emit('tool-changed', type);
 
         // Auto-activate Focus Mode for specific tools
         if (type === 'draw-mask') {
@@ -1212,9 +1223,33 @@ export class FloorPlanEditor {
                 this.update();
                 this.render();
                 this.needsRender = false;
+
+                // Update context room automatically based on view
+                this.updateContextRoom();
             }
         };
         animate();
+    }
+
+    public updateContextRoom(): void {
+        const roomLayer = this.layerSystem.getLayer('room');
+        const rooms = roomLayer?.content ? ((roomLayer.content as VectorLayerContent).rooms || []) : [];
+
+        let newContext: Room | null = null;
+
+        // Priority 1: Hovered Room (from PlaceSymbolTool etc)
+        if (this.hoveredRoom) {
+            newContext = this.hoveredRoom;
+        } else {
+            // Priority 2: Center of Screen
+            const cameraState = this.cameraSystem.getState();
+            newContext = findRoomObjectAt({ x: cameraState.x, y: cameraState.y }, rooms);
+        }
+
+        if (newContext !== this.lastContextRoom) {
+            this.lastContextRoom = newContext;
+            this.emit('context-room-changed', newContext);
+        }
     }
 
     public setDirty(): void {

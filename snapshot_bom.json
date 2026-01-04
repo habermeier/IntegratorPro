@@ -1,5 +1,5 @@
 {
-  "totalCost": 51030.53,
+  "totalCost": 51409.53,
   "totalPower": null,
   "items": [
     {
@@ -451,20 +451,12 @@
       "manufacturer": "LTech"
     },
     {
-      "name": "custom-2ds-l9-1767158007452 ligh",
-      "quantity": 20,
-      "cost": 0,
-      "total": 0,
-      "description": "Product: generic-product",
-      "manufacturer": "Unknown"
-    },
-    {
-      "name": "recessed-light ligh",
+      "name": "Samsung 990 Pro 4TB Heatsink",
       "quantity": 1,
-      "cost": 0,
-      "total": 0,
-      "description": "Product: generic-light",
-      "manufacturer": "Unknown"
+      "cost": 379,
+      "total": 379,
+      "description": "NVMe M.2 SSD with Heatsink (PCIe 4.0)",
+      "manufacturer": "Samsung"
     }
   ]
 }

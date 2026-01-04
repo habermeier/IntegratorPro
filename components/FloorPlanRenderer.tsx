@@ -43,6 +43,7 @@ export const FloorPlanRenderer: React.FC = () => {
     const [isPanning, setIsPanning] = useState(false);
     const [isAltPressed, setIsAltPressed] = useState(false);
     const [isShiftPressed, setIsShiftPressed] = useState(false);
+    const [contextRoom, setContextRoom] = useState<Room | null>(null);
     const [unitPreference, setUnitPreference] = useState<'METRIC' | 'IMPERIAL'>(() => {
         return (localStorage.getItem('integrator-pro-units') as 'METRIC' | 'IMPERIAL') || 'IMPERIAL';
     });
@@ -184,8 +185,14 @@ export const FloorPlanRenderer: React.FC = () => {
 
         editor.on('room-edit-requested', onRoomEdit);
 
+        const onContextRoomChanged = (room: Room | null) => {
+            setContextRoom(room);
+        };
+        editor.on('context-room-changed', onContextRoomChanged);
+
         return () => {
             editor.off('room-edit-requested', onRoomEdit);
+            editor.off('context-room-changed', onContextRoomChanged);
         };
     }, [editor]);
 
@@ -419,10 +426,12 @@ export const FloorPlanRenderer: React.FC = () => {
 
                     {/* Editor Overlays */}
                     <EditorOverlays
+                        editor={editor}
                         isEditMode={isEditMode}
                         activeTool={activeTool}
                         measurement={measurement}
                         unitPreference={unitPreference}
+                        contextRoom={contextRoom}
                     />
 
                     {/* 📏 Dynamic Scale Ruler */}

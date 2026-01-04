@@ -1,13 +1,15 @@
 import React from 'react';
-import { Box, Database } from 'lucide-react';
+import { Box, Database, Lightbulb, Zap } from 'lucide-react';
 
 // Core imports
 import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
 import { SYMBOL_CATEGORIES, SYMBOL_LIBRARY, SymbolDefinition } from '../../editor/models/symbolLibrary';
-import { ToolType, Room } from '../../editor/models/types';
+import { ToolType, Room, PlacedSymbol } from '../../editor/models/types';
 import { dataService } from '../../src/services/DataService';
 import { deviceRegistry } from '../../src/services/DeviceRegistry';
 import { calculateRoomArea } from '../../utils/spatialUtils';
+import { calculateRoomLightingStats } from '../../src/utils/lightModeling';
+import { getRecommendedLux } from '../../src/constants/lightingTargets';
 
 // Modular Sub-components
 import { useDevicePanelState } from './device-panel/useDevicePanelState';
@@ -17,6 +19,8 @@ import { PlacedDevicesView } from './device-panel/PlacedDevicesView';
 import { RoomEditor } from './device-panel/RoomEditor';
 import { DeviceConversionModal } from './DeviceConversionModal';
 import { SwapDeviceModal } from './SwapDeviceModal';
+import { NameNewTypeModal } from './NameNewTypeModal';
+import { DeleteTypeModal } from './DeleteTypeModal';
 
 interface DevicePanelProps {
     editor: FloorPlanEditor | null;
@@ -24,6 +28,44 @@ interface DevicePanelProps {
     isOpen?: boolean;
     isLocked?: boolean;
 }
+
+const LivePlacementStats = ({ room, devices, pixelsPerMeter }: { room: Room, devices: any[], pixelsPerMeter: number }) => {
+    const stats = React.useMemo(() => {
+        const mappedDevices = devices.map(d => ({
+            id: d.id,
+            type: d.deviceTypeId,
+            category: d.layerId,
+            x: d.position.x,
+            y: d.position.y,
+            rotation: d.rotation,
+            scale: 1,
+            room: d.roomId || undefined,
+            productId: d.productId,
+            installationHeight: d.installationHeight,
+            busAssignment: d.busAssignment || undefined,
+            metadata: d.metadata,
+            createdAt: new Date(d.createdAt).toISOString()
+        })) as PlacedSymbol[];
+        return calculateRoomLightingStats(room, mappedDevices, pixelsPerMeter);
+    }, [room, devices, pixelsPerMeter]);
+
+    const target = room.targetLux || getRecommendedLux(room.roomType);
+    const compliance = Math.round((stats.mean / target) * 100);
+
+    return (
+        <div className="flex items-center gap-2">
+            <div className="flex-1 h-1 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                <div
+                    className={`h-full transition-all duration-300 ${compliance < 90 ? 'bg-amber-500' : compliance > 130 ? 'bg-blue-500' : 'bg-emerald-500'}`}
+                    style={{ width: `${Math.min(100, compliance)}%` }}
+                />
+            </div>
+            <span className={`text-[10px] font-mono font-black shrink-0 ${compliance < 90 ? 'text-amber-400' : compliance > 130 ? 'text-blue-400' : 'text-emerald-400'}`}>
+                {stats.mean} / {target} LUX
+            </span>
+        </div>
+    );
+};
 
 const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, isOpen = true, isLocked = false }) => {
     // 1. High-level View Navigation
@@ -38,6 +80,8 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
     const [showConversionModal, setShowConversionModal] = React.useState(false);
     const [conversionData, setConversionData] = React.useState<any>(null);
     const [swapData, setSwapData] = React.useState<any>(null);
+    const [newNameData, setNewNameData] = React.useState<{ defaultName: string; onConfirm: (name: string) => void } | null>(null);
+    const [deleteModalData, setDeleteModalData] = React.useState<{ typeId: string; typeName: string; count: number; replacements: SymbolDefinition[] } | null>(null);
 
     const {
         editingDevice,
@@ -50,6 +94,8 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
         updateDevice
     } = useDevicePanelState(editor);
 
+    const [lightingMode, setLightingMode] = React.useState<'circles' | 'intensity' | 'fixture'>(() => editor?.layerSystem.getLightingMode() || 'circles');
+
     // 2. Memoized Categories
     const categoryCounts = React.useMemo(() => {
         const counts: Record<string, number> = {};
@@ -59,6 +105,24 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
         return counts;
     }, [devices]);
 
+    const [hoverRoom, setHoverRoom] = React.useState<Room | null>(null);
+
+    // Track lighting mode changes
+    React.useEffect(() => {
+        if (!editor) return;
+        const syncMode = () => setLightingMode(editor.layerSystem.getLightingMode());
+        const handleModeChange = (mode: any) => setLightingMode(mode);
+        const handleHoverRoom = (room: Room | null) => setHoverRoom(room);
+
+        syncMode();
+        editor.on('lighting-mode-changed', handleModeChange);
+        editor.on('hover-room-changed', handleHoverRoom);
+        return () => {
+            editor.off('lighting-mode-changed', handleModeChange);
+            editor.off('hover-room-changed', handleHoverRoom);
+        };
+    }, [editor]);
+
     // 3. Automated View Routing
     React.useEffect(() => {
         if (editingDevice || selectedRoom) {
@@ -66,6 +130,18 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
             setIsAddingNew(false); // Close library adding when something selected
         }
     }, [editingDevice, selectedRoom]);
+
+    // Sticky Selection Sync: Ensure 'place-symbol' tool always uses the selected symbol
+    React.useEffect(() => {
+        if (activeTool === 'place-symbol' && selectedSymbolType && editor) {
+            const symbolDef = SYMBOL_LIBRARY[selectedSymbolType];
+            const toolAttrs: any = { symbolType: selectedSymbolType };
+            if (symbolDef?.productId) toolAttrs.productId = symbolDef.productId;
+            editor.setActiveTool('place-symbol', toolAttrs);
+        } else if (activeTool !== 'place-symbol') {
+            setHoverRoom(null); // Clear context if tool changes
+        }
+    }, [activeTool, selectedSymbolType, editor]);
 
     // 4. Workflow Handlers
     const handleSelectSymbol = (type: string) => {
@@ -95,59 +171,170 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
         }
     };
 
+    const handleUpdateType = async (typeId: string, updates: any) => {
+        if (!editor) return;
+
+        // Mode 1: If we have an editing device (Instance), and its type matches the typeId, update the instance
+        if (editingDevice && editingDevice.deviceTypeId === typeId) {
+            const success = updateDevice(editingDevice.id, updates);
+            if (success) {
+                editor.emit('layers-changed', editor.layerSystem.getAllLayers());
+                editor.setDirty();
+            }
+        }
+
+        // Mode 2: Update global type registry
+        try {
+            await dataService.updateGlobalSymbolType(typeId, updates);
+            // Refresh library
+            editor?.emit('layers-changed', editor.layerSystem.getAllLayers());
+        } catch (err) {
+            console.error('Failed to update global type:', err);
+        }
+    };
+
+    /**
+     * Specialized wrapper for DeviceEditor which expects a single typeId string
+     */
+    const handleDeviceTypeChange = (newTypeId: string) => {
+        if (!editingDevice || !editor) return;
+        const symbolDef = SYMBOL_LIBRARY[newTypeId] as any;
+        const updates: any = { deviceTypeId: newTypeId };
+        if (symbolDef?.productId) updates.productId = symbolDef.productId;
+        if (updateDevice(editingDevice.id, updates)) {
+            editor.emit('layers-changed', editor.layerSystem.getAllLayers());
+        }
+    };
+
+    const handleUpdateRoom = async (updates: Partial<Room>) => {
+        if (!selectedRoom || !editor) return;
+
+        // 1. Update in LayerSystem (immediate UI)
+        const roomLayer = editor.layerSystem.getLayer('room');
+        if (roomLayer && roomLayer.type === 'vector' && roomLayer.content) {
+            const content = roomLayer.content as any;
+            const rooms = content.rooms || [];
+            const roomIndex = rooms.findIndex((r: any) => r.id === selectedRoom.id);
+            if (roomIndex !== -1) {
+                const updatedRoom = { ...rooms[roomIndex], ...updates };
+                rooms[roomIndex] = updatedRoom;
+                editor.layerSystem.markDirty('room');
+                editor.emit('layers-changed', editor.layerSystem.getAllLayers());
+                editor.setDirty();
+
+                // Keep UI in sync by forcing a selection change re-eval
+                editor.emit('selection-changed', [selectedRoom.id]);
+            }
+        }
+
+        // 2. Persistent Save
+        try {
+            const currentData = await dataService.loadProject();
+            if (currentData) {
+                const polygons = currentData.floorPlan.polygons;
+                const polyIndex = polygons.findIndex(p => p.id === selectedRoom.id);
+                if (polyIndex !== -1) {
+                    polygons[polyIndex] = { ...polygons[polyIndex], ...updates };
+                    await dataService.saveProject(currentData);
+                }
+            }
+        } catch (err) {
+            console.error('Failed to save room update:', err);
+        }
+    };
+
     const handleSaveAsNewType = async () => {
         // Mode 1: Editing an existing device
         if (editingDevice) {
-            const name = prompt('New type name:', `${editingDevice.name} Custom`);
-            if (!name) return;
+            const currentType = SYMBOL_LIBRARY[editingDevice.deviceTypeId];
+            const defaultName = currentType?.name || editingDevice.name || 'New Fixture';
 
-            // Robustly resolve Product ID from formData (user dropdown) or metadata
-            const effectiveProductId = formData.productId || editingDevice.metadata?.productId || editingDevice.productId || 'generic-product';
+            setNewNameData({
+                defaultName: defaultName,
+                onConfirm: async (name) => {
+                    // Robustly resolve Product ID from formData (user dropdown) or metadata
+                    const effectiveProductId = formData.productId || editingDevice.metadata?.productId || editingDevice.productId || 'generic-product';
 
-            try {
-                const newType: SymbolDefinition = {
-                    ...SYMBOL_LIBRARY[editingDevice.deviceTypeId],
-                    id: `custom-${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
-                    name,
-                    productId: effectiveProductId,
-                    metadata: { ...draftMetadata }
-                };
-                await dataService.addCustomSymbol(newType);
-                handleUpdateType(newType.id);
-                // Also update the productId on the instance itself to match
-                if (updateDevice(editingDevice.id, { productId: effectiveProductId })) {
-                    editor?.emit('layers-changed', editor.layerSystem.getAllLayers());
+                    try {
+                        const newType: SymbolDefinition = {
+                            ...SYMBOL_LIBRARY[editingDevice.deviceTypeId],
+                            id: `custom-${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
+                            name,
+                            productId: effectiveProductId,
+                            metadata: { ...draftMetadata, shorthand: name }
+                        };
+                        await dataService.addCustomSymbol(newType);
+
+                        // 1. Update the instance to point to the new type
+                        // 2. Also update its 'name' to the new type name for clarity
+                        // 3. Update productId
+                        const updates: any = {
+                            deviceTypeId: newType.id,
+                            productId: effectiveProductId,
+                            name: name
+                        };
+
+                        if (updateDevice(editingDevice.id, updates)) {
+                            // Sync updates to FloorPlanEditor's internal layer state immediately for visual refresh
+                            const targetLayerId = editingDevice.layerId || 'lighting';
+                            const layer = editor?.layerSystem.getLayer(targetLayerId);
+                            if (layer && layer.content && (layer.content as any).symbols) {
+                                const symbol = (layer.content as any).symbols.find((s: any) => s.id === editingDevice.id);
+                                if (symbol) {
+                                    symbol.type = updates.deviceTypeId; // Map deviceTypeId -> type
+                                    if (updates.productId) symbol.productId = updates.productId;
+                                    if (updates.metadata) symbol.metadata = updates.metadata;
+                                    editor?.layerSystem.markDirty(targetLayerId);
+                                }
+                            }
+
+                            editor?.emit('layers-changed', editor.layerSystem.getAllLayers());
+                            // Force selection refresh so panels update immediately
+                            editor?.selectionSystem.select(editingDevice.id);
+                        }
+
+                        // Sticky selection: Update state so next 'Place' action uses this new type
+                        setSelectedSymbolType(newType.id);
+                        localStorage.setItem('integrator-pro-last-symbol-type', newType.id);
+
+                        setNewNameData(null);
+                    } catch (e) {
+                        console.error(e);
+                        alert('Error creating new type.');
+                    }
                 }
-                alert('New fixture type created and applied.');
-            } catch (e) {
-                console.error(e);
-            }
+            });
         }
         // Mode 2: Creating from Library (Add New)
         else if (productId && isAddingNew) {
             const product = await import('../../catalog.json').then(m => m.default.find(p => p.id === productId));
-            const name = prompt('New type name:', `${product?.name || 'New Fixture'} Custom`);
-            if (!name) return;
 
-            try {
-                // Use a default base symbol (e.g. generic-lighting) since we don't have a source symbol
-                // Or try to infer from category. For now, default to 'recessed-light' or similar.
-                const baseSymbol = SYMBOL_LIBRARY['recessed-light'];
-                const newType: SymbolDefinition = {
-                    ...baseSymbol,
-                    id: `custom-${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
-                    name,
-                    productId: productId,
-                    metadata: { ...draftMetadata }
-                };
+            setNewNameData({
+                defaultName: `${product?.name || 'New Fixture'} Custom`,
+                onConfirm: async (name) => {
+                    try {
+                        // Use a default base symbol (e.g. generic-lighting) since we don't have a source symbol
+                        const baseSymbol = SYMBOL_LIBRARY['recessed-light'] || Object.values(SYMBOL_LIBRARY)[0];
+                        const newType: SymbolDefinition = {
+                            ...baseSymbol,
+                            id: `custom-${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
+                            name,
+                            productId: productId,
+                            metadata: { ...draftMetadata, shorthand: name }
+                        };
 
-                await dataService.addCustomSymbol(newType);
-                setIsAddingNew(false);
-                setSelectedCategory(baseSymbol.category); // Switch to relevant category
-                alert('New fixture type added to library.');
-            } catch (e) {
-                console.error(e);
-            }
+                        await dataService.addCustomSymbol(newType);
+                        setIsAddingNew(false);
+                        setSelectedCategory(baseSymbol.category);
+                        // Activate immediately for placement
+                        handleSelectSymbol(newType.id);
+                        setNewNameData(null);
+                    } catch (e) {
+                        console.error(e);
+                        alert('Error creating new type.');
+                    }
+                }
+            });
         }
     };
 
@@ -163,14 +350,73 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
         }
     };
 
-    const handleUpdateType = (newTypeId: string) => {
-        if (!editingDevice || !editor) return;
-        const symbolDef = SYMBOL_LIBRARY[newTypeId] as any;
-        const updates: any = { deviceTypeId: newTypeId };
-        if (symbolDef?.productId) updates.productId = symbolDef.productId;
-        if (updateDevice(editingDevice.id, updates)) {
-            editor.emit('layers-changed', editor.layerSystem.getAllLayers());
+    const handleDeleteType = async () => {
+        if (!selectedSymbolType) return;
+        const usageCount = devices.filter(d => d.deviceTypeId === selectedSymbolType).length;
+
+        // Prepare replacements (same category, different ID)
+        const currentCat = SYMBOL_LIBRARY[selectedSymbolType]?.category;
+        const replacements = Object.values(SYMBOL_LIBRARY).filter(s =>
+            s.category === currentCat && s.id !== selectedSymbolType
+        );
+
+        setDeleteModalData({
+            typeId: selectedSymbolType,
+            typeName: SYMBOL_LIBRARY[selectedSymbolType]?.name || selectedSymbolType,
+            count: usageCount,
+            replacements
+        });
+    };
+
+    const handleConfirmDeleteAll = async () => {
+        if (!deleteModalData) return;
+
+        // 1. Delete all instances
+        const toDeleteIds = devices.filter(d => d.deviceTypeId === deleteModalData.typeId).map(d => d.id);
+        if (toDeleteIds.length > 0) {
+            toDeleteIds.forEach(id => editor?.deleteDevice(id));
         }
+
+        // 2. Delete the type
+        await dataService.removeCustomSymbol(deleteModalData.typeId);
+
+        // 3. Cleanup
+        setDeleteModalData(null);
+        setSelectedSymbolType(null);
+        editor?.emit('layers-changed', editor.layerSystem.getAllLayers());
+    };
+
+    const handleConfirmReplace = async (newTypeId: string) => {
+        if (!deleteModalData) return;
+
+        // 1. Replace all instances
+        const toUpdate = devices.filter(d => d.deviceTypeId === deleteModalData.typeId);
+        const newSymbol = SYMBOL_LIBRARY[newTypeId];
+
+        const updates = toUpdate.map(d => ({
+            id: d.id,
+            // Update type and name (to match new type name + index or keep custom?)
+            // Usually reset name to new type defaults
+            deviceTypeId: newTypeId,
+            productId: newSymbol.productId || 'generic-product', // Propagate product ID
+            // We can optionally update the name, but user might have custom names. 
+            // Safest is to keep name or append? 
+            // The user prompt said: "replace existing devices with a different model type"
+            // Let's assume minimal disruption, just type swap.
+        }));
+
+        // Batch update if possible, else loop
+        // editor.updateDevice accepts single ID. We might need a batch method or loop.
+        // Loop for now.
+        updates.forEach(u => updateDevice(u.id, { deviceTypeId: u.deviceTypeId, productId: u.productId }));
+
+        // 2. Delete the type
+        await dataService.removeCustomSymbol(deleteModalData.typeId);
+
+        // 3. Cleanup
+        setDeleteModalData(null);
+        setSelectedSymbolType(null);
+        editor?.emit('layers-changed', editor.layerSystem.getAllLayers());
     };
 
     const calculateRoomStats = React.useMemo(() => {
@@ -205,7 +451,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                         draftMetadata={draftMetadata}
                         onFieldChange={handleFieldChange}
                         onFieldBlur={() => { }}
-                        onUpdateType={handleUpdateType}
+                        onUpdateType={handleDeviceTypeChange}
                         onClearSelection={() => {
                             editor?.selectionSystem.clearSelection();
                             editor?.emit('selection-changed', []);
@@ -218,30 +464,88 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                 ) : selectedRoom ? (
                     <RoomEditor
                         selectedRoom={selectedRoom}
+                        devices={devices.map(d => ({
+                            id: d.id,
+                            type: d.deviceTypeId,
+                            category: d.layerId,
+                            x: d.position.x,
+                            y: d.position.y,
+                            rotation: d.rotation,
+                            scale: 1,
+                            room: d.roomId || undefined,
+                            productId: d.productId,
+                            installationHeight: d.installationHeight,
+                            busAssignment: d.busAssignment || undefined,
+                            metadata: d.metadata,
+                            createdAt: new Date(d.createdAt).toISOString()
+                        }))}
                         calculateRoomStats={calculateRoomStats}
+                        pixelsPerMeter={editor?.pixelsMeter || 39.3701}
+                        onUpdateRoom={handleUpdateRoom}
                         onClearSelection={() => {
                             editor?.selectionSystem.clearSelection();
                             editor?.emit('selection-changed', []);
                         }}
                         onFocusRoom={(id) => editor?.focusOnRoom(id)}
+                        lightingMode={lightingMode}
+                        onToggleLightingMode={() => {
+                            const next = lightingMode === 'circles' ? 'intensity' : (lightingMode === 'intensity' ? 'circles' : 'circles');
+                            editor?.layerSystem.setLightingMode(next);
+                            setLightingMode(next);
+                        }}
                     />
                 ) : activeTab === 'library' ? (
-                    <DeviceLibrary
-                        selectedCategory={selectedCategory}
-                        setSelectedCategory={setSelectedCategory}
-                        selectedSymbolType={selectedSymbolType}
-                        onSelectSymbol={handleSelectSymbol}
-                        onDeleteType={() => { }}
-                        isAddingNew={isAddingNew}
-                        setIsAddingNew={setIsAddingNew}
-                        categoryCounts={{}}
-                        productId={productId}
-                        setProductId={setProductId}
-                        draftMetadata={draftMetadata}
-                        setDraftMetadata={setDraftMetadata}
-                        onUpdateDefinition={handleUpdateGlobalType}
-                        onSaveAsNewType={handleSaveAsNewType}
-                    />
+                    <div className="flex flex-col h-full overflow-hidden">
+                        {activeTool === 'place-symbol' && hoverRoom && (
+                            <div className="p-2 border-b border-blue-500/20 bg-blue-500/5 animate-in slide-in-from-top-1 duration-200">
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex flex-col">
+                                        <div className="flex items-center gap-1">
+                                            <Lightbulb size={8} className="text-blue-400" />
+                                            <span className="text-[7px] text-blue-400 uppercase font-black leading-tight">Live Context</span>
+                                        </div>
+                                        <span className="text-[9px] text-slate-200 font-bold">{hoverRoom.name}</span>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="text-[7px] text-slate-500 uppercase font-black block">Target</span>
+                                        <span className="text-[9px] text-slate-400 font-mono">{hoverRoom.targetLux || getRecommendedLux(hoverRoom.roomType)} LUX</span>
+                                    </div>
+                                </div>
+                                <LivePlacementStats
+                                    room={hoverRoom}
+                                    devices={devices}
+                                    pixelsPerMeter={editor?.pixelsMeter || 39.3701}
+                                />
+                            </div>
+                        )}
+                        <div className="flex-1 overflow-y-auto">
+                            <DeviceLibrary
+                                selectedCategory={selectedCategory}
+                                setSelectedCategory={setSelectedCategory}
+                                selectedSymbolType={selectedSymbolType}
+                                onSelectSymbol={handleSelectSymbol}
+                                onDeleteType={() => {
+                                    if (selectedSymbolType) {
+                                        setDeleteModalData({
+                                            typeId: selectedSymbolType,
+                                            typeName: SYMBOL_LIBRARY[selectedSymbolType].name,
+                                            count: devices.filter(d => d.deviceTypeId === selectedSymbolType).length,
+                                            replacements: Object.values(SYMBOL_LIBRARY).filter(s => s.id !== selectedSymbolType)
+                                        });
+                                    }
+                                }}
+                                isAddingNew={isAddingNew}
+                                setIsAddingNew={setIsAddingNew}
+                                categoryCounts={categoryCounts}
+                                productId={productId}
+                                setProductId={setProductId}
+                                draftMetadata={draftMetadata}
+                                setDraftMetadata={setDraftMetadata}
+                                onUpdateDefinition={handleUpdateGlobalType}
+                                onSaveAsNewType={handleSaveAsNewType}
+                            />
+                        </div>
+                    </div>
                 ) : (
                     <PlacedDevicesView
                         devices={devices}
@@ -259,6 +563,28 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
             )}
             {swapData && <SwapDeviceModal isOpen={true} currentDeviceName={editingDevice?.name} newDeviceName={swapData.targetDeviceName}
                 onSwapInstance={() => { }} onSwapRoom={() => { }} onSwapProject={() => { }} onCancel={() => setSwapData(null)} />}
+
+            {newNameData && (
+                <NameNewTypeModal
+                    isOpen={true}
+                    defaultName={newNameData.defaultName}
+                    existingNames={Object.values(SYMBOL_LIBRARY).map(s => s.name || s.id)}
+                    onConfirm={newNameData.onConfirm}
+                    onCancel={() => setNewNameData(null)}
+                />
+            )}
+
+            {deleteModalData && (
+                <DeleteTypeModal
+                    isOpen={true}
+                    typeName={deleteModalData.typeName}
+                    usageCount={deleteModalData.count}
+                    availableReplacementTypes={deleteModalData.replacements}
+                    onDeleteAll={handleConfirmDeleteAll}
+                    onReplaceAndDelete={handleConfirmReplace}
+                    onCancel={() => setDeleteModalData(null)}
+                />
+            )}
         </div>
     );
 };

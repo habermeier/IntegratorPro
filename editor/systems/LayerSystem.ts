@@ -5,6 +5,7 @@ import { calculatePolygonArea, calculateRoomArea } from '../../utils/spatialUtil
 import { remoteLog } from '../../src/utils/logger';
 import { calculateCoverage, getEffectiveHeight, coverageToPixels } from '../../src/utils/lightingUtils';
 import { calculatePointIntensity, calculateRoomLightingStats, LightIntensityStats } from '../../src/utils/lightModeling';
+import { getRecommendedLux } from '../../src/constants/lightingTargets';
 
 export class LayerSystem {
     private layers: Map<string, Layer> = new Map();
@@ -109,6 +110,7 @@ export class LayerSystem {
         if (layer) {
             layer.visible = visible;
             layer.container.visible = visible;
+            this.markDirty(id); // Ensure re-render when visibility changes
         }
     }
 
@@ -177,6 +179,7 @@ export class LayerSystem {
         if (this.lightingMode !== mode) {
             this.lightingMode = mode;
             this.markDirty('lighting');
+            (this.scene.userData.editor as any)?.emit('lighting-mode-changed', mode);
         }
     }
 
@@ -351,26 +354,28 @@ export class LayerSystem {
             const label = group.getObjectByName('label') as THREE.Sprite;
 
             if (mode === 'intensity') {
-                const fixturesInRoom = fixtures.filter(f => f.room === roomId);
                 const pixelsPerMeter = (this.scene.userData.editor as any)?.pixelsMeter || 39.3701;
-                const stats = calculateRoomLightingStats(room, fixturesInRoom, pixelsPerMeter);
+                // Pass total fixtures to allow for bleed/room-mapping logic handled in utility
+                const stats = calculateRoomLightingStats(room, fixtures, pixelsPerMeter);
+                const targetLux = room.targetLux || getRecommendedLux(room.roomType);
 
                 // Update Heatmap Texture
                 if (heatmap) {
                     heatmap.visible = true;
-                    this.updateHeatmapTexture(heatmap, room, fixturesInRoom, pixelsPerMeter, stats);
+                    this.updateHeatmapTexture(heatmap, room, fixtures, pixelsPerMeter, stats);
                 }
 
                 // Append Stats to Label
                 if (label && group.userData.labelName) {
-                    const statsText = `\nMin: ${stats.min} | Avg: ${stats.mean} | Max: ${stats.max} lm`;
+                    const compliance = Math.round((stats.mean / targetLux) * 100);
+                    const statsText = `\n${stats.mean} / ${targetLux} LUX (${compliance}%)`;
+
                     // Only update if stats changed significantly to avoid texture thrashing
                     if (group.userData.statsText !== statsText) {
                         const roomName = group.userData.labelName;
                         const displayType = this.formatRoomType(group.userData.labelType);
                         const areaLabel = group.userData.areaLabel;
 
-                        // We need a modified createLabel that supports the extra line or just concatenate
                         const newLabel = this.createLabel(roomName, displayType, `${areaLabel}${statsText}`);
                         newLabel.name = 'label';
                         newLabel.position.copy(label.position);
@@ -473,6 +478,7 @@ export class LayerSystem {
             const cacheKey = `${layer.id}-${id}`;
             let group = this.meshCache.get(cacheKey) as THREE.Group;
             const isMask = poly.polyType === 'mask';
+            const isRoom = poly.polyType === 'room';
 
             // 1. Check if points OR attributes have changed (hash)
             // We include name, color, type in hash to force re-render if they change
@@ -485,37 +491,40 @@ export class LayerSystem {
                 group = new THREE.Group();
 
                 // Centered Glow / Halo (Non-directional Blur Effect)
-                const glowShape = new THREE.Shape();
-                glowShape.moveTo(poly.points[0].x, poly.points[0].y);
-                for (let i = 1; i < poly.points.length; i++) {
-                    glowShape.lineTo(poly.points[i].x, poly.points[i].y);
-                }
-                glowShape.closePath();
-                const glowGeo = new THREE.ShapeGeometry(glowShape);
-                const glowMat = new THREE.MeshBasicMaterial({
-                    color: 0x000000,
-                    transparent: true,
-                    opacity: 0.1, // Stacked low opacity
-                    side: THREE.DoubleSide
-                });
-
-                // Create 8-way offset cluster for Gaussian-like non-directional blur
-                const glowOffsets = [
-                    { x: 4, y: 0 }, { x: -4, y: 0 }, { x: 0, y: 4 }, { x: 0, y: -4 },
-                    { x: 2.8, y: 2.8 }, { x: -2.8, y: -2.8 }, { x: 2.8, y: -2.8 }, { x: -2.8, y: 2.8 },
-                    { x: 0, y: 0 } // Center anchor at higher opacity
-                ];
-
-                glowOffsets.forEach((off, idx) => {
-                    const glowMesh = new THREE.Mesh(glowGeo, glowMat);
-                    glowMesh.name = `glow-${idx}`;
-                    glowMesh.position.set(off.x, off.y, -0.1);
-                    if (off.x === 0 && off.y === 0) glowMesh.material = glowMat.clone();
-                    if (glowMesh.material instanceof THREE.MeshBasicMaterial && off.x === 0 && off.y === 0) {
-                        glowMesh.material.opacity = 0.3;
+                // ONLY for Masks to create the "fuzzy edge" look. Rooms should be crisp.
+                if (isMask) {
+                    const glowShape = new THREE.Shape();
+                    glowShape.moveTo(poly.points[0].x, poly.points[0].y);
+                    for (let i = 1; i < poly.points.length; i++) {
+                        glowShape.lineTo(poly.points[i].x, poly.points[i].y);
                     }
-                    group.add(glowMesh);
-                });
+                    glowShape.closePath();
+                    const glowGeo = new THREE.ShapeGeometry(glowShape);
+                    const glowMat = new THREE.MeshBasicMaterial({
+                        color: 0x000000,
+                        transparent: true,
+                        opacity: 0.1, // Stacked low opacity
+                        side: THREE.DoubleSide
+                    });
+
+                    // Create 8-way offset cluster for Gaussian-like non-directional blur
+                    const glowOffsets = [
+                        { x: 4, y: 0 }, { x: -4, y: 0 }, { x: 0, y: 4 }, { x: 0, y: -4 },
+                        { x: 2.8, y: 2.8 }, { x: -2.8, y: -2.8 }, { x: 2.8, y: -2.8 }, { x: -2.8, y: 2.8 },
+                        { x: 0, y: 0 } // Center anchor at higher opacity
+                    ];
+
+                    glowOffsets.forEach((off, idx) => {
+                        const glowMesh = new THREE.Mesh(glowGeo, glowMat);
+                        glowMesh.name = `glow-${idx}`;
+                        glowMesh.position.set(off.x, off.y, -0.1);
+                        if (off.x === 0 && off.y === 0) glowMesh.material = glowMat.clone();
+                        if (glowMesh.material instanceof THREE.MeshBasicMaterial && off.x === 0 && off.y === 0) {
+                            glowMesh.material.opacity = 0.3;
+                        }
+                        group.add(glowMesh);
+                    });
+                }
 
                 // Fill Mesh
                 const shape = new THREE.Shape();
@@ -527,11 +536,20 @@ export class LayerSystem {
                 const geometry = new THREE.ShapeGeometry(shape);
                 const isSelected = selectedIds.has(id);
                 const fillColor = isMask ? (this.isMaskEditMode ? 0x94a3b8 : 0xffffff) : (poly.color || 0x3b82f6);
+
+                // Opacity Logic: 
+                // Masks: High opacity when selected/editing.
+                // Rooms: Very low opacity (0.15) to just "tint" the floor plan.
+                const opacity = isMask
+                    ? (isSelected ? 0.8 : 1.0)
+                    : (isSelected ? 0.4 : 0.15);
+
                 const material = new THREE.MeshBasicMaterial({
                     color: isSelected ? 0xfacc15 : fillColor,
                     transparent: true,
-                    opacity: isMask ? (isSelected ? 0.8 : 1.0) : 0.4,
-                    side: THREE.DoubleSide
+                    opacity: opacity,
+                    side: THREE.DoubleSide,
+                    depthWrite: false
                 });
                 const mesh = new THREE.Mesh(geometry, material);
                 mesh.name = 'fill';
@@ -793,6 +811,20 @@ export class LayerSystem {
                 const cacheKey = `${layer.id}-${symbolData.id}`;
                 let group = this.meshCache.get(cacheKey) as THREE.Group;
 
+                // Check for invalidation (Type or Shorthand change)
+                if (group) {
+                    const metadata = symbolData.metadata || {};
+                    const fallbackShorthand = getSymbolShorthand(symbolData.type);
+                    const effectiveShorthand = (metadata as any).shorthand || fallbackShorthand;
+
+                    if (group.userData.symbolType !== symbolData.type ||
+                        group.userData.shorthand !== effectiveShorthand) {
+                        layer.container.remove(group);
+                        this.meshCache.delete(cacheKey);
+                        group = undefined as any;
+                    }
+                }
+
                 if (!group) {
                     const def = SYMBOL_LIBRARY[symbolData.type];
                     remoteLog(`Symbol ${symbolData.id} - SYMBOL_LIBRARY[${symbolData.type}] found: ${!!def}`, 'debug', '🔍 DEEP-TRACE');
@@ -812,16 +844,20 @@ export class LayerSystem {
                     // See: docs/SCALE-BUG-POSTMORTEM.md
                     const scale = symbolData.scale ?? 1;
                     group.scale.set(scale, scale, 1);
+                    const metadata = symbolData.metadata || {};
+                    const fallbackShorthand = getSymbolShorthand(symbolData.type);
+                    const effectiveShorthand = (metadata as any).shorthand || fallbackShorthand;
+
                     group.userData = {
                         id: symbolData.id,
                         type: 'symbol',
                         category: symbolData.category,
-                        symbolType: symbolData.type
+                        symbolType: symbolData.type,
+                        shorthand: effectiveShorthand
                     };
 
                     // Add label if symbol has label or productId
                     // BUT hide 'generic-product' labels when no shorthand exists
-                    const metadata = symbolData.metadata || {};
                     const hasShorthand = !!(metadata as any).shorthand;
                     const isGenericProduct = symbolData.productId === 'generic-product';
 
@@ -841,7 +877,7 @@ export class LayerSystem {
                         identifier = labelText.split(' - ').pop() || labelText;
                     }
 
-                    const willShowRegularLabel = !!identifier;
+                    const willShowRegularLabel = !!identifier && identifier !== effectiveShorthand;
 
                     if (willShowRegularLabel) {
                         const labelSprite = this.createLabel(identifier, "");
@@ -852,9 +888,6 @@ export class LayerSystem {
                     }
 
                     // Add shorthand annotation if present in metadata or fallback to library
-                    const fallbackShorthand = getSymbolShorthand(symbolData.type);
-                    const effectiveShorthand = (metadata as any).shorthand || fallbackShorthand;
-
                     if (effectiveShorthand) {
                         const shorthandLabel = this.createShorthandLabel(effectiveShorthand);
                         shorthandLabel.name = 'shorthand-label';

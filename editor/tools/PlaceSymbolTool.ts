@@ -4,7 +4,7 @@ import { ToolType, Vector2, PlacedSymbol, VectorLayerContent, Room } from '../mo
 import { FloorPlanEditor } from '../FloorPlanEditor';
 import { SYMBOL_LIBRARY } from '../models/symbolLibrary';
 import { AddSymbolCommand } from '../commands/AddSymbolCommand';
-import { findRoomAt } from '../../utils/spatialUtils';
+import { findRoomAt, findRoomObjectAt } from '../../utils/spatialUtils';
 import { remoteDebug } from '../../src/utils/logger';
 
 export class PlaceSymbolTool implements Tool {
@@ -266,6 +266,15 @@ export class PlaceSymbolTool implements Tool {
         // Set higher Z-position (100) to ensure preview is on top of everything
         this.previewGroup.position.set(worldPos.x, worldPos.y, 100);
         this.previewGroup.visible = !!this.symbolType;
+
+        // Detect room under cursor for real-time analysis
+        const roomLayer = this.editor.layerSystem.getLayer('room');
+        const rooms = roomLayer?.content ? ((roomLayer.content as VectorLayerContent).rooms || []) : [];
+        const room = findRoomObjectAt(worldPos, rooms);
+        this.editor.hoveredRoom = room;
+
+        this.editor.emit('hover-room-changed', room);
+
         this.editor.setDirty();
     }
 

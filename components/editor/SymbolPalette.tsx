@@ -45,8 +45,8 @@ export const SymbolPalette: React.FC<SymbolPaletteProps> = ({ activeCategory, on
     if (allSymbols.length === 0) return null;
 
     return (
-        <div className="max-h-[220px] overflow-y-auto bg-slate-950 rounded-lg border border-slate-800 mt-2 custom-scrollbar">
-            <div className="grid grid-cols-2 gap-2 p-2">
+        <div className="max-h-[280px] overflow-y-auto bg-slate-950 rounded-lg border border-slate-800 mt-2 custom-scrollbar">
+            <div className="grid grid-cols-3 gap-1.5 p-1.5">
                 {allSymbols.map(symbol => {
                     const hexColor = `#${symbol.color.toString(16).padStart(6, '0')}`;
                     const isCustom = symbol.id.startsWith('custom-');
@@ -55,25 +55,42 @@ export const SymbolPalette: React.FC<SymbolPaletteProps> = ({ activeCategory, on
                         <button
                             key={symbol.id}
                             onClick={() => onSelectSymbol(symbol.id)}
-                            className={`flex flex-col items-center justify-center p-2 rounded-md transition-all border ${selectedSymbolType === symbol.id
-                                ? 'bg-blue-600/20 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+                            className={`flex flex-col items-center justify-center p-1.5 rounded transition-all border ${selectedSymbolType === symbol.id
+                                ? 'bg-blue-600/20 border-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.3)]'
                                 : 'bg-slate-900 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'
                                 }`}
                             title={symbol.description}
                         >
-                            <div className="w-10 h-10 flex items-center justify-center mb-1">
+                            <div className="w-8 h-8 flex items-center justify-center mb-0.5">
                                 <SymbolIcon
                                     symbolType={symbol.id}
                                     color={isCustom ? '#3b82f6' : hexColor}
-                                    size={36}
+                                    size={28}
                                     showShorthand={true}
                                     customShorthand={symbol.metadata?.shorthand}
                                 />
                             </div>
-                            <span className={`text-[9px] text-center font-bold leading-tight uppercase tracking-tighter ${selectedSymbolType === symbol.id ? 'text-blue-400' : 'text-slate-400'
+                            <span className={`text-[8px] text-center font-bold leading-tight uppercase tracking-tighter ${selectedSymbolType === symbol.id ? 'text-blue-400' : 'text-slate-300'
                                 }`}>
                                 {symbol.name}
                             </span>
+
+                            {/* Technical Meta (Lumen/Beam) - AUTO-ULITMATE-UI-P27 */}
+                            {symbol.category === 'lighting' && (symbol.metadata?.lumens || symbol.metadata?.beamAngle) && (
+                                <div className="mt-1 flex gap-1 items-center">
+                                    {symbol.metadata?.lumens && (
+                                        <span className="text-[7px] text-slate-400 font-mono">
+                                            {symbol.metadata.lumens}L
+                                        </span>
+                                    )}
+                                    {symbol.metadata?.beamAngle && (
+                                        <span className="text-[7px] text-slate-500 font-mono italic">
+                                            {symbol.metadata.beamAngle}°
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+
                             {isCustom && (
                                 <div className="mt-1 px-1 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-[7px] text-blue-500 font-black uppercase tracking-widest">
                                     Custom

@@ -45,7 +45,7 @@ export const DeviceLibrary: React.FC<DeviceLibraryProps> = ({
         <div className="space-y-4 p-1">
             {/* Category Selector */}
             <div className="space-y-1">
-                <label className="text-[8px] text-slate-400 uppercase font-bold px-1">Working Layer</label>
+                <label className="text-[8px] text-slate-300 uppercase font-bold px-1">Working Layer</label>
                 <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
@@ -94,14 +94,14 @@ export const DeviceLibrary: React.FC<DeviceLibraryProps> = ({
                         <h4 className="text-[9px] font-black text-blue-400 uppercase">New Fixture</h4>
                         <button
                             onClick={() => setIsAddingNew(false)}
-                            className="text-[8px] text-slate-500 hover:text-slate-300 font-bold uppercase"
+                            className="text-[8px] text-slate-400 hover:text-slate-200 font-bold uppercase"
                         >
                             Cancel
                         </button>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-[7px] text-slate-400 uppercase font-bold">Base Product</label>
+                        <label className="text-[7px] text-slate-300 uppercase font-bold">Base Product</label>
                         <select
                             value={productId}
                             onChange={(e) => setProductId(e.target.value)}
@@ -123,7 +123,7 @@ export const DeviceLibrary: React.FC<DeviceLibraryProps> = ({
                             {SpecBuilder ? (
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[7px] text-slate-500 font-bold uppercase">Specification</span>
+                                        <span className="text-[7px] text-slate-400 font-bold uppercase">Specification</span>
                                         <span className="text-[7px] text-emerald-500 font-mono">BUILDER</span>
                                     </div>
                                     <SpecBuilder
@@ -132,7 +132,7 @@ export const DeviceLibrary: React.FC<DeviceLibraryProps> = ({
                                     />
                                 </div>
                             ) : (
-                                <div className="text-[8px] text-slate-500 italic text-center py-4 border border-dashed border-slate-800 rounded">
+                                <div className="text-[8px] text-slate-400 italic text-center py-4 border border-dashed border-slate-800 rounded">
                                     No builder for this item.
                                 </div>
                             )}

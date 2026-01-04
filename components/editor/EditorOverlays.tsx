@@ -8,22 +8,46 @@
  */
 
 import React from 'react';
-import { ToolType } from '../../editor/models/types';
+import { ToolType, Room, PlacedSymbol, VectorLayerContent } from '../../editor/models/types';
 import { formatDistance } from '../../utils/measurementUtils';
+import { Lightbulb, Target, Zap, TrendingUp } from 'lucide-react';
+import { calculateRoomLightingStats } from '../../src/utils/lightModeling';
+import { getRecommendedLux } from '../../src/constants/lightingTargets';
+import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
 
 interface EditorOverlaysProps {
+  editor: FloorPlanEditor | null;
   isEditMode: boolean;
   activeTool: ToolType;
   measurement: { distance: number; finalized: boolean } | null;
   unitPreference: 'METRIC' | 'IMPERIAL';
+  contextRoom: Room | null;
 }
 
 export const EditorOverlays: React.FC<EditorOverlaysProps> = ({
+  editor,
   isEditMode,
   activeTool,
   measurement,
-  unitPreference
+  unitPreference,
+  contextRoom
 }) => {
+  // Compute lighting stats if contextRoom exists
+  const lightingStats = React.useMemo(() => {
+    if (!contextRoom || !editor) return null;
+
+    const layer = editor.layerSystem.getLayer('lighting');
+    const symbols = layer?.content ? (layer.content as VectorLayerContent).symbols || [] : [];
+
+    const stats = calculateRoomLightingStats(contextRoom, symbols, editor.pixelsMeter);
+    const target = contextRoom.targetLux || getRecommendedLux(contextRoom.roomType);
+    const performance = Math.round((stats.mean / target) * 100);
+
+    return { ...stats, target, performance };
+  }, [contextRoom, editor]);
+
+  // Only show HUD during placement mode or when actively hovering
+  const showHUD = lightingStats && (activeTool === 'place-symbol' || activeTool === 'place-furniture');
   return (
     <>
       {/* Editor Mode Overlay */}
@@ -64,6 +88,62 @@ export const EditorOverlays: React.FC<EditorOverlaysProps> = ({
             )}
           </div>
           <div className="text-[10px] opacity-80 mt-0.5">Click two points • Escape to undo</div>
+        </div>
+      )}
+      {/* Lighting HUD - Compact Top-Right Card */}
+      {showHUD && (
+        <div className="absolute top-4 right-4 z-30 pointer-events-none animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="bg-slate-950/90 backdrop-blur-xl border border-white/10 rounded-xl px-4 py-3 shadow-2xl ring-1 ring-white/5 min-w-[200px]">
+            {/* Room Name */}
+            <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-800">
+              <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider">Live Context</span>
+              <Lightbulb size={14} className={lightingStats.performance < 90 ? 'text-amber-500' : 'text-emerald-500'} />
+            </div>
+
+            <div className="text-xs font-bold text-white mb-3">{contextRoom?.name}</div>
+
+            {/* Compact Stats */}
+            <div className="space-y-2">
+              {/* Average Lux */}
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] text-slate-300 font-bold uppercase">Average</span>
+                <div className="flex items-baseline gap-1">
+                  <span className={`text-lg font-mono font-black ${lightingStats.performance < 90 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                    {lightingStats.mean}
+                  </span>
+                  <span className="text-[8px] text-slate-500 font-bold">LUX</span>
+                </div>
+              </div>
+
+              {/* Target Match */}
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] text-slate-300 font-bold uppercase">Target</span>
+                <span className={`text-xs font-black font-mono ${lightingStats.performance < 90 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                  {lightingStats.performance}%
+                </span>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="relative h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+                <div
+                  className={`absolute inset-0 transition-all duration-700 ${lightingStats.performance < 90 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                  style={{ width: `${Math.min(100, lightingStats.performance)}%` }}
+                />
+              </div>
+
+              {/* Range */}
+              <div className="flex items-center justify-between pt-1">
+                <div className="flex flex-col">
+                  <span className="text-[7px] text-slate-500 uppercase">Min</span>
+                  <span className="text-[10px] font-mono text-slate-300 font-bold">{lightingStats.min}</span>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className="text-[7px] text-slate-500 uppercase">Max</span>
+                  <span className="text-[10px] font-mono text-slate-300 font-bold">{lightingStats.max}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </>
