@@ -137,7 +137,10 @@ export class FloorPlanEditor {
         this.cameraSystem = new CameraSystem(width, height);
         this.toolSystem = new ToolSystem();
         this.commandManager = new CommandManager();
-        this.commandManager.setOnChanged(() => this.setDirty()); // Trigger repaint on undo/redo
+        this.commandManager.setOnChanged(() => {
+            this.setDirty();
+            this.emit('layers-changed', this.layerSystem.getAllLayers());
+        });
         this.selectionSystem = new SelectionSystem(this.cameraSystem, this.layerSystem);
 
         // Register Tools
@@ -1308,6 +1311,10 @@ export class FloorPlanEditor {
     }
 
     public emit(event: string, data: any): void {
+        if (event === 'layers-changed') {
+            console.trace(`[FloorPlanEditor] Emitting 'layers-changed'`);
+            // remoteDebug(`[FloorPlanEditor] Emitting 'layers-changed'`, 'FloorPlanEditor', { event });
+        }
         this.eventListeners.get(event)?.forEach(cb => cb(data));
     }
 

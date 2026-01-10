@@ -62,7 +62,18 @@ export function useEditorEvents(
       callbacks.setActiveLayerId(activeLayerId);
     };
 
+    let updateCount = 0;
     const onLayersChanged = (newLayers: Layer[]) => {
+      updateCount++;
+      if (updateCount > 500) {
+        if (updateCount === 501) {
+          console.error('⛔️ INFINITE LOOP DETECTED in onLayersChanged. Stopping updates.');
+          // alert('Infinite Loop Detected - Check Console');
+        }
+        return;
+      }
+      if (updateCount % 50 === 0) console.log(`[useEditorEvents] onLayersChanged count: ${updateCount}`);
+
       callbacks.setLayers([...newLayers]);
       callbacks.debouncedSaveProject();
     };

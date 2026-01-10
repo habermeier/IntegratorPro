@@ -22,6 +22,7 @@ interface EditorOverlaysProps {
   measurement: { distance: number; finalized: boolean } | null;
   unitPreference: 'METRIC' | 'IMPERIAL';
   contextRoom: Room | null;
+  layers?: any[]; // Added to trigger re-renders on layer changes
 }
 
 export const EditorOverlays: React.FC<EditorOverlaysProps> = ({
@@ -30,7 +31,8 @@ export const EditorOverlays: React.FC<EditorOverlaysProps> = ({
   activeTool,
   measurement,
   unitPreference,
-  contextRoom
+  contextRoom,
+  layers
 }) => {
   // Compute lighting stats if contextRoom exists
   const lightingStats = React.useMemo(() => {
@@ -44,7 +46,7 @@ export const EditorOverlays: React.FC<EditorOverlaysProps> = ({
     const performance = Math.round((stats.mean / target) * 100);
 
     return { ...stats, target, performance };
-  }, [contextRoom, editor]);
+  }, [contextRoom, editor, layers]); // Added layers to dependencies
 
   // Only show HUD during placement mode or when actively hovering
   const showHUD = lightingStats && (activeTool === 'place-symbol' || activeTool === 'place-furniture');

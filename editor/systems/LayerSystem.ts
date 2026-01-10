@@ -183,18 +183,35 @@ export class LayerSystem {
         }
     }
 
+    private debugTick = 0;
+
     public update(): void {
+        this.debugTick++;
+        if (this.debugTick % 300 === 0) { // Every ~5 seconds
+            console.log(`[LayerSystem] Update Loop Alive. Mode: ${this.lightingMode}, DirtyLayers: ${this.dirtyLayers.size}`);
+            // Check if heatmap exists in scene
+            const roomLayer = this.layers.get('room');
+            if (roomLayer) {
+                const count = roomLayer.container.children.length;
+                const heatmap = roomLayer.container.children[0]?.getObjectByName('intensity-heatmap');
+                console.log(`[LayerSystem] RoomLayer children: ${count}. Sample Heatmap found? ${!!heatmap}. Visible? ${heatmap?.visible}`);
+            }
+        }
+
         const time = this.clock.getElapsedTime();
         const pulse = (Math.sin(time * 6) + 1) / 2; // 0 to 1
 
+        // Capture dirty state and clear immediately to allow new dirty flags to accumulate during update
+        const dirtyIds = new Set(this.dirtyLayers);
+        this.dirtyLayers.clear();
+
         // 1. Geometry Updates (Dirty Layers)
-        if (this.dirtyLayers.size > 0) {
-            for (const id of this.dirtyLayers) {
+        if (dirtyIds.size > 0) {
+            for (const id of dirtyIds) {
                 const layer = this.layers.get(id);
                 if (!layer || layer.type !== 'vector') continue;
                 this.renderVectorLayer(layer);
             }
-            this.dirtyLayers.clear();
         }
 
         // 2. Selection Pulse (Always if anything selected)
@@ -322,7 +339,9 @@ export class LayerSystem {
         }
 
         // 4. Update Lighting Visuals (Heatmaps & Modes)
-        this.updateLightingVisuals();
+        if (dirtyIds.has('lighting') || dirtyIds.has('room')) {
+            this.updateLightingVisuals();
+        }
     }
 
     private updateLightingVisuals(): void {
@@ -354,6 +373,7 @@ export class LayerSystem {
             const label = group.getObjectByName('label') as THREE.Sprite;
 
             if (mode === 'intensity') {
+                const roomName = room.name || 'Unknown Room';
                 const pixelsPerMeter = (this.scene.userData.editor as any)?.pixelsMeter || 39.3701;
                 // Pass total fixtures to allow for bleed/room-mapping logic handled in utility
                 const stats = calculateRoomLightingStats(room, fixtures, pixelsPerMeter);
@@ -361,8 +381,11 @@ export class LayerSystem {
 
                 // Update Heatmap Texture
                 if (heatmap) {
+                    if (!heatmap.visible) console.log(`[LayerSystem] Showing Heatmap for ${roomName}`);
                     heatmap.visible = true;
                     this.updateHeatmapTexture(heatmap, room, fixtures, pixelsPerMeter, stats);
+                } else {
+                    console.warn(`[LayerSystem] Heatmap mesh missing for room: ${roomName}`);
                 }
 
                 // Append Stats to Label
@@ -402,13 +425,26 @@ export class LayerSystem {
         });
     }
 
+    private heatmapCanvases: Map<string, HTMLCanvasElement> = new Map();
+    private heatmapTextures: Map<string, THREE.CanvasTexture> = new Map();
+
     private updateHeatmapTexture(mesh: THREE.Mesh, room: Room, fixtures: PlacedSymbol[], pixelsPerMeter: number, stats: LightIntensityStats): void {
-        // Simple Canvas Implementation for the heatmap
-        const canvas = document.createElement('canvas');
-        const res = 64; // Low res for perf
-        canvas.width = res;
-        canvas.height = res;
-        const ctx = canvas.getContext('2d')!;
+        const cacheKey = `heatmap-${room.id}`;
+
+        // 1. Get or Create Canvas for this specific room
+        let canvas = this.heatmapCanvases.get(cacheKey);
+        if (!canvas) {
+            canvas = document.createElement('canvas');
+            this.heatmapCanvases.set(cacheKey, canvas);
+        }
+
+        const res = 128; // Higher resolution is now safe due to throttling and filtering
+        // Optimization: Only resize if needed to avoid flicker/reflow? 
+        // Always setting it clears it, which is fine since we clear anyway.
+        if (canvas.width !== res) canvas.width = res;
+        if (canvas.height !== res) canvas.height = res;
+
+        const ctx = canvas.getContext('2d', { alpha: true })!;
 
         // Get bounding box of room
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -420,46 +456,110 @@ export class LayerSystem {
         const rw = maxX - minX;
         const rh = maxY - minY;
 
-        // Fill background
-        ctx.fillStyle = 'rgba(0,0,0,0.1)';
-        ctx.fillRect(0, 0, res, res);
+        // Clear canvas explicitly to ensure transparency
+        ctx.clearRect(0, 0, res, res);
 
-        // Draw intensity
-        for (let ix = 0; ix < res; ix++) {
-            for (let iy = 0; iy < res; iy++) {
-                const px = minX + (ix / res) * rw;
-                const py = minY + (iy / res) * rh;
+        // DEBUG: Fill with semi-transparent blue to prove texture is updating
+        // If we see blue squares, the texture pipeline works.
+        // ctx.fillStyle = 'rgba(0, 0, 255, 0.5)';
+        // ctx.fillRect(0, 0, res, res);
 
-                const intensity = calculatePointIntensity({ x: px, y: py }, fixtures, pixelsPerMeter);
-                // Map intensity to color (Yellow/Orange)
-                const alpha = Math.min(0.6, intensity / (stats.max || 1));
-                ctx.fillStyle = `rgba(255, 230, 0, ${alpha})`;
-                ctx.fillRect(ix, iy, 1, 1);
+        // PERFORMANCE: Filter to fixtures near the room bounding box to avoid O(N*M) loop
+        // We use a 12-meter bleed to catch nearby fixtures that might affect this room
+        const bleed = 12 * pixelsPerMeter;
+        const relevantFixtures = fixtures.filter(f => {
+            return f.x >= minX - bleed && f.x <= maxX + bleed &&
+                f.y >= minY - bleed && f.y <= maxY + bleed;
+        });
+
+        if (relevantFixtures.length > 0) {
+            // Draw intensity
+            for (let ix = 0; ix < res; ix++) {
+                for (let iy = 0; iy < res; iy++) {
+                    const px = minX + (ix / res) * rw;
+                    // FIX: Map iy=0 (Top) to maxY (Top) -> Upright Image for correct UV mapping
+                    const py = maxY - (iy / res) * rh;
+
+                    const intensity = calculatePointIntensity({ x: px, y: py }, relevantFixtures, pixelsPerMeter);
+
+                    // Use 500 LUX as the normalization ceiling for better low-light sensitivity
+                    const normalized = Math.min(1.0, intensity / 500);
+
+                    // False-color thermal gradient (Blue -> Cyan -> Green -> Yellow -> Red)
+                    // This makes it MUCH easier to see variations than the subtle Amber gradient
+                    let r, g, b;
+
+                    if (normalized < 0.25) {
+                        // Blue -> Cyan
+                        const t = normalized / 0.25;
+                        r = 0;
+                        g = Math.round(t * 255);
+                        b = 255;
+                    } else if (normalized < 0.5) {
+                        // Cyan -> Green
+                        const t = (normalized - 0.25) / 0.25;
+                        r = 0;
+                        g = 255;
+                        b = Math.round((1 - t) * 255);
+                    } else if (normalized < 0.75) {
+                        // Green -> Yellow
+                        const t = (normalized - 0.5) / 0.25;
+                        r = Math.round(t * 255);
+                        g = 255;
+                        b = 0;
+                    } else {
+                        // Yellow -> Red
+                        const t = (normalized - 0.75) / 0.25;
+                        r = 255;
+                        g = Math.round((1 - t) * 255);
+                        b = 0;
+                    }
+
+                    // Higher base alpha to ensure it's visible against the floor plan
+                    // Sqrt curve keeps low end visible but not transparent
+                    // Increased floor to 0.4 for guaranteed visibility
+                    const alpha = Math.max(0.4, Math.min(0.9, Math.sqrt(normalized)));
+
+                    if (alpha > 0.05) {
+                        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                        ctx.fillRect(ix, iy, 1, 1);
+                    } else {
+                        // Ensure we don't leave artifacts if reusing canvas (though clearRect handles this globaly)
+                    }
+                }
             }
         }
 
-        const texture = new THREE.CanvasTexture(canvas);
-        if ((mesh.material as THREE.MeshBasicMaterial).map) (mesh.material as THREE.MeshBasicMaterial).map?.dispose();
-        (mesh.material as THREE.MeshBasicMaterial).map = texture;
-        (mesh.material as THREE.MeshBasicMaterial).needsUpdate = true;
+        // Texture reuse management
+        // Reuse cacheKey from earlier
+        let texture = this.heatmapTextures.get(cacheKey);
+
+        if (texture) {
+            // Important: Mark existing texture as needing update since underlying canvas changed
+            texture.needsUpdate = true;
+        } else {
+            texture = new THREE.CanvasTexture(canvas);
+            this.heatmapTextures.set(cacheKey, texture);
+        }
+
+        // CRITICAL FIX: Map world-space UVs (from ShapeGeometry) to 0..1 texture space
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(1 / rw, 1 / rh);
+        texture.offset.set(-minX / rw, -minY / rh);
+
+
+        if ((mesh.material as THREE.MeshBasicMaterial).map !== texture) {
+            (mesh.material as THREE.MeshBasicMaterial).map = texture;
+            (mesh.material as THREE.MeshBasicMaterial).needsUpdate = true;
+        }
     }
 
     private renderVectorLayer(layer: Layer): void {
-        remoteLog(`renderVectorLayer ENTRY for layer: ${layer.id}`, 'debug', '🔍 DEEP-TRACE');
-
-        // Log viewport state at render time
-        const editor = (this.scene.userData.editor as any);
-        if (editor && editor.cameraSystem && layer.id === 'lighting') {
-            editor.cameraSystem.logViewportDebug(`During renderVectorLayer(${layer.id})`);
-        }
-
         const content = layer.content as VectorLayerContent;
         if (!content) {
-            remoteLog(`Layer ${layer.id} has no content, returning early`, 'debug', '🔍 DEEP-TRACE');
             return;
         }
-
-        remoteLog(`Layer ${layer.id} - content.symbols length: ${(content.symbols || []).length}`, 'debug', '🔍 DEEP-TRACE');
 
         const activeItemIds = new Set<string>();
         const selectedIds = new Set(this.scene.userData.editor?.selectionSystem.getSelectedIds() || []);
@@ -621,12 +721,17 @@ export class LayerSystem {
                         transparent: true,
                         opacity: 0.8,
                         side: THREE.DoubleSide,
-                        depthWrite: false
+                        depthWrite: false,
+                        polygonOffset: true,
+                        polygonOffsetFactor: -4, // Pushes it towards camera
+                        polygonOffsetUnits: -4,
+                        color: 0xffffff
                     });
                     const heatmap = new THREE.Mesh(heatmapGeo, heatmapMat);
                     heatmap.name = 'intensity-heatmap';
-                    heatmap.position.z = 0.02; // Above room fill
+                    heatmap.position.z = 0.05; // SIGNIFICANTLY above room fill to prevent z-fighting
                     heatmap.visible = false;
+                    console.log(`[LayerSystem] Created heatmap mesh for room: ${roomName}`);
                     group.add(heatmap);
 
                     // --- NEW: Stencil Mask for Clipping ---

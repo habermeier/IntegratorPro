@@ -161,6 +161,22 @@ export const FloorPlanRenderer: React.FC = () => {
     useEffect(() => {
         if (editor) {
             editor.setZoomCursorRef(zoomCursorRef);
+
+            // AUTO-DEBUG: Enable Lighting Intensity Mode if requested via URL
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('debug') && params.get('debug') === 'lighting' || params.has('test')) {
+                console.log('🔦 Debug Mode Detected: Switching to Lighting Intensity Mode');
+                // Small delay to ensure layers are loaded
+                setTimeout(() => {
+                    const layerSystem = (editor as any).layerSystem; // Access via any for now or public getter if available
+                    if (layerSystem && layerSystem.setLightingMode) {
+                        layerSystem.setLightingMode('intensity');
+                        // Force a re-render/update
+                        layerSystem.markDirty('lighting');
+                        layerSystem.markDirty('room');
+                    }
+                }, 500);
+            }
         }
     }, [editor]);
 
@@ -432,6 +448,7 @@ export const FloorPlanRenderer: React.FC = () => {
                         measurement={measurement}
                         unitPreference={unitPreference}
                         contextRoom={contextRoom}
+                        layers={layers}
                     />
 
                     {/* 📏 Dynamic Scale Ruler */}

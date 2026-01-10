@@ -200,7 +200,15 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
         if (!editingDevice || !editor) return;
         const symbolDef = SYMBOL_LIBRARY[newTypeId] as any;
         const updates: any = { deviceTypeId: newTypeId };
-        if (symbolDef?.productId) updates.productId = symbolDef.productId;
+
+        // Only update Product ID if the new symbol specifies a NON-GENERIC product
+        // This prevents specific hardware (e.g. HE Williams) from being reset to 'generic-light' 
+        // just because we switched to a new symbol style (e.g. 2ds-l12)
+        const genericIds = ['generic-product', 'generic-light', 'generic-switch'];
+        if (symbolDef?.productId && !genericIds.includes(symbolDef.productId)) {
+            updates.productId = symbolDef.productId;
+        }
+
         if (updateDevice(editingDevice.id, updates)) {
             editor.emit('layers-changed', editor.layerSystem.getAllLayers());
         }

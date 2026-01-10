@@ -27,28 +27,33 @@ export function calculatePointIntensity(
         const metadata = fixture.metadata || {};
         const lumens = (metadata as any).lumens || DEFAULT_LUMENS;
         const beamAngle = (metadata as any).beamAngle || 60;
-        const height = fixture.installationHeight || 2.74; // Distance fixture-to-floor
+        const height = fixture.installationHeight || 2.74; // Distance fixture-to-floor (m)
 
         const dx = (point.x - fixture.x) / pixelsPerMeter;
         const dy = (point.y - fixture.y) / pixelsPerMeter;
         const dist2D = Math.sqrt(dx * dx + dy * dy);
 
-        // Inverse Square Law + Beam Angle Falloff
-        // simplified: Lux = (Lumens / Area) * falloff
-        // Area of circle at height h: PI * (h * tan(theta/2))^2
+        // Physics-based model:
+        // 1. Calculate Center Luminous Intensity (Candelas)
         const halfBeamRad = (beamAngle / 2) * (Math.PI / 180);
-        const radiusAtFloor = height * Math.tan(halfBeamRad);
+        const omega = 2 * Math.PI * (1 - Math.cos(halfBeamRad));
+        const I0 = lumens / (omega || 1); // Candelas at center
 
-        if (dist2D <= radiusAtFloor * 1.5) { // Allow for some bleed/soft edge
-            const r = Math.sqrt(dist2D * dist2D + height * height); // Distance to source
+        // 2. Inverse Square Law on plane: E = (I * cos(theta)) / r^2
+        // r = direct distance to source, theta = angle from normal
+        const r2 = dist2D * dist2D + height * height;
+        const r = Math.sqrt(r2);
+        const cosTheta = height / r;
 
-            // Basic lux at height r: L / (4 * PI * r^2) - but this is for isotropic
-            // For directional fixtures, we use more empirical scaling
-            // E = (I * cos(alpha)) / r^2 
-            // We'll use a pragmatic approximation for design visualization:
-            const falloff = Math.max(0, Math.cos((dist2D / (radiusAtFloor * 1.5)) * (Math.PI / 2)));
-            const lux = (lumens / (Math.PI * radiusAtFloor * radiusAtFloor)) * falloff;
+        // 3. Beam Profile: Smooth Gaussian falloff
+        // Standard definition of beam angle is the angle where intensity is 50% (half-power).
+        // This Gaussian hits exactly 0.5 at relativeAngle = 1.0.
+        const angle = Math.atan2(dist2D, height);
+        const relativeAngle = angle / halfBeamRad;
+        const falloff = Math.exp(-0.693147 * Math.pow(relativeAngle, 2));
 
+        if (falloff > 0.001) {
+            const lux = (I0 * cosTheta / r2) * falloff;
             totalLux += lux;
         }
     }
@@ -58,53 +63,66 @@ export function calculatePointIntensity(
 
 export function calculateRoomLightingStats(
     room: Room,
-    fixturesInTotal: PlacedSymbol[], // Pass all fixtures for bleed or filter inside?
+    fixturesInTotal: PlacedSymbol[],
     pixelsPerMeter: number
 ): LightIntensityStats {
-    // Filter fixtures: Include those with explicit room assignment OR physically inside the room
-    // Also filter to only lighting fixtures (category === 'lighting')
+    // Determine room bounding box for efficient nearby fixture filtering (Bleed)
+    const roomPoints = room.points;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    roomPoints.forEach(p => {
+        minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
+        maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y);
+    });
+
+    // 10-meter bleed threshold for light contribution from outside the room
+    const bleed = 10 * pixelsPerMeter;
+
+    // Robust Filter: Include those assigned via ID, name, or physical proximity (Bleed)
     const fixturesInRoom = fixturesInTotal.filter(f => {
-        // Only consider lighting fixtures
         if (f.category !== 'lighting') return false;
 
-        // Include if explicitly assigned to this room
-        if (f.room === room.id || f.room === `${room.name} ${room.roomType}`) return true;
+        // 1. Exact ID match
+        if (f.room === room.id) return true;
 
-        // Include if physically inside the room (even without explicit assignment)
-        return isPointInPolygon({ x: f.x, y: f.y }, room.points);
+        // 2. Soft name match (case-insensitive)
+        if (f.room && typeof f.room === 'string') {
+            const roomMatchName = `${room.name} ${room.roomType}`.toLowerCase().trim();
+            const fRoom = f.room.toLowerCase().trim();
+            if (fRoom === roomMatchName || fRoom === room.name.toLowerCase().trim()) return true;
+        }
+
+        // 3. Physical proximity (Bleed fallback)
+        return (f.x >= minX - bleed && f.x <= maxX + bleed &&
+            f.y >= minY - bleed && f.y <= maxY + bleed);
     });
 
     if (fixturesInRoom.length === 0) {
         return { min: 0, max: 0, mean: 0 };
     }
 
-    // Sampling grid
-    const points: Vector2[] = [];
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    room.points.forEach(p => {
-        minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
-        maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y);
-    });
-
-    // Strategy: adaptive step based on room size for performance
+    // Sampling grid strategy: Adaptive step based on room size for balance of speed/accuracy
+    const samplePoints: Vector2[] = [];
     const roomWidth = maxX - minX;
-    const step = Math.max(10, Math.min(40, roomWidth / 20));
+    const roomHeight = maxY - minY;
+
+    // Step size in pixels, aiming for ~0.4m resolution capped for performance
+    const step = Math.max(12, Math.min(48, Math.min(roomWidth, roomHeight) / 20));
 
     for (let x = minX; x <= maxX; x += step) {
         for (let y = minY; y <= maxY; y += step) {
             if (isPointInPolygon({ x, y }, room.points)) {
-                points.push({ x, y });
+                samplePoints.push({ x, y });
             }
         }
     }
 
-    if (points.length === 0) return { min: 0, max: 0, mean: 0 };
+    if (samplePoints.length === 0) return { min: 0, max: 0, mean: 0 };
 
     let sum = 0;
     let min = Infinity;
     let max = -Infinity;
 
-    points.forEach(p => {
+    samplePoints.forEach(p => {
         const I = calculatePointIntensity(p, fixturesInRoom, pixelsPerMeter);
         sum += I;
         min = Math.min(min, I);
@@ -114,6 +132,6 @@ export function calculateRoomLightingStats(
     return {
         min: Math.round(min),
         max: Math.round(max),
-        mean: Math.round(sum / points.length)
+        mean: Math.round(sum / samplePoints.length)
     };
 }
