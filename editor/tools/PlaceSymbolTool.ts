@@ -279,25 +279,60 @@ export class PlaceSymbolTool implements Tool {
     }
 
     public onKeyDown(key: string, event: KeyboardEvent): void {
+        const lowerKey = key.toLowerCase();
+
+        // 1. Check for Selection Rotation first (Smart override)
+        // If we have selected items (e.g. user clicked an existing device), 'R' should rotate THEM, not the preview.
+        const selectedIds = this.editor.selectionSystem.getSelectedIds();
+        if (selectedIds.length > 0 && lowerKey === 'r') {
+            remoteDebug('[PlaceSymbolTool] Rotating Selection instead of Preview', 'PlaceSymbolTool', { count: selectedIds.length });
+
+            const rotationAmount = event.shiftKey ? -1 : 45;
+            const layers = this.editor.layerSystem.getAllLayers();
+            let changed = false;
+
+            selectedIds.forEach(id => {
+                for (const layer of layers) {
+                    if (layer.type !== 'vector') continue;
+                    const content = layer.content as VectorLayerContent;
+                    const symbol = (content.symbols || []).find(s => s.id === id);
+
+                    if (symbol) {
+                        symbol.rotation = (symbol.rotation + rotationAmount) % 360;
+                        this.editor.layerSystem.markDirty(layer.id);
+                        changed = true;
+                    }
+                }
+            });
+
+            if (changed) {
+                this.editor.setDirty();
+                this.editor.emit('layers-changed', this.editor.layerSystem.getAllLayers());
+                this.editor.emit('selection-changed', selectedIds);
+            }
+            return; // Important: Don't rotate preview if rotating selection
+        }
+
         if (!this.symbolType) return;
 
         const step = event.shiftKey ? 1 : 45;
 
-        if (key.toLowerCase() === 'r') {
+        if (lowerKey === 'r') {
+            remoteDebug('Rotating Symbol Preview', 'PlaceSymbolTool', { step, current: this.currentRotation });
             if (event.shiftKey) {
-                this.currentRotation -= 45;
+                this.currentRotation -= step;
             } else {
-                this.currentRotation += 45;
+                this.currentRotation += step;
             }
             this.updatePreviewTransform();
         }
 
         if (event.shiftKey) {
-            if (key === 'ArrowLeft') {
+            if (lowerKey === 'arrowleft') {
                 this.currentRotation -= 1;
                 this.updatePreviewTransform();
             }
-            if (key === 'ArrowRight') {
+            if (lowerKey === 'arrowright') {
                 this.currentRotation += 1;
                 this.updatePreviewTransform();
             }

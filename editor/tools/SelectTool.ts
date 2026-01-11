@@ -121,7 +121,46 @@ export class SelectTool implements Tool {
     }
 
     public onKeyDown(key: string, event: KeyboardEvent): void {
-        if (key === 'Escape') {
+        const lowerKey = key.toLowerCase();
+
+        if (lowerKey === 'r') {
+            const selectedIds = this.editor.selectionSystem.getSelectedIds();
+            remoteDebug('[SelectTool] R pressed', 'SelectTool', { selectedCount: selectedIds.length });
+
+            if (selectedIds.length === 0) return;
+
+            const step = event.shiftKey ? -1 : 45;
+            const rotationAmount = event.shiftKey ? -1 : 45;
+
+            // TODO: Use a proper Command for Undo support
+            // For now, direct manipulation to unblock user
+            const layers = this.editor.layerSystem.getAllLayers();
+            let changed = false;
+
+            selectedIds.forEach(id => {
+                for (const layer of layers) {
+                    if (layer.type !== 'vector') continue;
+                    const content = layer.content as VectorLayerContent;
+                    const symbol = (content.symbols || []).find(s => s.id === id);
+
+                    if (symbol) {
+                        const oldRot = symbol.rotation;
+                        symbol.rotation = (symbol.rotation + rotationAmount) % 360;
+                        remoteDebug('[SelectTool] Rotating symbol', 'SelectTool', { id, oldRot, newRot: symbol.rotation });
+                        this.editor.layerSystem.markDirty(layer.id);
+                        changed = true;
+                    }
+                }
+            });
+
+            if (changed) {
+                this.editor.setDirty();
+                this.editor.emit('layers-changed', this.editor.layerSystem.getAllLayers());
+                // Emit selection change to force property panel update if needed
+                this.editor.emit('selection-changed', selectedIds);
+            }
+
+        } else if (key === 'Escape') {
             this.editor.selectionSystem.clearSelection();
             this.editor.emit('selection-changed', []);
             this.updateHandles();

@@ -7,7 +7,7 @@ import { SYMBOL_CATEGORIES, SYMBOL_LIBRARY, SymbolDefinition } from '../../edito
 import { ToolType, Room, PlacedSymbol } from '../../editor/models/types';
 import { dataService } from '../../src/services/DataService';
 import { deviceRegistry } from '../../src/services/DeviceRegistry';
-import { calculateRoomArea } from '../../utils/spatialUtils';
+import { calculateRoomArea, getOrientedBoundingBox } from '../../utils/spatialUtils';
 import { calculateRoomLightingStats } from '../../src/utils/lightModeling';
 import { getRecommendedLux } from '../../src/constants/lightingTargets';
 
@@ -33,18 +33,7 @@ const LivePlacementStats = ({ room, devices, pixelsPerMeter }: { room: Room, dev
     const stats = React.useMemo(() => {
         const mappedDevices = devices.map(d => ({
             id: d.id,
-            type: d.deviceTypeId,
-            category: d.layerId,
-            x: d.position.x,
-            y: d.position.y,
-            rotation: d.rotation,
-            scale: 1,
-            room: d.roomId || undefined,
-            productId: d.productId,
-            installationHeight: d.installationHeight,
-            busAssignment: d.busAssignment || undefined,
-            metadata: d.metadata,
-            createdAt: new Date(d.createdAt).toISOString()
+            type: d.deviceTypeId
         })) as PlacedSymbol[];
         return calculateRoomLightingStats(room, mappedDevices, pixelsPerMeter);
     }, [room, devices, pixelsPerMeter]);

@@ -503,3 +503,69 @@ export function debounce<T extends (...args: any[]) => any>(
         }, wait);
     };
 }
+
+/**
+ * Calculates the Oriented Bounding Box (OBB) for a polygon.
+ * Used to determine if a shape is roughly rectangular and to get its "width x depth".
+ * Uses the Rotating Calipers approach (checking each edge as a potential axis).
+ */
+export function getOrientedBoundingBox(points: Vector2[]): { width: number, length: number, area: number, rectangularity: number } {
+    if (points.length < 3) return { width: 0, length: 0, area: 0, rectangularity: 0 };
+
+    const polygonArea = calculatePolygonArea(points);
+    let minDiff = Infinity; // Diff between OBB area and Polygon Area
+    let bestBox = { width: 0, length: 0, area: Infinity };
+
+    // Simply check alignment with each edge
+    for (let i = 0; i < points.length; i++) {
+        const p1 = points[i];
+        const p2 = points[(i + 1) % points.length];
+
+        // Edge vector (normalized)
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        if (len === 0) continue;
+
+        const ux = dx / len;
+        const uy = dy / len;
+        // Perpendicular vector
+        const vx = -uy;
+        const vy = ux;
+
+        let minU = Infinity, maxU = -Infinity;
+        let minV = Infinity, maxV = -Infinity;
+
+        // Project all points onto these axes
+        for (const p of points) {
+            const u = p.x * ux + p.y * uy;
+            const v = p.x * vx + p.y * vy;
+
+            minU = Math.min(minU, u);
+            maxU = Math.max(maxU, u);
+            minV = Math.min(minV, v);
+            maxV = Math.max(maxV, v);
+        }
+
+        const width = maxU - minU;
+        const length = maxV - minV;
+        const area = width * length;
+        const diff = area - polygonArea; // OBB Area is always >= Polygon Area
+
+        if (diff < minDiff) {
+            minDiff = diff;
+            bestBox = { width, length, area };
+        }
+    }
+
+    // Rectangularity: Ratio of Polygon Area to OBB Area (0.0 to 1.0)
+    // 1.0 = Perfect Rectangle
+    const rectangularity = bestBox.area > 0 ? polygonArea / bestBox.area : 0;
+
+    return {
+        width: bestBox.width,
+        length: bestBox.length,
+        area: bestBox.area,
+        rectangularity
+    };
+}

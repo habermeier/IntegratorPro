@@ -6,6 +6,15 @@ interface HEWilliams2DSBuilderProps {
     deviceId?: string;
 }
 
+// Lumen Mapping (AUTO-SPEC-SYSTEM-P26)
+const LUMEN_MAP: Record<string, number> = {
+    'L5': 500,
+    'L7': 700,
+    'L9': 900,
+    'L12': 1200,
+    'L15': 1500
+};
+
 export interface HEWilliams2DSSpec {
     orderingCode: string;
     shorthand: string;
@@ -24,6 +33,8 @@ export interface HEWilliams2DSSpec {
     specTrimType: string;
     specTrimOptions: string;
     specBracket: string;
+    // Calculated Properties
+    lumens: number;
 }
 
 export const HEWilliams2DSBuilder: React.FC<HEWilliams2DSBuilderProps> = ({ initialMetadata, onChange, deviceId }) => {
@@ -113,7 +124,9 @@ export const HEWilliams2DSBuilder: React.FC<HEWilliams2DSBuilderProps> = ({ init
                 specVoltage,
                 specTrimType,
                 specTrimOptions,
-                specBracket
+                specBracket,
+                // Calculated Metadata
+                lumens: LUMEN_MAP[specLumens] || 800
             });
         }
     }, [specLumens, specColor, specMountingType, specDriver, specDistribution, specFlange,

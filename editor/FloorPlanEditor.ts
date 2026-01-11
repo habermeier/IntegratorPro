@@ -249,7 +249,7 @@ export class FloorPlanEditor {
 
         // System-level toggles/history (Skip repeats to avoid rapid-fire noise)
         // Except for Undo/Redo which can be held
-        const repeatableKeys = ['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'z', 'y'];
+        const repeatableKeys = ['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'z', 'y', 'r'];
         const isRepeatable = repeatableKeys.includes(e.key.toLowerCase());
 
         if (e.repeat && !isRepeatable) {
@@ -347,7 +347,27 @@ export class FloorPlanEditor {
         if (!e.ctrlKey && !e.metaKey && !e.altKey) {
             switch (key) {
                 case 'v': this.setActiveTool('select'); break;
-                case 'r': this.setActiveTool('draw-room'); break;
+                case 'r': {
+                    const activeType = this.toolSystem.getActiveToolType();
+                    const hasSelection = this.selectionSystem.getSelectedIds().length > 0;
+                    const isPlacing = activeType === 'place-symbol';
+                    const isSelecting = activeType === 'select' && hasSelection;
+
+                    remoteDebug('[KEY] Pressed R', 'FloorPlanEditor', { activeType, hasSelection, isPlacing, isSelecting });
+
+                    // Priority:
+                    // 1. Placing a symbol -> 'r' rotates it
+                    // 2. Selecting a symbol -> 'r' rotates it (if selection exists)
+                    // 3. Otherwise -> Switch to Room Tool
+
+                    if (!isPlacing && !isSelecting) {
+                        remoteDebug('[KEY] Switching to Room Tool', 'FloorPlanEditor');
+                        this.setActiveTool('draw-room');
+                    } else {
+                        remoteDebug('[KEY] Skipping tool switch (Pass-through)', 'FloorPlanEditor');
+                    }
+                    break;
+                }
                 case 'm': this.setActiveTool('draw-mask'); break;
                 case 'p':
                     this.setActiveLayer('lighting', true);

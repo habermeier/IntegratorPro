@@ -12,6 +12,7 @@ import { ToolType, Room, PlacedSymbol, VectorLayerContent } from '../../editor/m
 import { formatDistance } from '../../utils/measurementUtils';
 import { Lightbulb, Target, Zap, TrendingUp } from 'lucide-react';
 import { calculateRoomLightingStats } from '../../src/utils/lightModeling';
+import { calculateRoomArea, getOrientedBoundingBox } from '../../utils/spatialUtils';
 import { getRecommendedLux } from '../../src/constants/lightingTargets';
 import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
 
@@ -45,7 +46,22 @@ export const EditorOverlays: React.FC<EditorOverlaysProps> = ({
     const target = contextRoom.targetLux || getRecommendedLux(contextRoom.roomType);
     const performance = Math.round((stats.mean / target) * 100);
 
-    return { ...stats, target, performance };
+    // Spatial Stats
+    const spatial = (() => {
+      if (!contextRoom.points || contextRoom.points.length < 3) return null;
+      const area = calculateRoomArea(contextRoom.points, editor.pixelsMeter);
+      const obb = getOrientedBoundingBox(contextRoom.points);
+      const isRectangular = obb.rectangularity > 0.85;
+      const widthFt = (obb.width / editor.pixelsMeter) * 3.28084;
+      const lengthFt = (obb.length / editor.pixelsMeter) * 3.28084;
+
+      return {
+        areaFt: Math.round(area.feet),
+        dims: isRectangular ? `${Math.round(widthFt)}' x ${Math.round(lengthFt)}'` : null
+      };
+    })();
+
+    return { ...stats, target, performance, spatial };
   }, [contextRoom, editor, layers]); // Added layers to dependencies
 
   // Only show HUD during placement mode or when actively hovering
@@ -113,37 +129,64 @@ export const EditorOverlays: React.FC<EditorOverlaysProps> = ({
                   <span className={`text-lg font-mono font-black ${lightingStats.performance < 90 ? 'text-amber-400' : 'text-emerald-400'}`}>
                     {lightingStats.mean}
                   </span>
-                  <span className="text-[8px] text-slate-500 font-bold">LUX</span>
+                  <span className="text-[8px] text-slate-400 font-bold">LUX</span>
                 </div>
               </div>
 
-              {/* Target Match */}
+              {/* Target / Goal (Explicit) */}
               <div className="flex items-center justify-between">
-                <span className="text-[9px] text-slate-300 font-bold uppercase">Target</span>
-                <span className={`text-xs font-black font-mono ${lightingStats.performance < 90 ? 'text-amber-400' : 'text-emerald-400'}`}>
-                  {lightingStats.performance}%
-                </span>
+                <span className="text-[9px] text-slate-300 font-bold uppercase">Goal</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-sm font-mono font-bold text-slate-200">
+                    {lightingStats.target}
+                  </span>
+                  <span className="text-[8px] text-slate-400 font-bold">LUX</span>
+                </div>
               </div>
 
-              {/* Progress Bar */}
-              <div className="relative h-1 w-full bg-slate-800 rounded-full overflow-hidden">
-                <div
-                  className={`absolute inset-0 transition-all duration-700 ${lightingStats.performance < 90 ? 'bg-amber-500' : 'bg-emerald-500'}`}
-                  style={{ width: `${Math.min(100, lightingStats.performance)}%` }}
-                />
+              {/* Progress Bar & Percentage */}
+              <div className="pt-1">
+                <div className="flex justify-between items-end mb-1">
+                  <span className="text-[8px] text-slate-400 font-bold uppercase">Achievement</span>
+                  <span className={`text-[10px] font-black font-mono ${lightingStats.performance < 90 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                    {lightingStats.performance}%
+                  </span>
+                </div>
+                <div className="relative h-1.5 w-full bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                  <div
+                    className={`absolute inset-0 transition-all duration-700 ${lightingStats.performance < 90 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                    style={{ width: `${Math.min(100, lightingStats.performance)}%` }}
+                  />
+                </div>
               </div>
 
-              {/* Range */}
-              <div className="flex items-center justify-between pt-1">
+              {/* Range - High Contrast */}
+              <div className="flex items-center justify-between pt-2 border-t border-slate-800">
                 <div className="flex flex-col">
-                  <span className="text-[7px] text-slate-500 uppercase">Min</span>
-                  <span className="text-[10px] font-mono text-slate-300 font-bold">{lightingStats.min}</span>
+                  <span className="text-[7px] text-slate-400 uppercase font-bold">Min</span>
+                  <span className="text-[10px] font-mono text-slate-200 font-bold">{lightingStats.min}</span>
                 </div>
                 <div className="flex flex-col items-end">
-                  <span className="text-[7px] text-slate-500 uppercase">Max</span>
-                  <span className="text-[10px] font-mono text-slate-300 font-bold">{lightingStats.max}</span>
+                  <span className="text-[7px] text-slate-400 uppercase font-bold">Max</span>
+                  <span className="text-[10px] font-mono text-slate-200 font-bold">{lightingStats.max}</span>
                 </div>
               </div>
+
+              {/* Spatial Stats - High Contrast */}
+              {lightingStats.spatial && (
+                <div className="flex justify-between items-center pt-2 mt-2 border-t border-slate-800">
+                  <div className="flex flex-col">
+                    <span className="text-[7px] text-slate-400 uppercase font-bold">Area</span>
+                    <span className="text-[10px] font-mono text-slate-200 font-bold">{lightingStats.spatial.areaFt} sq ft</span>
+                  </div>
+                  {lightingStats.spatial.dims && (
+                    <div className="flex flex-col items-end">
+                      <span className="text-[7px] text-slate-400 uppercase font-bold">Dims</span>
+                      <span className="text-[10px] font-mono text-emerald-300 font-bold">{lightingStats.spatial.dims}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
