@@ -1,11 +1,11 @@
 {
   "version": "1.0",
-  "timestamp": "2026-01-10T22:10:37.642Z",
+  "timestamp": "2026-01-11T17:52:24.831Z",
   "metadata": {
     "name": "270 Boll Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2026-01-10T22:10:37.517Z"
+    "modified": "2026-01-11T17:52:24.825Z"
   },
   "floorPlan": {
     "scale": {
@@ -4158,13 +4158,13 @@
       "createdAt": 1768082820458
     },
     {
-      "id": "lighting-1768082944509",
-      "deviceTypeId": "custom-recessed-light---2ds-l12-1768083035063",
+      "id": "lighting-1768153942455",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
       "productId": "generic-product",
-      "name": "Recessed Light - 2DS-L12",
+      "name": "custom-2ds-l9-1767158007452 ligh",
       "position": {
-        "x": 313.68438193267633,
-        "y": 837.2336733791152
+        "x": 312.0891421517307,
+        "y": 839.1737708783658
       },
       "rotation": 0,
       "roomId": "Family Room Open Area",
@@ -4197,7 +4197,7 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768082944509
+      "createdAt": 1768153942455
     }
   ],
   "cables": [],
@@ -4239,37 +4239,6 @@
         "specTrimOptions": "NONE",
         "specBracket": "F1"
       }
-    },
-    {
-      "id": "custom-recessed-light---2ds-l12-1768083035063",
-      "name": "Recessed Light - 2DS-L12",
-      "category": "lighting",
-      "description": "Recessed Light Preset - Shorthand: 2DS-L9. Product: light-fix-dali, Bus: Bus 1, Cable: Cat6",
-      "color": 0,
-      "size": {
-        "width": 16,
-        "height": 16
-      },
-      "metadata": {
-        "orderingCode": "2DS - L12/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
-        "shorthand": "Recessed Light - 2DS-L12",
-        "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
-        "shoppingLink": "",
-        "specLumens": "L12",
-        "specColor": "9TW",
-        "specMountingType": "N",
-        "specDriver": "LD2",
-        "specDistribution": "W",
-        "specFlange": "ZF",
-        "specReflectorFinish": "WH",
-        "specOptions": "NONE",
-        "specControl": "STD",
-        "specVoltage": "UNV",
-        "specTrimType": "R",
-        "specTrimOptions": "NONE",
-        "specBracket": "F1"
-      },
-      "productId": "generic-product"
     }
   ]
 }

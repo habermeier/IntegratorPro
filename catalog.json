@@ -14,7 +14,7 @@
     },
     {
         "id": "2DS-L9",
-        "name": "HE Williams 2DS",
+        "name": "2DS Downlight",
         "manufacturer": "HE Williams",
         "description": "2\" Downlight",
         "type": "LIGHTING",
@@ -295,7 +295,7 @@
     },
     {
         "id": "light-fix-dali",
-        "name": "HE Williams 2DS Square Downlight",
+        "name": "2DS Square Downlight",
         "manufacturer": "HE Williams",
         "description": "2\" Square Architectural Downlight - Configurable DALI-2 with Tunable White",
         "type": "LIGHTING",
@@ -359,7 +359,7 @@
     },
     {
         "id": "light-adj-dali",
-        "name": "HE Williams 2AS Adjustable",
+        "name": "2AS Adjustable",
         "manufacturer": "HE Williams",
         "description": "2\" Tunable White Mud-in Adjustable Trimless (DALI-2)",
         "type": "LIGHTING",

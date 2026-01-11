@@ -201,12 +201,24 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
         const symbolDef = SYMBOL_LIBRARY[newTypeId] as any;
         const updates: any = { deviceTypeId: newTypeId };
 
-        // Only update Product ID if the new symbol specifies a NON-GENERIC product
-        // This prevents specific hardware (e.g. HE Williams) from being reset to 'generic-light' 
-        // just because we switched to a new symbol style (e.g. 2ds-l12)
-        const genericIds = ['generic-product', 'generic-light', 'generic-switch'];
-        if (symbolDef?.productId && !genericIds.includes(symbolDef.productId)) {
-            updates.productId = symbolDef.productId;
+        // AUTO-SPEC-SYSTEM-P27: Preserve Product ID Logic
+        // When changing symbol style (e.g. 2DS-L9 -> 2DS-L12), we must NOT overwrite 
+        // a specific product (e.g. HE Williams) with a generic one from the new symbol definition.
+
+        const proposedProductId = symbolDef?.productId;
+        const currentProductId = editingDevice.productId;
+
+        // Define what constitutes a "Generic" product that should never overwrite a specific one
+        const isGeneric = (id: string | undefined) => {
+            return !id || ['generic-product', 'generic-light', 'generic-switch'].includes(id);
+        };
+
+        // Only apply the symbol's product ID if:
+        // 1. The new symbol explicitly has one
+        // 2. AND the proposed product is NOT generic
+        // 3. OR the current product IS generic (upgrading from generic to specific or generic to generic)
+        if (proposedProductId && (!isGeneric(proposedProductId) || isGeneric(currentProductId))) {
+            updates.productId = proposedProductId;
         }
 
         if (updateDevice(editingDevice.id, updates)) {
@@ -261,7 +273,12 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                 defaultName: defaultName,
                 onConfirm: async (name) => {
                     // Robustly resolve Product ID from formData (user dropdown) or metadata
-                    const effectiveProductId = formData.productId || editingDevice.metadata?.productId || editingDevice.productId || 'generic-product';
+                    // AUTO-SPEC-SYSTEM-P27: Fix Cloning Bug where 2DS lost its specific product ID
+                    // Prioritize specific ID from metadata (spec builder output) > existing device ID > form data > generic
+                    const effectiveProductId =
+                        (draftMetadata?.productId && draftMetadata.productId !== 'generic-product') ? draftMetadata.productId :
+                            (editingDevice.productId && editingDevice.productId !== 'generic-product') ? editingDevice.productId :
+                                formData.productId || 'generic-product';
 
                     try {
                         const newType: SymbolDefinition = {

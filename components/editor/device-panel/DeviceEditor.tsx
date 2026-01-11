@@ -41,10 +41,17 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
     // 2. Symbol Definition (Source of Truth for Custom Types)
     // 3. Metadata (Legacy/Instance specific)
     // 4. Instance ID
+    // Resolve product more robustly:
+    // 1. User manual selection (formData)
+    // 2. Instance ID (if specific) - CRITICAL: Must override generic symbol defaults
+    // 3. Metadata (Legacy/Instance specific)
+    // 4. Symbol Definition (if specific)
+    // 5. Fallback to whatever is available
     const effectiveProductId =
         (formData.productId && formData.productId !== 'generic-product' ? formData.productId : null) ||
-        (editingDevice.deviceTypeId && SYMBOL_LIBRARY[editingDevice.deviceTypeId]?.productId) ||
+        (editingDevice.productId && editingDevice.productId !== 'generic-product' && editingDevice.productId !== 'generic-light' ? editingDevice.productId : null) ||
         (editingDevice.metadata?.productId && editingDevice.metadata.productId !== 'generic-product' ? editingDevice.metadata.productId : null) ||
+        (editingDevice.deviceTypeId && SYMBOL_LIBRARY[editingDevice.deviceTypeId]?.productId && SYMBOL_LIBRARY[editingDevice.deviceTypeId]?.productId !== 'generic-product' && SYMBOL_LIBRARY[editingDevice.deviceTypeId]?.productId !== 'generic-light' ? SYMBOL_LIBRARY[editingDevice.deviceTypeId].productId : null) ||
         editingDevice.productId;
 
     const product = catalog.find(p => p.id === effectiveProductId);
