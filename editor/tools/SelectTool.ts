@@ -160,6 +160,58 @@ export class SelectTool implements Tool {
                 this.editor.emit('selection-changed', selectedIds);
             }
 
+        } else if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(lowerKey)) {
+            remoteDebug('[SelectTool] Arrow Key Pressed', 'SelectTool', { key: lowerKey });
+            const selectedIds = this.editor.selectionSystem.getSelectedIds();
+            if (selectedIds.length === 0) return;
+
+            // standard = 1 unit (pixel), shift = 10 units
+            const step = event.shiftKey ? 10 : 1;
+            let dx = 0;
+            let dy = 0;
+
+            if (lowerKey === 'arrowup') dy = step; // Y is up in this world space? 
+            // FloorPlanEditor lines 336: y + step for Up. So Y increases Up.
+            if (lowerKey === 'arrowdown') dy = -step;
+            if (lowerKey === 'arrowleft') dx = -step;
+            if (lowerKey === 'arrowright') dx = step;
+
+            const layers = this.editor.layerSystem.getAllLayers();
+            let changed = false;
+
+            selectedIds.forEach(id => {
+                for (const layer of layers) {
+                    if (layer.type !== 'vector') continue;
+                    const content = layer.content as VectorLayerContent;
+
+                    // Try to find symbol
+                    const symbol = (content.symbols || []).find(s => s.id === id);
+                    if (symbol) {
+                        symbol.x += dx;
+                        symbol.y += dy;
+                        this.editor.layerSystem.markDirty(layer.id);
+                        changed = true;
+                        continue;
+                    }
+
+                    // Try to find furniture
+                    const furniture = (content.furniture || []).find(f => f.id === id);
+                    if (furniture) {
+                        furniture.x += dx;
+                        furniture.y += dy;
+                        this.editor.layerSystem.markDirty(layer.id);
+                        changed = true;
+                        continue;
+                    }
+                }
+            });
+
+            if (changed) {
+                this.editor.setDirty();
+                this.editor.emit('layers-changed', this.editor.layerSystem.getAllLayers());
+                // Maybe emit selection update? Not strictly needed for position unless property panel shows coords live
+            }
+
         } else if (key === 'Escape') {
             this.editor.selectionSystem.clearSelection();
             this.editor.emit('selection-changed', []);

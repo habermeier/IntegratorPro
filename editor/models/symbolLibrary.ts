@@ -81,6 +81,57 @@ export const createUniversalMesh = (width?: number, height?: number): THREE.Grou
     return group;
 };
 
+/**
+ * Ceiling Fan Mesh Creator: Central hub with 3 aerodynamic blades
+ * Scaled larger than standard lighting fixtures.
+ */
+export const createCeilingFanMesh = (width?: number, height?: number): THREE.Group => {
+    const w = width || 48; // 3x standard 16px
+    const h = height || 48;
+    const group = new THREE.Group();
+    const blackMat = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide });
+    const whiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+
+    // 1. Central Hub
+    const hubRadius = w / 8;
+    const hubHaloGeo = new THREE.CircleGeometry(hubRadius + 1.5, 32);
+    const hubHalo = new THREE.Mesh(hubHaloGeo, whiteMat);
+    hubHalo.position.z = 0.01;
+    group.add(hubHalo);
+
+    const hubGeo = new THREE.CircleGeometry(hubRadius, 32);
+    const hub = new THREE.Mesh(hubGeo, blackMat);
+    hub.position.z = 0.05;
+    group.add(hub);
+
+    // 2. Three Blades
+    for (let i = 0; i < 3; i++) {
+        const angle = (i * 2 * Math.PI) / 3;
+        const bladeWidth = w / 5;
+        const bladeLength = (w / 2) * 0.9;
+
+        const bladeGroup = new THREE.Group();
+        
+        // Tapered/Rounded blade approximation using Plane with White Halo
+        const bladeHaloGeo = new THREE.PlaneGeometry(bladeWidth + 2.0, bladeLength + 2.0);
+        const bladeHalo = new THREE.Mesh(bladeHaloGeo, whiteMat);
+        bladeHalo.position.y = bladeLength / 2;
+        bladeHalo.position.z = 0.02;
+        bladeGroup.add(bladeHalo);
+
+        const bladeGeo = new THREE.PlaneGeometry(bladeWidth, bladeLength);
+        const blade = new THREE.Mesh(bladeGeo, blackMat);
+        blade.position.y = bladeLength / 2;
+        blade.position.z = 0.06;
+        bladeGroup.add(blade);
+
+        bladeGroup.rotation.z = angle;
+        group.add(bladeGroup);
+    }
+
+    return group;
+};
+
 export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
     // --- LIGHTING ---
     'recessed-light': {
@@ -115,11 +166,21 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
     'ceiling-fan': {
         id: 'ceiling-fan',
         name: 'Ceiling Fan',
-        category: 'lighting',
-        description: 'Filled black square with crosshairs',
+        category: 'hvac',
+        description: 'Symbolic representation of a ceiling fan with blades',
         color: 0x000000,
-        size: { width: 16, height: 16 },
-        createMesh: createUniversalMesh
+        size: { width: 48, height: 48 },
+        createMesh: createCeilingFanMesh
+    },
+    'haiku-fan': {
+        id: 'haiku-fan',
+        name: 'Haiku Fan',
+        category: 'hvac',
+        description: 'Premium Big Ass Fans Haiku Series',
+        color: 0x000000,
+        size: { width: 48, height: 48 },
+        createMesh: createCeilingFanMesh,
+        productId: 'BAF-HAIKU'
     },
     'exterior-light': {
         id: 'exterior-light',
@@ -218,6 +279,7 @@ export const SHORTHAND_MAP: Record<string, string> = {
     'wifi-ap': 'AP',
     'security-camera': 'CAM',
     'ceiling-fan': 'FAN',
+    'haiku-fan': 'FAN',
     'exterior-light': 'OSC',
     'knx-switch': 'LV',
     'standard-outlet': 'OUT',

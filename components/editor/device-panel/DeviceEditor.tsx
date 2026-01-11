@@ -35,26 +35,32 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
     const [isPlacementExpanded, setIsPlacementExpanded] = React.useState(true);
     const [isConfigExpanded, setIsConfigExpanded] = React.useState(true);
 
-    // Resolve product more robustly (check metadata and deviceTypeId if needed)
-    // Resolve product more robustly:
-    // 1. User manual selection (formData)
-    // 2. Symbol Definition (Source of Truth for Custom Types)
-    // 3. Metadata (Legacy/Instance specific)
-    // 4. Instance ID
     // Resolve product more robustly:
     // 1. User manual selection (formData)
     // 2. Instance ID (if specific) - CRITICAL: Must override generic symbol defaults
     // 3. Metadata (Legacy/Instance specific)
     // 4. Symbol Definition (if specific)
     // 5. Fallback to whatever is available
-    const effectiveProductId =
-        (formData.productId && formData.productId !== 'generic-product' ? formData.productId : null) ||
-        (editingDevice.productId && editingDevice.productId !== 'generic-product' && editingDevice.productId !== 'generic-light' ? editingDevice.productId : null) ||
-        (editingDevice.metadata?.productId && editingDevice.metadata.productId !== 'generic-product' ? editingDevice.metadata.productId : null) ||
-        (editingDevice.deviceTypeId && SYMBOL_LIBRARY[editingDevice.deviceTypeId]?.productId && SYMBOL_LIBRARY[editingDevice.deviceTypeId]?.productId !== 'generic-product' && SYMBOL_LIBRARY[editingDevice.deviceTypeId]?.productId !== 'generic-light' ? SYMBOL_LIBRARY[editingDevice.deviceTypeId].productId : null) ||
-        editingDevice.productId;
 
-    const product = catalog.find(p => p.id === effectiveProductId);
+    // Helper to check if an ID is 'generic'
+    const isGeneric = (id: string | null | undefined) => !id || id === 'generic-product' || id === 'generic-light' || id === 'generic-switch';
+
+    const effectiveProductId =
+        (!isGeneric(formData.productId) ? formData.productId : null) ||
+        (!isGeneric(editingDevice.productId) ? editingDevice.productId : null) ||
+        (!isGeneric(editingDevice.metadata?.productId) ? editingDevice.metadata.productId : null) ||
+        (!isGeneric(SYMBOL_LIBRARY[editingDevice.deviceTypeId]?.productId) ? SYMBOL_LIBRARY[editingDevice.deviceTypeId].productId : null) ||
+        editingDevice.productId; // Final fallback
+
+    // Attempt to find in catalog. If not found but we have a specific ID, create a synthetic 'Unknown' product to avoid "Generic" UI
+    const catalogProduct = catalog.find(p => p.id === effectiveProductId);
+
+    const product = catalogProduct || (effectiveProductId && !isGeneric(effectiveProductId) ? {
+        id: effectiveProductId,
+        name: `${effectiveProductId} (Unknown)`,
+        manufacturer: 'Unknown',
+        type: 'LIGHTING'
+    } : undefined);
 
     const SpecBuilder = getSpecBuilder(product);
 
@@ -227,6 +233,24 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
                             <span>Save as New Fixture Type</span>
                         </button>
                     </div>
+                </div>
+            </CollapsibleSection>
+
+            {/* SECTION 4: DEBUG (Temporary) */}
+            <CollapsibleSection
+                title="Debug Data"
+                isExpanded={false}
+                toggle={() => { }}
+            >
+                <div className="p-2 space-y-1 text-[7px] font-mono whitespace-pre-wrap bg-slate-950 text-emerald-400 border-t border-slate-800">
+                    <div className="opacity-50 mb-1">DATA INSPECTOR</div>
+                    <div>ID: <span className="text-slate-300">{editingDevice.id}</span></div>
+                    <div>Type: <span className="text-slate-300">{editingDevice.deviceTypeId}</span></div>
+                    <div>Dev PID: <span className="text-slate-300">{JSON.stringify(editingDevice.productId)}</span></div>
+                    <div>Form PID: <span className="text-slate-300">{JSON.stringify(formData.productId)}</span></div>
+                    <div>Meta PID: <span className="text-slate-300">{JSON.stringify(editingDevice.metadata?.productId)}</span></div>
+                    <div>Def PID: <span className="text-slate-300">{JSON.stringify(SYMBOL_LIBRARY[editingDevice.deviceTypeId]?.productId)}</span></div>
+                    <div>Effective: <span className="text-blue-300 font-bold">{JSON.stringify(effectiveProductId)}</span></div>
                 </div>
             </CollapsibleSection>
         </div>

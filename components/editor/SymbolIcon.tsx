@@ -30,10 +30,41 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
 
     // Universal symbol design for ALL types
     const renderSymbol = () => {
+        const center = 16;
+
+        // Specialized Icon: Ceiling Fan
+        if (symbolType === 'ceiling-fan' || symbolType === 'haiku-fan' || symbolType.includes('fan')) {
+            const hubRadius = 4;
+            const bladeWidth = 4;
+            const bladeLength = 10;
+
+            return (
+                <svg width={size} height={size} viewBox="0 0 32 32" style={{ overflow: 'visible' }}>
+                    {/* White Halos for Fan */}
+                    <circle cx={center} cy={center} r={hubRadius + 1.5} fill="#FFF" />
+                    {[0, 120, 240].map((angle) => (
+                        <g key={`halo-${angle}`} transform={`rotate(${angle}, ${center}, ${center})`}>
+                            <rect x={center - bladeWidth / 2 - 1} y={center - hubRadius - bladeLength - 1} width={bladeWidth + 2} height={bladeLength + 2} fill="#FFF" rx="2" />
+                        </g>
+                    ))}
+
+                    {/* Black Fan Parts */}
+                    <circle cx={center} cy={center} r={hubRadius} fill="#000" />
+                    {[0, 120, 240].map((angle) => (
+                        <g key={`blade-${angle}`} transform={`rotate(${angle}, ${center}, ${center})`}>
+                            <rect x={center - bladeWidth / 2} y={center - hubRadius - bladeLength} width={bladeWidth} height={bladeLength} fill="#000" rx="1" />
+                        </g>
+                    ))}
+
+                    {/* Shorthand & Labels (Shared logic) */}
+                    {renderLabels(center, 8)}
+                </svg>
+            );
+        }
+
         const squareSize = 16;
         const squareHalf = squareSize / 2;
         const crosshairExt = squareHalf; // Jut out by 1/2 width (8px extension on 8px half)
-        const center = 16;
 
         return (
             <svg width={size} height={size} viewBox="0 0 32 32" style={{ overflow: 'visible' }}>
@@ -94,12 +125,21 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
                     strokeWidth={strokeWidth}
                 />
 
+                {/* Labels */}
+                {renderLabels(center, squareHalf)}
+            </svg>
+        );
+    };
+
+    const renderLabels = (center: number, offset: number) => {
+        return (
+            <>
                 {/* Shorthand text with white halo */}
                 {showShorthand && (
                     <>
                         <text
-                            x={center + squareHalf + 2}
-                            y={center + squareHalf + 2}
+                            x={center + offset + 2}
+                            y={center + offset + 2}
                             textAnchor="start"
                             dominantBaseline="hanging"
                             fontSize={fontSize}
@@ -111,8 +151,8 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
                             {customShorthand || getSymbolShorthand(symbolType)}
                         </text>
                         <text
-                            x={center + squareHalf + 2}
-                            y={center + squareHalf + 2}
+                            x={center + offset + 2}
+                            y={center + offset + 2}
                             textAnchor="start"
                             dominantBaseline="hanging"
                             fontSize={fontSize}
@@ -128,8 +168,8 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
                 {secondaryLabel && (
                     <>
                         <text
-                            x={center - squareHalf - 2}
-                            y={center + squareHalf + 2}
+                            x={center - offset - 2}
+                            y={center + offset + 2}
                             textAnchor="end"
                             dominantBaseline="hanging"
                             fontSize={fontSize}
@@ -141,8 +181,8 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
                             {secondaryLabel}
                         </text>
                         <text
-                            x={center - squareHalf - 2}
-                            y={center + squareHalf + 2}
+                            x={center - offset - 2}
+                            y={center + offset + 2}
                             textAnchor="end"
                             dominantBaseline="hanging"
                             fontSize={fontSize}
@@ -153,7 +193,7 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
                         </text>
                     </>
                 )}
-            </svg>
+            </>
         );
     };
 

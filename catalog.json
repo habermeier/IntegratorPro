@@ -13,6 +13,20 @@
         "instances": []
     },
     {
+        "id": "BAF-HAIKU",
+        "name": "Big Ass Fans Haiku",
+        "manufacturer": "Big Ass Fans",
+        "description": "Smart Ceiling Fan - Configurable Series, Size, and Finish",
+        "type": "HVAC",
+        "hasSpecBuilder": true,
+        "mountType": "CEILING",
+        "size": 2.0,
+        "cost": 1200.00,
+        "quantity": 0,
+        "url": "https://www.bigassfans.com/fans/haiku/",
+        "instances": []
+    },
+    {
         "id": "2DS-L9",
         "name": "2DS Downlight",
         "manufacturer": "HE Williams",

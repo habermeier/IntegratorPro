@@ -218,6 +218,24 @@ export class PlaceSymbolTool implements Tool {
         const rooms = roomLayer?.content ? ((roomLayer.content as VectorLayerContent).rooms || []) : [];
         const roomName = findRoomAt(worldPos, rooms);
 
+        // Helper to check if an ID is 'generic'
+        const isGeneric = (id: string | null | undefined) => !id || id === 'generic-product' || id === 'generic-light' || id === 'generic-switch';
+
+        // RESOLUTION LOGIC: 
+        // 1. If the tool has a specific activeProductId (from catalog selection), use it.
+        // 2. If the Symbol Definition has a specific productId (Custom Type), use it.
+        // 3. Fallback to generic defaults.
+
+        let finalProductId = this.activeProductId;
+        if (isGeneric(finalProductId) && !isGeneric(def.productId)) {
+            finalProductId = def.productId!;
+        } else if (!isGeneric(finalProductId)) {
+            // keep activeProductId
+        } else {
+            // both are generic or missing
+            finalProductId = def.productId || 'generic-product';
+        }
+
         const symbol: PlacedSymbol = {
             id: `${def.category}-${Date.now()}`,
             type: this.symbolType,
@@ -227,12 +245,12 @@ export class PlaceSymbolTool implements Tool {
             rotation: this.currentRotation,
             scale: this.currentScale,
             room: roomName,
-            productId: def.productId || this.activeProductId,
+            productId: finalProductId,
             installationHeight: this.activeDefaultHeight,
             busAssignment: this.activeBusAssignment,
             metadata: {
                 // Priority 1: Use specific ID from symbol definition if acts as custom type
-                productId: def.productId || this.activeProductId,
+                productId: finalProductId,
 
                 // Priority 2: Use metadata from symbol definition (e.g. shorthand, ordering codes)
                 ...(def.metadata || {}),
@@ -281,36 +299,34 @@ export class PlaceSymbolTool implements Tool {
     public onKeyDown(key: string, event: KeyboardEvent): void {
         const lowerKey = key.toLowerCase();
 
-        // 1. Check for Selection Rotation first (Smart override)
-        // If we have selected items (e.g. user clicked an existing device), 'R' should rotate THEM, not the preview.
+        // 1. Check for Selection Rotation/Nudge (Smart override)
+        // If we have selected items, 'R' rotates THEM, and Arrows nudge THEM.
         const selectedIds = this.editor.selectionSystem.getSelectedIds();
-        if (selectedIds.length > 0 && lowerKey === 'r') {
-            remoteDebug('[PlaceSymbolTool] Rotating Selection instead of Preview', 'PlaceSymbolTool', { count: selectedIds.length });
+        if (selectedIds.length > 0) {
 
-            const rotationAmount = event.shiftKey ? -1 : 45;
-            const layers = this.editor.layerSystem.getAllLayers();
-            let changed = false;
-
-            selectedIds.forEach(id => {
-                for (const layer of layers) {
-                    if (layer.type !== 'vector') continue;
-                    const content = layer.content as VectorLayerContent;
-                    const symbol = (content.symbols || []).find(s => s.id === id);
-
-                    if (symbol) {
-                        symbol.rotation = (symbol.rotation + rotationAmount) % 360;
-                        this.editor.layerSystem.markDirty(layer.id);
-                        changed = true;
-                    }
-                }
-            });
-
-            if (changed) {
-                this.editor.setDirty();
-                this.editor.emit('layers-changed', this.editor.layerSystem.getAllLayers());
-                this.editor.emit('selection-changed', selectedIds);
+            // Rotation
+            if (lowerKey === 'r') {
+                remoteDebug('[PlaceSymbolTool] Rotating Selection', 'PlaceSymbolTool', { count: selectedIds.length });
+                const rotationAmount = event.shiftKey ? -1 : 45;
+                this.transformSelection(selectedIds, { rotate: rotationAmount });
+                return;
             }
-            return; // Important: Don't rotate preview if rotating selection
+
+            // Nudge (Arrow Keys)
+            if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(lowerKey)) {
+                remoteDebug('[PlaceSymbolTool] Nudging Selection', 'PlaceSymbolTool', { key: lowerKey });
+                const step = event.shiftKey ? 10 : 1;
+                let dx = 0;
+                let dy = 0;
+
+                if (lowerKey === 'arrowup') dy = step;
+                if (lowerKey === 'arrowdown') dy = -step;
+                if (lowerKey === 'arrowleft') dx = -step;
+                if (lowerKey === 'arrowright') dx = step;
+
+                this.transformSelection(selectedIds, { translate: { x: dx, y: dy } });
+                return;
+            }
         }
 
         if (!this.symbolType) return;
@@ -336,6 +352,52 @@ export class PlaceSymbolTool implements Tool {
                 this.currentRotation += 1;
                 this.updatePreviewTransform();
             }
+        }
+    }
+
+    private transformSelection(selectedIds: string[], transform: { rotate?: number, translate?: { x: number, y: number } }): void {
+        const layers = this.editor.layerSystem.getAllLayers();
+        let changed = false;
+
+        selectedIds.forEach(id => {
+            for (const layer of layers) {
+                if (layer.type !== 'vector') continue;
+                const content = layer.content as VectorLayerContent;
+
+                // Symbol
+                const symbol = (content.symbols || []).find(s => s.id === id);
+                if (symbol) {
+                    if (transform.rotate !== undefined) {
+                        symbol.rotation = (symbol.rotation + transform.rotate) % 360;
+                    }
+                    if (transform.translate) {
+                        symbol.x += transform.translate.x;
+                        symbol.y += transform.translate.y;
+                    }
+                    this.editor.layerSystem.markDirty(layer.id);
+                    changed = true;
+                }
+
+                // Furniture
+                const furniture = (content.furniture || []).find(f => f.id === id);
+                if (furniture) {
+                    if (transform.rotate !== undefined) {
+                        furniture.rotation = (furniture.rotation + transform.rotate) % 360;
+                    }
+                    if (transform.translate) {
+                        furniture.x += transform.translate.x;
+                        furniture.y += transform.translate.y;
+                    }
+                    this.editor.layerSystem.markDirty(layer.id);
+                    changed = true;
+                }
+            }
+        });
+
+        if (changed) {
+            this.editor.setDirty();
+            this.editor.emit('layers-changed', this.editor.layerSystem.getAllLayers());
+            this.editor.emit('selection-changed', selectedIds);
         }
     }
 }

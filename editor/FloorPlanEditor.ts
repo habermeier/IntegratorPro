@@ -59,9 +59,10 @@ export class FloorPlanEditor {
     private isSpacePressed: boolean = false;
     private isAltPressed: boolean = false;
     private isShiftPressed: boolean = false;
-    private needsRender: boolean = true;
-    private pixelsPerMeter: number = 1;
+
+    public needsRender: boolean = true;
     public fastZoomMultiplier: number = 3;
+    private pixelsPerMeter: number = 50; // Default calibration (approx 1m = 50px)
 
     // Panning State
     private isDragging: boolean = false;
@@ -75,7 +76,12 @@ export class FloorPlanEditor {
     private eventListeners: Map<string, Function[]> = new Map();
     private preMaskVisibility: Map<string, boolean> = new Map();
     private preShimmyOpacity: Map<string, number> = new Map();
-    private STORAGE_KEY = 'integrator-pro-editor-state';
+
+    // Focus Tracking
+    public isMouseOverCanvas: boolean = false;
+
+    // Persisted state key
+    private readonly STORAGE_KEY = 'integrator-pro-editor-state-v1';
 
     public get editMode(): boolean {
         return this.isOverlayAlignmentMode;
@@ -236,7 +242,21 @@ export class FloorPlanEditor {
 
     private handleKeyDown = (e: KeyboardEvent) => {
         // GLOBAL GUARD: Skip all editor shortcuts if user is typing in an input/textarea
-        if (FloorPlanEditor.isUserTyping(e)) return;
+        // EXCEPTION: If mouse is over canvas, we assume user WANTS to interact with canvas (e.g. Nudge, Rotate)
+        // even if a button has focus. But we MUST still respect text inputs.
+        const isTyping = FloorPlanEditor.isUserTyping(e);
+
+        if (this.isMouseOverCanvas && !isTyping) {
+            // Smart Focus: If over canvas and NOT typing, we claim the event.
+            // Aggressively prevent default for navigation keys to stop scrolling 
+            // and ensure the editor gets the event without interference.
+            if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyR'].includes(e.code)) {
+                e.preventDefault();
+                // remoteDebug(`[SmartFocus] Prevented default for ${e.code}`, 'FloorPlanEditor');
+            }
+        } else if (isTyping) {
+            return;
+        }
 
         // Spacebar Panning State (Skip repeats)
         if (e.code === 'Space') {
@@ -396,6 +416,10 @@ export class FloorPlanEditor {
                 this.isShiftPressed = true;
                 this.emit('modifier-changed', { isAltPressed: this.isAltPressed, isShiftPressed: true });
             }
+        }
+
+        if (e.key.startsWith('Arrow')) {
+            remoteDebug(`[FloorPlanEditor] Dispatching ${e.key} to ToolSystem`, 'FloorPlanEditor');
         }
 
         this.toolSystem.handleKeyDown(e.key, e);

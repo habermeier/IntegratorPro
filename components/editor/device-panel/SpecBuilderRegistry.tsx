@@ -1,6 +1,7 @@
 import React from 'react';
 import { HEWilliams2DSBuilder } from '../spec-builders/HEWilliams2DSBuilder';
 import { GenericLightBuilder } from '../spec-builders/GenericLightBuilder';
+import { BigAssFansBuilder } from '../spec-builders/BigAssFansBuilder';
 
 /**
  * Interface for all Specification Builders
@@ -31,6 +32,12 @@ export const getSpecBuilder = (product: any): React.FC<SpecBuilderProps> | null 
         if (isCompatibleSeries) {
             return HEWilliams2DSBuilder as any;
         }
+    }
+
+    // Special Case: Big Ass Fans
+    const isBigAssFan = product.manufacturer === 'Big Ass Fans' || product.id?.includes('BAF');
+    if (isBigAssFan) {
+        return BigAssFansBuilder as any;
     }
 
     // Fallback: Generic Builders by Category
