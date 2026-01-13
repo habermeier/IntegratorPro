@@ -82,6 +82,11 @@ export function useEditorEvents(
     const onSelectionChanged = (selectedIds: string[]) => {
       if (selectedIds.length === 0) return;
 
+      // HARD-ISOLATION: If we are in MASK mode, do NOT allow selections to force layers back on.
+      if (editor.toolSystem.getActiveToolType() === 'draw-mask') {
+        return;
+      }
+
       // Find the layer containing the selected object
       const layers = editor.layerSystem.getAllLayers();
       for (const layer of layers) {

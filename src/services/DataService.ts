@@ -175,14 +175,17 @@ class DataService {
    */
   async saveProject(data: ProjectData, force: boolean = false): Promise<void> {
     try {
-      // Get devices from DeviceRegistry
+      // Update timestamp and include devices.
+      // Priority: use explicitly provided devices if present (e.g. from a monolithic save payload),
+      // otherwise fallback to what's in the registry.
       const deviceRegistry = DeviceRegistry.getInstance();
-      const devices = deviceRegistry.getAllDevices();
+      const devices = (data.devices && data.devices.length > 0)
+        ? data.devices
+        : deviceRegistry.getAllDevices();
 
-      // Update timestamp and include devices from registry
       const projectData = {
         ...data,
-        devices, // Use devices from registry
+        devices, // Use merged/passed devices or fallback to registry
         timestamp: new Date().toISOString(),
         metadata: {
           ...data.metadata,

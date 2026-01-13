@@ -17,27 +17,13 @@
         "name": "Big Ass Fans Haiku",
         "manufacturer": "Big Ass Fans",
         "description": "Smart Ceiling Fan - Configurable Series, Size, and Finish",
-        "type": "HVAC",
+        "type": "LIGHTING",
         "hasSpecBuilder": true,
         "mountType": "CEILING",
         "size": 2.0,
         "cost": 1200.00,
         "quantity": 0,
         "url": "https://www.bigassfans.com/fans/haiku/",
-        "instances": []
-    },
-    {
-        "id": "2DS-L9",
-        "name": "2DS Downlight",
-        "manufacturer": "HE Williams",
-        "description": "2\" Downlight",
-        "type": "LIGHTING",
-        "hasSpecBuilder": true,
-        "mountType": "CEILING",
-        "size": 0.5,
-        "cost": 150.00,
-        "quantity": 0,
-        "url": "",
         "instances": []
     },
     {
@@ -308,7 +294,7 @@
         "notes": "NEC 2023 Compliance. Splits 480W into 4x Class 2 Circuits."
     },
     {
-        "id": "light-fix-dali",
+        "id": "2DS-L9",
         "name": "2DS Square Downlight",
         "manufacturer": "HE Williams",
         "description": "2\" Square Architectural Downlight - Configurable DALI-2 with Tunable White",

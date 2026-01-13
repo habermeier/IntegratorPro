@@ -15,6 +15,7 @@ export interface SystemConfig {
     layerCategory: 'technical' | 'foundation' | 'utility';
     defaultVisible: boolean;
     iconName?: string;
+    documentation?: string; // Path to reference docs (e.g. 'docs/ventilation-spec.md')
 }
 
 export const SYSTEM_REGISTRY: SystemConfig[] = [
@@ -76,7 +77,8 @@ export const SYSTEM_REGISTRY: SystemConfig[] = [
         zIndex: 60,
         layerCategory: 'technical',
         defaultVisible: false,
-        iconName: 'Thermometer'
+        iconName: 'Thermometer',
+        documentation: 'docs/ventilation-spec.md'
     },
     {
         id: 'receptacles',

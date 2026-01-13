@@ -10,6 +10,7 @@ import { deviceRegistry } from '../../src/services/DeviceRegistry';
 import { calculateRoomArea, getOrientedBoundingBox } from '../../utils/spatialUtils';
 import { calculateRoomLightingStats } from '../../src/utils/lightModeling';
 import { getRecommendedLux } from '../../src/constants/lightingTargets';
+import catalog from '../../catalog.json';
 
 // Modular Sub-components
 import { useDevicePanelState } from './device-panel/useDevicePanelState';
@@ -74,6 +75,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
 
     const {
         editingDevice,
+        librarySelectedSymbol,
         formData,
         setFormData,
         draftMetadata,
@@ -123,14 +125,26 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
     // Sticky Selection Sync: Ensure 'place-symbol' tool always uses the selected symbol
     React.useEffect(() => {
         if (activeTool === 'place-symbol' && selectedSymbolType && editor) {
-            const symbolDef = SYMBOL_LIBRARY[selectedSymbolType];
             const toolAttrs: any = { symbolType: selectedSymbolType };
-            if (symbolDef?.productId) toolAttrs.productId = symbolDef.productId;
+
+            // AUTO-SPEC-SYSTEM-P28: Sync Preview Metadata to Placement Tool
+            // This ensures that when the user places the device, it uses the 
+            // metadata configured in the library preview.
+            if (draftMetadata && !editingDevice) {
+                toolAttrs.metadata = draftMetadata;
+                // If the metadata contains a productId, prioritize it
+                const symbolDef = SYMBOL_LIBRARY[selectedSymbolType];
+                toolAttrs.productId = draftMetadata.productId || symbolDef?.productId || 'generic-product';
+            } else {
+                const symbolDef = SYMBOL_LIBRARY[selectedSymbolType];
+                if (symbolDef?.productId) toolAttrs.productId = symbolDef.productId;
+            }
+
             editor.setActiveTool('place-symbol', toolAttrs);
         } else if (activeTool !== 'place-symbol') {
             setHoverRoom(null); // Clear context if tool changes
         }
-    }, [activeTool, selectedSymbolType, editor]);
+    }, [activeTool, selectedSymbolType, editor, draftMetadata, editingDevice]);
 
     // 4. Workflow Handlers
     const handleSelectSymbol = (type: string) => {
@@ -143,6 +157,65 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
             editor.setActiveTool('place-symbol', toolAttrs);
         }
     };
+
+    // ONETIME FIX: Auto-Repair Generic 2DS
+    React.useEffect(() => {
+        if (!editor) return;
+
+        let repairCount = 0;
+
+        // 1. Repair Device Instances
+        const devicesToFix = devices.filter(d => {
+            const isGenericId = !d.productId || d.productId === 'generic-light' || d.productId === 'generic-product';
+            if (!isGenericId) return false;
+
+            // 1. If it's already a 2DS type, it should have the right product ID
+            const isExplicit2DS = d.deviceTypeId.includes('2ds');
+
+            // 2. If it's a generic recessed-light, only repair if it's CRYING OUT that it's a 2DS
+            const typeLabel = (SYMBOL_LIBRARY[d.deviceTypeId] as any)?.metadata?.shorthand || '';
+            const isImplied2DS = d.name.toLowerCase().includes('2ds') || typeLabel.toLowerCase().includes('2ds');
+            const isGenericRecessed = d.deviceTypeId === 'recessed-light' || d.deviceTypeId === 'generic-lighting';
+
+            return isExplicit2DS || (isGenericRecessed && isImplied2DS);
+        });
+
+        if (devicesToFix.length > 0) {
+            console.log(`[AutoRepair] Detected ${devicesToFix.length} 2DS-variant devices with generic IDs. repairing...`);
+            devicesToFix.forEach(d => {
+                // Force to '2DS-L9' (the permanent catalog ID)
+                if (updateDevice(d.id, { productId: '2DS-L9' })) repairCount++;
+            });
+        }
+
+        // 2. Repair Custom Symbol Definitions in DataService cache
+        const projectData = dataService.getCachedProject();
+        if (projectData?.customSymbols) {
+            let defsRepaired = false;
+            projectData.customSymbols.forEach(sym => {
+                const isGenericId = !sym.productId || sym.productId === 'generic-light' || sym.productId === 'generic-product';
+                const is2DS = sym.name.includes('2DS') || sym.metadata?.shorthand?.includes('2DS');
+
+                if (isGenericId && is2DS) {
+                    console.log(`[AutoRepair] Fixing Custom Symbol Preset: ${sym.id}`);
+                    sym.productId = '2DS-L9';
+                    if (!sym.metadata) sym.metadata = {};
+                    sym.metadata.productId = '2DS-L9';
+                    defsRepaired = true;
+                }
+            });
+
+            if (defsRepaired) {
+                // Persist the repaired definitions
+                dataService.saveProject(projectData, true).catch(console.error);
+            }
+        }
+
+        if (repairCount > 0) {
+            editor.emit('layers-changed', editor.layerSystem.getAllLayers());
+            console.log(`[AutoRepair] Successfully repaired ${repairCount} device instances.`);
+        }
+    }, [editor, devices, updateDevice]);
 
     const handleUpdateGlobalType = async () => {
         if (!editingDevice || !draftMetadata) return;
@@ -353,14 +426,30 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
     };
 
     const handleFieldChange = (field: string, value: any) => {
-        if (!editingDevice || !editor) return;
-        setFormData((prev: any) => ({ ...prev, [field]: value }));
-        const updateObj = field.startsWith('metadata.')
-            ? { metadata: { ...editingDevice.metadata, [field.split('.')[1]]: value } }
-            : { [field]: value };
+        if (!editor) return;
 
-        if (updateDevice(editingDevice.id, updateObj)) {
-            editor.emit('layers-changed', editor.layerSystem.getAllLayers());
+        // Update local form state immediately
+        setFormData((prev: any) => ({ ...prev, [field]: value }));
+
+        // Mode 1: Editing a placed instance
+        if (editingDevice) {
+            const updateObj = field.startsWith('metadata.')
+                ? { metadata: { ...editingDevice.metadata, [field.split('.')[1]]: value } }
+                : { [field]: value };
+
+            if (updateDevice(editingDevice.id, updateObj)) {
+                editor.emit('layers-changed', editor.layerSystem.getAllLayers());
+            }
+        }
+        // Mode 2: Library Preview (No editingDevice)
+        else if (librarySelectedSymbol) {
+            if (field === 'productId') {
+                // Changing product in library preview should reset metadata to catalog defaults
+                const product = catalog.find(p => p.id === value);
+                setDraftMetadata(product?.metadata || {});
+            }
+            // For other fields, they just stay in formData/draftMetadata 
+            // and are picked up by the placement tool sync effect
         }
     };
 
@@ -458,17 +547,30 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
             )}
 
             <div className="flex-1 overflow-hidden">
-                {editingDevice ? (
+                {(editingDevice || librarySelectedSymbol) ? (
                     <DeviceEditor
-                        editingDevice={editingDevice}
+                        editingDevice={editingDevice || {
+                            id: 'preview',
+                            deviceTypeId: librarySelectedSymbol.id,
+                            name: librarySelectedSymbol.name,
+                            productId: librarySelectedSymbol.productId,
+                            metadata: librarySelectedSymbol.metadata,
+                            position: { x: 0, y: 0 },
+                            rotation: 0
+                        }}
                         formData={formData}
                         draftMetadata={draftMetadata}
                         onFieldChange={handleFieldChange}
                         onFieldBlur={() => { }}
                         onUpdateType={handleDeviceTypeChange}
                         onClearSelection={() => {
-                            editor?.selectionSystem.clearSelection();
-                            editor?.emit('selection-changed', []);
+                            if (editingDevice) {
+                                editor?.selectionSystem.clearSelection();
+                                editor?.emit('selection-changed', []);
+                            } else {
+                                // Transition back to library list from preview
+                                setActiveTab('library');
+                            }
                         }}
                         onSaveNewType={handleSaveAsNewType}
                         onUpdateGlobal={handleUpdateGlobalType}

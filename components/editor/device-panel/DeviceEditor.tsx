@@ -50,6 +50,7 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
         (!isGeneric(editingDevice.productId) ? editingDevice.productId : null) ||
         (!isGeneric(editingDevice.metadata?.productId) ? editingDevice.metadata.productId : null) ||
         (!isGeneric(SYMBOL_LIBRARY[editingDevice.deviceTypeId]?.productId) ? SYMBOL_LIBRARY[editingDevice.deviceTypeId].productId : null) ||
+        (!isGeneric((SYMBOL_LIBRARY[editingDevice.deviceTypeId] as any)?.metadata?.productId) ? (SYMBOL_LIBRARY[editingDevice.deviceTypeId] as any).metadata.productId : null) ||
         editingDevice.productId; // Final fallback
 
     // Attempt to find in catalog. If not found but we have a specific ID, create a synthetic 'Unknown' product to avoid "Generic" UI
@@ -108,9 +109,12 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
                                 </option>
                             ))}
                         </select>
-                        <p className="text-[7px] text-slate-500 mt-1">
-                            Assigning a product enables manufacturer-specific controls.
-                        </p>
+                        <div className="flex justify-between items-center mt-1">
+                            <p className="text-[7px] text-slate-500">
+                                Assigning a product enables manufacturer-specific controls.
+                            </p>
+                            <span className="text-[7px] font-mono text-slate-600">ID: {effectiveProductId || 'null'}</span>
+                        </div>
                     </div>
 
                     <div className="border-t border-slate-800 my-2 pt-2">
@@ -233,24 +237,6 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
                             <span>Save as New Fixture Type</span>
                         </button>
                     </div>
-                </div>
-            </CollapsibleSection>
-
-            {/* SECTION 4: DEBUG (Temporary) */}
-            <CollapsibleSection
-                title="Debug Data"
-                isExpanded={false}
-                toggle={() => { }}
-            >
-                <div className="p-2 space-y-1 text-[7px] font-mono whitespace-pre-wrap bg-slate-950 text-emerald-400 border-t border-slate-800">
-                    <div className="opacity-50 mb-1">DATA INSPECTOR</div>
-                    <div>ID: <span className="text-slate-300">{editingDevice.id}</span></div>
-                    <div>Type: <span className="text-slate-300">{editingDevice.deviceTypeId}</span></div>
-                    <div>Dev PID: <span className="text-slate-300">{JSON.stringify(editingDevice.productId)}</span></div>
-                    <div>Form PID: <span className="text-slate-300">{JSON.stringify(formData.productId)}</span></div>
-                    <div>Meta PID: <span className="text-slate-300">{JSON.stringify(editingDevice.metadata?.productId)}</span></div>
-                    <div>Def PID: <span className="text-slate-300">{JSON.stringify(SYMBOL_LIBRARY[editingDevice.deviceTypeId]?.productId)}</span></div>
-                    <div>Effective: <span className="text-blue-300 font-bold">{JSON.stringify(effectiveProductId)}</span></div>
                 </div>
             </CollapsibleSection>
         </div>

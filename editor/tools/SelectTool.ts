@@ -4,6 +4,7 @@ import { ToolType, Vector2, Polygon, VectorLayerContent } from '../models/types'
 import { FloorPlanEditor } from '../FloorPlanEditor';
 import { DeletePolygonCommand } from '../commands/DeletePolygonCommand';
 import { ModifyPolygonCommand } from '../commands/ModifyPolygonCommand';
+import { ModifySymbolCommand, TransformState } from '../commands/ModifySymbolCommand';
 import { remoteDebug } from '../../src/utils/logger';
 
 export class SelectTool implements Tool {
@@ -141,22 +142,23 @@ export class SelectTool implements Tool {
                 for (const layer of layers) {
                     if (layer.type !== 'vector') continue;
                     const content = layer.content as VectorLayerContent;
-                    const symbol = (content.symbols || []).find(s => s.id === id);
+                    const item = (content.symbols || []).find(s => s.id === id) || (content.furniture || []).find(f => f.id === id);
 
-                    if (symbol) {
-                        const oldRot = symbol.rotation;
-                        symbol.rotation = (symbol.rotation + rotationAmount) % 360;
-                        remoteDebug('[SelectTool] Rotating symbol', 'SelectTool', { id, oldRot, newRot: symbol.rotation });
-                        this.editor.layerSystem.markDirty(layer.id);
+                    if (item) {
+                        const oldState: TransformState = { x: item.x, y: item.y, rotation: item.rotation };
+                        const newState: TransformState = { x: item.x, y: item.y, rotation: (item.rotation + rotationAmount) % 360 };
+
+                        const command = new ModifySymbolCommand(layer.id, id, oldState, newState, this.editor.layerSystem);
+                        this.editor.commandManager.execute(command);
                         changed = true;
                     }
                 }
             });
 
             if (changed) {
+                // Command execution already marks dirty and syncs registry
                 this.editor.setDirty();
                 this.editor.emit('layers-changed', this.editor.layerSystem.getAllLayers());
-                // Emit selection change to force property panel update if needed
                 this.editor.emit('selection-changed', selectedIds);
             }
 
@@ -184,22 +186,14 @@ export class SelectTool implements Tool {
                     if (layer.type !== 'vector') continue;
                     const content = layer.content as VectorLayerContent;
 
-                    // Try to find symbol
-                    const symbol = (content.symbols || []).find(s => s.id === id);
-                    if (symbol) {
-                        symbol.x += dx;
-                        symbol.y += dy;
-                        this.editor.layerSystem.markDirty(layer.id);
-                        changed = true;
-                        continue;
-                    }
+                    // Try to find symbol or furniture
+                    const item = (content.symbols || []).find(s => s.id === id) || (content.furniture || []).find(f => f.id === id);
+                    if (item) {
+                        const oldState: TransformState = { x: item.x, y: item.y, rotation: item.rotation };
+                        const newState: TransformState = { x: item.x + dx, y: item.y + dy, rotation: item.rotation };
 
-                    // Try to find furniture
-                    const furniture = (content.furniture || []).find(f => f.id === id);
-                    if (furniture) {
-                        furniture.x += dx;
-                        furniture.y += dy;
-                        this.editor.layerSystem.markDirty(layer.id);
+                        const command = new ModifySymbolCommand(layer.id, id, oldState, newState, this.editor.layerSystem);
+                        this.editor.commandManager.execute(command);
                         changed = true;
                         continue;
                     }

@@ -4,6 +4,7 @@ import { ToolType, Vector2, PlacedSymbol, VectorLayerContent, Room } from '../mo
 import { FloorPlanEditor } from '../FloorPlanEditor';
 import { SYMBOL_LIBRARY } from '../models/symbolLibrary';
 import { AddSymbolCommand } from '../commands/AddSymbolCommand';
+import { ModifySymbolCommand, TransformState } from '../commands/ModifySymbolCommand';
 import { findRoomAt, findRoomObjectAt } from '../../utils/spatialUtils';
 import { remoteDebug } from '../../src/utils/logger';
 
@@ -218,23 +219,23 @@ export class PlaceSymbolTool implements Tool {
         const rooms = roomLayer?.content ? ((roomLayer.content as VectorLayerContent).rooms || []) : [];
         const roomName = findRoomAt(worldPos, rooms);
 
-        // Helper to check if an ID is 'generic'
         const isGeneric = (id: string | null | undefined) => !id || id === 'generic-product' || id === 'generic-light' || id === 'generic-switch';
 
-        // RESOLUTION LOGIC: 
-        // 1. If the tool has a specific activeProductId (from catalog selection), use it.
-        // 2. If the Symbol Definition has a specific productId (Custom Type), use it.
-        // 3. Fallback to generic defaults.
+        // Product IDs in order of "broadness" (least broad = most specific)
+        const getSpecificity = (id: string | null | undefined) => {
+            if (!id || id === 'generic-product') return 0;
+            if (id === 'generic-light' || id === 'generic-switch') return 1;
+            return 2; // Specific catalog items
+        };
 
-        let finalProductId = this.activeProductId;
-        if (isGeneric(finalProductId) && !isGeneric(def.productId)) {
-            finalProductId = def.productId!;
-        } else if (!isGeneric(finalProductId)) {
-            // keep activeProductId
-        } else {
-            // both are generic or missing
-            finalProductId = def.productId || 'generic-product';
-        }
+        const activeSpec = getSpecificity(this.activeProductId);
+        const defSpec = getSpecificity(def.productId);
+
+        let fallbackId = 'generic-product';
+        if (def.category === 'lighting') fallbackId = 'generic-light';
+        if (def.category === 'lcps') fallbackId = 'generic-switch';
+
+        let finalProductId = (activeSpec >= defSpec) ? this.activeProductId : (def.productId || fallbackId);
 
         const symbol: PlacedSymbol = {
             id: `${def.category}-${Date.now()}`,
@@ -364,31 +365,22 @@ export class PlaceSymbolTool implements Tool {
                 if (layer.type !== 'vector') continue;
                 const content = layer.content as VectorLayerContent;
 
-                // Symbol
-                const symbol = (content.symbols || []).find(s => s.id === id);
-                if (symbol) {
-                    if (transform.rotate !== undefined) {
-                        symbol.rotation = (symbol.rotation + transform.rotate) % 360;
-                    }
-                    if (transform.translate) {
-                        symbol.x += transform.translate.x;
-                        symbol.y += transform.translate.y;
-                    }
-                    this.editor.layerSystem.markDirty(layer.id);
-                    changed = true;
-                }
+                // Symbol or Furniture
+                const item = (content.symbols || []).find(s => s.id === id) || (content.furniture || []).find(f => f.id === id);
+                if (item) {
+                    const oldState: TransformState = { x: item.x, y: item.y, rotation: item.rotation };
+                    const newState: TransformState = { ...oldState };
 
-                // Furniture
-                const furniture = (content.furniture || []).find(f => f.id === id);
-                if (furniture) {
                     if (transform.rotate !== undefined) {
-                        furniture.rotation = (furniture.rotation + transform.rotate) % 360;
+                        newState.rotation = (oldState.rotation + transform.rotate) % 360;
                     }
                     if (transform.translate) {
-                        furniture.x += transform.translate.x;
-                        furniture.y += transform.translate.y;
+                        newState.x += transform.translate.x;
+                        newState.y += transform.translate.y;
                     }
-                    this.editor.layerSystem.markDirty(layer.id);
+
+                    const command = new ModifySymbolCommand(layer.id, id, oldState, newState, this.editor.layerSystem);
+                    this.editor.commandManager.execute(command);
                     changed = true;
                 }
             }

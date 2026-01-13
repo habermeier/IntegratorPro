@@ -34,6 +34,8 @@ export const useDevicePanelState = (editor: FloorPlanEditor | null) => {
     });
     const [selectedRoom, setSelectedRoom] = React.useState<any>(null);
 
+    const [librarySelectedSymbol, setLibrarySelectedSymbol] = React.useState<any>(null);
+
     // Sync selection from editor
     React.useEffect(() => {
         if (!editor) return;
@@ -56,6 +58,7 @@ export const useDevicePanelState = (editor: FloorPlanEditor | null) => {
                     });
                     setDraftMetadata(device.metadata || {});
                     setSelectedRoom(null);
+                    setLibrarySelectedSymbol(null);
                     return;
                 }
 
@@ -66,6 +69,7 @@ export const useDevicePanelState = (editor: FloorPlanEditor | null) => {
                 if (room) {
                     setSelectedRoom(room);
                     setEditingDevice(null);
+                    setLibrarySelectedSymbol(null);
                     return;
                 }
             }
@@ -73,12 +77,42 @@ export const useDevicePanelState = (editor: FloorPlanEditor | null) => {
             // Clear if nothing or unknown selected
             setEditingDevice(null);
             setSelectedRoom(null);
-            setDraftMetadata(null);
+            // Don't clear draftMetadata immediately if we might be in library mode
         };
 
         editor.on('selection-changed', handleSelectionChange);
         return () => editor.off('selection-changed', handleSelectionChange);
     }, [editor, getDevice]);
+
+    // Handle Library Selection Sync (External to editor selection)
+    React.useEffect(() => {
+        if (!editor) return;
+
+        const handleToolChange = (args: any) => {
+            if (args.tool === 'place-symbol' && args.attrs?.symbolType) {
+                const typeId = args.attrs.symbolType;
+                const { SYMBOL_LIBRARY } = require('../../../editor/models/symbolLibrary'); // Avoid circular if any
+                const symbolDef = SYMBOL_LIBRARY[typeId];
+                if (symbolDef) {
+                    setLibrarySelectedSymbol(symbolDef);
+                    // Initialize metadata preview from symbol defaults if not already editing a real device
+                    if (!editingDevice) {
+                        setDraftMetadata(symbolDef.metadata || {});
+                        setFormData({
+                            name: symbolDef.name,
+                            productId: symbolDef.productId,
+                            metadata: { ...symbolDef.metadata }
+                        });
+                    }
+                }
+            } else if (args.tool !== 'place-symbol') {
+                setLibrarySelectedSymbol(null);
+            }
+        };
+
+        editor.on('tool-changed', handleToolChange);
+        return () => editor.off('tool-changed', handleToolChange);
+    }, [editor, editingDevice]);
 
     // Sync editingDevice if the underlying devices array changes (External sync)
     React.useEffect(() => {
@@ -105,6 +139,7 @@ export const useDevicePanelState = (editor: FloorPlanEditor | null) => {
 
     return {
         editingDevice,
+        librarySelectedSymbol,
         formData,
         setFormData,
         draftMetadata,

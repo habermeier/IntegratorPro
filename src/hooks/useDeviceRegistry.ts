@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { deviceRegistry } from '../services/DeviceRegistry';
 import { HardwareModule, ModuleType, MountType } from '../../types';
 import { Device } from '../models/Device';
+import catalog from '../../catalog.json';
 
 /**
  * useDeviceRegistry Hook
@@ -29,10 +30,10 @@ export function useDeviceRegistry() {
     const deviceModules = useMemo(() => {
         if (devices.length === 0) return [];
 
-        // Group devices by SKU (or fallback to productId)
+        // Group devices by SKU, Ordering Code, or fallback to productId
         const groupedMap = new Map<string, Device[]>();
         devices.forEach(device => {
-            const groupKey = device.metadata?.sku || device.productId;
+            const groupKey = device.metadata?.sku || device.metadata?.orderingCode || device.productId;
             if (!groupedMap.has(groupKey)) groupedMap.set(groupKey, []);
             groupedMap.get(groupKey)!.push(device);
         });
@@ -42,18 +43,29 @@ export function useDeviceRegistry() {
             const firstDevice = devicesInGroup[0];
             const category = firstDevice.layerId as any;
 
+            // Resolve Catalog Fallback
+            const catalogItem = catalog.find(p => p.id === firstDevice.productId);
+
+            // Resolve a descriptive "Display SKU"
+            const displaySku = firstDevice.metadata?.sku
+                || firstDevice.metadata?.orderingCode
+                || catalogItem?.id // Often the ID is the SKU
+                || firstDevice.productId;
+
             return {
                 id: `device-group-${groupKey}`,
                 name: firstDevice.name,
-                manufacturer: firstDevice.metadata?.manufacturer || 'Unknown',
-                description: firstDevice.metadata?.sku ? `SKU: ${firstDevice.metadata.sku}` : `Product: ${firstDevice.productId}`,
+                manufacturer: firstDevice.metadata?.manufacturer || catalogItem?.manufacturer || 'Unknown',
+                description: firstDevice.metadata?.sku || firstDevice.metadata?.orderingCode
+                    ? `${displaySku}`
+                    : (catalogItem?.description || `Product: ${firstDevice.productId}`),
                 type: category,
                 mountType: MountType.NA,
                 size: 0,
-                cost: firstDevice.metadata?.cost || 0,
-                powerWatts: firstDevice.metadata?.powerWatts || 0,
+                cost: firstDevice.metadata?.cost || catalogItem?.cost || 0,
+                powerWatts: firstDevice.metadata?.powerWatts || catalogItem?.powerWatts || 0,
                 quantity: devicesInGroup.length,
-                url: firstDevice.metadata?.purchaseUrl || '',
+                url: firstDevice.metadata?.purchaseUrl || catalogItem?.url || '',
                 linkStatus: firstDevice.metadata?.purchaseUrl ? 'PREFERRED' : 'MARKET',
                 genericRole: category,
                 instances: devicesInGroup.map(d => ({

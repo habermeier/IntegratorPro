@@ -1,11 +1,11 @@
 {
   "version": "1.0",
-  "timestamp": "2026-01-11T21:50:37.421Z",
+  "timestamp": "2026-01-12T02:20:20.790Z",
   "metadata": {
     "name": "270 Boll Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2026-01-11T21:50:37.413Z"
+    "modified": "2026-01-12T02:20:20.782Z"
   },
   "floorPlan": {
     "scale": {
@@ -2827,32 +2827,6 @@
         "type": "mask"
       },
       {
-        "id": "2w8v3l",
-        "points": [
-          {
-            "x": -2532.749177578205,
-            "y": 350.05792202039765
-          },
-          {
-            "x": -2522.493741422096,
-            "y": 121.23350278721375
-          },
-          {
-            "x": -2432.7586750561413,
-            "y": 116.746749468916
-          },
-          {
-            "x": -2438.5273578939527,
-            "y": 353.26274581918176
-          },
-          {
-            "x": -2438.5273578939527,
-            "y": 353.26274581918176
-          }
-        ],
-        "type": "mask"
-      },
-      {
         "id": "jklh2",
         "points": [
           {
@@ -3875,6 +3849,62 @@
           }
         ],
         "type": "mask"
+      },
+      {
+        "id": "2w8v3l",
+        "points": [
+          {
+            "x": -2532.749177578205,
+            "y": 350.05792202039765
+          },
+          {
+            "x": -2522.493741422096,
+            "y": 121.23350278721375
+          },
+          {
+            "x": -2432.7586750561413,
+            "y": 116.746749468916
+          },
+          {
+            "x": -2438.5273578939527,
+            "y": 353.26274581918176
+          },
+          {
+            "x": -2438.5273578939527,
+            "y": 353.26274581918176
+          }
+        ],
+        "type": "mask"
+      },
+      {
+        "id": "8rpdk3",
+        "points": [
+          {
+            "x": -2531.220079642542,
+            "y": 315.9399243309132
+          },
+          {
+            "x": -2526.901401142465,
+            "y": 407.69600425901444
+          },
+          {
+            "x": -2422.135898778703,
+            "y": 410.04454063471115
+          },
+          {
+            "x": -2437.5893102417344,
+            "y": 314.80279207823355
+          },
+          {
+            "x": -2438.5273578939527,
+            "y": 353.26274581918176
+          },
+          {
+            "x": -2532.749177578205,
+            "y": 350.05792202039765
+          }
+        ],
+        "type": "mask"
       }
     ],
     "electricalOverlay": {
@@ -3992,7 +4022,7 @@
     {
       "id": "lighting-1768153942455",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "2DS-L12",
       "position": {
         "x": 312.0891421517307,
@@ -4006,7 +4036,7 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "productId": "light-fix-dali",
+        "productId": "2DS-L9",
         "shorthand": "2DS-L9",
         "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
@@ -4029,12 +4059,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768153942455
+      "createdAt": 1768153942455,
+      "x": 312.0891421517307,
+      "y": 839.1737708783658,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768153982816",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 308.5338422300239,
@@ -4071,12 +4105,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768153982816
+      "createdAt": 1768153982816,
+      "x": 308.5338422300239,
+      "y": 670.2970245972892,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768153985116",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 308.5338422300239,
@@ -4113,12 +4151,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768153985116
+      "createdAt": 1768153985116,
+      "x": 308.5338422300239,
+      "y": 506.75322819877294,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768153992266",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 669.3967842832716,
@@ -4155,12 +4197,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768153992266
+      "createdAt": 1768153992266,
+      "x": 669.3967842832716,
+      "y": 835.6184709566587,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768153994733",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 662.2861844398578,
@@ -4197,12 +4243,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768153994733
+      "createdAt": 1768153994733,
+      "x": 662.2861844398578,
+      "y": 497.86497839450544,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768154017916",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 1030.642280496525,
@@ -4239,12 +4289,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768154017916
+      "createdAt": 1768154017916,
+      "x": 1030.642280496525,
+      "y": 667.0264974921482,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768154019683",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 1032.4013907185047,
@@ -4281,12 +4335,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768154019683
+      "createdAt": 1768154019683,
+      "x": 1032.4013907185047,
+      "y": 839.4192992461742,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768160899624",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 665.465093972934,
@@ -4323,12 +4381,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768160899624
+      "createdAt": 1768160899624,
+      "x": 665.465093972934,
+      "y": 664.1308070106222,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161243512",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 1391.782024338204,
@@ -4365,12 +4427,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768161243512
+      "createdAt": 1768161243512,
+      "x": 1391.782024338204,
+      "y": 590.2250294642088,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161246659",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 1315.5616992965083,
@@ -4407,12 +4473,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768161246659
+      "createdAt": 1768161246659,
+      "x": 1315.5616992965083,
+      "y": 729.4737002134607,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161263345",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 1526.6333686427429,
@@ -4449,12 +4519,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768161263345
+      "createdAt": 1768161263345,
+      "x": 1526.6333686427429,
+      "y": 442.18170582553023,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161266216",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 1333.1510050753614,
@@ -4491,12 +4565,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768161266216
+      "createdAt": 1768161266216,
+      "x": 1333.1510050753614,
+      "y": 339.577422115555,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161269247",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 1482.660104195611,
@@ -4533,12 +4611,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768161269247
+      "createdAt": 1768161269247,
+      "x": 1482.660104195611,
+      "y": 129.97152825089154,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161274709",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 1053.187888095286,
@@ -4575,12 +4657,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768161274709
+      "createdAt": 1768161274709,
+      "x": 1053.187888095286,
+      "y": 258.95977062914585,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161276609",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 1050.256337132144,
@@ -4617,12 +4703,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768161276609
+      "createdAt": 1768161276609,
+      "x": 1050.256337132144,
+      "y": -16.60601990621592,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161278292",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 837.7188923043382,
@@ -4659,12 +4749,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768161278292
+      "createdAt": 1768161278292,
+      "x": 837.7188923043382,
+      "y": -19.537570869357978,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161280346",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 619.3183455502484,
@@ -4701,12 +4795,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768161280346
+      "createdAt": 1768161280346,
+      "x": 619.3183455502484,
+      "y": -13.674468943073862,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161285198",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 408.24667620401357,
@@ -4743,12 +4841,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768161285198
+      "createdAt": 1768161285198,
+      "x": 408.24667620401357,
+      "y": -10.742917979931462,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161287082",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 409.71245168558465,
@@ -4785,12 +4887,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768161287082
+      "createdAt": 1768161287082,
+      "x": 409.71245168558465,
+      "y": 267.7544235185725,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161289628",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 626.6472229581034,
@@ -4827,12 +4933,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768161289628
+      "createdAt": 1768161289628,
+      "x": 626.6472229581034,
+      "y": 264.82287255543037,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161293231",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 840.6504432674802,
@@ -4869,12 +4979,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768161293231
+      "createdAt": 1768161293231,
+      "x": 840.6504432674802,
+      "y": 261.8913215922882,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162373296",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 680.0104410621257,
@@ -4911,12 +5025,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162373296
+      "createdAt": 1768162373296,
+      "x": 680.0104410621257,
+      "y": -351.59059786007373,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162375532",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 685.8543639959983,
@@ -4953,12 +5071,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162375532
+      "createdAt": 1768162375532,
+      "x": 685.8543639959983,
+      "y": -495.7406968955996,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162377876",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 455.9933952636731,
@@ -4995,12 +5117,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162377876
+      "createdAt": 1768162377876,
+      "x": 455.9933952636731,
+      "y": -349.64262354878286,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162380174",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 459.88934388625484,
@@ -5037,12 +5163,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162380174
+      "createdAt": 1768162380174,
+      "x": 459.88934388625484,
+      "y": -587.2954895262715,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162404377",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 179.38104306036712,
@@ -5079,12 +5209,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162404377
+      "createdAt": 1768162404377,
+      "x": 179.38104306036712,
+      "y": -852.2199958618316,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162407499",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 175.4850944377855,
@@ -5121,12 +5255,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162407499
+      "createdAt": 1768162407499,
+      "x": 175.4850944377855,
+      "y": -521.064362942381,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162408966",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 177.43306874907648,
@@ -5163,12 +5301,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162408966
+      "createdAt": 1768162408966,
+      "x": 177.43306874907648,
+      "y": -306.7871887003833,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162410581",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 179.38104306036723,
@@ -5205,12 +5347,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162410581
+      "createdAt": 1768162410581,
+      "x": 179.38104306036723,
+      "y": -102.24988601483992,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162412548",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -147.87864123650218,
@@ -5247,12 +5393,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162412548
+      "createdAt": 1768162412548,
+      "x": -147.87864123650218,
+      "y": -106.1458346374217,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162415033",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -155.67053848166574,
@@ -5289,12 +5439,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162415033
+      "createdAt": 1768162415033,
+      "x": -155.67053848166574,
+      "y": -312.63111163425594,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162417010",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -157.61851279295672,
@@ -5331,12 +5485,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162417010
+      "createdAt": 1768162417010,
+      "x": -157.61851279295672,
+      "y": -523.0123372536718,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162421009",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -463.4504796656257,
@@ -5373,12 +5531,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162421009
+      "createdAt": 1768162421009,
+      "x": -463.4504796656257,
+      "y": -519.1163886310901,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162423975",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -461.5025053543352,
@@ -5415,12 +5577,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162423975
+      "createdAt": 1768162423975,
+      "x": -461.5025053543352,
+      "y": -102.24988601484017,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162425891",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -771.2304208495866,
@@ -5457,12 +5623,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162425891
+      "createdAt": 1768162425891,
+      "x": -771.2304208495866,
+      "y": -102.24988601484017,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162427674",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -775.1263694721684,
@@ -5499,12 +5669,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162427674
+      "createdAt": 1768162427674,
+      "x": -775.1263694721684,
+      "y": -310.6831373229653,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162429892",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -777.0743437834593,
@@ -5541,12 +5715,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162429892
+      "createdAt": 1768162429892,
+      "x": -777.0743437834593,
+      "y": -517.1684143197996,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162435997",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -428.3869420623903,
@@ -5583,12 +5761,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162435997
+      "createdAt": 1768162435997,
+      "x": -428.3869420623903,
+      "y": -908.7112508892678,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162439683",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -432.28289068497213,
@@ -5625,12 +5807,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162439683
+      "createdAt": 1768162439683,
+      "x": -432.28289068497213,
+      "y": -1200.9073975829015,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162441779",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -165.4104100381203,
@@ -5667,12 +5853,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162441779
+      "createdAt": 1768162441779,
+      "x": -165.4104100381203,
+      "y": -1202.855371894192,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162443693",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -163.4624357268292,
@@ -5709,12 +5899,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162443693
+      "createdAt": 1768162443693,
+      "x": -163.4624357268292,
+      "y": -908.7112508892678,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162455647",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1236.7962812481082,
@@ -5751,12 +5945,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162455647
+      "createdAt": 1768162455647,
+      "x": -1236.7962812481082,
+      "y": -1132.7282966877206,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162458950",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1232.9003326255263,
@@ -5793,12 +5991,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162458950
+      "createdAt": 1768162458950,
+      "x": -1232.9003326255263,
+      "y": -883.3875848424865,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162461080",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1501.7207875836693,
@@ -5835,12 +6037,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162461080
+      "createdAt": 1768162461080,
+      "x": -1501.7207875836693,
+      "y": -887.2835334650682,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162463864",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1501.7207875836693,
@@ -5877,12 +6083,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162463864
+      "createdAt": 1768162463864,
+      "x": -1501.7207875836693,
+      "y": -1132.7282966877206,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162468547",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1104.3340280803272,
@@ -5919,12 +6129,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162468547
+      "createdAt": 1768162468547,
+      "x": -1104.3340280803272,
+      "y": -143.15734655194905,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162471332",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1106.282002391618,
@@ -5961,12 +6175,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162471332
+      "createdAt": 1768162471332,
+      "x": -1106.282002391618,
+      "y": -425.61362168912825,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162473878",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1377.0504316610518,
@@ -6003,12 +6221,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162473878
+      "createdAt": 1768162473878,
+      "x": -1377.0504316610518,
+      "y": -427.56159600041923,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162476680",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1373.1544830384698,
@@ -6045,12 +6267,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162476680
+      "createdAt": 1768162476680,
+      "x": -1373.1544830384698,
+      "y": -145.10532086323997,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162514982",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1719.8939104482465,
@@ -6087,12 +6313,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162514982
+      "createdAt": 1768162514982,
+      "x": -1719.8939104482465,
+      "y": -324.31895750200187,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162519982",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1727.68580769341,
@@ -6129,12 +6359,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162519982
+      "createdAt": 1768162519982,
+      "x": -1727.68580769341,
+      "y": -90.56204014709482,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162538499",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -2738.6844752533807,
@@ -6171,12 +6405,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162538499
+      "createdAt": 1768162538499,
+      "x": -2738.6844752533807,
+      "y": -1027.5376838780132,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162545815",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -2462.072123050075,
@@ -6213,12 +6451,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162545815
+      "createdAt": 1768162545815,
+      "x": -2462.072123050075,
+      "y": -1039.2255297457586,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162742844",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1273.807793162633,
@@ -6255,12 +6497,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162742844
+      "createdAt": 1768162742844,
+      "x": -1273.807793162633,
+      "y": -678.8502821569441,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162744693",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1690.6742957788829,
@@ -6297,18 +6543,22 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162744693
+      "createdAt": 1768162744693,
+      "x": -1690.6742957788829,
+      "y": -637.9428216198353,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162961239",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -2170.516107927817,
         "y": -39.25703336616226
       },
-      "rotation": 45,
+      "rotation": 90,
       "roomId": "Kids Hallway",
       "layerId": "lighting",
       "installationHeight": 2.4,
@@ -6339,12 +6589,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768162961239
+      "createdAt": 1768162961239,
+      "x": -2170.516107927817,
+      "y": -39.25703336616226,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768163032688",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -2152.640157745545,
@@ -6381,12 +6635,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768163032688
+      "createdAt": 1768163032688,
+      "x": -2152.640157745545,
+      "y": -532.4489555321506,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768163040088",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1888.284198175389,
@@ -6423,60 +6681,22 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768163040088
-    },
-    {
-      "id": "lighting-1768163053177",
-      "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
-      "name": "custom-2ds-l12-1768153974533 ligh",
-      "position": {
-        "x": -2172.8556134773803,
-        "y": -257.2077505679297
-      },
-      "rotation": 45,
-      "roomId": "Kids Hallway",
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "orderingCode": "2DS - L12/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
-        "shorthand": "2DS-L12",
-        "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
-        "shoppingLink": "",
-        "specLumens": "L12",
-        "specColor": "9TW",
-        "specMountingType": "N",
-        "specDriver": "LD2",
-        "specDistribution": "W",
-        "specFlange": "ZF",
-        "specReflectorFinish": "WH",
-        "specOptions": "NONE",
-        "specControl": "STD",
-        "specVoltage": "UNV",
-        "specTrimType": "R",
-        "specTrimOptions": "NONE",
-        "specBracket": "F1",
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": 1768163053177
+      "createdAt": 1768163040088,
+      "x": -1888.284198175389,
+      "y": -534.0039905884457,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768163097277",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -2172.85561347738,
         "y": 612.0568459009941
       },
-      "rotation": 45,
+      "rotation": 180,
       "roomId": "Primary Hallway",
       "layerId": "lighting",
       "installationHeight": 2.4,
@@ -6507,18 +6727,22 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768163097277
+      "createdAt": 1768163097277,
+      "x": -2172.85561347738,
+      "y": 612.0568459009941,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768163101979",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -2171.3005784210845,
         "y": 263.7289932909066
       },
-      "rotation": 45,
+      "rotation": 90,
       "roomId": "Primary Hallway",
       "layerId": "lighting",
       "installationHeight": 2.4,
@@ -6549,18 +6773,22 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768163101979
+      "createdAt": 1768163101979,
+      "x": -2171.3005784210845,
+      "y": 263.7289932909066,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768163111077",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1902.2795136820437,
         "y": 557.630618930668
       },
-      "rotation": 45,
+      "rotation": 90,
       "roomId": "Primary Closet",
       "layerId": "lighting",
       "installationHeight": 2.4,
@@ -6591,18 +6819,22 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768163111077
+      "createdAt": 1768163111077,
+      "x": -1902.2795136820437,
+      "y": 557.630618930668,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768163112944",
       "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1897.6144085131587,
         "y": 299.4947995856925
       },
-      "rotation": 45,
+      "rotation": 90,
       "roomId": "Primary Closet",
       "layerId": "lighting",
       "installationHeight": 2.4,
@@ -6633,205 +6865,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768163112944
-    },
-    {
-      "id": "lighting-1768163179844",
-      "deviceTypeId": "pendant-light",
-      "productId": "generic-product",
-      "name": "pendant-light ligh",
-      "position": {
-        "x": -2141.754912351479,
-        "y": 1086.3425380709793
-      },
-      "rotation": 45,
-      "roomId": "Primary Bedroom",
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": 1768163179844
-    },
-    {
-      "id": "lighting-1768163214564",
-      "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
-      "name": "custom-2ds-l12-1768153974533 ligh",
-      "position": {
-        "x": -2379.675275964619,
-        "y": 919.9537870474107
-      },
-      "rotation": 45,
-      "roomId": "Primary Bedroom",
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "orderingCode": "2DS - L12/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
-        "shorthand": "2DS-L12",
-        "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
-        "shoppingLink": "",
-        "specLumens": "L12",
-        "specColor": "9TW",
-        "specMountingType": "N",
-        "specDriver": "LD2",
-        "specDistribution": "W",
-        "specFlange": "ZF",
-        "specReflectorFinish": "WH",
-        "specOptions": "NONE",
-        "specControl": "STD",
-        "specVoltage": "UNV",
-        "specTrimType": "R",
-        "specTrimOptions": "NONE",
-        "specBracket": "F1",
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": 1768163214564
-    },
-    {
-      "id": "lighting-1768163223444",
-      "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
-      "name": "custom-2ds-l12-1768153974533 ligh",
-      "position": {
-        "x": -2384.3403811335043,
-        "y": 1254.286324150843
-      },
-      "rotation": 45,
-      "roomId": "Primary Bedroom",
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "orderingCode": "2DS - L12/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
-        "shorthand": "2DS-L12",
-        "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
-        "shoppingLink": "",
-        "specLumens": "L12",
-        "specColor": "9TW",
-        "specMountingType": "N",
-        "specDriver": "LD2",
-        "specDistribution": "W",
-        "specFlange": "ZF",
-        "specReflectorFinish": "WH",
-        "specOptions": "NONE",
-        "specControl": "STD",
-        "specVoltage": "UNV",
-        "specTrimType": "R",
-        "specTrimOptions": "NONE",
-        "specBracket": "F1",
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": 1768163223444
-    },
-    {
-      "id": "lighting-1768163229094",
-      "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
-      "name": "custom-2ds-l12-1768153974533 ligh",
-      "position": {
-        "x": -1886.7291631190935,
-        "y": 1246.5111488693678
-      },
-      "rotation": 45,
-      "roomId": "Primary Bedroom",
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "orderingCode": "2DS - L12/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
-        "shorthand": "2DS-L12",
-        "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
-        "shoppingLink": "",
-        "specLumens": "L12",
-        "specColor": "9TW",
-        "specMountingType": "N",
-        "specDriver": "LD2",
-        "specDistribution": "W",
-        "specFlange": "ZF",
-        "specReflectorFinish": "WH",
-        "specOptions": "NONE",
-        "specControl": "STD",
-        "specVoltage": "UNV",
-        "specTrimType": "R",
-        "specTrimOptions": "NONE",
-        "specBracket": "F1",
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": 1768163229094
-    },
-    {
-      "id": "lighting-1768163266512",
-      "deviceTypeId": "custom-2ds-l12-1768153974533",
-      "productId": "generic-product",
-      "name": "custom-2ds-l12-1768153974533 ligh",
-      "position": {
-        "x": -1911.6097240198146,
-        "y": 912.1786117659358
-      },
-      "rotation": 45,
-      "roomId": "Primary Bedroom",
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "orderingCode": "2DS - L12/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
-        "shorthand": "2DS-L12",
-        "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
-        "shoppingLink": "",
-        "specLumens": "L12",
-        "specColor": "9TW",
-        "specMountingType": "N",
-        "specDriver": "LD2",
-        "specDistribution": "W",
-        "specFlange": "ZF",
-        "specReflectorFinish": "WH",
-        "specOptions": "NONE",
-        "specControl": "STD",
-        "specVoltage": "UNV",
-        "specTrimType": "R",
-        "specTrimOptions": "NONE",
-        "specBracket": "F1",
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": 1768163266512
+      "createdAt": 1768163112944,
+      "x": -1897.6144085131587,
+      "y": 299.4947995856925,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768168228046",
       "deviceTypeId": "custom-2ds-l9-1767158007452",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l9-1767158007452 ligh",
       "position": {
         "x": -2743.8653591889465,
@@ -6845,7 +6888,7 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "productId": "light-fix-dali",
+        "productId": "2DS-L9",
         "shorthand": "2DS-L9",
         "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
@@ -6868,12 +6911,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768168228046
+      "createdAt": 1768168228046,
+      "x": -2743.8653591889465,
+      "y": 6.048871265523729,
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768168231511",
       "deviceTypeId": "custom-2ds-l9-1767158007452",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l9-1767158007452 ligh",
       "position": {
         "x": -2738.0555346998044,
@@ -6887,7 +6934,7 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "productId": "light-fix-dali",
+        "productId": "2DS-L9",
         "shorthand": "2DS-L9",
         "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
@@ -6910,12 +6957,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768168231511
+      "createdAt": 1768168231511,
+      "x": -2738.0555346998044,
+      "y": -271.370248091009,
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768168233844",
       "deviceTypeId": "custom-2ds-l9-1767158007452",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l9-1767158007452 ligh",
       "position": {
         "x": -2469.3511520769844,
@@ -6929,7 +6980,7 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "productId": "light-fix-dali",
+        "productId": "2DS-L9",
         "shorthand": "2DS-L9",
         "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
@@ -6952,12 +7003,16 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768168233844
+      "createdAt": 1768168233844,
+      "x": -2469.3511520769844,
+      "y": -274.27516033558004,
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768168235910",
       "deviceTypeId": "custom-2ds-l9-1767158007452",
-      "productId": "generic-product",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l9-1767158007452 ligh",
       "position": {
         "x": -2470.80360819927,
@@ -6971,7 +7026,7 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "productId": "light-fix-dali",
+        "productId": "2DS-L9",
         "shorthand": "2DS-L9",
         "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
@@ -6994,7 +7049,872 @@
         "range": 10,
         "cableType": "Cat6"
       },
-      "createdAt": 1768168235910
+      "createdAt": 1768168235910,
+      "x": -2470.80360819927,
+      "y": 8.953783510094723,
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
+    },
+    {
+      "id": "lighting-1768172017297",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
+      "name": "custom-2ds-l12-1768153974533 ligh",
+      "position": {
+        "x": 1035.6959784448386,
+        "y": 493.70222248329253
+      },
+      "rotation": 0,
+      "roomId": "Family Room Open Area",
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "2DS-L9",
+        "orderingCode": "2DS - L12/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "shorthand": "2DS-L12",
+        "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+        "shoppingLink": "",
+        "specLumens": "L12",
+        "specColor": "9TW",
+        "specMountingType": "N",
+        "specDriver": "LD2",
+        "specDistribution": "W",
+        "specFlange": "ZF",
+        "specReflectorFinish": "WH",
+        "specOptions": "NONE",
+        "specControl": "STD",
+        "specVoltage": "UNV",
+        "specTrimType": "R",
+        "specTrimOptions": "NONE",
+        "specBracket": "F1",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1768172017297,
+      "x": 1035.6959784448386,
+      "y": 493.70222248329253,
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
+    },
+    {
+      "id": "lighting-1768172618942",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": 461.99594777868504,
+        "y": -914.3065479540812
+      },
+      "rotation": 0,
+      "roomId": "Guest Bedroom",
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "2DS-L9",
+        "shorthand": "2DS-L9",
+        "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+        "shoppingLink": "",
+        "specLumens": "L9",
+        "specColor": "9TW",
+        "specMountingType": "N",
+        "specDriver": "LD2",
+        "specOptions": "NONE",
+        "specControl": "STD",
+        "specVoltage": "UNV",
+        "specFlange": "ZF",
+        "specReflectorFinish": "WH",
+        "specDistribution": "W",
+        "specTrimType": "R",
+        "specTrimOptions": "NONE",
+        "specBracket": "F1",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1768172618942,
+      "x": 461.99594777868504,
+      "y": -914.3065479540812,
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
+    },
+    {
+      "id": "lighting-1768172621373",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": 461.99594777868504,
+        "y": -1126.411088811804
+      },
+      "rotation": 0,
+      "roomId": "Guest Bedroom",
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "2DS-L9",
+        "shorthand": "2DS-L9",
+        "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+        "shoppingLink": "",
+        "specLumens": "L9",
+        "specColor": "9TW",
+        "specMountingType": "N",
+        "specDriver": "LD2",
+        "specOptions": "NONE",
+        "specControl": "STD",
+        "specVoltage": "UNV",
+        "specFlange": "ZF",
+        "specReflectorFinish": "WH",
+        "specDistribution": "W",
+        "specTrimType": "R",
+        "specTrimOptions": "NONE",
+        "specBracket": "F1",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1768172621373,
+      "x": 461.99594777868504,
+      "y": -1126.411088811804,
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
+    },
+    {
+      "id": "lighting-1768172625172",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": 828.2196154466952,
+        "y": -1130.988884657654
+      },
+      "rotation": 0,
+      "roomId": "Guest Bedroom",
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "2DS-L9",
+        "shorthand": "2DS-L9",
+        "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+        "shoppingLink": "",
+        "specLumens": "L9",
+        "specColor": "9TW",
+        "specMountingType": "N",
+        "specDriver": "LD2",
+        "specOptions": "NONE",
+        "specControl": "STD",
+        "specVoltage": "UNV",
+        "specFlange": "ZF",
+        "specReflectorFinish": "WH",
+        "specDistribution": "W",
+        "specTrimType": "R",
+        "specTrimOptions": "NONE",
+        "specBracket": "F1",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1768172625172,
+      "x": 828.2196154466952,
+      "y": -1130.988884657654,
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
+    },
+    {
+      "id": "lighting-1768172627038",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": 819.0640237549949,
+        "y": -903.6250243137642
+      },
+      "rotation": 0,
+      "roomId": "Guest Bedroom",
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "2DS-L9",
+        "shorthand": "2DS-L9",
+        "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+        "shoppingLink": "",
+        "specLumens": "L9",
+        "specColor": "9TW",
+        "specMountingType": "N",
+        "specDriver": "LD2",
+        "specOptions": "NONE",
+        "specControl": "STD",
+        "specVoltage": "UNV",
+        "specFlange": "ZF",
+        "specReflectorFinish": "WH",
+        "specDistribution": "W",
+        "specTrimType": "R",
+        "specTrimOptions": "NONE",
+        "specBracket": "F1",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1768172627038,
+      "x": 819.0640237549949,
+      "y": -903.6250243137642,
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
+    },
+    {
+      "id": "lighting-1768172983538",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": -2432.6969587472117,
+        "y": 1266.2502066191964
+      },
+      "rotation": 0,
+      "roomId": "Primary Bedroom",
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "2DS-L9",
+        "shorthand": "2DS-L9",
+        "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+        "shoppingLink": "",
+        "specLumens": "L9",
+        "specColor": "9TW",
+        "specMountingType": "N",
+        "specDriver": "LD2",
+        "specOptions": "NONE",
+        "specControl": "STD",
+        "specVoltage": "UNV",
+        "specFlange": "ZF",
+        "specReflectorFinish": "WH",
+        "specDistribution": "W",
+        "specTrimType": "R",
+        "specTrimOptions": "NONE",
+        "specBracket": "F1",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1768172983538,
+      "x": -2432.6969587472117,
+      "y": 1266.2502066191964,
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
+    },
+    {
+      "id": "lighting-1768172992634",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": -1880.3095933479633,
+        "y": 1255.5686829788795
+      },
+      "rotation": 0,
+      "roomId": "Primary Bedroom",
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "2DS-L9",
+        "shorthand": "2DS-L9",
+        "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+        "shoppingLink": "",
+        "specLumens": "L9",
+        "specColor": "9TW",
+        "specMountingType": "N",
+        "specDriver": "LD2",
+        "specOptions": "NONE",
+        "specControl": "STD",
+        "specVoltage": "UNV",
+        "specFlange": "ZF",
+        "specReflectorFinish": "WH",
+        "specDistribution": "W",
+        "specTrimType": "R",
+        "specTrimOptions": "NONE",
+        "specBracket": "F1",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1768172992634,
+      "x": -1880.3095933479633,
+      "y": 1255.5686829788795,
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
+    },
+    {
+      "id": "lighting-1768172993667",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": -1887.9392530910468,
+        "y": 935.1229737693706
+      },
+      "rotation": 0,
+      "roomId": "Primary Bedroom",
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "2DS-L9",
+        "shorthand": "2DS-L9",
+        "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+        "shoppingLink": "",
+        "specLumens": "L9",
+        "specColor": "9TW",
+        "specMountingType": "N",
+        "specDriver": "LD2",
+        "specOptions": "NONE",
+        "specControl": "STD",
+        "specVoltage": "UNV",
+        "specFlange": "ZF",
+        "specReflectorFinish": "WH",
+        "specDistribution": "W",
+        "specTrimType": "R",
+        "specTrimOptions": "NONE",
+        "specBracket": "F1",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1768172993667,
+      "x": -1887.9392530910468,
+      "y": 935.1229737693706,
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
+    },
+    {
+      "id": "lighting-1768172994917",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": -2429.6450948499787,
+        "y": 938.174837666604
+      },
+      "rotation": 0,
+      "roomId": "Primary Bedroom",
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "2DS-L9",
+        "shorthand": "2DS-L9",
+        "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+        "shoppingLink": "",
+        "specLumens": "L9",
+        "specColor": "9TW",
+        "specMountingType": "N",
+        "specDriver": "LD2",
+        "specOptions": "NONE",
+        "specControl": "STD",
+        "specVoltage": "UNV",
+        "specFlange": "ZF",
+        "specReflectorFinish": "WH",
+        "specDistribution": "W",
+        "specTrimType": "R",
+        "specTrimOptions": "NONE",
+        "specBracket": "F1",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1768172994917,
+      "x": -2429.6450948499787,
+      "y": 938.174837666604,
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
+    },
+    {
+      "id": "lighting-1768173194955",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": -2168.7107316365214,
+        "y": 916.8117903859702
+      },
+      "rotation": 0,
+      "roomId": "Primary Bedroom",
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "2DS-L9",
+        "shorthand": "2DS-L9",
+        "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+        "shoppingLink": "",
+        "specLumens": "L9",
+        "specColor": "9TW",
+        "specMountingType": "N",
+        "specDriver": "LD2",
+        "specOptions": "NONE",
+        "specControl": "STD",
+        "specVoltage": "UNV",
+        "specFlange": "ZF",
+        "specReflectorFinish": "WH",
+        "specDistribution": "W",
+        "specTrimType": "R",
+        "specTrimOptions": "NONE",
+        "specBracket": "F1",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1768173194955,
+      "x": -2168.7107316365214,
+      "y": 916.8117903859702,
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
+    },
+    {
+      "id": "lighting-1768173197038",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
+      "name": "custom-2ds-l9-1767158007452 ligh",
+      "position": {
+        "x": -2165.658867739288,
+        "y": 1272.3539344136634
+      },
+      "rotation": 0,
+      "roomId": "Primary Bedroom",
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "2DS-L9",
+        "shorthand": "2DS-L9",
+        "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+        "shoppingLink": "",
+        "specLumens": "L9",
+        "specColor": "9TW",
+        "specMountingType": "N",
+        "specDriver": "LD2",
+        "specOptions": "NONE",
+        "specControl": "STD",
+        "specVoltage": "UNV",
+        "specFlange": "ZF",
+        "specReflectorFinish": "WH",
+        "specDistribution": "W",
+        "specTrimType": "R",
+        "specTrimOptions": "NONE",
+        "specBracket": "F1",
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": 1768173197038,
+      "x": -2165.658867739288,
+      "y": 1272.3539344136634,
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
+    },
+    {
+      "id": "lighting-1768175363988",
+      "deviceTypeId": "generic-lighting",
+      "productId": "2DS-L9",
+      "name": "Device 78",
+      "position": {
+        "x": -2167.1336782012017,
+        "y": -263.4818829429919
+      },
+      "rotation": 0,
+      "roomId": null,
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "id": "lighting-1768175363988",
+        "type": "custom-2ds-l12-1768153974533",
+        "category": "lighting",
+        "x": -2167.1336782012017,
+        "y": -263.4818829429919,
+        "rotation": 0,
+        "scale": 1,
+        "room": "Kids Hallway",
+        "productId": "2DS-L9",
+        "installationHeight": 2.4,
+        "busAssignment": "Bus 1",
+        "metadata": {
+          "productId": "2DS-L9",
+          "orderingCode": "2DS - L12/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+          "shorthand": "2DS-L12",
+          "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+          "shoppingLink": "",
+          "specLumens": "L12",
+          "specColor": "9TW",
+          "specMountingType": "N",
+          "specDriver": "LD2",
+          "specDistribution": "W",
+          "specFlange": "ZF",
+          "specReflectorFinish": "WH",
+          "specOptions": "NONE",
+          "specControl": "STD",
+          "specVoltage": "UNV",
+          "specTrimType": "R",
+          "specTrimOptions": "NONE",
+          "specBracket": "F1",
+          "lumens": 800,
+          "beamAngle": 60,
+          "range": 10,
+          "cableType": "Cat6"
+        },
+        "createdAt": "2026-01-11T23:49:23.988Z",
+        "_migratedFrom": "DaliDevice",
+        "_migrationTimestamp": 1768175963136
+      },
+      "createdAt": "2026-01-11T23:49:23.988Z",
+      "x": -2167.1336782012017,
+      "y": -263.4818829429919,
+      "type": "recessed-light",
+      "category": "lighting"
+    },
+    {
+      "id": "lighting-1768175440243",
+      "deviceTypeId": "generic-lighting",
+      "productId": "2DS-L9",
+      "name": "Device 79",
+      "position": {
+        "x": -2315.1888343982478,
+        "y": -64.13258805544899
+      },
+      "rotation": 0,
+      "roomId": null,
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "id": "lighting-1768175440243",
+        "type": "custom-2ds-l9-1767158007452",
+        "category": "lighting",
+        "x": -2315.1888343982478,
+        "y": -64.13258805544899,
+        "rotation": 0,
+        "scale": 1,
+        "room": "Bedroom 2 Closet",
+        "productId": "2DS-L9",
+        "installationHeight": 2.4,
+        "busAssignment": "Bus 1",
+        "metadata": {
+          "productId": "2DS-L9",
+          "shorthand": "2DS-L9",
+          "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+          "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+          "shoppingLink": "",
+          "specLumens": "L9",
+          "specColor": "9TW",
+          "specMountingType": "N",
+          "specDriver": "LD2",
+          "specOptions": "NONE",
+          "specControl": "STD",
+          "specVoltage": "UNV",
+          "specFlange": "ZF",
+          "specReflectorFinish": "WH",
+          "specDistribution": "W",
+          "specTrimType": "R",
+          "specTrimOptions": "NONE",
+          "specBracket": "F1",
+          "lumens": 800,
+          "beamAngle": 60,
+          "range": 10,
+          "cableType": "Cat6"
+        },
+        "createdAt": "2026-01-11T23:50:40.243Z",
+        "_migratedFrom": "DaliDevice",
+        "_migrationTimestamp": 1768175963136
+      },
+      "createdAt": "2026-01-11T23:50:40.243Z",
+      "x": -2315.1888343982478,
+      "y": -64.13258805544899,
+      "type": "recessed-light",
+      "category": "lighting"
+    },
+    {
+      "id": "lighting-1768175485521",
+      "deviceTypeId": "generic-lighting",
+      "productId": "2DS-L9",
+      "name": "Device 80",
+      "position": {
+        "x": -1040.7777882455166,
+        "y": -955.3873719661816
+      },
+      "rotation": 0,
+      "roomId": null,
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "id": "lighting-1768175485521",
+        "type": "custom-2ds-l9-1767158007452",
+        "category": "lighting",
+        "x": -1040.7777882455166,
+        "y": -955.3873719661816,
+        "rotation": 0,
+        "scale": 1,
+        "room": "Office 1 Other",
+        "productId": "2DS-L9",
+        "installationHeight": 2.4,
+        "busAssignment": "Bus 1",
+        "metadata": {
+          "productId": "2DS-L9",
+          "shorthand": "2DS-L9",
+          "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+          "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+          "shoppingLink": "",
+          "specLumens": "L9",
+          "specColor": "9TW",
+          "specMountingType": "N",
+          "specDriver": "LD2",
+          "specOptions": "NONE",
+          "specControl": "STD",
+          "specVoltage": "UNV",
+          "specFlange": "ZF",
+          "specReflectorFinish": "WH",
+          "specDistribution": "W",
+          "specTrimType": "R",
+          "specTrimOptions": "NONE",
+          "specBracket": "F1",
+          "lumens": 800,
+          "beamAngle": 60,
+          "range": 10,
+          "cableType": "Cat6"
+        },
+        "createdAt": "2026-01-11T23:51:25.521Z",
+        "_migratedFrom": "DaliDevice",
+        "_migrationTimestamp": 1768175963136
+      },
+      "createdAt": "2026-01-11T23:51:25.521Z",
+      "x": -1040.7777882455166,
+      "y": -955.3873719661816,
+      "type": "recessed-light",
+      "category": "lighting"
+    },
+    {
+      "id": "lighting-1768175494571",
+      "deviceTypeId": "generic-lighting",
+      "productId": "2DS-L9",
+      "name": "Device 81",
+      "position": {
+        "x": -1036.613046264625,
+        "y": -1213.2718908196582
+      },
+      "rotation": 0,
+      "roomId": null,
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "id": "lighting-1768175494571",
+        "type": "custom-2ds-l9-1767158007452",
+        "category": "lighting",
+        "x": -1036.613046264625,
+        "y": -1213.2718908196582,
+        "rotation": 0,
+        "scale": 1,
+        "room": "Foyer Closet",
+        "productId": "2DS-L9",
+        "installationHeight": 2.4,
+        "busAssignment": "Bus 1",
+        "metadata": {
+          "productId": "2DS-L9",
+          "shorthand": "2DS-L9",
+          "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+          "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+          "shoppingLink": "",
+          "specLumens": "L9",
+          "specColor": "9TW",
+          "specMountingType": "N",
+          "specDriver": "LD2",
+          "specOptions": "NONE",
+          "specControl": "STD",
+          "specVoltage": "UNV",
+          "specFlange": "ZF",
+          "specReflectorFinish": "WH",
+          "specDistribution": "W",
+          "specTrimType": "R",
+          "specTrimOptions": "NONE",
+          "specBracket": "F1",
+          "lumens": 800,
+          "beamAngle": 60,
+          "range": 10,
+          "cableType": "Cat6"
+        },
+        "createdAt": "2026-01-11T23:51:34.571Z",
+        "_migratedFrom": "DaliDevice",
+        "_migrationTimestamp": 1768175963136
+      },
+      "createdAt": "2026-01-11T23:51:34.571Z",
+      "x": -1036.613046264625,
+      "y": -1213.2718908196582,
+      "type": "recessed-light",
+      "category": "lighting"
+    },
+    {
+      "id": "lighting-1768175568092",
+      "deviceTypeId": "generic-lighting",
+      "productId": "2DS-L9",
+      "name": "Device 82",
+      "position": {
+        "x": 1067.5239223241301,
+        "y": -1116.9606089472256
+      },
+      "rotation": 0,
+      "roomId": null,
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "id": "lighting-1768175568092",
+        "type": "custom-2ds-l9-1767158007452",
+        "category": "lighting",
+        "x": 1067.5239223241301,
+        "y": -1116.9606089472256,
+        "rotation": 0,
+        "scale": 1,
+        "room": "Guest Closet",
+        "productId": "2DS-L9",
+        "installationHeight": 2.4,
+        "busAssignment": "Bus 1",
+        "metadata": {
+          "productId": "2DS-L9",
+          "shorthand": "2DS-L9",
+          "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+          "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+          "shoppingLink": "",
+          "specLumens": "L9",
+          "specColor": "9TW",
+          "specMountingType": "N",
+          "specDriver": "LD2",
+          "specOptions": "NONE",
+          "specControl": "STD",
+          "specVoltage": "UNV",
+          "specFlange": "ZF",
+          "specReflectorFinish": "WH",
+          "specDistribution": "W",
+          "specTrimType": "R",
+          "specTrimOptions": "NONE",
+          "specBracket": "F1",
+          "lumens": 800,
+          "beamAngle": 60,
+          "range": 10,
+          "cableType": "Cat6"
+        },
+        "createdAt": "2026-01-11T23:52:48.092Z",
+        "_migratedFrom": "DaliDevice",
+        "_migrationTimestamp": 1768175963136
+      },
+      "createdAt": "2026-01-11T23:52:48.092Z",
+      "x": 1067.5239223241301,
+      "y": -1116.9606089472256,
+      "type": "recessed-light",
+      "category": "lighting"
+    },
+    {
+      "id": "lighting-1768176191654",
+      "deviceTypeId": "generic-lighting",
+      "productId": "generic-light",
+      "name": "Device 83",
+      "position": {
+        "x": 927.9284819840798,
+        "y": -316.6498595045605
+      },
+      "rotation": 0,
+      "roomId": null,
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "id": "lighting-1768176191654",
+        "type": "generic-lighting",
+        "category": "lighting",
+        "x": 927.9284819840798,
+        "y": -316.6498595045605,
+        "rotation": 0,
+        "scale": 1,
+        "room": "Utility Closet",
+        "productId": "generic-light",
+        "installationHeight": 2.4,
+        "busAssignment": "Bus 1",
+        "metadata": {
+          "productId": "generic-light",
+          "lumens": 800,
+          "beamAngle": 60,
+          "range": 10,
+          "cableType": "Cat6"
+        },
+        "createdAt": "2026-01-12T00:03:11.654Z",
+        "_migratedFrom": "DaliDevice",
+        "_migrationTimestamp": 1768181846550
+      },
+      "createdAt": "2026-01-12T00:03:11.654Z",
+      "x": 927.9284819840798,
+      "y": -316.6498595045605,
+      "type": "recessed-light",
+      "category": "lighting"
     }
   ],
   "cables": [],
@@ -7010,7 +7930,7 @@
       "id": "custom-2ds-l9-1767158007452",
       "name": "Recessed Light - 2DS-L9",
       "category": "lighting",
-      "description": "Recessed Light Preset - Shorthand: 2DS-L9. Product: light-fix-dali, Bus: Bus 1, Cable: Cat6",
+      "description": "Recessed Light Preset - Shorthand: 2DS-L9. Product: 2DS-L9, Bus: Bus 1, Cable: Cat6",
       "color": 0,
       "size": {
         "width": 16,
@@ -7018,7 +7938,7 @@
       },
       "metadata": {
         "shorthand": "2DS-L9",
-        "productId": "light-fix-dali",
+        "productId": "2DS-L9",
         "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
@@ -7035,13 +7955,14 @@
         "specTrimType": "R",
         "specTrimOptions": "NONE",
         "specBracket": "F1"
-      }
+      },
+      "productId": "2DS-L9"
     },
     {
       "id": "custom-2ds-l12-1768153974533",
       "name": "2DS-L12",
       "category": "lighting",
-      "description": "Recessed Light Preset - Shorthand: 2DS-L9. Product: light-fix-dali, Bus: Bus 1, Cable: Cat6",
+      "description": "Recessed Light Preset - Shorthand: 2DS-L9. Product: 2DS-L9, Bus: Bus 1, Cable: Cat6",
       "color": 0,
       "size": {
         "width": 16,
@@ -7064,9 +7985,38 @@
         "specVoltage": "UNV",
         "specTrimType": "R",
         "specTrimOptions": "NONE",
-        "specBracket": "F1"
+        "specBracket": "F1",
+        "productId": "2DS-L9"
       },
-      "productId": "generic-product"
+      "productId": "2DS-L9"
+    },
+    {
+      "id": "custom-haiku-52-alu-1768174111818",
+      "name": "Haiku-52-alu",
+      "category": "lighting",
+      "description": "Filled black square with crosshairs",
+      "color": 0,
+      "size": {
+        "width": 16,
+        "height": 16
+      },
+      "productId": "BAF-HAIKU",
+      "metadata": {
+        "orderingCode": "HK-52-I-AL-BA-LOW-NL",
+        "shorthand": "Haiku-52-alu",
+        "pdfUrl": "https://bigassfans.com/docs/haiku/haiku/cutsheet-haiku-en.pdf",
+        "shoppingLink": "",
+        "fanSeries": "HK",
+        "fanSize": "52",
+        "fanFinish": "BA",
+        "fanMount": "LOW",
+        "fanMaterial": "AL",
+        "fanEnvironment": "I",
+        "fanLightKit": "NL",
+        "fanVoltage": "UNV",
+        "cfm": 5172,
+        "maxPower": 15.1
+      }
     }
   ]
 }

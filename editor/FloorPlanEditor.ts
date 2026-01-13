@@ -34,7 +34,7 @@ export class FloorPlanEditor {
      */
     public static isTyping(): boolean {
         const activeProp = document.activeElement?.tagName.toLowerCase();
-        return activeProp === 'input' || activeProp === 'textarea' || (document.activeElement as HTMLElement)?.isContentEditable === true;
+        return activeProp === 'input' || activeProp === 'textarea' || activeProp === 'select' || (document.activeElement as HTMLElement)?.isContentEditable === true;
     }
 
     public static isUserTyping(e: KeyboardEvent): boolean {
@@ -247,12 +247,14 @@ export class FloorPlanEditor {
         const isTyping = FloorPlanEditor.isUserTyping(e);
 
         if (this.isMouseOverCanvas && !isTyping) {
-            // Smart Focus: If over canvas and NOT typing, we claim the event.
-            // Aggressively prevent default for navigation keys to stop scrolling 
-            // and ensure the editor gets the event without interference.
+            // Smart Focus: If over canvas and NOT typing, we claim the event
+            // and stop it from reaching ANY other components (dialogs, sidebars).
+            // (AGGRESSIVE-HIJACK-P28)
+            e.stopImmediatePropagation();
+
+            // Aggressively prevent default for navigation/common keys to stop browser side effects
             if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyR'].includes(e.code)) {
                 e.preventDefault();
-                // remoteDebug(`[SmartFocus] Prevented default for ${e.code}`, 'FloorPlanEditor');
             }
         } else if (isTyping) {
             return;
@@ -457,16 +459,30 @@ export class FloorPlanEditor {
     private setupEventListeners(): void {
         const el = this.renderer.domElement;
 
+        el.addEventListener('mouseenter', () => {
+            this.isMouseOverCanvas = true;
+            // Aggressively claim focus when entering canvas
+            // This satisfies the user's request to "reset focus" when moving the mouse
+            // even if they were previously typing in an input.
+            el.focus();
+        });
+
         el.addEventListener('mouseleave', () => {
+            this.isMouseOverCanvas = false;
             this.isDragging = false;
             el.style.cursor = 'default';
         });
+
         el.addEventListener('mousedown', this.handleMouseDown);
         el.addEventListener('mousemove', this.handleMouseMove);
         el.addEventListener('mouseup', this.handleMouseUp);
         el.addEventListener('dblclick', this.handleDoubleClick);
-        window.addEventListener('keydown', this.handleKeyDown);
-        window.addEventListener('keyup', this.handleKeyUp);
+
+        // Use capture phase for key listeners to ensure editor takes priority 
+        // over other UI components when mouse is over canvas. (SMART-FOCUS-P28)
+        window.addEventListener('keydown', this.handleKeyDown, { capture: true });
+        window.addEventListener('keyup', this.handleKeyUp, { capture: true });
+
         el.addEventListener('wheel', this.handleWheel, { passive: false });
         window.addEventListener('resize', this.handleResize);
 
@@ -1156,6 +1172,7 @@ export class FloorPlanEditor {
 
         // Auto-activate Focus Mode for specific tools
         if (type === 'draw-mask') {
+            this.selectionSystem.clearSelection();
             this.setActiveLayer('mask', true);
         } else if (type === 'draw-room') {
             this.setActiveLayer('room', true);
@@ -1198,6 +1215,7 @@ export class FloorPlanEditor {
             // 2. Apply Isolation Rules
             this.layerSystem.getAllLayers().forEach(layer => {
                 const isTarget = layer.id === this.activeLayerId;
+                const isMaskMode = this.activeLayerId === 'mask';
 
                 if (layer.id === 'base') {
                     this.layerSystem.setLayerVisible(layer.id, true); // Always show base
@@ -1205,26 +1223,25 @@ export class FloorPlanEditor {
                     this.layerSystem.setLayerVisible(layer.id, true); // Show target
                     // Only unlock if we are in ALIGNMENT mode
                     this.layerSystem.setLayerLocked(layer.id, !this.isOverlayAlignmentMode);
+                } else if (isMaskMode) {
+                    // STRICT ISOLATION: If we are editing masks, hide EVERYTHING ELSE.
+                    // No rooms, no devices, no cables, no electrical.
+                    this.layerSystem.setLayerVisible(layer.id, false);
+                    this.layerSystem.setLayerLocked(layer.id, true);
                 } else if (this.isOverlayAlignmentMode && layer.id === 'electrical') {
                     // Always show electrical during alignment mode even if not the active layer
-                    // (facilitates multi-image alignment if ever supported, but mandatory for overlay)
                     this.layerSystem.setLayerVisible(layer.id, true);
                     this.layerSystem.setLayerLocked(layer.id, true);
                 } else if (layer.type === 'vector' && (layer.id === 'room' || layer.id === 'mask')) {
-                    // KEEP Rooms and Masks visible even if not the active focus layer
+                    // KEEP Rooms and Masks visible even if not the active focus layer (when NOT in strict mask isolation)
                     this.layerSystem.setLayerVisible(layer.id, true);
                     this.layerSystem.setLayerLocked(layer.id, true);
                 } else if (isSymbolPlacement && layer.type === 'vector') {
                     // During symbol placement, show other technical layers for context
                     this.layerSystem.setLayerVisible(layer.id, true);
                     this.layerSystem.setLayerLocked(layer.id, true);
-                } else if (this.isOverlayAlignmentMode) {
-                    // During alignment, hide other irrelevant layers to reduce noise
-                    if (layer.type === 'vector') {
-                        this.layerSystem.setLayerVisible(layer.id, false);
-                    }
                 } else {
-                    // Default Isolation (e.g. Draw Mask hides Furniture)
+                    // Default Isolation (e.g. Draw Room hides Furniture)
                     this.layerSystem.setLayerVisible(layer.id, false);
                     this.layerSystem.setLayerLocked(layer.id, true);
                 }
@@ -1279,6 +1296,15 @@ export class FloorPlanEditor {
     }
 
     public updateContextRoom(): void {
+        // Disable room detection completely when in Mask Mode to prevent UI noise/interactions
+        if (this.activeLayerId === 'mask') {
+            if (this.lastContextRoom !== null) {
+                this.lastContextRoom = null;
+                this.emit('context-room-changed', null);
+            }
+            return;
+        }
+
         const roomLayer = this.layerSystem.getLayer('room');
         const rooms = roomLayer?.content ? ((roomLayer.content as VectorLayerContent).rooms || []) : [];
 
@@ -1366,8 +1392,8 @@ export class FloorPlanEditor {
         this.container.removeEventListener('mousedown', this.handleMouseDown);
         window.removeEventListener('mousemove', this.handleMouseMove);
         window.removeEventListener('mouseup', this.handleMouseUp);
-        window.removeEventListener('keydown', this.handleKeyDown);
-        window.removeEventListener('keyup', this.handleKeyUp);
+        window.removeEventListener('keydown', this.handleKeyDown, { capture: true });
+        window.removeEventListener('keyup', this.handleKeyUp, { capture: true });
 
         if (this.animationFrameId) {
             cancelAnimationFrame(this.animationFrameId);

@@ -218,7 +218,7 @@ export class LayerSystem {
         const selectedIds = new Set(this.scene.userData.editor?.selectionSystem.getSelectedIds() || []);
         if (selectedIds.size > 0) {
             this.layers.forEach(layer => {
-                if (layer.type !== 'vector') return;
+                if (layer.type !== 'vector' || !layer.visible) return;
                 layer.container.children.forEach(group => {
                     const id = group.userData.id;
                     if (id && selectedIds.has(id)) {
@@ -300,19 +300,19 @@ export class LayerSystem {
                                 // Here we just need to determine if we should revert.
                                 // It's safer to let renderVectorLayer normalize it, BUT update() runs every frame.
                                 // We must reset if we modified it in previous frames.
-                                const isDestructive = true; // We modified the material directly
-                                if (isDestructive) {
-                                    // Optimization: Store original color in userData? 
-                                    // Or just re-apply standard logic if not selected
-                                    const isMask = itemType === 'mask';
-                                    const baseColor = isMask ? (this.isMaskEditMode ? 0x94a3b8 : 0xffffff) : (group.userData.color || 0x3b82f6);
-                                    // Actually we don't store original color in userData.color easily here unless we check content.
-                                    // Re-rendering or resetting to a default is easiest.
-                                    // For now, let's just reset transparency/color to 'default blue' for rooms if we don't know better?
-                                    // Problem: We don't know the specific color of the polygon here without lookups.
-                                    // BUT: renderVectorLayer checks hash. If we just changed material props, hash might not change?
-                                    // Hash includes "isSelected". So if selected state changes, renderVectorLayer WILL re-run.
-                                    // So we just need to ensure we hide the shadow.
+                                const isMask = itemType === 'mask';
+                                const baseColor = isMask ? (this.isMaskEditMode ? 0x94a3b8 : 0xffffff) : (group.userData.color || 0x3b82f6);
+                                const baseOpacity = isMask ? (this.isMaskEditMode ? 0.3 : 1.0) : 0.15;
+
+                                fill.material.color.setHex(baseColor);
+                                fill.material.opacity = baseOpacity;
+
+                                // For masks, we also need to sync the glow visibility
+                                if (isMask) {
+                                    for (let i = 0; i < 9; i++) {
+                                        const glow = group.getObjectByName(`glow-${i}`);
+                                        if (glow) glow.visible = this.isMaskEditMode;
+                                    }
                                 }
                             }
                         }
@@ -618,6 +618,7 @@ export class LayerSystem {
                         const glowMesh = new THREE.Mesh(glowGeo, glowMat);
                         glowMesh.name = `glow-${idx}`;
                         glowMesh.position.set(off.x, off.y, -0.1);
+                        glowMesh.visible = this.isMaskEditMode; // ONLY show glow during mask editing
                         if (off.x === 0 && off.y === 0) glowMesh.material = glowMat.clone();
                         if (glowMesh.material instanceof THREE.MeshBasicMaterial && off.x === 0 && off.y === 0) {
                             glowMesh.material.opacity = 0.3;
@@ -638,10 +639,10 @@ export class LayerSystem {
                 const fillColor = isMask ? (this.isMaskEditMode ? 0x94a3b8 : 0xffffff) : (poly.color || 0x3b82f6);
 
                 // Opacity Logic: 
-                // Masks: High opacity when selected/editing.
+                // Masks: Solid white (1.0) for blocking if not editing, low-opacity gray (0.3) if editing.
                 // Rooms: Very low opacity (0.15) to just "tint" the floor plan.
                 const opacity = isMask
-                    ? (isSelected ? 0.8 : 1.0)
+                    ? (this.isMaskEditMode ? (isSelected ? 0.3 : 0.3) : 1.0)
                     : (isSelected ? 0.4 : 0.15);
 
                 const material = new THREE.MeshBasicMaterial({
@@ -941,79 +942,106 @@ export class LayerSystem {
                     group = def.createMesh(def.size.width, def.size.height);
 
                     group.name = `symbol-${symbolData.id}`;
-                    group.position.set(symbolData.x, symbolData.y, 0.2);
-                    group.rotation.z = (symbolData.rotation * Math.PI) / 180;
-                    // CRITICAL: Default scale to 1 if null/undefined
-                    // Device interface has no 'scale' field, so loaded devices have scale=null
-                    // Without this default, Three.js converts null→0, making symbols invisible
-                    // See: docs/SCALE-BUG-POSTMORTEM.md
-                    const scale = symbolData.scale ?? 1;
-                    group.scale.set(scale, scale, 1);
-                    const metadata = symbolData.metadata || {};
-                    const fallbackShorthand = getSymbolShorthand(symbolData.type);
-                    const effectiveShorthand = (metadata as any).shorthand || fallbackShorthand;
+                    // Position, rotation, scale will be set below for both new and cached groups
+                    // UserData will be set below for both new and cached groups
+                }
 
-                    group.userData = {
-                        id: symbolData.id,
-                        type: 'symbol',
-                        category: symbolData.category,
-                        symbolType: symbolData.type,
-                        shorthand: effectiveShorthand
-                    };
+                const metadata = symbolData.metadata || {};
+                const fallbackShorthand = getSymbolShorthand(symbolData.type);
+                const effectiveShorthand = (metadata as any).shorthand || fallbackShorthand;
 
-                    // Add label if symbol has label or productId
-                    // BUT hide 'generic-product' labels when no shorthand exists
-                    const hasShorthand = !!(metadata as any).shorthand;
-                    const isGenericProduct = symbolData.productId === 'generic-product';
+                // Add label ONLY if symbol has a specific user-assigned label
+                // OR if it's a non-generic product and we DON'T have a shorthand to represent it.
+                // We avoid showing technical SKUs on the drawing.
 
-                    // Priority: label > productId > metadata.productId
-                    let labelText = symbolData.label || symbolData.productId || (metadata as any).productId;
+                const hasShorthand = !!effectiveShorthand;
+                const rawId = symbolData.productId || (metadata as any).productId || "";
 
-                    // IMPROVEMENT: If the label is "generic-product", use the human-readable library name
-                    if (labelText === 'generic-product' && def.name) {
-                        labelText = def.name;
+                // Technical ID Check & Mapping
+                const technicalIdLabels: Record<string, string> = {
+                    'generic-product': 'Generic Product',
+                    'generic-light': 'Generic Light',
+                    'generic-switch': 'Generic Switch'
+                };
+                const mappedTechnicalLabel = technicalIdLabels[rawId.toLowerCase()];
+                const isTechnicalId = !!mappedTechnicalLabel || rawId.toLowerCase().includes('generic-');
+
+                // Priority 1: User-assigned label (always show)
+                // Priority 2: Mapped Technical Label (if no shorthand)
+                // Priority 3: Product ID (only show if not technical and no shorthand)
+                let identifier = symbolData.label || "";
+                if (!identifier && !hasShorthand) {
+                    if (mappedTechnicalLabel) {
+                        identifier = mappedTechnicalLabel;
+                    } else if (rawId.toLowerCase() === 'generic-product' && symbolData.category === 'lighting') {
+                        identifier = 'Generic Light'; // Final safety override
+                    } else if (!isTechnicalId) {
+                        identifier = rawId;
                     }
+                }
 
-                    // Show label for ALL products if we have a name
-                    // User Request: Overkill to label "Recessed Light - 2DS-L9", just "2DS-L9" is enough.
-                    // Identifiers like 2DS-L9 are usually in productId.
-                    let identifier = labelText;
-                    if (labelText.includes(' - ')) {
-                        identifier = labelText.split(' - ').pop() || labelText;
-                    }
+                // Cleaning the identifier (remove category prefix if present in library name)
+                if (identifier && identifier.includes(' - ')) {
+                    identifier = identifier.split(' - ').pop() || identifier;
+                }
 
-                    const willShowRegularLabel = !!identifier && identifier !== effectiveShorthand;
+                // Final safety check: never show raw technical SKUs (unless they were explicitly mapped to friendly labels)
+                if (identifier && !mappedTechnicalLabel && (identifier.toLowerCase().includes('generic-'))) {
+                    identifier = "";
+                }
+
+                const willShowRegularLabel = !!identifier && identifier !== effectiveShorthand;
+                const labelsHash = `${willShowRegularLabel}|${identifier}|${effectiveShorthand}`;
+
+                // Sync Labels (even for cached groups)
+                if (group.userData.labelsHash !== labelsHash) {
+                    // Remove old labels
+                    const oldLabel = group.getObjectByName('label');
+                    if (oldLabel) group.remove(oldLabel);
+                    const oldShorthand = group.getObjectByName('shorthand-label');
+                    if (oldShorthand) group.remove(oldShorthand);
 
                     if (willShowRegularLabel) {
                         const labelSprite = this.createLabel(identifier, "");
                         labelSprite.name = 'label';
-                        // Move label to bottom-right (as requested)
                         labelSprite.position.set(15, -15, 0.5);
                         group.add(labelSprite);
                     }
 
-                    // Add shorthand annotation if present in metadata or fallback to library
                     if (effectiveShorthand) {
                         const shorthandLabel = this.createShorthandLabel(effectiveShorthand);
                         shorthandLabel.name = 'shorthand-label';
-                        // Position exactly at bottom-right corner of square
-                        // Square is 16x16, so 8 is the edge. Shorthand matches SymbolIcon.tsx logic (center+squareHalf+2)
-                        const xOffset = 10;
-                        const yOffset = -10;
-                        shorthandLabel.position.set(xOffset, yOffset, 0.6);
+                        shorthandLabel.position.set(10, -10, 0.6);
                         group.add(shorthandLabel);
                     }
+                    group.userData.labelsHash = labelsHash;
+                }
 
+                group.position.set(symbolData.x, symbolData.y, 0.2);
+                group.rotation.z = (symbolData.rotation * Math.PI) / 180;
+                // CRITICAL: Default scale to 1 if null/undefined
+                // Device interface has no 'scale' field, so loaded devices have scale=null
+                // Without this default, Three.js converts null→0, making symbols invisible
+                // See: docs/SCALE-BUG-POSTMORTEM.md
+                const scale = symbolData.scale ?? 1;
+                group.scale.set(scale, scale, 1);
+
+                group.userData = {
+                    ...group.userData,
+                    id: symbolData.id,
+                    type: 'symbol',
+                    category: symbolData.category,
+                    symbolType: symbolData.type,
+                    shorthand: effectiveShorthand,
+                    labelsHash
+                };
+
+                if (!this.meshCache.has(cacheKey)) {
                     remoteLog(`✅ Adding NEW symbol ${symbolData.id} to layer.container for layer ${layer.id} at position (${(symbolData.x ?? 0).toFixed(2)}, ${(symbolData.y ?? 0).toFixed(2)})`, 'debug', '🔍 DEEP-TRACE');
                     layer.container.add(group);
                     this.meshCache.set(cacheKey, group);
                 } else {
                     remoteLog(`♻️ Updating CACHED symbol ${symbolData.id} position to (${(symbolData.x ?? 0).toFixed(2)}, ${(symbolData.y ?? 0).toFixed(2)})`, 'debug', '🔍 DEEP-TRACE');
-                    group.position.set(symbolData.x, symbolData.y, 0.2);
-                    group.rotation.z = (symbolData.rotation * Math.PI) / 180;
-                    // CRITICAL: Default scale to 1 (see docs/SCALE-BUG-POSTMORTEM.md)
-                    const scale = symbolData.scale ?? 1;
-                    group.scale.set(scale, scale, 1);
                 }
 
                 // Update Coverage Circle (Worker 2)

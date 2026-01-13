@@ -111,7 +111,7 @@ export const createCeilingFanMesh = (width?: number, height?: number): THREE.Gro
         const bladeLength = (w / 2) * 0.9;
 
         const bladeGroup = new THREE.Group();
-        
+
         // Tapered/Rounded blade approximation using Plane with White Halo
         const bladeHaloGeo = new THREE.PlaneGeometry(bladeWidth + 2.0, bladeLength + 2.0);
         const bladeHalo = new THREE.Mesh(bladeHaloGeo, whiteMat);
@@ -152,7 +152,8 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         description: 'Fallback symbol',
         color: 0x000000,
         size: { width: 16, height: 16 },
-        createMesh: createUniversalMesh
+        createMesh: createUniversalMesh,
+        productId: 'generic-light'
     },
     'pendant-light': {
         id: 'pendant-light',
@@ -161,21 +162,23 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         description: 'Filled black square with crosshairs',
         color: 0x000000,
         size: { width: 16, height: 16 },
-        createMesh: createUniversalMesh
+        createMesh: createUniversalMesh,
+        productId: 'generic-light'
     },
     'ceiling-fan': {
         id: 'ceiling-fan',
         name: 'Ceiling Fan',
-        category: 'hvac',
+        category: 'lighting',
         description: 'Symbolic representation of a ceiling fan with blades',
         color: 0x000000,
         size: { width: 48, height: 48 },
-        createMesh: createCeilingFanMesh
+        createMesh: createCeilingFanMesh,
+        productId: 'generic-light'
     },
     'haiku-fan': {
         id: 'haiku-fan',
         name: 'Haiku Fan',
-        category: 'hvac',
+        category: 'lighting',
         description: 'Premium Big Ass Fans Haiku Series',
         color: 0x000000,
         size: { width: 48, height: 48 },
@@ -189,7 +192,8 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         description: 'Filled black square with crosshairs',
         color: 0x000000,
         size: { width: 16, height: 16 },
-        createMesh: createUniversalMesh
+        createMesh: createUniversalMesh,
+        productId: 'generic-light'
     },
 
     // --- LV CONTROLS ---
@@ -223,7 +227,8 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         description: 'Filled black square with crosshairs',
         color: 0x000000,
         size: { width: 16, height: 16 },
-        createMesh: createUniversalMesh
+        createMesh: createUniversalMesh,
+        productId: 'generic-light'
     },
 
     // --- SAFETY/SENSORS ---

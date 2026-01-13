@@ -1,9 +1,10 @@
 import React from 'react';
-import { Box, Search, Trash2, Plus } from 'lucide-react';
+import { Box, Search, Trash2, Plus, FileText } from 'lucide-react';
 import { SYMBOL_CATEGORIES, SYMBOL_LIBRARY } from '../../../editor/models/symbolLibrary';
 import { SymbolPalette } from '../SymbolPalette';
 import catalog from '../../../catalog.json';
 import { getSpecBuilder } from './SpecBuilderRegistry';
+import { SYSTEM_REGISTRY } from '../../../src/registry/SystemRegistry';
 
 interface DeviceLibraryProps {
     selectedCategory: string;
@@ -40,6 +41,7 @@ export const DeviceLibrary: React.FC<DeviceLibraryProps> = ({
 }) => {
     const activeProduct = catalog.find(p => p.id === productId);
     const SpecBuilder = getSpecBuilder(activeProduct);
+    const activeSystem = SYSTEM_REGISTRY.find(s => s.id === selectedCategory);
 
     return (
         <div className="space-y-4 p-1">
@@ -57,6 +59,17 @@ export const DeviceLibrary: React.FC<DeviceLibraryProps> = ({
                         </option>
                     ))}
                 </select>
+
+                {/* Documentation Link */}
+                {activeSystem?.documentation && (
+                    <button
+                        onClick={() => window.open(activeSystem.documentation, '_blank')}
+                        className="w-full flex items-center justify-center gap-2 px-2 py-1.5 mt-1 rounded bg-slate-800 hover:bg-slate-700 text-blue-400 border border-slate-700 hover:border-blue-500 transition-all group"
+                    >
+                        <FileText size={10} className="group-hover:text-blue-300" />
+                        <span className="text-[9px] font-bold uppercase tracking-wider group-hover:text-blue-300">View System Spec</span>
+                    </button>
+                )}
             </div>
 
             {/* Symbol Palette */}

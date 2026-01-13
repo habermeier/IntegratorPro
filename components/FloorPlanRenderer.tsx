@@ -412,8 +412,8 @@ export const FloorPlanRenderer: React.FC = () => {
                             />
                         )}
 
-                        {/* Full panel when open */}
-                        {panels.left.open && (
+                        {/* Full panel when open - Hide during mask editing to prevent interference */}
+                        {panels.left.open && activeTool !== 'draw-mask' && (
                             <div
                                 className="h-full flex flex-col transition-all duration-300 ease-out animate-in fade-in slide-in-from-left-4 duration-500"
                                 style={{ animationDelay: '100ms' }}
