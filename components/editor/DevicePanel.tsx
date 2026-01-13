@@ -453,6 +453,29 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
         }
     };
 
+    const handleMetadataChange = (newMetadata: any) => {
+        setDraftMetadata(newMetadata);
+
+        // AUTO-SPEC-SYSTEM-P28: Auto-save spec builder changes to instance
+        if (editingDevice && editor) {
+            const updates = { metadata: { ...editingDevice.metadata, ...newMetadata } };
+            if (updateDevice(editingDevice.id, updates)) {
+                // Also update the in-memory symbol for immediate visual feedback if the symbol uses metadata (e.g. shorthand)
+                const targetLayerId = editingDevice.layerId || 'lighting';
+                const layer = editor.layerSystem.getLayer(targetLayerId);
+                if (layer && layer.type === 'vector' && layer.content) {
+                    const symbols = (layer.content as any).symbols || [];
+                    const symbol = symbols.find((s: any) => s.id === editingDevice.id);
+                    if (symbol) {
+                        symbol.metadata = updates.metadata;
+                        editor.layerSystem.markDirty(targetLayerId);
+                    }
+                }
+                editor.emit('layers-changed', editor.layerSystem.getAllLayers());
+            }
+        }
+    };
+
     const handleDeleteType = async () => {
         if (!selectedSymbolType) return;
         const usageCount = devices.filter(d => d.deviceTypeId === selectedSymbolType).length;
@@ -574,7 +597,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                         }}
                         onSaveNewType={handleSaveAsNewType}
                         onUpdateGlobal={handleUpdateGlobalType}
-                        setDraftMetadata={setDraftMetadata}
+                        setDraftMetadata={handleMetadataChange}
                         unitPreference={unitPreference}
                     />
                 ) : selectedRoom ? (

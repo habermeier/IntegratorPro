@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Layer, LayerConfig, Transform, VectorLayerContent, Polygon, PlacedSymbol, Furniture, Room } from '../models/types';
-import { SYMBOL_LIBRARY, getSymbolShorthand } from '../models/symbolLibrary';
+import { SYMBOL_LIBRARY, getSymbolShorthand, getMeshCreator } from '../models/symbolLibrary';
 import { calculatePolygonArea, calculateRoomArea } from '../../utils/spatialUtils';
 import { remoteLog } from '../../src/utils/logger';
 import { calculateCoverage, getEffectiveHeight, coverageToPixels } from '../../src/utils/lightingUtils';
@@ -939,7 +939,8 @@ export class LayerSystem {
                         return;
                     }
 
-                    group = def.createMesh(def.size.width, def.size.height);
+                    const meshCreator = getMeshCreator(def.meshType, symbolData.type);
+                    group = meshCreator(def.size.width, def.size.height);
 
                     group.name = `symbol-${symbolData.id}`;
                     // Position, rotation, scale will be set below for both new and cached groups

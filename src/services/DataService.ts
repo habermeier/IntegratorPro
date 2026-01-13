@@ -8,7 +8,7 @@
 import { Device } from '../models/Device';
 import { DeviceRegistry } from './DeviceRegistry';
 import { ProjectData, ProjectSettings as Settings, ElectricalOverlay, Polygon, Point, Furniture, ProjectMetadata, ScaleData, LayoutModule, FloorPlan } from '../../editor/models/types';
-import { SymbolDefinition, SYMBOL_LIBRARY, createUniversalMesh } from '../../editor/models/symbolLibrary';
+import { SymbolDefinition, SYMBOL_LIBRARY, createUniversalMesh, getMeshCreator } from '../../editor/models/symbolLibrary';
 import { remoteDebug } from '../utils/logger';
 
 // ============================================================================
@@ -155,8 +155,8 @@ class DataService {
       // Merge custom symbols into runtime SYMBOL_LIBRARY
       if (projectData.customSymbols && projectData.customSymbols.length > 0) {
         projectData.customSymbols.forEach((symbol: SymbolDefinition) => {
-          // Re-attach createMesh function (lost during JSON serialization)
-          symbol.createMesh = createUniversalMesh;
+          // Re-attach correct createMesh function (lost during JSON serialization) based on meshType or ID
+          symbol.createMesh = getMeshCreator(symbol.meshType, symbol.id);
           SYMBOL_LIBRARY[symbol.id] = symbol;
         });
         remoteDebug('Merged custom symbols into SYMBOL_LIBRARY', 'DataService', { count: projectData.customSymbols.length });
@@ -350,8 +350,8 @@ class DataService {
     // Check for duplicate IDs
     const existingIndex = this.cache!.customSymbols.findIndex(s => s.id === customSymbol.id);
 
-    // Ensure createMesh is attached for runtime use
-    customSymbol.createMesh = createUniversalMesh;
+    // Ensure correct createMesh is attached for runtime use based on meshType or ID
+    customSymbol.createMesh = getMeshCreator(customSymbol.meshType, customSymbol.id);
     SYMBOL_LIBRARY[customSymbol.id] = customSymbol;
 
     if (existingIndex >= 0) {
@@ -393,8 +393,8 @@ class DataService {
         id: symbolId // Ensure ID doesn't change
       };
 
-      // Ensure createMesh is attached for runtime use
-      updatedSymbol.createMesh = createUniversalMesh;
+      // Ensure correct createMesh is attached for runtime use based on meshType or ID
+      updatedSymbol.createMesh = getMeshCreator(updatedSymbol.meshType, updatedSymbol.id);
 
       // Update in cache
       this.cache!.customSymbols[existingIndex] = updatedSymbol;
@@ -411,7 +411,7 @@ class DataService {
         ...builtInSymbol,
         ...updates,
         id: symbolId,
-        createMesh: createUniversalMesh
+        createMesh: getMeshCreator(builtInSymbol.meshType, symbolId)
       };
 
       // Add to customSymbols

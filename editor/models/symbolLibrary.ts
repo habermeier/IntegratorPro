@@ -8,6 +8,7 @@ export interface SymbolDefinition {
     color: number;
     size: { width: number, height: number };
     createMesh: (width: number, height: number) => THREE.Group;
+    meshType?: 'universal' | 'fan';
     productId?: string;
     metadata?: any;
 }
@@ -132,6 +133,23 @@ export const createCeilingFanMesh = (width?: number, height?: number): THREE.Gro
     return group;
 };
 
+export const getMeshCreator = (meshType?: string, symbolId?: string): (width: number, height: number) => THREE.Group => {
+    // 1. Explicit type check
+    if (meshType === 'fan') return createCeilingFanMesh;
+    if (meshType === 'universal') return createUniversalMesh;
+
+    // 2. Legacy/Migration fallback: Keyword matching
+    if (symbolId) {
+        const idLower = symbolId.toLowerCase();
+        if (idLower.includes('fan') || idLower.includes('haiku')) {
+            return createCeilingFanMesh;
+        }
+    }
+
+    // Default fallback
+    return createUniversalMesh;
+};
+
 export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
     // --- LIGHTING ---
     'recessed-light': {
@@ -142,6 +160,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         color: 0x000000,
         size: { width: 16, height: 16 },
         createMesh: createUniversalMesh,
+        meshType: 'universal',
         productId: 'generic-light'
     },
     // Fallback for migration/legacy data
@@ -153,6 +172,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         color: 0x000000,
         size: { width: 16, height: 16 },
         createMesh: createUniversalMesh,
+        meshType: 'universal',
         productId: 'generic-light'
     },
     'pendant-light': {
@@ -163,6 +183,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         color: 0x000000,
         size: { width: 16, height: 16 },
         createMesh: createUniversalMesh,
+        meshType: 'universal',
         productId: 'generic-light'
     },
     'ceiling-fan': {
@@ -173,6 +194,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         color: 0x000000,
         size: { width: 48, height: 48 },
         createMesh: createCeilingFanMesh,
+        meshType: 'fan',
         productId: 'generic-light'
     },
     'haiku-fan': {
@@ -183,6 +205,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         color: 0x000000,
         size: { width: 48, height: 48 },
         createMesh: createCeilingFanMesh,
+        meshType: 'fan',
         productId: 'BAF-HAIKU'
     },
     'exterior-light': {

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { Tool } from '../systems/ToolSystem';
 import { ToolType, Vector2, PlacedSymbol, VectorLayerContent, Room } from '../models/types';
 import { FloorPlanEditor } from '../FloorPlanEditor';
-import { SYMBOL_LIBRARY } from '../models/symbolLibrary';
+import { SYMBOL_LIBRARY, getMeshCreator } from '../models/symbolLibrary';
 import { AddSymbolCommand } from '../commands/AddSymbolCommand';
 import { ModifySymbolCommand, TransformState } from '../commands/ModifySymbolCommand';
 import { findRoomAt, findRoomObjectAt } from '../../utils/spatialUtils';
@@ -100,7 +100,8 @@ export class PlaceSymbolTool implements Tool {
         const def = SYMBOL_LIBRARY[this.symbolType];
         if (!def) return;
 
-        const mesh = def.createMesh(def.size.width, def.size.height);
+        const meshCreator = getMeshCreator(def.meshType, this.symbolType);
+        const mesh = meshCreator(def.size.width, def.size.height);
         // Make preview semi-transparent
         mesh.traverse((obj) => {
             if (obj instanceof THREE.Mesh && obj.material instanceof THREE.MeshBasicMaterial) {

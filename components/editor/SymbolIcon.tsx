@@ -7,6 +7,7 @@ interface SymbolIconProps {
     showShorthand?: boolean;
     secondaryLabel?: string;
     customShorthand?: string;
+    meshType?: string;
 }
 
 import { getSymbolShorthand } from '../../editor/models/symbolLibrary';
@@ -21,7 +22,8 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
     size = 32,
     showShorthand = true,
     secondaryLabel,
-    customShorthand
+    customShorthand,
+    meshType
 }) => {
     const strokeWidth = size / 16; // Proportional stroke width
     const fontSize = size * 0.3; // Shorthand text size (slightly smaller)
@@ -33,7 +35,7 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
         const center = 16;
 
         // Specialized Icon: Ceiling Fan
-        if (symbolType === 'ceiling-fan' || symbolType === 'haiku-fan' || symbolType.includes('fan')) {
+        if (meshType === 'fan' || symbolType === 'ceiling-fan' || symbolType === 'haiku-fan' || symbolType.toLowerCase().includes('fan') || symbolType.toLowerCase().includes('haiku')) {
             const hubRadius = 4;
             const bladeWidth = 4;
             const bladeLength = 10;

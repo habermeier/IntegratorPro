@@ -1,5 +1,5 @@
 {
-  "totalCost": 51409.53,
+  "totalCost": 71549.53,
   "totalPower": null,
   "items": [
     {
@@ -457,6 +457,38 @@
       "total": 379,
       "description": "NVMe M.2 SSD with Heatsink (PCIe 4.0)",
       "manufacturer": "Samsung"
+    },
+    {
+      "name": "2DS-L12",
+      "quantity": 15,
+      "cost": 245,
+      "total": 3675,
+      "description": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+      "manufacturer": "HE Williams"
+    },
+    {
+      "name": "custom-2ds-l12-1768153974533 ligh",
+      "quantity": 62,
+      "cost": 245,
+      "total": 15190,
+      "description": "2DS - L12/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+      "manufacturer": "HE Williams"
+    },
+    {
+      "name": "Device 78",
+      "quantity": 5,
+      "cost": 245,
+      "total": 1225,
+      "description": "2\" Square Architectural Downlight - Configurable DALI-2 with Tunable White",
+      "manufacturer": "HE Williams"
+    },
+    {
+      "name": "Device 83",
+      "quantity": 1,
+      "cost": 50,
+      "total": 50,
+      "description": "AI Detected Light Point",
+      "manufacturer": "Generic"
     }
   ]
 }
