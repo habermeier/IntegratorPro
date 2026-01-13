@@ -189,6 +189,17 @@ export class CameraSystem {
         this.updateZoomCamera();
     }
 
+    public reset(): void {
+        this.state.zoom = 1;
+        this.mainCamera.left = 0;
+        this.mainCamera.right = this.viewportWidth;
+        this.mainCamera.top = this.viewportHeight;
+        this.mainCamera.bottom = 0;
+        this.mainCamera.updateProjectionMatrix();
+        this.updateZoomCamera();
+        console.log('[📷 CAMERA] View Reset to default');
+    }
+
     public getState(): { x: number, y: number, zoom: number } {
         const cx = (this.mainCamera.left + this.mainCamera.right) / 2;
         const cy = (this.mainCamera.top + this.mainCamera.bottom) / 2;

@@ -240,6 +240,26 @@ export class FloorPlanEditor {
         }
     }
 
+    public resetView(): void {
+        remoteDebug('Resetting view and clearing persistent camera state', 'FloorPlanEditor');
+        this.cameraSystem.reset();
+        this.layerSystem.updateLabelScales(1);
+
+        // Remove only camera state from persistence if possible, or just clear all for a clean start
+        const saved = localStorage.getItem(this.STORAGE_KEY);
+        if (saved) {
+            try {
+                const state = JSON.parse(saved);
+                delete state.camera;
+                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(state));
+            } catch (err) {
+                localStorage.removeItem(this.STORAGE_KEY);
+            }
+        }
+
+        this.setDirty();
+    }
+
     private handleKeyDown = (e: KeyboardEvent) => {
         // GLOBAL GUARD: Skip all editor shortcuts if user is typing in an input/textarea
         // EXCEPTION: If mouse is over canvas, we assume user WANTS to interact with canvas (e.g. Nudge, Rotate)

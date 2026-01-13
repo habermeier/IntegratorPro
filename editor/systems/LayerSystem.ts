@@ -14,7 +14,7 @@ export class LayerSystem {
     private isMaskEditMode: boolean = false;
     private textureLoader: THREE.TextureLoader = new THREE.TextureLoader();
     private vertexMaterial: THREE.SpriteMaterial | null = null;
-    private lightingMode: 'circles' | 'intensity' | 'fixture' = 'circles';
+    private lightingMode: 'circles' | 'intensity' | 'fixture' = 'fixture';
 
     // Cache to prevent recreating everything from scratch
     private meshCache: Map<string, THREE.Object3D> = new Map();
@@ -331,8 +331,8 @@ export class LayerSystem {
             if (lightingLayer && lightingLayer.type === 'vector') {
                 const content = lightingLayer.content as VectorLayerContent;
                 if (content && content.symbols && content.symbols.length > 0) {
-                    remoteLog(`[AUTO-DEBUG] Triggering one-time debugLayer('lighting') - symbols detected: ${content.symbols.length}`, 'info', '🔍 AUTO-DEBUG');
-                    this.debugLayer('lighting');
+                    // remoteLog(`[AUTO-DEBUG] Triggering one-time debugLayer('lighting') - symbols detected: ${content.symbols.length}`, 'info', '🔍 AUTO-DEBUG');
+                    // this.debugLayer('lighting');
                     this.hasLoggedLighting = true;
                 }
             }

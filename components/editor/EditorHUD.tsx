@@ -159,6 +159,14 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
                         <HelpCircle size={18} />
                     </button>
                     <button
+                        onClick={() => editor?.resetView()}
+                        className="p-2 hover:bg-blue-900/40 focus:bg-blue-900/40 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md text-blue-500 hover:text-blue-400 transition-colors text-lg"
+                        title="Reset View (Center & Zoom)"
+                        aria-label="Reset floor plan view"
+                    >
+                        📐
+                    </button>
+                    <button
                         onClick={() => window.dispatchEvent(new CustomEvent('test-purge-polygons'))}
                         className="p-2 hover:bg-red-900/40 focus:bg-red-900/40 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-md text-red-500 hover:text-red-400 transition-colors text-lg"
                         title="DEBUG: Purge All Polygons (Test Data Protection)"
