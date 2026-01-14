@@ -21,8 +21,9 @@ export const getSpecBuilder = (product: any): React.FC<SpecBuilderProps> | null 
 
     // Special Case: HE Williams Lighting Series
     const isHEWilliams = product.manufacturer === 'HE Williams' || product.id?.includes('2DS') || product.id?.includes('2AS');
+    const category = product.category?.toLowerCase() || product.type?.toLowerCase();
 
-    if (isHEWilliams && product.type === 'LIGHTING') {
+    if (isHEWilliams && category === 'lighting') {
         // We use the 2DS/2AS builder for things that look like 2DS/2AS series or families
         const isCompatibleSeries =
             product.id?.includes('2DS') || product.name?.includes('2DS') || product.productFamily === '2DS' ||
@@ -41,7 +42,7 @@ export const getSpecBuilder = (product: any): React.FC<SpecBuilderProps> | null 
     }
 
     // Fallback: Generic Builders by Category
-    if (product.type === 'LIGHTING') {
+    if (category === 'lighting') {
         return GenericLightBuilder as any;
     }
 

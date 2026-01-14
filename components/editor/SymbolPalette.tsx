@@ -11,36 +11,66 @@ interface SymbolPaletteProps {
 
 export const SymbolPalette: React.FC<SymbolPaletteProps> = ({ activeCategory, onSelectSymbol, selectedSymbolType }) => {
     const [customSymbols, setCustomSymbols] = React.useState<SymbolDefinition[]>([]);
+    const [blueprints, setBlueprints] = React.useState<any[]>([]);
 
-    const fetchCustomSymbols = async () => {
+    const fetchData = async () => {
         try {
-            const symbols = await dataService.getCustomSymbols();
+            const [symbols, bps] = await Promise.all([
+                dataService.getCustomSymbols(),
+                dataService.getBlueprints()
+            ]);
             setCustomSymbols(symbols);
+            setBlueprints(bps);
         } catch (error) {
-            console.error('Failed to fetch custom symbols:', error);
+            console.error('Failed to fetch palette data:', error);
         }
     };
 
     React.useEffect(() => {
-        fetchCustomSymbols();
+        fetchData();
 
-        const handleProjectChange = () => {
-            fetchCustomSymbols();
-        };
-
+        const handleProjectChange = () => fetchData();
         window.addEventListener('project-data-changed', handleProjectChange);
         return () => window.removeEventListener('project-data-changed', handleProjectChange);
     }, []);
 
-    // Combine base library symbols with custom symbols for the active category
+    // Combine base library symbols with custom symbols and BLUEPRINTS
     const allSymbols = React.useMemo(() => {
-        // Only take non-custom symbols from the base library to avoid duplication
-        const baseSymbols = Object.values(SYMBOL_LIBRARY).filter(s => s.category === activeCategory && !s.id.startsWith('custom-'));
+        // 1. Base Symbols (Reduced)
+        const baseSymbols = Object.values(SYMBOL_LIBRARY).filter(s =>
+            s.category === activeCategory &&
+            !s.id.startsWith('custom-') &&
+            !s.id.includes('generic')
+        );
+
+        // 2. Custom Symbols (Legacy/User Created)
         const relevantCustom = customSymbols.filter(s => s.category === activeCategory);
 
-        // AUTO-SORT-CUSTOM-FIRST: Custom symbols are most important to users
-        return [...relevantCustom, ...baseSymbols];
-    }, [activeCategory, customSymbols]);
+        // 3. Blueprints (The new standard)
+        const relevantBlueprints = blueprints
+            .filter(bp => bp.category === activeCategory)
+            .map(bp => {
+                const def: SymbolDefinition = {
+                    id: bp.id,
+                    name: bp.name,
+                    category: bp.category,
+                    description: `Blueprint: ${bp.name}`,
+                    color: 0x3b82f6,
+                    size: SYMBOL_LIBRARY[bp.symbolType]?.size || { width: 16, height: 16 },
+                    createMesh: SYMBOL_LIBRARY[bp.symbolType]?.createMesh || SYMBOL_LIBRARY['recessed-light'].createMesh,
+                    meshType: SYMBOL_LIBRARY[bp.symbolType]?.meshType || 'universal',
+                    metadata: { ...bp, isBlueprint: true }
+                };
+
+                // Inject into global library (AUTO-BRIDGE-P28)
+                SYMBOL_LIBRARY[bp.id] = def;
+
+                return def;
+            });
+
+        // Priority: Blueprints > Custom > Base
+        return [...relevantBlueprints, ...relevantCustom, ...baseSymbols];
+    }, [activeCategory, customSymbols, blueprints]);
 
     if (allSymbols.length === 0) return null;
 

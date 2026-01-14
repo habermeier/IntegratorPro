@@ -30,50 +30,113 @@ export function useDeviceRegistry() {
     const deviceModules = useMemo(() => {
         if (devices.length === 0) return [];
 
-        // Group devices by SKU, Ordering Code, or fallback to productId
-        const groupedMap = new Map<string, Device[]>();
+        const catalogV2 = catalog as any; // Cast as V2 for now
+        const { registry, blueprints } = catalogV2;
+
+        const flattenedItems: any[] = [];
+
         devices.forEach(device => {
-            const groupKey = device.metadata?.sku || device.metadata?.orderingCode || device.productId;
-            if (!groupedMap.has(groupKey)) groupedMap.set(groupKey, []);
-            groupedMap.get(groupKey)!.push(device);
+            const blueprint = blueprints.find((bp: any) => bp.id === device.deviceTypeId);
+            if (!blueprint) {
+                // Fallback for legacy/non-blueprint devices
+                flattenedItems.push({
+                    sku: device.productId || 'generic-hardware',
+                    name: device.name,
+                    manufacturer: (device.metadata as any)?.manufacturer || 'Generic',
+                    description: (device.metadata as any)?.description || 'Unidentified Component',
+                    cost: (device.metadata as any)?.cost || 0,
+                    wattage: (device.metadata as any)?.powerWatts || 0,
+                    busDrawMa: 0,
+                    category: device.layerId || 'lighting',
+                    instance: device
+                });
+                return;
+            }
+
+            // 1. Resolve Load
+            const load = registry.loads.find((l: any) => l.id === blueprint.components.loadId);
+            if (load) {
+                flattenedItems.push({
+                    sku: load.id,
+                    name: `${blueprint.name} - ${load.name}`,
+                    manufacturer: load.manufacturer,
+                    description: load.description,
+                    cost: load.cost,
+                    wattage: load.efficiency
+                        ? load.wattage * (1 + (1 - load.efficiency)) // Simple loss approximation
+                        : load.wattage,
+                    busDrawMa: load.busDrawMa || 0,
+                    category: blueprint.category,
+                    instance: device
+                });
+            }
+
+            // 2. Resolve Driver
+            if (blueprint.components.driverId) {
+                const driver = registry.drivers.find((d: any) => d.id === blueprint.components.driverId);
+                if (driver) {
+                    flattenedItems.push({
+                        sku: driver.id,
+                        name: driver.name,
+                        manufacturer: driver.manufacturer,
+                        description: driver.description,
+                        cost: driver.cost,
+                        wattage: driver.maxWatts * (1 - driver.efficiency), // Loss as heat
+                        busDrawMa: driver.busDrawMa || 0,
+                        category: 'lcps',
+                        instance: device
+                    });
+                }
+            }
+
+            // 3. Resolve Logic (Pucks)
+            blueprint.components.logicIds.forEach((logicId: string) => {
+                const logic = registry.logic.find((l: any) => l.id === logicId);
+                if (logic) {
+                    flattenedItems.push({
+                        sku: logic.id,
+                        name: logic.name,
+                        manufacturer: logic.manufacturer,
+                        description: logic.description,
+                        cost: logic.cost,
+                        wattage: 1, // Logic draw is negligible but non-zero
+                        busDrawMa: logic.busDrawMa,
+                        category: 'lcps',
+                        instance: device
+                    });
+                }
+            });
         });
 
-        // Convert groups to HardwareModule/aggregate entries
-        return Array.from(groupedMap.entries()).map(([groupKey, devicesInGroup]) => {
-            const firstDevice = devicesInGroup[0];
-            const category = firstDevice.layerId as any;
+        // Group flattened items by SKU for BOM view
+        const groupedMap = new Map<string, any[]>();
+        flattenedItems.forEach(item => {
+            if (!groupedMap.has(item.sku)) groupedMap.set(item.sku, []);
+            groupedMap.get(item.sku)!.push(item);
+        });
 
-            // Resolve Catalog Fallback
-            const catalogItem = catalog.find(p => p.id === firstDevice.productId);
-
-            // Resolve a descriptive "Display SKU"
-            const displaySku = firstDevice.metadata?.sku
-                || firstDevice.metadata?.orderingCode
-                || catalogItem?.id // Often the ID is the SKU
-                || firstDevice.productId;
-
+        return Array.from(groupedMap.entries()).map(([sku, items]) => {
+            const first = items[0];
             return {
-                id: `device-group-${groupKey}`,
-                name: firstDevice.name,
-                manufacturer: firstDevice.metadata?.manufacturer || catalogItem?.manufacturer || 'Unknown',
-                description: firstDevice.metadata?.sku || firstDevice.metadata?.orderingCode
-                    ? `${displaySku}`
-                    : (catalogItem?.description || `Product: ${firstDevice.productId}`),
-                type: category,
+                id: `bom-${sku}`,
+                name: first.name,
+                manufacturer: first.manufacturer,
+                description: first.description || sku,
+                type: first.category.toUpperCase(),
                 mountType: MountType.NA,
                 size: 0,
-                cost: firstDevice.metadata?.cost || catalogItem?.cost || 0,
-                powerWatts: firstDevice.metadata?.powerWatts || catalogItem?.powerWatts || 0,
-                quantity: devicesInGroup.length,
-                url: firstDevice.metadata?.purchaseUrl || catalogItem?.url || '',
-                linkStatus: firstDevice.metadata?.purchaseUrl ? 'PREFERRED' : 'MARKET',
-                genericRole: category,
-                instances: devicesInGroup.map(d => ({
-                    id: d.id,
-                    location: d.roomId || 'Unknown',
-                    notes: '',
-                    position: d.position,
-                    universe: d.busAssignment ? (parseInt(d.busAssignment.replace(/\D/g, '')) || 0) : undefined
+                cost: first.cost,
+                powerWatts: first.wattage || 0,
+                busDrawMa: first.busDrawMa || 0,
+                quantity: items.length,
+                url: '',
+                linkStatus: 'MARKET',
+                genericRole: first.category,
+                instances: items.map(i => ({
+                    id: i.instance.id,
+                    location: i.instance.roomId || 'Unknown',
+                    position: i.instance.position,
+                    universe: i.instance.busAssignment ? (parseInt(i.instance.busAssignment.replace(/\D/g, '')) || 0) : undefined
                 }))
             } as any;
         });

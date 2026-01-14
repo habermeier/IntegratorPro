@@ -45,18 +45,14 @@ export function useApplyProjectData(
             const layerId = device.layerId || device.category || 'lighting';
             if (!devicesByCategory[layerId]) devicesByCategory[layerId] = [];
 
-            const rawType = device.deviceTypeId || device.type || 'recessed-light';
+            // resolve symbol type from device structure (migrated data has this)
             const symbol: PlacedSymbol = {
                 ...device,
                 x: device.position?.x ?? device.x ?? 0,
                 y: device.position?.y ?? device.y ?? 0,
-                type: rawType,
+                type: device.symbolType || device.deviceTypeId || 'recessed-light',
                 category: layerId
             };
-
-            if (symbol.type === 'generic-lighting') {
-                symbol.type = 'recessed-light';
-            }
 
             devicesByCategory[layerId].push(symbol);
         });

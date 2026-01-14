@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { ViewMode, HardwareModule, Connection } from './types';
 import { INITIAL_MODULES, MOCK_CONNECTIONS } from './constants';
-import { flattenModules } from './utils/moduleHelpers';
+import { flattenModules, calculateTotalCost } from './utils/moduleHelpers';
 
 import ProjectBOM from './components/ProjectBOM';
 import SystemsOverview from './components/SystemsOverview';
@@ -14,9 +14,10 @@ import CoverSheet from './components/CoverSheet';
 import RoughInGuide from './components/RoughInGuide';
 import FloorPlanRenderer from './components/FloorPlanRenderer';
 import Settings from './components/Settings';
+import SystemManager from './components/SystemManager';
 
 // Icons
-import { LayoutDashboard, Activity, Cpu, Map, FileText, Hammer, Menu, Settings as SettingsIcon, Home } from 'lucide-react';
+import { LayoutDashboard, Activity, Cpu, Map, FileText, Hammer, Menu, Settings as SettingsIcon, Home, Layers } from 'lucide-react';
 
 import MobileNav from './components/MobileNav';
 import ConflictNotification from './components/editor/ConflictNotification';
@@ -43,12 +44,14 @@ const App = () => {
   const currentMode = getCurrentMode(location.pathname);
   const isZenMode = location.pathname.startsWith('/floorplan');
 
-  // Raw Products (Grouped)
+  // Products from registry vs legacy static state
+  const { devices, deviceModules, totalCost: registryDevicesCost } = useDeviceRegistry();
   const [products, setProducts] = useState<HardwareModule[]>(INITIAL_MODULES);
 
-  // Flattened Instances (for Visualizer/FloorPlan)
-  const flatModules = useMemo(() => flattenModules(products), [products]);
-  const { totalCost: registryDevicesCost } = useDeviceRegistry();
+  // Flattened Instances (for Visualizer/FloorPlan/Advisor)
+  // Combines legacy static modules with dynamic registry modules
+  const allGroupedModules = useMemo(() => [...products, ...deviceModules], [products, deviceModules]);
+  const flatModules = useMemo(() => flattenModules(allGroupedModules), [allGroupedModules]);
 
   const [connections, setConnections] = useState<Connection[]>(MOCK_CONNECTIONS);
 
@@ -73,6 +76,7 @@ const App = () => {
   const navItems = [
     { path: '/project-brief', mode: 'COVER_SHEET', icon: FileText, label: 'Project Brief' },
     { path: '/systems', mode: 'SYSTEMS', icon: LayoutDashboard, label: 'Systems Overview' },
+    { path: '/registry', mode: 'REGISTRY', icon: Layers, label: 'System Manager' },
     { path: '/visualizer', mode: 'VISUALIZER', icon: Cpu, label: 'Rack & DIN Layout' },
     { path: '/floorplan', mode: 'FLOORPLAN', icon: Map, label: 'Floor Plan Map' },
     { path: '/bom', mode: 'BOM', icon: FileText, label: 'Bill of Materials' },
@@ -154,7 +158,7 @@ const App = () => {
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-slate-400">Total BOM:</span>
                 <span className="text-lg font-bold text-emerald-400">
-                  ${(products.reduce((acc, m) => acc + (m.cost * m.quantity), 0) + registryDevicesCost).toLocaleString()}
+                  ${calculateTotalCost(allGroupedModules).toLocaleString()}
                 </span>
               </div>
             </header>
@@ -169,14 +173,14 @@ const App = () => {
               <Route path="/" element={<Navigate to="/project-brief" replace />} />
               <Route path="/project-brief" element={
                 <div className="overflow-y-auto p-4 w-full h-full">
-                  <CoverSheet modules={products} highlightedModuleId={null} onNavigate={handleNavigate} />
+                  <CoverSheet modules={allGroupedModules} highlightedModuleId={null} onNavigate={handleNavigate} />
                 </div>
               } />
 
               {/* 2. Systems Overview */}
               <Route path="/systems/:systemId?" element={
                 <div className="overflow-y-auto p-4 w-full h-full">
-                  <SystemsOverview modules={products} highlightedId={null} onNavigate={handleNavigate} />
+                  <SystemsOverview modules={allGroupedModules} highlightedId={null} onNavigate={handleNavigate} />
                 </div>
               } />
 
@@ -199,7 +203,7 @@ const App = () => {
                 <div className="overflow-y-auto p-4 w-full h-full">
                   <div className="max-w-7xl mx-auto space-y-4">
                     <h2 className="text-2xl font-bold text-white mb-6">Bill of Materials</h2>
-                    <ProjectBOM modules={products} highlightedModuleId={null} linkPrefix="bom" />
+                    <ProjectBOM modules={allGroupedModules} highlightedModuleId={null} linkPrefix="bom" />
                   </div>
                 </div>
               } />
@@ -211,14 +215,21 @@ const App = () => {
                 </div>
               } />
 
-              {/* 7. Advisor */}
+              {/* 7. System Manager (New) */}
+              <Route path="/registry" element={
+                <div className="absolute inset-0 w-full h-full">
+                  <SystemManager />
+                </div>
+              } />
+
+              {/* 8. Advisor */}
               <Route path="/advisor" element={
                 <div className="overflow-y-auto p-4 w-full h-full">
                   <GeminiAdvisor modules={flatModules} connections={connections} />
                 </div>
               } />
 
-              {/* 8. Settings */}
+              {/* 9. Settings */}
               <Route path="/settings" element={
                 <div className="absolute inset-0 w-full h-full">
                   <Settings />

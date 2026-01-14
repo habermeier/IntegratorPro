@@ -1,11 +1,11 @@
 {
-  "version": "2.0",
-  "timestamp": "2026-01-14T22:31:16.004Z",
+  "version": "1.0",
+  "timestamp": "2026-01-14T01:04:09.176Z",
   "metadata": {
     "name": "270 Boll Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2026-01-14T22:31:15.997Z"
+    "modified": "2026-01-14T01:04:09.161Z"
   },
   "floorPlan": {
     "scale": {
@@ -3996,8 +3996,8 @@
   "devices": [
     {
       "id": "lighting-1768153942455",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "2DS-L12",
       "position": {
         "x": 312.0891421517307,
@@ -4032,20 +4032,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768153942455,
       "x": 312.0891421517307,
       "y": 839.1737708783658,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768153982816",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 308.5338422300239,
@@ -4080,20 +4078,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768153982816,
       "x": 308.5338422300239,
       "y": 670.2970245972892,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768153985116",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 308.5338422300239,
@@ -4128,20 +4124,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768153985116,
       "x": 308.5338422300239,
       "y": 506.75322819877294,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768153992266",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 669.3967842832716,
@@ -4176,20 +4170,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768153992266,
       "x": 669.3967842832716,
       "y": 835.6184709566587,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768153994733",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 662.2861844398578,
@@ -4224,20 +4216,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768153994733,
       "x": 662.2861844398578,
       "y": 497.86497839450544,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768154017916",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 1030.642280496525,
@@ -4272,20 +4262,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768154017916,
       "x": 1030.642280496525,
       "y": 667.0264974921482,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768154019683",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 1032.4013907185047,
@@ -4320,20 +4308,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768154019683,
       "x": 1032.4013907185047,
       "y": 839.4192992461742,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768160899624",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 665.465093972934,
@@ -4368,20 +4354,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768160899624,
       "x": 665.465093972934,
       "y": 664.1308070106222,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161243512",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 1391.782024338204,
@@ -4416,20 +4400,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768161243512,
       "x": 1391.782024338204,
       "y": 590.2250294642088,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161246659",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 1315.5616992965083,
@@ -4464,20 +4446,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768161246659,
       "x": 1315.5616992965083,
       "y": 729.4737002134607,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161263345",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 1526.6333686427429,
@@ -4512,20 +4492,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768161263345,
       "x": 1526.6333686427429,
       "y": 442.18170582553023,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161266216",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 1333.1510050753614,
@@ -4560,20 +4538,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768161266216,
       "x": 1333.1510050753614,
       "y": 339.577422115555,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161269247",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 1482.660104195611,
@@ -4608,20 +4584,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768161269247,
       "x": 1482.660104195611,
       "y": 129.97152825089154,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161274709",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 1053.187888095286,
@@ -4656,20 +4630,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768161274709,
       "x": 1053.187888095286,
       "y": 258.95977062914585,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161276609",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 1050.256337132144,
@@ -4704,20 +4676,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768161276609,
       "x": 1050.256337132144,
       "y": -16.60601990621592,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161278292",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 837.7188923043382,
@@ -4752,20 +4722,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768161278292,
       "x": 837.7188923043382,
       "y": -19.537570869357978,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161280346",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 619.3183455502484,
@@ -4800,20 +4768,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768161280346,
       "x": 619.3183455502484,
       "y": -13.674468943073862,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161285198",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 408.24667620401357,
@@ -4848,20 +4814,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768161285198,
       "x": 408.24667620401357,
       "y": -10.742917979931462,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161287082",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 409.71245168558465,
@@ -4896,20 +4860,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768161287082,
       "x": 409.71245168558465,
       "y": 267.7544235185725,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161289628",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 626.6472229581034,
@@ -4944,20 +4906,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768161289628,
       "x": 626.6472229581034,
       "y": 264.82287255543037,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768161293231",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 840.6504432674802,
@@ -4992,20 +4952,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768161293231,
       "x": 840.6504432674802,
       "y": 261.8913215922882,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162373296",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 680.0104410621257,
@@ -5040,20 +4998,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162373296,
       "x": 680.0104410621257,
       "y": -351.59059786007373,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162375532",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 685.8543639959983,
@@ -5088,20 +5044,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162375532,
       "x": 685.8543639959983,
       "y": -495.7406968955996,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162377876",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 455.9933952636731,
@@ -5136,20 +5090,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162377876,
       "x": 455.9933952636731,
       "y": -349.64262354878286,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162380174",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 459.88934388625484,
@@ -5184,20 +5136,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162380174,
       "x": 459.88934388625484,
       "y": -587.2954895262715,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162404377",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 179.38104306036712,
@@ -5232,20 +5182,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162404377,
       "x": 179.38104306036712,
       "y": -852.2199958618316,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162407499",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 175.4850944377855,
@@ -5280,20 +5228,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162407499,
       "x": 175.4850944377855,
       "y": -521.064362942381,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162408966",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 177.43306874907648,
@@ -5328,20 +5274,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162408966,
       "x": 177.43306874907648,
       "y": -306.7871887003833,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162410581",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 179.38104306036723,
@@ -5376,20 +5320,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162410581,
       "x": 179.38104306036723,
       "y": -102.24988601483992,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162412548",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -147.87864123650218,
@@ -5424,20 +5366,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162412548,
       "x": -147.87864123650218,
       "y": -106.1458346374217,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162415033",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -155.67053848166574,
@@ -5472,20 +5412,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162415033,
       "x": -155.67053848166574,
       "y": -312.63111163425594,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162417010",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -157.61851279295672,
@@ -5520,20 +5458,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162417010,
       "x": -157.61851279295672,
       "y": -523.0123372536718,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162421009",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -463.4504796656257,
@@ -5568,20 +5504,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162421009,
       "x": -463.4504796656257,
       "y": -519.1163886310901,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162423975",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -461.5025053543352,
@@ -5616,20 +5550,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162423975,
       "x": -461.5025053543352,
       "y": -102.24988601484017,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162425891",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -771.2304208495866,
@@ -5664,20 +5596,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162425891,
       "x": -771.2304208495866,
       "y": -102.24988601484017,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162427674",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -775.1263694721684,
@@ -5712,20 +5642,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162427674,
       "x": -775.1263694721684,
       "y": -310.6831373229653,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162429892",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -777.0743437834593,
@@ -5760,20 +5688,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162429892,
       "x": -777.0743437834593,
       "y": -517.1684143197996,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162435997",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -428.3869420623903,
@@ -5808,20 +5734,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162435997,
       "x": -428.3869420623903,
       "y": -908.7112508892678,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162439683",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -432.28289068497213,
@@ -5856,20 +5780,18 @@
         "lumens": 1200,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162439683,
       "x": -432.28289068497213,
       "y": -1200.9073975829015,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162441779",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -165.4104100381203,
@@ -5904,20 +5826,18 @@
         "lumens": 1200,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162441779,
       "x": -165.4104100381203,
       "y": -1202.855371894192,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162443693",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -163.4624357268292,
@@ -5952,20 +5872,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162443693,
       "x": -163.4624357268292,
       "y": -908.7112508892678,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162455647",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1236.7962812481082,
@@ -6000,20 +5918,18 @@
         "lumens": 1200,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162455647,
       "x": -1236.7962812481082,
       "y": -1132.7282966877206,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162458950",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1232.9003326255263,
@@ -6048,20 +5964,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162458950,
       "x": -1232.9003326255263,
       "y": -883.3875848424865,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162461080",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1501.7207875836693,
@@ -6096,20 +6010,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162461080,
       "x": -1501.7207875836693,
       "y": -887.2835334650682,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162463864",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1501.7207875836693,
@@ -6144,20 +6056,18 @@
         "lumens": 1200,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162463864,
       "x": -1501.7207875836693,
       "y": -1132.7282966877206,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162468547",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1104.3340280803272,
@@ -6192,20 +6102,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162468547,
       "x": -1104.3340280803272,
       "y": -143.15734655194905,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162471332",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1106.282002391618,
@@ -6240,20 +6148,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162471332,
       "x": -1106.282002391618,
       "y": -425.61362168912825,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162473878",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1377.0504316610518,
@@ -6288,20 +6194,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162473878,
       "x": -1377.0504316610518,
       "y": -427.56159600041923,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162476680",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1373.1544830384698,
@@ -6336,20 +6240,18 @@
         "lumens": 900,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162476680,
       "x": -1373.1544830384698,
       "y": -145.10532086323997,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162514982",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1719.8939104482465,
@@ -6384,20 +6286,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162514982,
       "x": -1719.8939104482465,
       "y": -324.31895750200187,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162519982",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1727.68580769341,
@@ -6432,20 +6332,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162519982,
       "x": -1727.68580769341,
       "y": -90.56204014709482,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162538499",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -2738.6844752533807,
@@ -6480,20 +6378,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162538499,
       "x": -2738.6844752533807,
       "y": -1027.5376838780132,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162545815",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -2462.072123050075,
@@ -6528,20 +6424,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162545815,
       "x": -2462.072123050075,
       "y": -1039.2255297457586,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162742844",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1273.807793162633,
@@ -6576,20 +6470,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162742844,
       "x": -1273.807793162633,
       "y": -678.8502821569441,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162744693",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1690.6742957788829,
@@ -6624,20 +6516,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162744693,
       "x": -1690.6742957788829,
       "y": -637.9428216198353,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768162961239",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -2170.516107927817,
@@ -6672,20 +6562,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768162961239,
       "x": -2170.516107927817,
       "y": -39.25703336616226,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768163032688",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -2152.640157745545,
@@ -6720,20 +6608,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768163032688,
       "x": -2152.640157745545,
       "y": -532.4489555321506,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768163040088",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1888.284198175389,
@@ -6768,20 +6654,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768163040088,
       "x": -1888.284198175389,
       "y": -534.0039905884457,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768163097277",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -2172.85561347738,
@@ -6816,20 +6700,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768163097277,
       "x": -2172.85561347738,
       "y": 612.0568459009941,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768163101979",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -2171.3005784210845,
@@ -6864,20 +6746,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768163101979,
       "x": -2171.3005784210845,
       "y": 263.7289932909066,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768163111077",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1902.2795136820437,
@@ -6912,20 +6792,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768163111077,
       "x": -1902.2795136820437,
       "y": 557.630618930668,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768163112944",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": -1897.6144085131587,
@@ -6960,20 +6838,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768163112944,
       "x": -1897.6144085131587,
       "y": 299.4947995856925,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768168228046",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l9-1767158007452 ligh",
       "position": {
         "x": -2743.8653591889465,
@@ -7008,20 +6884,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "cableType": "Cat6"
       },
       "createdAt": 1768168228046,
       "x": -2743.8653591889465,
       "y": 6.048871265523729,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768168231511",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l9-1767158007452 ligh",
       "position": {
         "x": -2738.0555346998044,
@@ -7056,20 +6930,18 @@
         "lumens": 900,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "cableType": "Cat6"
       },
       "createdAt": 1768168231511,
       "x": -2738.0555346998044,
       "y": -271.370248091009,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768168233844",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l9-1767158007452 ligh",
       "position": {
         "x": -2469.3511520769844,
@@ -7104,20 +6976,18 @@
         "lumens": 900,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "cableType": "Cat6"
       },
       "createdAt": 1768168233844,
       "x": -2469.3511520769844,
       "y": -274.27516033558004,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768168235910",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l9-1767158007452 ligh",
       "position": {
         "x": -2470.80360819927,
@@ -7152,20 +7022,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "cableType": "Cat6"
       },
       "createdAt": 1768168235910,
       "x": -2470.80360819927,
       "y": 8.953783510094723,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768172017297",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l12-1768153974533",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l12-1768153974533 ligh",
       "position": {
         "x": 1035.6959784448386,
@@ -7200,20 +7068,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l12-1768153974533"
+        "cableType": "Cat6"
       },
       "createdAt": 1768172017297,
       "x": 1035.6959784448386,
       "y": 493.70222248329253,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l12-1768153974533",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768172618942",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l9-1767158007452 ligh",
       "position": {
         "x": 461.99594777868504,
@@ -7248,20 +7114,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "cableType": "Cat6"
       },
       "createdAt": 1768172618942,
       "x": 461.99594777868504,
       "y": -914.3065479540812,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768172621373",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l9-1767158007452 ligh",
       "position": {
         "x": 461.99594777868504,
@@ -7296,20 +7160,18 @@
         "lumens": 1200,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "cableType": "Cat6"
       },
       "createdAt": 1768172621373,
       "x": 461.99594777868504,
       "y": -1126.411088811804,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768172625172",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l9-1767158007452 ligh",
       "position": {
         "x": 828.2196154466952,
@@ -7344,20 +7206,18 @@
         "lumens": 1200,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "cableType": "Cat6"
       },
       "createdAt": 1768172625172,
       "x": 828.2196154466952,
       "y": -1130.988884657654,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768172627038",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l9-1767158007452 ligh",
       "position": {
         "x": 819.0640237549949,
@@ -7392,20 +7252,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "cableType": "Cat6"
       },
       "createdAt": 1768172627038,
       "x": 819.0640237549949,
       "y": -903.6250243137642,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768172983538",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l9-1767158007452 ligh",
       "position": {
         "x": -2432.6969587472117,
@@ -7440,20 +7298,18 @@
         "lumens": 1500,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "cableType": "Cat6"
       },
       "createdAt": 1768172983538,
       "x": -2432.6969587472117,
       "y": 1266.2502066191964,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768172992634",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l9-1767158007452 ligh",
       "position": {
         "x": -1880.3095933479633,
@@ -7488,20 +7344,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "cableType": "Cat6"
       },
       "createdAt": 1768172992634,
       "x": -1880.3095933479633,
       "y": 1255.5686829788795,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768172993667",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l9-1767158007452 ligh",
       "position": {
         "x": -1887.9392530910468,
@@ -7536,20 +7390,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "cableType": "Cat6"
       },
       "createdAt": 1768172993667,
       "x": -1887.9392530910468,
       "y": 935.1229737693706,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768172994917",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l9-1767158007452 ligh",
       "position": {
         "x": -2429.6450948499787,
@@ -7584,20 +7436,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "cableType": "Cat6"
       },
       "createdAt": 1768172994917,
       "x": -2429.6450948499787,
       "y": 938.174837666604,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768173194955",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l9-1767158007452 ligh",
       "position": {
         "x": -2168.7107316365214,
@@ -7632,20 +7482,18 @@
         "lumens": 800,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "cableType": "Cat6"
       },
       "createdAt": 1768173194955,
       "x": -2168.7107316365214,
       "y": 916.8117903859702,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768173197038",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "custom-2ds-l9-1767158007452",
+      "productId": "2DS-L9",
       "name": "custom-2ds-l9-1767158007452 ligh",
       "position": {
         "x": -2165.658867739288,
@@ -7680,20 +7528,18 @@
         "lumens": 1500,
         "beamAngle": 60,
         "range": 10,
-        "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "cableType": "Cat6"
       },
       "createdAt": 1768173197038,
       "x": -2165.658867739288,
       "y": 1272.3539344136634,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "type": "custom-2ds-l9-1767158007452",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768175363988",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "generic-lighting",
+      "productId": "2DS-L9",
       "name": "Device 78",
       "position": {
         "x": -2167.1336782012017,
@@ -7743,20 +7589,19 @@
           "cableType": "Cat6"
         },
         "createdAt": "2026-01-11T23:49:23.988Z",
-        "_migratedFrom": "generic-lighting",
+        "_migratedFrom": "DaliDevice",
         "_migrationTimestamp": 1768175963136
       },
       "createdAt": "2026-01-11T23:49:23.988Z",
       "x": -2167.1336782012017,
       "y": -263.4818829429919,
       "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "category": "lighting"
     },
     {
       "id": "lighting-1768175440243",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "generic-lighting",
+      "productId": "2DS-L9",
       "name": "Device 79",
       "position": {
         "x": -2315.1888343982478,
@@ -7806,20 +7651,19 @@
           "cableType": "Cat6"
         },
         "createdAt": "2026-01-11T23:50:40.243Z",
-        "_migratedFrom": "generic-lighting",
+        "_migratedFrom": "DaliDevice",
         "_migrationTimestamp": 1768175963136
       },
       "createdAt": "2026-01-11T23:50:40.243Z",
       "x": -2315.1888343982478,
       "y": -64.13258805544899,
       "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "category": "lighting"
     },
     {
       "id": "lighting-1768175485521",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "generic-lighting",
+      "productId": "2DS-L9",
       "name": "Device 80",
       "position": {
         "x": -1040.7777882455166,
@@ -7869,20 +7713,19 @@
           "cableType": "Cat6"
         },
         "createdAt": "2026-01-11T23:51:25.521Z",
-        "_migratedFrom": "generic-lighting",
+        "_migratedFrom": "DaliDevice",
         "_migrationTimestamp": 1768175963136
       },
       "createdAt": "2026-01-11T23:51:25.521Z",
       "x": -1040.7777882455166,
       "y": -955.3873719661816,
       "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "category": "lighting"
     },
     {
       "id": "lighting-1768175494571",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "generic-lighting",
+      "productId": "2DS-L9",
       "name": "Device 81",
       "position": {
         "x": -1036.613046264625,
@@ -7932,7 +7775,7 @@
           "cableType": "Cat6"
         },
         "createdAt": "2026-01-11T23:51:34.571Z",
-        "_migratedFrom": "generic-lighting",
+        "_migratedFrom": "DaliDevice",
         "_migrationTimestamp": 1768175963136,
         "orderingCode": "2DS - L15/9TW - N - LD2 - UNV - M - O - OF - CS - F1",
         "shorthand": "",
@@ -7957,13 +7800,12 @@
       "x": -1036.613046264625,
       "y": -1213.2718908196582,
       "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "category": "lighting"
     },
     {
       "id": "lighting-1768175568092",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-he-williams-2ds",
+      "deviceTypeId": "generic-lighting",
+      "productId": "2DS-L9",
       "name": "Device 82",
       "position": {
         "x": 1067.5239223241301,
@@ -8013,7 +7855,7 @@
           "cableType": "Cat6"
         },
         "createdAt": "2026-01-11T23:52:48.092Z",
-        "_migratedFrom": "generic-lighting",
+        "_migratedFrom": "DaliDevice",
         "_migrationTimestamp": 1768175963136,
         "orderingCode": "2DS - L12/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "shorthand": "2DS-L12",
@@ -8038,13 +7880,12 @@
       "x": 1067.5239223241301,
       "y": -1116.9606089472256,
       "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "category": "lighting"
     },
     {
       "id": "lighting-1768176191654",
-      "deviceTypeId": "recessed-light",
-      "productId": "bp-generic-light",
+      "deviceTypeId": "generic-lighting",
+      "productId": "generic-light",
       "name": "Device 83",
       "position": {
         "x": 927.9284819840798,
@@ -8077,20 +7918,19 @@
           "cableType": "Cat6"
         },
         "createdAt": "2026-01-12T00:03:11.654Z",
-        "_migratedFrom": "generic-lighting",
+        "_migratedFrom": "DaliDevice",
         "_migrationTimestamp": 1768181846550
       },
       "createdAt": "2026-01-12T00:03:11.654Z",
       "x": 927.9284819840798,
       "y": -316.6498595045605,
       "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
+      "category": "lighting"
     },
     {
       "id": "lighting-1768333212116",
-      "deviceTypeId": "haiku-fan",
-      "productId": "bp-haiku-fan",
+      "deviceTypeId": "generic-lighting",
+      "productId": "BAF-HAIKU",
       "name": "Device 84",
       "position": {
         "x": -2157.9409102828126,
@@ -8138,20 +7978,19 @@
           "lightKit": "L"
         },
         "createdAt": "2026-01-13T19:40:12.116Z",
-        "_migratedFrom": "generic-lighting",
+        "_migratedFrom": "DaliDevice",
         "_migrationTimestamp": 1768352475500
       },
       "createdAt": "2026-01-13T19:40:12.116Z",
       "x": -2157.9409102828126,
       "y": 1088.8387274346587,
-      "type": "haiku-fan",
-      "category": "lighting",
-      "symbolType": "haiku-fan"
+      "type": "recessed-light",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768333475088",
-      "deviceTypeId": "haiku-fan",
-      "productId": "bp-haiku-fan",
+      "deviceTypeId": "generic-lighting",
+      "productId": "BAF-HAIKU",
       "name": "Device 85",
       "position": {
         "x": -2626.058610759375,
@@ -8199,20 +8038,19 @@
           "lightKit": "L"
         },
         "createdAt": "2026-01-13T19:44:35.088Z",
-        "_migratedFrom": "generic-lighting",
+        "_migratedFrom": "DaliDevice",
         "_migrationTimestamp": 1768352475500
       },
       "createdAt": "2026-01-13T19:44:35.088Z",
       "x": -2626.058610759375,
       "y": -127.1939695344023,
-      "type": "haiku-fan",
-      "category": "lighting",
-      "symbolType": "haiku-fan"
+      "type": "recessed-light",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768333499496",
-      "deviceTypeId": "haiku-fan",
-      "productId": "bp-haiku-fan",
+      "deviceTypeId": "generic-lighting",
+      "productId": "BAF-HAIKU",
       "name": "Device 86",
       "position": {
         "x": -1257.4186352342444,
@@ -8260,20 +8098,19 @@
           "lightKit": "L"
         },
         "createdAt": "2026-01-13T19:44:59.496Z",
-        "_migratedFrom": "generic-lighting",
+        "_migratedFrom": "DaliDevice",
         "_migrationTimestamp": 1768352475500
       },
       "createdAt": "2026-01-13T19:44:59.496Z",
       "x": -1257.4186352342444,
       "y": -327.298572852559,
-      "type": "haiku-fan",
-      "category": "lighting",
-      "symbolType": "haiku-fan"
+      "type": "recessed-light",
+      "category": "lighting"
     },
     {
       "id": "lighting-1768333503120",
-      "deviceTypeId": "haiku-fan",
-      "productId": "bp-haiku-fan",
+      "deviceTypeId": "generic-lighting",
+      "productId": "BAF-HAIKU",
       "name": "Device 87",
       "position": {
         "x": -1366.9098332762546,
@@ -8321,15 +8158,14 @@
           "lightKit": "L"
         },
         "createdAt": "2026-01-13T19:45:03.120Z",
-        "_migratedFrom": "generic-lighting",
+        "_migratedFrom": "DaliDevice",
         "_migrationTimestamp": 1768352475501
       },
       "createdAt": "2026-01-13T19:45:03.120Z",
       "x": -1366.9098332762546,
       "y": -1027.6646844661086,
-      "type": "haiku-fan",
-      "category": "lighting",
-      "symbolType": "haiku-fan"
+      "type": "recessed-light",
+      "category": "lighting"
     }
   ],
   "cables": [],

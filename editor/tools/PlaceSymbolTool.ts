@@ -100,8 +100,30 @@ export class PlaceSymbolTool implements Tool {
         this.previewGroup.clear();
         if (!this.symbolType) return;
 
-        const def = SYMBOL_LIBRARY[this.symbolType];
-        if (!def) return;
+        // Try SYMBOL_LIBRARY first, then check Blueprints if not found (AUTO-SPEC-RESOLVE-P28)
+        let def = SYMBOL_LIBRARY[this.symbolType];
+
+        // If not in static library, it might be a Blueprint ID (which are treated as symbols)
+        if (!def) {
+            // This is a bit of a hack since Tool doesn't have easy context, 
+            // but we can check if it's stored in metadata by the palette
+            // or just assume the caller set it up in SYMBOL_LIBRARY at runtime.
+            // For now, let's look at the editor's registry or the global library.
+            // (FloorPlanEditor could have a registry reference)
+
+            // Fallback: If it starts with 'bp-', it's almost certainly a blueprint
+            if (this.symbolType.startsWith('bp-')) {
+                // We rely on the symbol being injected into the library or 
+                // we create a temporary definition here if we can't find it.
+                // Actually, the SymbolPalette maps these. Let's look for it.
+                def = SYMBOL_LIBRARY[this.symbolType];
+            }
+        }
+
+        if (!def) {
+            remoteDebug(`[PlaceSymbolTool] Definition not found for ${this.symbolType} `, 'PlaceSymbolTool');
+            return;
+        }
 
         const meshCreator = getMeshCreator(def.meshType, this.symbolType);
 

@@ -39,7 +39,14 @@ export const DeviceLibrary: React.FC<DeviceLibraryProps> = ({
     onUpdateDefinition,
     onSaveAsNewType
 }) => {
-    const activeProduct = catalog.find(p => p.id === productId);
+    const catalogV2 = catalog as any;
+    const allProducts = [
+        ...catalogV2.registry.loads,
+        ...catalogV2.registry.drivers,
+        ...catalogV2.registry.logic
+    ];
+
+    const activeProduct = allProducts.find(p => p.id === productId);
     const SpecBuilder = getSpecBuilder(activeProduct);
     const activeSystem = SYSTEM_REGISTRY.find(s => s.id === selectedCategory);
 
@@ -121,8 +128,8 @@ export const DeviceLibrary: React.FC<DeviceLibraryProps> = ({
                             className="w-full text-[9px] text-slate-100 font-mono px-2 py-1.5 bg-slate-900 rounded border border-slate-700"
                         >
                             <option value="">Select Catalog Item...</option>
-                            {catalog
-                                .filter(p => p.type === selectedCategory.toUpperCase())
+                            {(catalogV2.registry.loads as any[])
+                                .filter(p => p.category === selectedCategory)
                                 .map(item => (
                                     <option key={item.id} value={item.id}>
                                         {item.name}

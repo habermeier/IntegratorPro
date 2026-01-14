@@ -139,9 +139,9 @@ class DataService {
         remoteDebug('Project version token', 'DataService', { versionToken: this.versionToken });
       }
 
-      // Apply migration if needed
-      if (projectData.devices && projectData.devices.length > 0) {
-        projectData.devices = this.migrateDaliDevices(projectData.devices);
+      // Migration phase complete - version 2.0 now standard
+      if (projectData.version === '1.0' || !projectData.version) {
+        remoteDebug('⚠️ WARNING: Project data version mismatch. Expected 2.0.', 'DataService');
       }
 
       this.cache = projectData;
@@ -513,11 +513,7 @@ class DataService {
 
       const versionData = await response.json();
 
-      // Apply migration if needed
-      if (versionData.devices && versionData.devices.length > 0) {
-        versionData.devices = this.migrateDaliDevices(versionData.devices);
-      }
-
+      // Migration phase complete
       return versionData;
     } catch (error) {
       console.error('Error loading version:', error);
@@ -571,64 +567,28 @@ class DataService {
   }
 
   /**
-   * Migrate legacy DALI devices to new Device structure
-   * @param legacyDevices Array of legacy device objects
-   * @returns Array of properly structured Device objects
+   * Get the full catalog (Blueprints + Registries)
    */
-  private migrateDaliDevices(legacyDevices: any[]): Device[] {
-    if (!legacyDevices || legacyDevices.length === 0) {
-      return [];
-    }
+  async getCatalog(): Promise<any> {
+    const response = await fetch('/catalog.json');
+    if (!response.ok) throw new Error('Failed to load catalog');
+    return response.json();
+  }
 
-    return legacyDevices.map((legacy, index) => {
-      // Check if this is already a migrated Device (has required fields)
-      const isAlreadyMigrated =
-        legacy.deviceTypeId !== undefined &&
-        legacy.position !== undefined &&
-        typeof legacy.position === 'object' &&
-        legacy.position.x !== undefined &&
-        legacy.position.y !== undefined &&
-        legacy.layerId !== undefined;
+  /**
+   * Get all registered Blueprints
+   */
+  async getBlueprints(): Promise<any[]> {
+    const catalog = await this.getCatalog();
+    return catalog.blueprints || [];
+  }
 
-      if (isAlreadyMigrated) {
-        // Already in new format, return as-is
-        return legacy as Device;
-      }
-
-      // Legacy device detected - perform migration
-      remoteDebug(`Migrating legacy device ${legacy.id || index}`, 'DataService', { deviceId: legacy.id || index });
-
-      // Extract position from legacy x/y or position object
-      const position = {
-        x: legacy.x ?? legacy.position?.x ?? 0,
-        y: legacy.y ?? legacy.position?.y ?? 0
-      };
-
-      // Build migrated device
-      const migratedDevice: Device = {
-        id: legacy.id || `migrated-device-${Date.now()}-${index}`,
-        deviceTypeId: legacy.deviceTypeId || 'generic-lighting',
-        productId: legacy.productId || 'generic-legacy',
-        name: legacy.name || `Device ${index + 1}`,
-        position,
-        rotation: legacy.rotation ?? 0,
-        roomId: legacy.roomId ?? null,
-        layerId: legacy.layerId || 'lighting',
-        installationHeight: legacy.installationHeight ?? 2.4,
-        networkConnections: legacy.networkConnections || [],
-        lcpAssignment: legacy.lcpAssignment ?? null,
-        busAssignment: legacy.busAssignment ?? null,
-        metadata: {
-          // Preserve all legacy fields in metadata for reference
-          ...legacy,
-          _migratedFrom: 'DaliDevice',
-          _migrationTimestamp: Date.now()
-        },
-        createdAt: legacy.createdAt ?? Date.now()
-      };
-
-      return migratedDevice;
-    });
+  /**
+   * Get a specific Blueprint by ID
+   */
+  async getBlueprintById(id: string): Promise<any | null> {
+    const blueprints = await this.getBlueprints();
+    return blueprints.find(bp => bp.id === id) || null;
   }
 }
 

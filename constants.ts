@@ -4,9 +4,10 @@ import INITIAL_CONNECTIONS_JSON from './src/data/initial-connections.json';
 
 /**
  * INITIAL_MODULES
- * Loaded from catalog.json as the source of truth for available hardware.
+ * DEPRECATED: Use DeviceRegistry/useDeviceRegistry instead.
+ * Initialized as empty to avoid double-counting with registry-based devices.
  */
-export const INITIAL_MODULES: HardwareModule[] = INITIAL_MODULES_JSON as any as HardwareModule[];
+export const INITIAL_MODULES: HardwareModule[] = [];
 
 /**
  * INITIAL_CONNECTIONS

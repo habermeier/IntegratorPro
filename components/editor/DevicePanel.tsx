@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Database, Lightbulb, Zap } from 'lucide-react';
+import { Box, Database, Target, ChevronLeft, ChevronRight, Save, Trash2, Cpu, Activity, Lightbulb, Zap } from 'lucide-react';
 
 // Core imports
 import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
@@ -439,7 +439,8 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
         }
         // Mode 2: Creating from Library (Add New)
         else if (productId && isAddingNew) {
-            const product = await import('../../catalog.json').then(m => m.default.find(p => p.id === productId));
+            const catalogV2 = catalog as any;
+            const product = (catalogV2.registry.loads as any[]).find(p => p.id === productId);
 
             setNewNameData({
                 defaultName: `${product?.name || 'New Fixture'} Custom`,
@@ -497,7 +498,8 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
         else if (librarySelectedSymbol) {
             if (field === 'productId') {
                 // Changing product in library preview should reset metadata to catalog defaults
-                const product = catalog.find(p => p.id === value);
+                const catalogV2 = catalog as any;
+                const product = (catalogV2.registry.loads as any[]).find(p => p.id === value);
                 setDraftMetadata(product?.metadata || {});
             }
             // For other fields, they just stay in formData/draftMetadata 
@@ -632,7 +634,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                             metadata: librarySelectedSymbol.metadata,
                             position: { x: 0, y: 0 },
                             rotation: 0
-                        }}
+                        } as any}
                         formData={formData}
                         draftMetadata={draftMetadata}
                         onFieldChange={handleFieldChange}
@@ -651,6 +653,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                         onUpdateGlobal={handleUpdateGlobalType}
                         setDraftMetadata={handleMetadataChange}
                         unitPreference={unitPreference}
+                        devices={devices}
                     />
                 ) : selectedRoom ? (
                     <RoomEditor

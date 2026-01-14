@@ -153,6 +153,20 @@
         "category": "lighting"
       },
       {
+        "id": "2DS-L9-INTEGRATED",
+        "name": "2DS Square Downlight (Integrated DALI)",
+        "manufacturer": "HE Williams",
+        "description": "2\" Square Downlight with BUILT-IN DALI-2 Driver and Logic.",
+        "cost": 325,
+        "type": "load",
+        "wattage": 15,
+        "category": "lighting",
+        "busDrawMa": 4.5,
+        "efficiency": 0.88,
+        "addresses": 1,
+        "protocol": "DALI"
+      },
+      {
         "id": "light-adj-dali",
         "name": "2AS Adjustable",
         "manufacturer": "HE Williams",
@@ -683,6 +697,22 @@
         "hvAmps": 0.1388888888888889,
         "lvMa": 2,
         "totalAddresses": 0
+      }
+    },
+    {
+      "id": "bp-2ds-integrated",
+      "name": "HE Williams 2DS (All-In-One)",
+      "category": "lighting",
+      "symbolType": "recessed-light",
+      "components": {
+        "loadId": "2DS-L9-INTEGRATED",
+        "logicIds": []
+      },
+      "calculatedStats": {
+        "totalCost": 325,
+        "hvAmps": 0.142,
+        "lvMa": 4.5,
+        "totalAddresses": 1
       }
     },
     {

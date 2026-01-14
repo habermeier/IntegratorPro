@@ -70,7 +70,12 @@ export function useAutoSave(
           const content = layer.content as VectorLayerContent;
           const symbols = content.symbols || [];
           if (symbols.length > 0) {
-            allDevices.push(...symbols);
+            // Map PlacedSymbol to Device structure for storage
+            const deviceMappedSymbols = symbols.map(s => ({
+              ...s,
+              deviceTypeId: s.type // Align with Device model
+            }));
+            allDevices.push(...deviceMappedSymbols);
           }
         }
       });

@@ -301,8 +301,8 @@ export class LayerSystem {
                                 // It's safer to let renderVectorLayer normalize it, BUT update() runs every frame.
                                 // We must reset if we modified it in previous frames.
                                 const isMask = itemType === 'mask';
-                                const baseColor = isMask ? (this.isMaskEditMode ? 0x94a3b8 : 0xffffff) : (group.userData.color || 0x3b82f6);
-                                const baseOpacity = isMask ? (this.isMaskEditMode ? 0.3 : 1.0) : 0.15;
+                                const baseColor = isMask ? 0xffffff : (group.userData.color || 0x3b82f6);
+                                const baseOpacity = isMask ? (this.isMaskEditMode ? 0.6 : 1.0) : 0.15;
 
                                 fill.material.color.setHex(baseColor);
                                 fill.material.opacity = baseOpacity;
@@ -601,7 +601,7 @@ export class LayerSystem {
                     glowShape.closePath();
                     const glowGeo = new THREE.ShapeGeometry(glowShape);
                     const glowMat = new THREE.MeshBasicMaterial({
-                        color: 0x000000,
+                        color: 0xffffff,
                         transparent: true,
                         opacity: 0.1, // Stacked low opacity
                         side: THREE.DoubleSide
@@ -636,13 +636,13 @@ export class LayerSystem {
                 shape.closePath();
                 const geometry = new THREE.ShapeGeometry(shape);
                 const isSelected = selectedIds.has(id);
-                const fillColor = isMask ? (this.isMaskEditMode ? 0x94a3b8 : 0xffffff) : (poly.color || 0x3b82f6);
+                const fillColor = isMask ? 0xffffff : (poly.color || 0x3b82f6);
 
                 // Opacity Logic: 
-                // Masks: Solid white (1.0) for blocking if not editing, low-opacity gray (0.3) if editing.
+                // Masks: Solid white (1.0) for blocking if not editing, semi-opaque white (0.6) if editing.
                 // Rooms: Very low opacity (0.15) to just "tint" the floor plan.
                 const opacity = isMask
-                    ? (this.isMaskEditMode ? (isSelected ? 0.3 : 0.3) : 1.0)
+                    ? (this.isMaskEditMode ? (isSelected ? 0.6 : 0.6) : 1.0)
                     : (isSelected ? 0.4 : 0.15);
 
                 const material = new THREE.MeshBasicMaterial({

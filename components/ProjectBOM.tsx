@@ -1,7 +1,25 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { HardwareModule, ModuleType, MountType } from '../types';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
-import { ShoppingCart, Zap, Thermometer, DollarSign, Activity, X, Search, FileText, ArrowUp, ArrowDown, ExternalLink, Info } from 'lucide-react';
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import { HVCircuitSchedule } from './reports/HVCircuitSchedule';
+import { DaliUniverseMap } from './reports/DaliUniverseMap';
+import { AmpereEngine } from '../src/services/AmpereEngine';
+import catalog from '../catalog.json';
+
+// Icons
+import {
+    ShoppingCart, Zap, Thermometer, DollarSign, Activity, X, Search, FileText, ArrowUp, ArrowDown, ExternalLink, Info,
+    Plus,
+    Trash2,
+    ChevronDown,
+    ChevronUp,
+    FileDown,
+    Layers,
+    Filter,
+    Download,
+    AlertCircle
+} from 'lucide-react';
 import { deviceRegistry } from '../src/services/DeviceRegistry';
 import { useDeviceRegistry } from '../src/hooks/useDeviceRegistry';
 import { Device } from '../src/models/Device';
@@ -111,7 +129,7 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
     }, [layoutData]);
 
     // --- INTEGRATION: Convert Devices from DeviceRegistry to BOM Modules (Grouped by SKU) ---
-    const { deviceModules } = useDeviceRegistry();
+    const { devices, deviceModules } = useDeviceRegistry();
 
     const allModules = useMemo(() => [...modules, ...virtualCableModules, ...deviceModules], [modules, virtualCableModules, deviceModules]);
 
@@ -289,10 +307,41 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                 {!summaryOnly && (
                     <div className="bg-transparent md:bg-slate-900 rounded-none md:rounded-xl border-0 md:border border-slate-800 flex flex-col shadow-none md:shadow-lg">
                         <div className="hidden md:flex px-0 md:px-6 py-2 md:py-4 border-b-0 md:border-b border-slate-800 bg-transparent md:bg-slate-900/50 justify-between items-center mb-2 md:mb-0">
-                            <h3 className="font-bold text-white flex items-center text-lg md:text-base">
-                                <Activity className="w-5 h-5 md:w-4 md:h-4 mr-2 text-blue-500" />
-                                Equipment List
-                            </h3>
+                            <div className="flex items-center gap-4">
+                                <h3 className="font-bold text-white flex items-center text-lg md:text-base">
+                                    <Activity className="w-5 h-5 md:w-4 md:h-4 mr-2 text-blue-500" />
+                                    Equipment List
+                                </h3>
+
+                                {/* TECHNICAL REPORTS (AUTO-REPORTS-P28) */}
+                                <div className="flex gap-2">
+                                    <PDFDownloadLink
+                                        document={<HVCircuitSchedule projectName="Current Project" circuits={AmpereEngine.calculateLoads(devices as any, catalog as any).circuits} />}
+                                        fileName="HV_Circuit_Schedule.pdf"
+                                        style={{ textDecoration: 'none' }}
+                                    >
+                                        {({ loading }) => (
+                                            <button className="flex items-center gap-1.5 px-2 py-1 bg-slate-800 hover:bg-amber-900/40 text-amber-400 rounded border border-amber-500/30 text-[9px] font-bold uppercase transition-all">
+                                                <Zap size={10} />
+                                                <span>{loading ? '...' : 'HV Schedule'}</span>
+                                            </button>
+                                        )}
+                                    </PDFDownloadLink>
+
+                                    <PDFDownloadLink
+                                        document={<DaliUniverseMap projectName="Current Project" buses={AmpereEngine.calculateLoads(devices as any, catalog as any).buses} />}
+                                        fileName="DALI_Universe_Map.pdf"
+                                        style={{ textDecoration: 'none' }}
+                                    >
+                                        {({ loading }) => (
+                                            <button className="flex items-center gap-1.5 px-2 py-1 bg-slate-800 hover:bg-purple-900/40 text-purple-400 rounded border border-purple-500/30 text-[9px] font-bold uppercase transition-all">
+                                                <Activity size={10} />
+                                                <span>{loading ? '...' : 'DALI Map'}</span>
+                                            </button>
+                                        )}
+                                    </PDFDownloadLink>
+                                </div>
+                            </div>
                             {sortConfig.length > 0 && (
                                 <button onClick={clearSort} className="text-xs flex items-center gap-1 text-slate-400 hover:text-white px-2 py-1 rounded hover:bg-slate-800">
                                     <X className="w-3 h-3" /> Clear Sort

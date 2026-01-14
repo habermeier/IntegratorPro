@@ -1,8 +1,10 @@
 import React from 'react';
-import { Target, Box, ChevronLeft, ChevronRight, Save, Trash2 } from 'lucide-react';
+import { Target, Box, ChevronLeft, ChevronRight, Save, Trash2, Cpu, Activity, Lightbulb, Zap } from 'lucide-react';
 import { SYMBOL_LIBRARY } from '../../../editor/models/symbolLibrary';
 import { getSpecBuilder } from './SpecBuilderRegistry';
 import catalog from '../../../catalog.json';
+import { AmpereEngine } from '../../../src/services/AmpereEngine';
+import { CatalogV2 } from '../../../src/models/Blueprint';
 
 interface DeviceEditorProps {
     editingDevice: any;
@@ -16,6 +18,7 @@ interface DeviceEditorProps {
     onUpdateGlobal: () => void;
     setDraftMetadata: (metadata: any) => void;
     unitPreference: 'IMPERIAL' | 'METRIC';
+    devices: any[]; // New prop
 }
 
 export const DeviceEditor: React.FC<DeviceEditorProps> = ({
@@ -29,18 +32,20 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
     onSaveNewType,
     onUpdateGlobal,
     setDraftMetadata,
-    unitPreference
+    unitPreference,
+    devices
 }) => {
     const [isGeneralExpanded, setIsGeneralExpanded] = React.useState(true);
     const [isPlacementExpanded, setIsPlacementExpanded] = React.useState(true);
     const [isConfigExpanded, setIsConfigExpanded] = React.useState(true);
 
-    // Resolve product more robustly:
-    // 1. User manual selection (formData)
-    // 2. Instance ID (if specific) - CRITICAL: Must override generic symbol defaults
-    // 3. Metadata (Legacy/Instance specific)
-    // 4. Symbol Definition (if specific)
-    // 5. Fallback to whatever is available
+    const catalogV2 = catalog as any as CatalogV2;
+    const blueprint = catalogV2.blueprints.find(bp => bp.id === editingDevice.deviceTypeId);
+
+    // Calculate Loads (AUTO-POWER-P28)
+    const { circuits, buses } = AmpereEngine.calculateLoads(devices, catalogV2);
+    const circuitLoad = circuits.find(c => c.id === editingDevice.lcpAssignment || (editingDevice.lcpAssignment === null && c.id === 'Unassigned'));
+    const busLoad = buses.find(b => b.id === editingDevice.busAssignment || (editingDevice.busAssignment === null && b.id === 'Unassigned'));
 
     // Helper to check if an ID is 'generic'
     const isGeneric = (id: string | null | undefined) => !id || id === 'generic-product' || id === 'generic-light' || id === 'generic-switch';
@@ -53,23 +58,22 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
         (!isGeneric((SYMBOL_LIBRARY[editingDevice.deviceTypeId] as any)?.metadata?.productId) ? (SYMBOL_LIBRARY[editingDevice.deviceTypeId] as any).metadata.productId : null) ||
         editingDevice.productId; // Final fallback
 
-    // Attempt to find in catalog. If not found but we have a specific ID, create a synthetic 'Unknown' product to avoid "Generic" UI
-    const catalogProduct = catalog.find(p => p.id === effectiveProductId);
+    // Attempt to find in catalog
+    const catalogProduct = catalogV2.registry.loads.find(p => p.id === effectiveProductId);
 
     const product = catalogProduct || (effectiveProductId && !isGeneric(effectiveProductId) ? {
         id: effectiveProductId,
         name: `${effectiveProductId} (Unknown)`,
         manufacturer: 'Unknown',
         type: 'LIGHTING'
-    } : undefined);
+    } as any : undefined);
 
     const SpecBuilder = getSpecBuilder(product);
 
-    // Filter catalog for relevant items (simple match for now, or all)
-    // We want to allow re-assignment to any valid hardware.
+    // Filter catalog for relevant items
     const catalogOptions = React.useMemo(() => {
-        return catalog.sort((a, b) => (a.manufacturer + a.name).localeCompare(b.manufacturer + b.name));
-    }, []);
+        return [...catalogV2.registry.loads].sort((a, b) => (a.manufacturer + a.name).localeCompare(b.manufacturer + b.name));
+    }, [catalogV2]);
 
     return (
         <div className="p-3 space-y-3 pb-20 overflow-y-auto h-full custom-scrollbar">
@@ -192,7 +196,66 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
                 </div>
             </CollapsibleSection>
 
-            {/* SECTION 3: SPECIFICATION */}
+            {/* NEW SECTION: BLUEPRINT SUMMARY & POWER */}
+            <CollapsibleSection
+                title="System Connectivity"
+                isExpanded={isPlacementExpanded}
+                toggle={() => setIsPlacementExpanded(!isPlacementExpanded)}
+                icon={<Activity className="w-3 h-3 text-emerald-400" />}
+            >
+                <div className="p-2 space-y-2">
+                    <div className="flex bg-slate-950 p-2 rounded border border-slate-800 justify-between items-center">
+                        <div className="flex flex-col">
+                            <span className="text-[7px] text-slate-500 uppercase font-black">Circuit Assignment</span>
+                            <span className="text-[10px] text-slate-200 font-mono">{editingDevice.lcpAssignment || 'Unassigned'}</span>
+                        </div>
+                        <div className="text-right">
+                            <span className="text-[7px] text-slate-500 uppercase font-black">Circuit Load</span>
+                            <div className={`text-[10px] font-mono ${circuitLoad?.isOverloaded ? 'text-rose-500 font-bold' : 'text-emerald-400'}`}>
+                                {circuitLoad?.totalAmps.toFixed(2) || '0.00'}A / 12A
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex bg-slate-950 p-2 rounded border border-slate-800 justify-between items-center">
+                        <div className="flex flex-col">
+                            <span className="text-[7px] text-slate-500 uppercase font-black">Bus / Universe</span>
+                            <span className="text-[10px] text-slate-200 font-mono">{editingDevice.busAssignment || 'Unassigned'}</span>
+                        </div>
+                        <div className="text-right">
+                            <span className="text-[7px] text-slate-500 uppercase font-black">Bus Load</span>
+                            <div className={`text-[10px] font-mono ${busLoad?.isOverloaded ? 'text-rose-500 font-bold' : 'text-blue-400'}`}>
+                                {busLoad?.totalMa || 0}mA / 250mA
+                            </div>
+                        </div>
+                    </div>
+
+                    {blueprint && (
+                        <div className="mt-3">
+                            <label className="text-[9px] text-slate-500 uppercase font-bold block mb-1">Components</label>
+                            <div className="space-y-1">
+                                <div className="flex items-center gap-2 p-1.5 bg-slate-800/50 rounded border border-slate-700/50">
+                                    <Lightbulb size={10} className="text-pink-400" />
+                                    <span className="text-[9px] text-slate-300 truncate">{blueprint.components.loadId}</span>
+                                </div>
+                                {blueprint.components.driverId && (
+                                    <div className="flex items-center gap-2 p-1.5 bg-slate-800/50 rounded border border-slate-700/50">
+                                        <Zap size={10} className="text-amber-400" />
+                                        <span className="text-[9px] text-slate-300 truncate">{blueprint.components.driverId}</span>
+                                    </div>
+                                )}
+                                {blueprint.components.logicIds.map((lid: string) => (
+                                    <div key={lid} className="flex items-center gap-2 p-1.5 bg-slate-800/50 rounded border border-slate-700/50">
+                                        <Cpu size={10} className="text-emerald-400" />
+                                        <span className="text-[9px] text-slate-300 truncate">{lid}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </CollapsibleSection>
+
             {/* SECTION 3: SPECIFICATION */}
             <CollapsibleSection
                 title={SpecBuilder ? "Spec Builder" : "Specifications"}
