@@ -7,7 +7,7 @@ export interface SymbolDefinition {
     description: string;
     color: number;
     size: { width: number, height: number };
-    createMesh: (width: number, height: number) => THREE.Group;
+    createMesh: (width: number, height: number, metadata?: any) => THREE.Group;
     meshType?: 'universal' | 'fan';
     productId?: string;
     metadata?: any;
@@ -30,7 +30,7 @@ export const SYMBOL_CATEGORIES = [
  * @param width - Width of the symbol in pixels (default: 16)
  * @param height - Height of the symbol in pixels (default: 16)
  */
-export const createUniversalMesh = (width?: number, height?: number): THREE.Group => {
+export const createUniversalMesh = (width?: number, height?: number, metadata?: any): THREE.Group => {
     const w = width || 16;
     const h = height || 16;
     const group = new THREE.Group();
@@ -86,30 +86,34 @@ export const createUniversalMesh = (width?: number, height?: number): THREE.Grou
  * Ceiling Fan Mesh Creator: Central hub with 3 aerodynamic blades
  * Scaled larger than standard lighting fixtures.
  */
-export const createCeilingFanMesh = (width?: number, height?: number): THREE.Group => {
+export const createCeilingFanMesh = (width?: number, height?: number, metadata?: any): THREE.Group => {
     const w = width || 48; // 3x standard 16px
     const h = height || 48;
     const group = new THREE.Group();
     const blackMat = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide });
     const whiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
 
-    // 1. Central Hub
-    const hubRadius = w / 8;
-    const hubHaloGeo = new THREE.CircleGeometry(hubRadius + 1.5, 32);
-    const hubHalo = new THREE.Mesh(hubHaloGeo, whiteMat);
-    hubHalo.position.z = 0.01;
-    group.add(hubHalo);
+    // 1. Central Hub (representing the Light if present)
+    const hasLight = metadata?.fanLightKit !== 'NL' && metadata?.lumens !== 0;
 
-    const hubGeo = new THREE.CircleGeometry(hubRadius, 32);
-    const hub = new THREE.Mesh(hubGeo, blackMat);
-    hub.position.z = 0.05;
-    group.add(hub);
+    if (hasLight) {
+        const hubRadius = w / 8;
+        const hubHaloGeo = new THREE.CircleGeometry(hubRadius + 1.5, 32);
+        const hubHalo = new THREE.Mesh(hubHaloGeo, whiteMat);
+        hubHalo.position.z = 0.01;
+        group.add(hubHalo);
+
+        const hubGeo = new THREE.CircleGeometry(hubRadius, 32);
+        const hub = new THREE.Mesh(hubGeo, blackMat);
+        hub.position.z = 0.05;
+        group.add(hub);
+    }
 
     // 2. Three Blades
     for (let i = 0; i < 3; i++) {
         const angle = (i * 2 * Math.PI) / 3;
         const bladeWidth = w / 5;
-        const bladeLength = (w / 2) * 0.9;
+        const bladeLength = (w / 2) * 1.8; // Twice as long (AUTO-SCALE-FAN-P2)
 
         const bladeGroup = new THREE.Group();
 
@@ -133,12 +137,11 @@ export const createCeilingFanMesh = (width?: number, height?: number): THREE.Gro
     return group;
 };
 
-export const getMeshCreator = (meshType?: string, symbolId?: string): (width: number, height: number) => THREE.Group => {
-    // 1. Explicit type check
+export const getMeshCreator = (meshType?: string, symbolId?: string): (width: number, height: number, metadata?: any) => THREE.Group => {
     if (meshType === 'fan') return createCeilingFanMesh;
     if (meshType === 'universal') return createUniversalMesh;
 
-    // 2. Legacy/Migration fallback: Keyword matching
+    // Legacy/Migration Fallback: Keyword matching (AUTO-MIGRATE-P28)
     if (symbolId) {
         const idLower = symbolId.toLowerCase();
         if (idLower.includes('fan') || idLower.includes('haiku')) {
@@ -146,7 +149,6 @@ export const getMeshCreator = (meshType?: string, symbolId?: string): (width: nu
         }
     }
 
-    // Default fallback
     return createUniversalMesh;
 };
 
@@ -192,7 +194,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         category: 'lighting',
         description: 'Symbolic representation of a ceiling fan with blades',
         color: 0x000000,
-        size: { width: 48, height: 48 },
+        size: { width: 96, height: 96 },
         createMesh: createCeilingFanMesh,
         meshType: 'fan',
         productId: 'generic-light'
@@ -203,7 +205,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         category: 'lighting',
         description: 'Premium Big Ass Fans Haiku Series',
         color: 0x000000,
-        size: { width: 48, height: 48 },
+        size: { width: 96, height: 96 },
         createMesh: createCeilingFanMesh,
         meshType: 'fan',
         productId: 'BAF-HAIKU'

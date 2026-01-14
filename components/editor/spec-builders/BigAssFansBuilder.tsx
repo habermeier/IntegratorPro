@@ -22,6 +22,9 @@ export interface BigAssFansSpec {
     // Calculated Properties
     cfm: number;
     maxPower: number;
+    lumens?: number;
+    beamAngle?: number;
+    lightKit?: string;
 }
 
 // Technical Data based on Haiku Cutsheet (Approximate)
@@ -36,7 +39,7 @@ const PERFORMANCE_DATA: Record<string, { cfm: number, watts: number }> = {
 export const BigAssFansBuilder: React.FC<BigAssFansBuilderProps> = ({ initialMetadata, onChange, deviceId }) => {
     // Big Ass Fans Spec State (Refined for Haiku Cutsheet)
     const [fanSeries, setFanSeries] = useState<string>('HK'); // Haiku
-    const [fanSize, setFanSize] = useState<string>('60'); 
+    const [fanSize, setFanSize] = useState<string>('60');
     const [fanEnvironment, setFanEnvironment] = useState<string>('I'); // I=Indoor, O=Outdoor
     const [fanMaterial, setFanMaterial] = useState<string>('AL'); // AL=Aluminum, BA=Bamboo
     const [fanFinish, setFanFinish] = useState<string>('WH'); // White, BL, BA, CA, CO
@@ -73,9 +76,16 @@ export const BigAssFansBuilder: React.FC<BigAssFansBuilderProps> = ({ initialMet
     const calculateStats = () => {
         const key = `${fanSize}-${fanMaterial}`;
         const data = PERFORMANCE_DATA[key] || { cfm: 5000, watts: 20 };
+
+        // Handle Light Kit (Integrated LED typically 1200-1500 lumens)
+        const hasLight = fanLightKit === 'L';
+
         return {
             cfm: data.cfm,
-            maxPower: data.watts
+            maxPower: data.watts,
+            lumens: hasLight ? 1200 : 0,
+            beamAngle: hasLight ? 120 : 0,
+            range: 0 // We use beamAngle/height for lighting
         };
     };
 
@@ -96,7 +106,9 @@ export const BigAssFansBuilder: React.FC<BigAssFansBuilderProps> = ({ initialMet
                 fanEnvironment,
                 fanLightKit,
                 fanVoltage,
-                ...stats
+                ...stats,
+                // Explicitly pass lightKit flag for rendering logic
+                lightKit: fanLightKit
             });
         }
     }, [fanSeries, fanSize, fanEnvironment, fanMaterial, fanFinish, fanMount, fanLightKit, fanVoltage, specShorthand, specPdfUrl, specShoppingLink, onChange]);

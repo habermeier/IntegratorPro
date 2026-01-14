@@ -1,11 +1,11 @@
 {
   "version": "1.0",
-  "timestamp": "2026-01-12T02:20:20.790Z",
+  "timestamp": "2026-01-14T01:04:09.176Z",
   "metadata": {
     "name": "270 Boll Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2026-01-12T02:20:20.782Z"
+    "modified": "2026-01-14T01:04:09.161Z"
   },
   "floorPlan": {
     "scale": {
@@ -463,31 +463,6 @@
         "name": "Kitchen",
         "roomType": "open",
         "color": 5105113,
-        "type": "room"
-      },
-      {
-        "id": "305k1p",
-        "points": [
-          {
-            "x": 1233.0045471191406,
-            "y": 280.5192108154297
-          },
-          {
-            "x": 1236.9337900111686,
-            "y": 1028.3390100610966
-          },
-          {
-            "x": 60.90713776571215,
-            "y": 1026.0635902599572
-          },
-          {
-            "x": 56.03716004778846,
-            "y": 284.4602163892679
-          }
-        ],
-        "name": "Family Room",
-        "roomType": "open",
-        "color": 15027578,
         "type": "room"
       },
       {
@@ -5802,7 +5777,7 @@
         "specTrimType": "R",
         "specTrimOptions": "NONE",
         "specBracket": "F1",
-        "lumens": 800,
+        "lumens": 1200,
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6"
@@ -5848,7 +5823,7 @@
         "specTrimType": "R",
         "specTrimOptions": "NONE",
         "specBracket": "F1",
-        "lumens": 800,
+        "lumens": 1200,
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6"
@@ -5940,7 +5915,7 @@
         "specTrimType": "R",
         "specTrimOptions": "NONE",
         "specBracket": "F1",
-        "lumens": 800,
+        "lumens": 1200,
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6"
@@ -6078,7 +6053,7 @@
         "specTrimType": "R",
         "specTrimOptions": "NONE",
         "specBracket": "F1",
-        "lumens": 800,
+        "lumens": 1200,
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6"
@@ -6245,11 +6220,11 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "orderingCode": "2DS - L12/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
-        "shorthand": "2DS-L12",
+        "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "shorthand": "2DS-L9",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
-        "specLumens": "L12",
+        "specLumens": "L9",
         "specColor": "9TW",
         "specMountingType": "N",
         "specDriver": "LD2",
@@ -6262,7 +6237,7 @@
         "specTrimType": "R",
         "specTrimOptions": "NONE",
         "specBracket": "F1",
-        "lumens": 800,
+        "lumens": 900,
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6"
@@ -6952,7 +6927,7 @@
         "specTrimType": "R",
         "specTrimOptions": "NONE",
         "specBracket": "F1",
-        "lumens": 800,
+        "lumens": 900,
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6"
@@ -6998,7 +6973,7 @@
         "specTrimType": "R",
         "specTrimOptions": "NONE",
         "specBracket": "F1",
-        "lumens": 800,
+        "lumens": 900,
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6"
@@ -7165,11 +7140,11 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "2DS-L9",
-        "shorthand": "2DS-L9",
-        "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "shorthand": "2DS-L12",
+        "orderingCode": "2DS - L12/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
-        "specLumens": "L9",
+        "specLumens": "L12",
         "specColor": "9TW",
         "specMountingType": "N",
         "specDriver": "LD2",
@@ -7182,7 +7157,7 @@
         "specTrimType": "R",
         "specTrimOptions": "NONE",
         "specBracket": "F1",
-        "lumens": 800,
+        "lumens": 1200,
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6"
@@ -7211,11 +7186,11 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "2DS-L9",
-        "shorthand": "2DS-L9",
-        "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "shorthand": "2DS-L12",
+        "orderingCode": "2DS - L12/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
-        "specLumens": "L9",
+        "specLumens": "L12",
         "specColor": "9TW",
         "specMountingType": "N",
         "specDriver": "LD2",
@@ -7228,7 +7203,7 @@
         "specTrimType": "R",
         "specTrimOptions": "NONE",
         "specBracket": "F1",
-        "lumens": 800,
+        "lumens": 1200,
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6"
@@ -7304,23 +7279,23 @@
       "metadata": {
         "productId": "2DS-L9",
         "shorthand": "2DS-L9",
-        "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "orderingCode": "2DS - L15/9TW - N - LD2 - UNV - M - O - OF - CS - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
-        "specLumens": "L9",
+        "specLumens": "L15",
         "specColor": "9TW",
         "specMountingType": "N",
         "specDriver": "LD2",
         "specOptions": "NONE",
         "specControl": "STD",
         "specVoltage": "UNV",
-        "specFlange": "ZF",
-        "specReflectorFinish": "WH",
-        "specDistribution": "W",
-        "specTrimType": "R",
+        "specFlange": "OF",
+        "specReflectorFinish": "CS",
+        "specDistribution": "M",
+        "specTrimType": "O",
         "specTrimOptions": "NONE",
         "specBracket": "F1",
-        "lumens": 800,
+        "lumens": 1500,
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6"
@@ -7534,23 +7509,23 @@
       "metadata": {
         "productId": "2DS-L9",
         "shorthand": "2DS-L9",
-        "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "orderingCode": "2DS - L15/9TW - N - LD2 - UNV - M - O - OF - CS - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
-        "specLumens": "L9",
+        "specLumens": "L15",
         "specColor": "9TW",
         "specMountingType": "N",
         "specDriver": "LD2",
         "specOptions": "NONE",
         "specControl": "STD",
         "specVoltage": "UNV",
-        "specFlange": "ZF",
-        "specReflectorFinish": "WH",
-        "specDistribution": "W",
-        "specTrimType": "R",
+        "specFlange": "OF",
+        "specReflectorFinish": "CS",
+        "specDistribution": "M",
+        "specTrimType": "O",
         "specTrimOptions": "NONE",
         "specBracket": "F1",
-        "lumens": 800,
+        "lumens": 1500,
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6"
@@ -7801,7 +7776,25 @@
         },
         "createdAt": "2026-01-11T23:51:34.571Z",
         "_migratedFrom": "DaliDevice",
-        "_migrationTimestamp": 1768175963136
+        "_migrationTimestamp": 1768175963136,
+        "orderingCode": "2DS - L15/9TW - N - LD2 - UNV - M - O - OF - CS - F1",
+        "shorthand": "",
+        "pdfUrl": "",
+        "shoppingLink": "",
+        "specLumens": "L15",
+        "specColor": "9TW",
+        "specMountingType": "N",
+        "specDriver": "LD2",
+        "specDistribution": "M",
+        "specFlange": "OF",
+        "specReflectorFinish": "CS",
+        "specOptions": "NONE",
+        "specControl": "STD",
+        "specVoltage": "UNV",
+        "specTrimType": "O",
+        "specTrimOptions": "NONE",
+        "specBracket": "F1",
+        "lumens": 1500
       },
       "createdAt": "2026-01-11T23:51:34.571Z",
       "x": -1036.613046264625,
@@ -7863,7 +7856,25 @@
         },
         "createdAt": "2026-01-11T23:52:48.092Z",
         "_migratedFrom": "DaliDevice",
-        "_migrationTimestamp": 1768175963136
+        "_migrationTimestamp": 1768175963136,
+        "orderingCode": "2DS - L12/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "shorthand": "2DS-L12",
+        "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+        "shoppingLink": "",
+        "specLumens": "L12",
+        "specColor": "9TW",
+        "specMountingType": "N",
+        "specDriver": "LD2",
+        "specDistribution": "W",
+        "specFlange": "ZF",
+        "specReflectorFinish": "WH",
+        "specOptions": "NONE",
+        "specControl": "STD",
+        "specVoltage": "UNV",
+        "specTrimType": "R",
+        "specTrimOptions": "NONE",
+        "specBracket": "F1",
+        "lumens": 1200
       },
       "createdAt": "2026-01-11T23:52:48.092Z",
       "x": 1067.5239223241301,
@@ -7915,6 +7926,246 @@
       "y": -316.6498595045605,
       "type": "recessed-light",
       "category": "lighting"
+    },
+    {
+      "id": "lighting-1768333212116",
+      "deviceTypeId": "generic-lighting",
+      "productId": "BAF-HAIKU",
+      "name": "Device 84",
+      "position": {
+        "x": -2157.9409102828126,
+        "y": 1088.8387274346587
+      },
+      "rotation": 0,
+      "roomId": null,
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "id": "lighting-1768333212116",
+        "type": "custom-haiku-52-alu-1768174111818",
+        "category": "lighting",
+        "x": -2157.9409102828126,
+        "y": 1088.8387274346587,
+        "rotation": 0,
+        "scale": 1,
+        "room": "Primary Bedroom",
+        "productId": "BAF-HAIKU",
+        "installationHeight": 2.4,
+        "busAssignment": "Bus 1",
+        "metadata": {
+          "productId": "BAF-HAIKU",
+          "orderingCode": "HK-60-I-AL-WH-STD-L",
+          "shorthand": "HK-60",
+          "pdfUrl": "https://bigassfans.com/docs/haiku/haiku/cutsheet-haiku-en.pdf",
+          "shoppingLink": "",
+          "fanSeries": "HK",
+          "fanSize": "60",
+          "fanFinish": "WH",
+          "fanMount": "STD",
+          "fanMaterial": "AL",
+          "fanEnvironment": "I",
+          "fanLightKit": "L",
+          "fanVoltage": "UNV",
+          "cfm": 8629,
+          "maxPower": 26.8,
+          "lumens": 1200,
+          "beamAngle": 120,
+          "range": 0,
+          "cableType": "Cat6",
+          "lightKit": "L"
+        },
+        "createdAt": "2026-01-13T19:40:12.116Z",
+        "_migratedFrom": "DaliDevice",
+        "_migrationTimestamp": 1768352475500
+      },
+      "createdAt": "2026-01-13T19:40:12.116Z",
+      "x": -2157.9409102828126,
+      "y": 1088.8387274346587,
+      "type": "recessed-light",
+      "category": "lighting"
+    },
+    {
+      "id": "lighting-1768333475088",
+      "deviceTypeId": "generic-lighting",
+      "productId": "BAF-HAIKU",
+      "name": "Device 85",
+      "position": {
+        "x": -2626.058610759375,
+        "y": -127.1939695344023
+      },
+      "rotation": 0,
+      "roomId": null,
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "id": "lighting-1768333475088",
+        "type": "custom-haiku-52-alu-1768174111818",
+        "category": "lighting",
+        "x": -2626.058610759375,
+        "y": -127.1939695344023,
+        "rotation": 0,
+        "scale": 1,
+        "room": "Bedroom 2 Bedroom",
+        "productId": "BAF-HAIKU",
+        "installationHeight": 2.4,
+        "busAssignment": "Bus 1",
+        "metadata": {
+          "productId": "BAF-HAIKU",
+          "orderingCode": "HK-60-I-AL-WH-STD-L",
+          "shorthand": "2DS-L9",
+          "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+          "shoppingLink": "",
+          "fanSeries": "HK",
+          "fanSize": "60",
+          "fanFinish": "WH",
+          "fanMount": "STD",
+          "fanMaterial": "AL",
+          "fanEnvironment": "I",
+          "fanLightKit": "L",
+          "fanVoltage": "UNV",
+          "cfm": 8629,
+          "maxPower": 26.8,
+          "lumens": 1200,
+          "beamAngle": 120,
+          "range": 0,
+          "cableType": "Cat6",
+          "lightKit": "L"
+        },
+        "createdAt": "2026-01-13T19:44:35.088Z",
+        "_migratedFrom": "DaliDevice",
+        "_migrationTimestamp": 1768352475500
+      },
+      "createdAt": "2026-01-13T19:44:35.088Z",
+      "x": -2626.058610759375,
+      "y": -127.1939695344023,
+      "type": "recessed-light",
+      "category": "lighting"
+    },
+    {
+      "id": "lighting-1768333499496",
+      "deviceTypeId": "generic-lighting",
+      "productId": "BAF-HAIKU",
+      "name": "Device 86",
+      "position": {
+        "x": -1257.4186352342444,
+        "y": -327.298572852559
+      },
+      "rotation": 0,
+      "roomId": null,
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "id": "lighting-1768333499496",
+        "type": "custom-haiku-52-alu-1768174111818",
+        "category": "lighting",
+        "x": -1257.4186352342444,
+        "y": -327.298572852559,
+        "rotation": 0,
+        "scale": 1,
+        "room": "Office 2 Other",
+        "productId": "BAF-HAIKU",
+        "installationHeight": 2.4,
+        "busAssignment": "Bus 1",
+        "metadata": {
+          "productId": "BAF-HAIKU",
+          "orderingCode": "HK-60-I-AL-WH-STD-L",
+          "shorthand": "HK-60",
+          "pdfUrl": "https://bigassfans.com/docs/haiku/haiku/cutsheet-haiku-en.pdf",
+          "shoppingLink": "",
+          "fanSeries": "HK",
+          "fanSize": "60",
+          "fanFinish": "WH",
+          "fanMount": "STD",
+          "fanMaterial": "AL",
+          "fanEnvironment": "I",
+          "fanLightKit": "L",
+          "fanVoltage": "UNV",
+          "cfm": 8629,
+          "maxPower": 26.8,
+          "lumens": 1200,
+          "beamAngle": 120,
+          "range": 0,
+          "cableType": "Cat6",
+          "lightKit": "L"
+        },
+        "createdAt": "2026-01-13T19:44:59.496Z",
+        "_migratedFrom": "DaliDevice",
+        "_migrationTimestamp": 1768352475500
+      },
+      "createdAt": "2026-01-13T19:44:59.496Z",
+      "x": -1257.4186352342444,
+      "y": -327.298572852559,
+      "type": "recessed-light",
+      "category": "lighting"
+    },
+    {
+      "id": "lighting-1768333503120",
+      "deviceTypeId": "generic-lighting",
+      "productId": "BAF-HAIKU",
+      "name": "Device 87",
+      "position": {
+        "x": -1366.9098332762546,
+        "y": -1027.6646844661086
+      },
+      "rotation": 0,
+      "roomId": null,
+      "layerId": "lighting",
+      "installationHeight": 2.4,
+      "networkConnections": [],
+      "lcpAssignment": null,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "id": "lighting-1768333503120",
+        "type": "custom-haiku-52-alu-1768174111818",
+        "category": "lighting",
+        "x": -1366.9098332762546,
+        "y": -1027.6646844661086,
+        "rotation": 0,
+        "scale": 1,
+        "room": "Office 1 Other",
+        "productId": "BAF-HAIKU",
+        "installationHeight": 2.4,
+        "busAssignment": "Bus 1",
+        "metadata": {
+          "productId": "BAF-HAIKU",
+          "orderingCode": "HK-60-I-AL-WH-STD-L",
+          "shorthand": "2DS-L9",
+          "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
+          "shoppingLink": "",
+          "fanSeries": "HK",
+          "fanSize": "60",
+          "fanFinish": "WH",
+          "fanMount": "STD",
+          "fanMaterial": "AL",
+          "fanEnvironment": "I",
+          "fanLightKit": "L",
+          "fanVoltage": "UNV",
+          "cfm": 8629,
+          "maxPower": 26.8,
+          "lumens": 1200,
+          "beamAngle": 120,
+          "range": 0,
+          "cableType": "Cat6",
+          "lightKit": "L"
+        },
+        "createdAt": "2026-01-13T19:45:03.120Z",
+        "_migratedFrom": "DaliDevice",
+        "_migrationTimestamp": 1768352475501
+      },
+      "createdAt": "2026-01-13T19:45:03.120Z",
+      "x": -1366.9098332762546,
+      "y": -1027.6646844661086,
+      "type": "recessed-light",
+      "category": "lighting"
     }
   ],
   "cables": [],
@@ -7956,7 +8207,8 @@
         "specTrimOptions": "NONE",
         "specBracket": "F1"
       },
-      "productId": "2DS-L9"
+      "productId": "2DS-L9",
+      "meshType": "universal"
     },
     {
       "id": "custom-2ds-l12-1768153974533",
@@ -7988,7 +8240,8 @@
         "specBracket": "F1",
         "productId": "2DS-L9"
       },
-      "productId": "2DS-L9"
+      "productId": "2DS-L9",
+      "meshType": "universal"
     },
     {
       "id": "custom-haiku-52-alu-1768174111818",
@@ -7997,8 +8250,8 @@
       "description": "Filled black square with crosshairs",
       "color": 0,
       "size": {
-        "width": 16,
-        "height": 16
+        "width": 96,
+        "height": 96
       },
       "productId": "BAF-HAIKU",
       "metadata": {
@@ -8016,7 +8269,8 @@
         "fanVoltage": "UNV",
         "cfm": 5172,
         "maxPower": 15.1
-      }
+      },
+      "meshType": "fan"
     }
   ]
 }

@@ -25,6 +25,7 @@ export class PlaceSymbolTool implements Tool {
     private activeDriver?: string;
     private activeMount?: string;
     private activeCCT?: string;
+    private activeFanLightKit?: string;
 
     constructor(editor: FloorPlanEditor) {
         this.editor = editor;
@@ -76,6 +77,7 @@ export class PlaceSymbolTool implements Tool {
         driver?: string;
         mount?: string;
         cct?: string;
+        fanLightKit?: string;
     }): void {
         this.activeProductId = attrs.productId;
         this.activeDefaultHeight = attrs.defaultHeight;
@@ -91,6 +93,7 @@ export class PlaceSymbolTool implements Tool {
         if (attrs.driver !== undefined) this.activeDriver = attrs.driver;
         if (attrs.mount !== undefined) this.activeMount = attrs.mount;
         if (attrs.cct !== undefined) this.activeCCT = attrs.cct;
+        if (attrs.fanLightKit !== undefined) this.activeFanLightKit = attrs.fanLightKit;
     }
 
     private updatePreviewMesh(): void {
@@ -101,7 +104,15 @@ export class PlaceSymbolTool implements Tool {
         if (!def) return;
 
         const meshCreator = getMeshCreator(def.meshType, this.symbolType);
-        const mesh = meshCreator(def.size.width, def.size.height);
+
+        const metadata = {
+            productId: this.activeProductId,
+            lumens: this.activeLumens,
+            beamAngle: this.activeBeamAngle,
+            fanLightKit: this.activeFanLightKit || (def.metadata as any)?.fanLightKit
+        };
+
+        const mesh = meshCreator(def.size.width, def.size.height, metadata);
         // Make preview semi-transparent
         mesh.traverse((obj) => {
             if (obj instanceof THREE.Mesh && obj.material instanceof THREE.MeshBasicMaterial) {
@@ -262,6 +273,7 @@ export class PlaceSymbolTool implements Tool {
                 beamAngle: this.activeBeamAngle,
                 range: this.activeRange,
                 cableType: this.activeCableType,
+                fanLightKit: this.activeFanLightKit,
                 // Configuration attributes
                 ...(this.activeDriver || this.activeMount || this.activeCCT ? {
                     configuration: {

@@ -69,6 +69,7 @@ export const SymbolPalette: React.FC<SymbolPaletteProps> = ({ activeCategory, on
                                     showShorthand={true}
                                     customShorthand={symbol.metadata?.shorthand}
                                     meshType={symbol.meshType}
+                                    metadata={symbol.metadata}
                                 />
                             </div>
                             <span className={`text-[8px] text-center font-bold leading-tight uppercase tracking-tighter ${selectedSymbolType === symbol.id ? 'text-blue-400' : 'text-slate-300'

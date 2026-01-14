@@ -277,6 +277,27 @@ export class FloorPlanEditor {
                 e.preventDefault();
             }
         } else if (isTyping) {
+            // Even if typing, allow Esc to clear selection
+            if (e.key === 'Escape') {
+                this.selectionSystem.clearSelection();
+                this.setActiveTool('select');
+                this.setDirty();
+            }
+            return;
+        }
+
+        // Global Escape: Clear selection and tool
+        if (e.key === 'Escape') {
+            this.selectionSystem.clearSelection();
+            this.setActiveTool('select');
+            this.setDirty();
+            return;
+        }
+
+        // FPS Counter Toggle (Ctrl+F)
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+            e.preventDefault();
+            this.emit('fps-toggled', true);
             return;
         }
 
@@ -491,6 +512,10 @@ export class FloorPlanEditor {
             this.isMouseOverCanvas = false;
             this.isDragging = false;
             el.style.cursor = 'default';
+            // Also force zoom cursor to hide if it was active
+            if (this.cameraSystem.zoomCursorRef?.current) {
+                this.cameraSystem.zoomCursorRef.current.style.display = 'none';
+            }
         });
 
         el.addEventListener('mousedown', this.handleMouseDown);

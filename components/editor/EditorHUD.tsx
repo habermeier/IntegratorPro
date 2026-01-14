@@ -235,6 +235,10 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
                                     <kbd className="px-2 py-1 bg-slate-800 rounded text-white font-mono text-sm border border-slate-700">L</kbd>
                                     <span className="text-sm text-slate-300 ml-3 flex-1">Toggle Alignment Mode</span>
                                 </div>
+                                <div className="flex justify-between items-center">
+                                    <kbd className="px-2 py-1 bg-slate-800 rounded text-white font-mono text-sm border border-slate-700">Ctrl + F</kbd>
+                                    <span className="text-sm text-slate-300 ml-3 flex-1">Toggle FPS Counter</span>
+                                </div>
                             </div>
 
                             {/* Tools */}

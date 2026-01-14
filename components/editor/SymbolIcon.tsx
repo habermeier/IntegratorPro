@@ -8,6 +8,7 @@ interface SymbolIconProps {
     secondaryLabel?: string;
     customShorthand?: string;
     meshType?: string;
+    metadata?: Record<string, any>;
 }
 
 import { getSymbolShorthand } from '../../editor/models/symbolLibrary';
@@ -23,7 +24,8 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
     showShorthand = true,
     secondaryLabel,
     customShorthand,
-    meshType
+    meshType,
+    metadata
 }) => {
     const strokeWidth = size / 16; // Proportional stroke width
     const fontSize = size * 0.3; // Shorthand text size (slightly smaller)
@@ -38,28 +40,33 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
         if (meshType === 'fan' || symbolType === 'ceiling-fan' || symbolType === 'haiku-fan' || symbolType.toLowerCase().includes('fan') || symbolType.toLowerCase().includes('haiku')) {
             const hubRadius = 4;
             const bladeWidth = 4;
-            const bladeLength = 10;
+            const bladeLength = 20; // Twice as long (10 -> 20)
+            const iconCenter = 24; // Expanded for 'zoom out' effect (16 -> 24)
+
+            // Determine if we should show the light hub
+            // If NL is specified, or lumens is 0, hide it. Default to true if unknown.
+            const hasLight = metadata?.fanLightKit !== 'NL' && metadata?.lumens !== 0;
 
             return (
-                <svg width={size} height={size} viewBox="0 0 32 32" style={{ overflow: 'visible' }}>
+                <svg width={size} height={size} viewBox="0 0 48 48" style={{ overflow: 'visible' }}>
                     {/* White Halos for Fan */}
-                    <circle cx={center} cy={center} r={hubRadius + 1.5} fill="#FFF" />
+                    {hasLight && <circle cx={iconCenter} cy={iconCenter} r={hubRadius + 1.5} fill="#FFF" />}
                     {[0, 120, 240].map((angle) => (
-                        <g key={`halo-${angle}`} transform={`rotate(${angle}, ${center}, ${center})`}>
-                            <rect x={center - bladeWidth / 2 - 1} y={center - hubRadius - bladeLength - 1} width={bladeWidth + 2} height={bladeLength + 2} fill="#FFF" rx="2" />
+                        <g key={`halo-${angle}`} transform={`rotate(${angle}, ${iconCenter}, ${iconCenter})`}>
+                            <rect x={iconCenter - bladeWidth / 2 - 1} y={iconCenter - hubRadius - bladeLength - 1} width={bladeWidth + 2} height={bladeLength + 2} fill="#FFF" rx="2" />
                         </g>
                     ))}
 
                     {/* Black Fan Parts */}
-                    <circle cx={center} cy={center} r={hubRadius} fill="#000" />
+                    {hasLight && <circle cx={iconCenter} cy={iconCenter} r={hubRadius} fill="#000" />}
                     {[0, 120, 240].map((angle) => (
-                        <g key={`blade-${angle}`} transform={`rotate(${angle}, ${center}, ${center})`}>
-                            <rect x={center - bladeWidth / 2} y={center - hubRadius - bladeLength} width={bladeWidth} height={bladeLength} fill="#000" rx="1" />
+                        <g key={`blade-${angle}`} transform={`rotate(${angle}, ${iconCenter}, ${iconCenter})`}>
+                            <rect x={iconCenter - bladeWidth / 2} y={iconCenter - hubRadius - bladeLength} width={bladeWidth} height={bladeLength} fill="#000" rx="1" />
                         </g>
                     ))}
 
                     {/* Shorthand & Labels (Shared logic) */}
-                    {renderLabels(center, 8)}
+                    {renderLabels(iconCenter, 8)}
                 </svg>
             );
         }

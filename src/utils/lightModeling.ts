@@ -25,7 +25,7 @@ export function calculatePointIntensity(
 
     for (const fixture of fixtures) {
         const metadata = fixture.metadata || {};
-        const lumens = (metadata as any).lumens || DEFAULT_LUMENS;
+        const lumens = (metadata as any).lumens !== undefined ? (metadata as any).lumens : DEFAULT_LUMENS;
         const beamAngle = (metadata as any).beamAngle || 60;
         const height = fixture.installationHeight || 2.74; // Distance fixture-to-floor (m)
 

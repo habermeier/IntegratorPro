@@ -916,6 +916,12 @@ export class LayerSystem {
                 activeItemIds.add(symbolData.id);
                 const cacheKey = `${layer.id}-${symbolData.id}`;
                 let group = this.meshCache.get(cacheKey) as THREE.Group;
+                const def = SYMBOL_LIBRARY[symbolData.type];
+
+                if (!def) {
+                    remoteLog(`⚠️ Symbol ${symbolData.id} SKIPPED - type '${symbolData.type}' not in SYMBOL_LIBRARY`, 'warn', '🔍 DEEP-TRACE');
+                    return;
+                }
 
                 // Check for invalidation (Type or Shorthand change)
                 if (group) {
@@ -924,6 +930,7 @@ export class LayerSystem {
                     const effectiveShorthand = (metadata as any).shorthand || fallbackShorthand;
 
                     if (group.userData.symbolType !== symbolData.type ||
+                        group.userData.meshType !== (def?.meshType || 'universal') ||
                         group.userData.shorthand !== effectiveShorthand) {
                         layer.container.remove(group);
                         this.meshCache.delete(cacheKey);
@@ -932,15 +939,11 @@ export class LayerSystem {
                 }
 
                 if (!group) {
-                    const def = SYMBOL_LIBRARY[symbolData.type];
                     remoteLog(`Symbol ${symbolData.id} - SYMBOL_LIBRARY[${symbolData.type}] found: ${!!def}`, 'debug', '🔍 DEEP-TRACE');
-                    if (!def) {
-                        remoteLog(`⚠️ Symbol ${symbolData.id} SKIPPED - type '${symbolData.type}' not in SYMBOL_LIBRARY`, 'warn', '🔍 DEEP-TRACE');
-                        return;
-                    }
 
                     const meshCreator = getMeshCreator(def.meshType, symbolData.type);
-                    group = meshCreator(def.size.width, def.size.height);
+                    const metadata = symbolData.metadata || {};
+                    group = meshCreator(def.size.width, def.size.height, metadata);
 
                     group.name = `symbol-${symbolData.id}`;
                     // Position, rotation, scale will be set below for both new and cached groups
@@ -1033,6 +1036,7 @@ export class LayerSystem {
                     type: 'symbol',
                     category: symbolData.category,
                     symbolType: symbolData.type,
+                    meshType: def?.meshType || 'universal',
                     shorthand: effectiveShorthand,
                     labelsHash
                 };

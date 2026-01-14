@@ -155,11 +155,28 @@ class DataService {
       // Merge custom symbols into runtime SYMBOL_LIBRARY
       if (projectData.customSymbols && projectData.customSymbols.length > 0) {
         projectData.customSymbols.forEach((symbol: SymbolDefinition) => {
-          // Re-attach correct createMesh function (lost during JSON serialization) based on meshType or ID
+          // AUTO-MIGRATE-P28: Ensure legacy/misidentified fans get explicit meshType
+          const idLower = symbol.id.toLowerCase();
+          const prodLower = (symbol.productId || "").toLowerCase();
+          const nameLower = (symbol.name || "").toLowerCase();
+          const looksLikeFan = idLower.includes('fan') || idLower.includes('haiku') ||
+            prodLower.includes('fan') || prodLower.includes('haiku') ||
+            nameLower.includes('fan') || nameLower.includes('haiku');
+
+          if (looksLikeFan && symbol.meshType !== 'fan') {
+            symbol.meshType = 'fan';
+            // Also ensure size is correct for blades to show
+            if (symbol.size.width < 96) {
+              symbol.size = { width: 96, height: 96 };
+            }
+          } else if (!symbol.meshType) {
+            symbol.meshType = 'universal';
+          }
+          // Re-attach correct createMesh function (lost during JSON serialization) based on meshType
           symbol.createMesh = getMeshCreator(symbol.meshType, symbol.id);
           SYMBOL_LIBRARY[symbol.id] = symbol;
         });
-        remoteDebug('Merged custom symbols into SYMBOL_LIBRARY', 'DataService', { count: projectData.customSymbols.length });
+        remoteDebug('Merged and migrated custom symbols into SYMBOL_LIBRARY', 'DataService', { count: projectData.customSymbols.length });
       }
 
       return this.cache;

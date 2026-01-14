@@ -140,6 +140,14 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                 if (symbolDef?.productId) toolAttrs.productId = symbolDef.productId;
             }
 
+            // Sync Lighting/Fan Configuration
+            const m = draftMetadata || (SYMBOL_LIBRARY[selectedSymbolType] as any)?.metadata;
+            if (m) {
+                if (m.lumens !== undefined) toolAttrs.lumens = m.lumens;
+                if (m.beamAngle !== undefined) toolAttrs.beamAngle = m.beamAngle;
+                if (m.fanLightKit !== undefined) toolAttrs.fanLightKit = m.fanLightKit;
+            }
+
             editor.setActiveTool('place-symbol', toolAttrs);
         } else if (activeTool !== 'place-symbol') {
             setHoverRoom(null); // Clear context if tool changes
@@ -154,6 +162,15 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
         if (editor) {
             const toolAttrs: any = { symbolType: type };
             if (symbolDef?.productId) toolAttrs.productId = symbolDef.productId;
+
+            // Sync Lighting/Fan Configuration
+            const m = symbolDef?.metadata;
+            if (m) {
+                if (m.lumens !== undefined) toolAttrs.lumens = m.lumens;
+                if (m.beamAngle !== undefined) toolAttrs.beamAngle = m.beamAngle;
+                if (m.fanLightKit !== undefined) toolAttrs.fanLightKit = m.fanLightKit;
+            }
+
             editor.setActiveTool('place-symbol', toolAttrs);
         }
     };
@@ -207,6 +224,28 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
 
             if (defsRepaired) {
                 // Persist the repaired definitions
+                dataService.saveProject(projectData, true).catch(console.error);
+            }
+        }
+
+        // 3. Fan Size Repair (AUTO-SCALE-FAN)
+        if (projectData?.customSymbols) {
+            let sizeRepaired = false;
+            projectData.customSymbols.forEach(sym => {
+                const isFan = sym.productId?.toLowerCase().includes('haiku') ||
+                    sym.productId?.toLowerCase().includes('fan') ||
+                    sym.name.toLowerCase().includes('fan');
+
+                // If it's a fan but has the tiny 16x16 size or legacy 48x48 size
+                if (isFan && (sym.size.width === 16 || sym.size.width === 48)) {
+                    console.log(`[AutoRepair] Scaling Fan symbol to 96x96: ${sym.id}`);
+                    sym.size = { width: 96, height: 96 };
+                    sym.meshType = 'fan';
+                    sizeRepaired = true;
+                }
+            });
+
+            if (sizeRepaired) {
                 dataService.saveProject(projectData, true).catch(console.error);
             }
         }
@@ -343,12 +382,18 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                                 formData.productId || 'generic-product';
 
                     try {
+                        const baseType = SYMBOL_LIBRARY[editingDevice.deviceTypeId];
+                        const isFan = baseType?.meshType === 'fan';
+
                         const newType: SymbolDefinition = {
                             ...SYMBOL_LIBRARY[editingDevice.deviceTypeId],
                             id: `custom-${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
                             name,
                             productId: effectiveProductId,
-                            metadata: { ...draftMetadata, shorthand: name }
+                            metadata: { ...draftMetadata, shorthand: name },
+                            // AUTO-SCALE-FAN: Ensure fans have appropriate physical scaling (96x96 vs 16x16)
+                            meshType: isFan ? 'fan' : 'universal',
+                            ...(isFan ? { size: { width: 96, height: 96 } } : {})
                         };
                         await dataService.addCustomSymbol(newType);
 
@@ -402,12 +447,19 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                     try {
                         // Use a default base symbol (e.g. generic-lighting) since we don't have a source symbol
                         const baseSymbol = SYMBOL_LIBRARY['recessed-light'] || Object.values(SYMBOL_LIBRARY)[0];
+
+                        const isFan = productId?.toLowerCase().includes('haiku') ||
+                            productId?.toLowerCase().includes('fan') ||
+                            name.toLowerCase().includes('fan');
+
                         const newType: SymbolDefinition = {
                             ...baseSymbol,
                             id: `custom-${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
                             name,
                             productId: productId,
-                            metadata: { ...draftMetadata, shorthand: name }
+                            metadata: { ...draftMetadata, shorthand: name },
+                            meshType: isFan ? 'fan' : 'universal',
+                            ...(isFan ? { size: { width: 96, height: 96 } } : {})
                         };
 
                         await dataService.addCustomSymbol(newType);

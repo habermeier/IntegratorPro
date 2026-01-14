@@ -24,6 +24,7 @@ import { EditorOverlays } from './editor/EditorOverlays';
 import { Room, RoomType, VectorLayerContent } from '../editor/models/types';
 import { AddPolygonCommand } from '../editor/commands/AddPolygonCommand';
 import { ScaleRuler } from './editor/ScaleRuler';
+import { FPSCounter } from './editor/FPSCounter';
 import { Layers } from 'lucide-react';
 
 export const FloorPlanRenderer: React.FC = () => {
@@ -190,6 +191,8 @@ export const FloorPlanRenderer: React.FC = () => {
         setIsRoomEdit
     );
 
+    const [showFPS, setShowFPS] = useState(false);
+
     useEffect(() => {
         if (!editor) return;
 
@@ -206,9 +209,15 @@ export const FloorPlanRenderer: React.FC = () => {
         };
         editor.on('context-room-changed', onContextRoomChanged);
 
+        const onFPSToggled = () => {
+            setShowFPS(prev => !prev);
+        };
+        editor.on('fps-toggled', onFPSToggled);
+
         return () => {
             editor.off('room-edit-requested', onRoomEdit);
             editor.off('context-room-changed', onContextRoomChanged);
+            editor.off('fps-toggled', onFPSToggled);
         };
     }, [editor]);
 
@@ -379,6 +388,7 @@ export const FloorPlanRenderer: React.FC = () => {
 
     return (
         <div className="h-full w-full flex flex-col bg-slate-950 overflow-hidden text-slate-200">
+            {showFPS && <FPSCounter />}
             <EditorHUD
                 editor={editor}
                 activeTool={activeTool}
