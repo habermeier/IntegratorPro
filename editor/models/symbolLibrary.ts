@@ -105,6 +105,7 @@ export const createCeilingFanMesh = (width?: number, height?: number, metadata?:
 
         const hubGeo = new THREE.CircleGeometry(hubRadius, 32);
         const hub = new THREE.Mesh(hubGeo, blackMat);
+        hub.name = 'fill'; // Enable selection highlight
         hub.position.z = 0.05;
         group.add(hub);
     }
@@ -126,6 +127,7 @@ export const createCeilingFanMesh = (width?: number, height?: number, metadata?:
 
         const bladeGeo = new THREE.PlaneGeometry(bladeWidth, bladeLength);
         const blade = new THREE.Mesh(bladeGeo, blackMat);
+        blade.name = 'fill'; // Enable selection highlight
         blade.position.y = bladeLength / 2;
         blade.position.z = 0.06;
         bladeGroup.add(blade);
@@ -199,8 +201,8 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         meshType: 'fan',
         productId: 'generic-light'
     },
-    'haiku-fan': {
-        id: 'haiku-fan',
+    'HAIKU-52-ALU': {
+        id: 'HAIKU-52-ALU',
         name: 'Haiku Fan',
         category: 'lighting',
         description: 'Premium Big Ass Fans Haiku Series',
@@ -209,6 +211,28 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         createMesh: createCeilingFanMesh,
         meshType: 'fan',
         productId: 'BAF-HAIKU'
+    },
+    '2DS-L12': {
+        id: '2DS-L12',
+        name: '2DS-L12',
+        category: 'lighting',
+        description: 'HE Williams 2" Square Downlight (1200lm)',
+        color: 0x000000,
+        size: { width: 16, height: 16 },
+        createMesh: createUniversalMesh,
+        meshType: 'universal',
+        productId: '2DS-L12'
+    },
+    '2DS-L9': {
+        id: '2DS-L9',
+        name: '2DS-L9',
+        category: 'lighting',
+        description: 'HE Williams 2" Square Downlight (900lm)',
+        color: 0x000000,
+        size: { width: 16, height: 16 },
+        createMesh: createUniversalMesh,
+        meshType: 'universal',
+        productId: '2DS-L9'
     },
     'exterior-light': {
         id: 'exterior-light',
@@ -309,7 +333,11 @@ export const SHORTHAND_MAP: Record<string, string> = {
     'wifi-ap': 'AP',
     'security-camera': 'CAM',
     'ceiling-fan': 'FAN',
-    'haiku-fan': 'FAN',
+    'HAIKU-52-ALU': 'HAIKU-52-ALU',
+    'haiku-fan': 'HAIKU-52-ALU',
+    '2DS-L12': '2DS-L12',
+    '2DS-L9': '2DS-L9',
+    'GENERIC-LIGHT': 'LIGHT',
     'exterior-light': 'OSC',
     'knx-switch': 'LV',
     'standard-outlet': 'OUT',

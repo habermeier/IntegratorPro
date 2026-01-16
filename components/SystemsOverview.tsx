@@ -91,7 +91,9 @@ const SystemsOverview: React.FC<SystemsOverviewProps> = ({ modules, highlightedI
             </h1>
 
             <div className="space-y-0 md:space-y-6">
-                {SYSTEM_REGISTRY.map(sys => {
+                {SYSTEM_REGISTRY.filter(sys => {
+                    return modules.some(m => m.systemIds?.includes(sys.id));
+                }).map(sys => {
                     const isExpanded = expandedSystemId === sys.id;
                     const systemModules = modules.filter(m => m.systemIds?.includes(sys.id));
                     const totalCost = systemModules.reduce((acc, m) => acc + (m.cost * m.quantity), 0);
@@ -113,20 +115,20 @@ const SystemsOverview: React.FC<SystemsOverviewProps> = ({ modules, highlightedI
                                 className="w-full text-left p-4 md:p-6 flex items-start justify-between group"
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className={`p-2 md:p-3 rounded-lg transition-colors ${isExpanded ? 'bg-indigo-500/20 text-indigo-400' : 'bg-slate-800 text-slate-500 group-hover:text-slate-400'}`}>
+                                    <div className={`p-2 md:p-3 rounded-lg transition-colors ${isExpanded ? 'bg-indigo-500/20 text-indigo-400' : 'bg-slate-800 text-slate-300 group-hover:text-slate-200'}`}>
                                         {isExpanded ? <ChevronDown size={20} className="md:w-6 md:h-6" /> : <ChevronRight size={20} className="md:w-6 md:h-6" />}
                                     </div>
                                     <div>
                                         <h2 className={`text-lg md:text-xl font-bold mb-0.5 md:mb-1 transition-colors ${isExpanded ? 'text-white' : 'text-slate-300 group-hover:text-white'}`}>
                                             {sys.title}
                                         </h2>
-                                        <p className="text-xs md:text-sm text-slate-400 line-clamp-1">
+                                        <p className="text-xs md:text-sm text-slate-200 line-clamp-1">
                                             {sys.description}
                                         </p>
                                     </div>
                                 </div>
                                 <div className="text-right hidden sm:block">
-                                    <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">Items</div>
+                                    <div className="text-xs text-slate-300 uppercase tracking-wider mb-1">Items</div>
                                     <div className="font-mono text-slate-300">{systemModules.length}</div>
                                 </div>
                             </button>
@@ -189,7 +191,7 @@ const SystemsOverview: React.FC<SystemsOverviewProps> = ({ modules, highlightedI
                                     {/* Mini BOM */}
                                     <div className="pb-4 md:px-6 md:pb-6">
                                         <div className="flex items-center justify-between mb-2 md:mb-4 px-4 md:px-0">
-                                            <h3 className="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-wider">System Components</h3>
+                                            <h3 className="text-xs md:text-sm font-bold text-slate-300 uppercase tracking-wider">System Components</h3>
                                             <div className="text-xs font-mono text-slate-600">
                                                 Est. Budget: ${totalCost.toLocaleString()}
                                             </div>

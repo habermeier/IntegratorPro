@@ -651,8 +651,8 @@
   },
   "blueprints": [
     {
-      "id": "bp-haiku-fan",
-      "name": "Haiku Fan (Smart)",
+      "id": "HAIKU-52-ALU",
+      "name": "HAIKU-52-ALU",
       "category": "hvac",
       "symbolType": "haiku-fan",
       "components": {
@@ -669,8 +669,8 @@
       }
     },
     {
-      "id": "bp-he-williams-2ds",
-      "name": "HE Williams 2DS Downlight",
+      "id": "2DS-L12",
+      "name": "2DS-L12",
       "category": "lighting",
       "symbolType": "recessed-light",
       "components": {
@@ -686,7 +686,7 @@
       }
     },
     {
-      "id": "bp-towel-warmer",
+      "id": "TOWEL-WARMER",
       "name": "DALI Towel Warmer",
       "category": "lifestyle",
       "symbolType": "recessed-light",
@@ -704,7 +704,7 @@
       }
     },
     {
-      "id": "bp-generic-light",
+      "id": "GENERIC-LIGHT",
       "name": "Generic Light",
       "category": "lighting",
       "symbolType": "recessed-light",

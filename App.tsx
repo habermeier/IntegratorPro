@@ -50,7 +50,9 @@ const App = () => {
 
   // Flattened Instances (for Visualizer/FloorPlan/Advisor)
   // Combines legacy static modules with dynamic registry modules
-  const allGroupedModules = useMemo(() => [...products, ...deviceModules], [products, deviceModules]);
+  const allGroupedModules = useMemo(() => {
+    return [...products, ...deviceModules].filter(m => m.quantity > 0);
+  }, [products, deviceModules]);
   const flatModules = useMemo(() => flattenModules(allGroupedModules), [allGroupedModules]);
 
   const [connections, setConnections] = useState<Connection[]>(MOCK_CONNECTIONS);

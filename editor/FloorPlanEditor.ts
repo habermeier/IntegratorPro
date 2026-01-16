@@ -20,6 +20,7 @@ import { PlaceFurnitureTool } from './tools/PlaceFurnitureTool';
 import { MeasureTool } from './tools/MeasureTool';
 import { DrawCableTool } from './tools/DrawCableTool';
 import { CommandManager } from './systems/CommandManager';
+import { deviceRegistry } from '../src/services/DeviceRegistry';
 import { DeleteSymbolCommand } from './commands/DeleteSymbolCommand';
 import { DeletePolygonCommand } from './commands/DeletePolygonCommand';
 import { OpacityCommand } from './commands/OpacityCommand';
@@ -170,6 +171,9 @@ export class FloorPlanEditor {
             visibility[l.id] = l.visible;
         });
 
+        // STRICT CLEANUP (Minimal Junk): Sync registry with layer content before saving
+        this.syncRegistryWithLayers();
+
         const state = {
             activeTool: this.toolSystem.getActiveToolType(),
             activeLayerId: this.activeLayerId,
@@ -182,6 +186,39 @@ export class FloorPlanEditor {
         };
 
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(state));
+    }
+
+    /**
+     * SYNC REGISTRY WITH LAYERS (Minimal Junk Principle)
+     * Ensures deviceRegistry contains ONLY devices that exist in the vector layers.
+     * Removes orphans that might have been left behind during layer deletions or errors.
+     */
+    public syncRegistryWithLayers(): void {
+        const layerDevices = new Set<string>();
+        const layers = this.layerSystem.getAllLayers();
+
+        layers.forEach(layer => {
+            if (layer.type === 'vector') {
+                const content = layer.content as VectorLayerContent;
+                (content.symbols || []).forEach(s => layerDevices.add(s.id));
+                (content.furniture || []).forEach(f => layerDevices.add(f.id));
+            }
+        });
+
+        const registryDevices = deviceRegistry.getAllDevices();
+        let purgeCount = 0;
+
+        registryDevices.forEach(device => {
+            if (!layerDevices.has(device.id)) {
+                deviceRegistry.removeDevice(device.id);
+                purgeCount++;
+            }
+        });
+
+        if (purgeCount > 0) {
+            remoteDebug(`[Minimal Junk] Purged ${purgeCount} orphaned devices from Registry`, 'FloorPlanEditor');
+            this.emit('layers-changed', this.layerSystem.getAllLayers());
+        }
     }
 
     public loadPersistentState(): void {
@@ -792,12 +829,11 @@ export class FloorPlanEditor {
         const layer = this.layerSystem.getLayer(id);
         remoteDebug(`setLayerVisible called for ${id}: ${visible} `, 'FloorPlanEditor', { id, visible, skipSave });
 
-        // Enforce mutual exclusivity for technical layers
+        /* Mutex disabled per user request to allow combined controllable layers
         if (visible && layer?.category === 'technical') {
             const allLayers = this.layerSystem.getAllLayers();
             allLayers.forEach(l => {
                 if (l.category === 'technical' && l.id !== id) {
-                    // Check if other technical layer is currently visible
                     if (l.visible) {
                         remoteDebug(`Mutex Check: Disabling ${l.id} because ${id} is becoming visible`, 'FloorPlanEditor', { disabled: l.id, enabled: id });
                         this.layerSystem.setLayerVisible(l.id, false);
@@ -805,6 +841,7 @@ export class FloorPlanEditor {
                 }
             });
         }
+        */
 
         this.layerSystem.setLayerVisible(id, visible);
         if (!skipSave) {
@@ -820,42 +857,8 @@ export class FloorPlanEditor {
     }
 
     public enforceTechnicalLayerMutex(): void {
-        remoteDebug('🛡️ STARTING MUTEX ENFORCEMENT 🛡️', 'FloorPlanEditor');
-        const layers = this.layerSystem.getAllLayers();
-        const techLayers = layers.filter(l => l.category === 'technical' && l.visible);
-
-        remoteDebug('Enforcing Mutex. Visible Tech Layers', 'FloorPlanEditor', { visibleLayers: techLayers.map(l => l.id) });
-
-        if (techLayers.length > 1) {
-            console.warn('[FloorPlanEditor] Mutex violation detected. Enforcing single technical layer.');
-            // Identify which one should stay active.
-            // Preference: Lighting > HVAC > First available
-            // Or just keep the last one (most likely user intent from restoration loop)
-            // Let's keep the last one found in the list (simplest heuristic for now) or specific priority?
-
-            // Heuristic: If multiple are active, keep the one with the highest zIndex (topmost) or just pick one.
-            // Let's match the user's report: they saw "All 3".
-            // Let's keep the one that appears *last* in the list (highest z-index usually) as the "active" one, disable others.
-
-            // Actually, let's look for known types to prioritize: 'lighting' is a good default if active.
-            let keptLayerId = techLayers[techLayers.length - 1].id;
-            const lighting = techLayers.find(l => l.id === 'lighting');
-            if (lighting) keptLayerId = 'lighting';
-
-            remoteDebug(`Keeping ${keptLayerId} active, disabling others`, 'FloorPlanEditor', { keptLayer: keptLayerId });
-
-            techLayers.forEach(l => {
-                if (l.id !== keptLayerId) {
-                    remoteDebug(`Auto - disabling layer ${l.id} `, 'FloorPlanEditor', { layerId: l.id });
-                    this.layerSystem.setLayerVisible(l.id, false);
-                }
-            });
-            this.savePersistentState();
-            // Force fresh array for React
-            this.emit('layers-changed', this.layerSystem.getAllLayers().map(l => ({ ...l })));
-        } else {
-            remoteDebug('No mutex violation found', 'FloorPlanEditor');
-        }
+        remoteDebug('🛡️ MUTEX ENFORCEMENT DISABLED 🛡️', 'FloorPlanEditor');
+        return;
     }
 
     public setRoomLayoutLocked(locked: boolean): void {

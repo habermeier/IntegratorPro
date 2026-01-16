@@ -229,18 +229,18 @@ export class LayerSystem {
                         const fill = group.getObjectByName('fill') as THREE.Mesh;
                         if (fill && fill.material instanceof THREE.MeshBasicMaterial) {
                             if (isSymbol) {
-                                // Symbols: Pulse Yellow/Gold
-                                const r = 1.0;
-                                const g = 0.8 + pulse * 0.2; // 0.8 to 1.0
-                                const b = 0.0;
+                                // Symbols: Pulse Vibrant Blue (High Contrast)
+                                const r = 0.2;
+                                const g = 0.5 + pulse * 0.3; // 0.5 to 0.8
+                                const b = 1.0;
                                 fill.material.color.setRGB(r, g, b);
-                                fill.material.opacity = 1.0; // Solid for symbols
+                                fill.material.opacity = 0.8; // Slightly transparent to avoid "stark" look
                             } else {
-                                // Rooms/Masks: Existing Logic
+                                // Rooms/Masks: Pulse Cyan/Blue
                                 const isMaskItem = itemType === 'mask';
-                                const r = 1.0;
+                                const r = 0.2;
                                 const g = 0.8 + pulse * 0.2;
-                                const b = 0.0;
+                                const b = 1.0;
                                 fill.material.color.setRGB(r, g, b);
                                 fill.material.opacity = isMaskItem ? 0.3 + pulse * 0.2 : 0.1 + pulse * 0.2;
                             }
@@ -1005,17 +1005,23 @@ export class LayerSystem {
                     const oldShorthand = group.getObjectByName('shorthand-label');
                     if (oldShorthand) group.remove(oldShorthand);
 
+                    const symbolWidth = def?.size.width || 16;
+                    const symbolHeight = def?.size.height || 16;
+                    // Dynamic offset: half the symbol size + a comfort margin
+                    const offsetX = (symbolWidth / 2) + 12;
+                    const offsetY = -((symbolHeight / 2) + 12);
+
                     if (willShowRegularLabel) {
                         const labelSprite = this.createLabel(identifier, "");
                         labelSprite.name = 'label';
-                        labelSprite.position.set(15, -15, 0.5);
+                        labelSprite.position.set(offsetX + 5, offsetY - 5, 0.5);
                         group.add(labelSprite);
                     }
 
                     if (effectiveShorthand) {
                         const shorthandLabel = this.createShorthandLabel(effectiveShorthand);
                         shorthandLabel.name = 'shorthand-label';
-                        shorthandLabel.position.set(10, -10, 0.6);
+                        shorthandLabel.position.set(offsetX, offsetY, 0.6);
                         group.add(shorthandLabel);
                     }
                     group.userData.labelsHash = labelsHash;
@@ -1174,9 +1180,9 @@ export class LayerSystem {
 
     private createLabel(name: string, type: string, area?: string): THREE.Sprite {
         const canvas = document.createElement('canvas');
-        const fontSize = 24;
-        const font = `bold ${fontSize}px Inter, sans-serif`;
-        const subFont = `normal ${fontSize * 0.8}px Inter, sans-serif`;
+        const fontSize = 32;
+        const font = `900 ${fontSize}px Inter, sans-serif`;
+        const subFont = `700 ${fontSize * 0.75}px Inter, sans-serif`;
 
         const ctx = canvas.getContext('2d');
         if (!ctx) return new THREE.Sprite();
@@ -1184,60 +1190,80 @@ export class LayerSystem {
         // 1. Measure dimensions
         ctx.font = font;
         const nameMetrics = ctx.measureText(name);
-
         ctx.font = subFont;
         const typeMetrics = ctx.measureText(type);
-
-        let areaMetrics = { width: 0 };
-        if (area) {
-            areaMetrics = ctx.measureText(area);
-        }
+        const areaMetrics = area ? ctx.measureText(area) : { width: 0 };
 
         const textWidth = Math.max(nameMetrics.width, typeMetrics.width, areaMetrics.width);
-        const lineHeight = fontSize * 1.2;
+        const lineHeight = fontSize * 1.15;
         const totalLines = area ? 3 : (type ? 2 : 1);
-        const totalHeight = lineHeight * totalLines;
+        const textHeight = lineHeight * totalLines;
 
-        // 2. Resize Canvas
-        canvas.width = textWidth + 40; // Padding
-        canvas.height = totalHeight + 40;
+        // Pill Dimensions
+        const px = 20; // More compact padding
+        const py = 12;
+        const rectWidth = textWidth + px * 2;
+        const rectHeight = textHeight + py * 2;
+        const cornerRadius = 16;
+
+        canvas.width = rectWidth + 40;
+        canvas.height = rectHeight + 40;
+
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        // 2. Render Pill Background
+        ctx.shadowColor = 'rgba(0,0,0,0.15)';
+        ctx.shadowBlur = 18;
+        ctx.shadowOffsetY = 10;
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.beginPath();
+        // Use standard rounded rect (shim for compatibility or modern API)
+        if (ctx.roundRect) {
+            ctx.roundRect(centerX - rectWidth / 2, centerY - rectHeight / 2, rectWidth, rectHeight, cornerRadius);
+        } else {
+            ctx.rect(centerX - rectWidth / 2, centerY - rectHeight / 2, rectWidth, rectHeight);
+        }
+        ctx.fill();
+
+        // Subtle Border
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.lineWidth = 1.0;
+        ctx.stroke();
 
         // 3. Render Text
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-
-        ctx.shadowColor = 'rgba(255,255,255,1.0)';
-        ctx.shadowBlur = 2; // Reduced for cleaner look
-        ctx.lineWidth = 1.5; // Thinner stroke
-        ctx.strokeStyle = 'white';
-        ctx.fillStyle = 'black';
-
         // Line 1: Name
         ctx.font = font;
-        ctx.strokeText(name, centerX, centerY - lineHeight * (totalLines - 1) * 0.5);
+        ctx.fillStyle = '#000000'; // Pure black for max contrast
         ctx.fillText(name, centerX, centerY - lineHeight * (totalLines - 1) * 0.5);
 
         // Line 2: Type
-        ctx.font = subFont;
-        ctx.strokeText(type, centerX, centerY - lineHeight * (totalLines - 1) * 0.5 + lineHeight);
-        ctx.fillText(type, centerX, centerY - lineHeight * (totalLines - 1) * 0.5 + lineHeight);
+        if (type) {
+            ctx.font = subFont;
+            ctx.fillStyle = '#000000'; // Pure black
+            ctx.fillText(type, centerX, centerY - lineHeight * (totalLines - 1) * 0.5 + lineHeight);
+        }
 
-        // Line 3: Area (Optional)
         if (area) {
-            ctx.strokeText(area, centerX, centerY - lineHeight * (totalLines - 1) * 0.5 + lineHeight * 2);
+            ctx.font = subFont;
+            ctx.fillStyle = '#000000'; // Pure black
             ctx.fillText(area, centerX, centerY - lineHeight * (totalLines - 1) * 0.5 + lineHeight * 2);
         }
 
         const texture = new THREE.CanvasTexture(canvas);
         texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
 
         const material = new THREE.SpriteMaterial({ map: texture, depthTest: false });
         const sprite = new THREE.Sprite(material);
 
-        const scale = 0.5;
+        const scale = 0.45;
         const initialX = canvas.width * scale;
         const initialY = canvas.height * scale;
 
@@ -1250,46 +1276,66 @@ export class LayerSystem {
 
     private createShorthandLabel(shorthandText: string): THREE.Sprite {
         const canvas = document.createElement('canvas');
-        const fontSize = 18;
-        const font = `bold ${fontSize}px Inter, sans-serif`;
+        const fontSize = 28;
+        const font = `900 ${fontSize}px Inter, sans-serif`;
 
         const ctx = canvas.getContext('2d');
         if (!ctx) return new THREE.Sprite();
 
-        // Measure dimensions
+        // Measure
         ctx.font = font;
         const textMetrics = ctx.measureText(shorthandText);
         const textWidth = textMetrics.width;
-        const lineHeight = fontSize * 1.2;
 
-        // Resize Canvas
-        canvas.width = textWidth + 16; // Small padding
-        canvas.height = lineHeight + 8;
+        // Pill Dimensions
+        const px = 16;
+        const py = 8;
+        const rectWidth = textWidth + px * 2;
+        const rectHeight = fontSize + py * 2;
+        const cornerRadius = 8;
 
-        // Render Text (dark color for visibility)
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
+        canvas.width = rectWidth + 24;
+        canvas.height = rectHeight + 24;
 
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
 
-        ctx.shadowColor = 'rgba(255,255,255,1.0)';
-        ctx.shadowBlur = 2;
-        ctx.lineWidth = 1.5;
-        ctx.strokeStyle = 'white';
-        ctx.fillStyle = 'black';
+        // Background
+        ctx.shadowColor = 'rgba(0,0,0,0.25)';
+        ctx.shadowBlur = 12;
+        ctx.shadowOffsetY = 6;
 
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.75)'; // Higher transparency
+        ctx.beginPath();
+        if (ctx.roundRect) {
+            ctx.roundRect(centerX - rectWidth / 2, centerY - rectHeight / 2, rectWidth, rectHeight, cornerRadius);
+        } else {
+            ctx.rect(centerX - rectWidth / 2, centerY - rectHeight / 2, rectWidth, rectHeight);
+        }
+        ctx.fill();
+
+        // Border (Solid Black)
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+        ctx.lineWidth = 1.0;
+        ctx.stroke();
+
+        // Text (Pitch Black)
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         ctx.font = font;
-        ctx.strokeText(shorthandText, centerX, centerY);
+        ctx.fillStyle = '#000000';
         ctx.fillText(shorthandText, centerX, centerY);
 
         const texture = new THREE.CanvasTexture(canvas);
         texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
 
         const material = new THREE.SpriteMaterial({ map: texture, depthTest: false });
         const sprite = new THREE.Sprite(material);
 
-        const scale = 0.4;
+        const scale = 0.5; // High resolution scale
         const initialX = canvas.width * scale;
         const initialY = canvas.height * scale;
 
@@ -1314,27 +1360,26 @@ export class LayerSystem {
     }
 
     public updateLabelScales(zoom: number): void {
-        const factor = 0.5; // Adjustable: 0 = fixed world size, 1 = fixed screen size
-        // We want something in between. 0.6 means closer to fixed screen size but still shrinks a bit.
-        // Formula: scale = baseScale * (1 / zoom) ^ factor
-
-        // Clamp the effective zoom multiplier to avoid labels becoming seemingly infinite scale
-        const effectiveZoom = Math.max(0.05, zoom);
-        // Inverse zoom power for "partial screen locking"
+        const factor = 0.7; // Increased factor for more zoom-independence
+        // Clamping zoom effectively puts a "minimum screen size" on labels
+        const effectiveZoom = Math.max(0.1, zoom);
         const scaler = Math.pow(1 / effectiveZoom, factor);
 
         this.layers.forEach(layer => {
             if (layer.type !== 'vector') return;
 
             layer.container.children.forEach(group => {
+                // Update BOTH regular labels and shorthand labels
                 const label = group.getObjectByName('label') as THREE.Sprite;
                 if (label && label.userData.baseScale) {
                     const base = label.userData.baseScale;
-                    label.scale.set(
-                        base.x * scaler,
-                        base.y * scaler,
-                        1
-                    );
+                    label.scale.set(base.x * scaler, base.y * scaler, 1);
+                }
+
+                const shorthand = group.getObjectByName('shorthand-label') as THREE.Sprite;
+                if (shorthand && shorthand.userData.baseScale) {
+                    const base = shorthand.userData.baseScale;
+                    shorthand.scale.set(base.x * scaler, base.y * scaler, 1);
                 }
             });
         });

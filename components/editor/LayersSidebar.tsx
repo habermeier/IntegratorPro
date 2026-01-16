@@ -130,7 +130,7 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                     }}>
                         <div className={`text-[9px] font-bold truncate leading-tight ${l.visible
                             ? (isActive ? 'text-red-400' : isFoundation ? 'text-emerald-300' : 'text-slate-200')
-                            : 'text-slate-500'}`}>
+                            : 'text-slate-200'}`}>
                             {l.name}
                         </div>
                         {l.id === 'lighting' && (
@@ -147,16 +147,16 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                                 >
                                     Mode: {lightingMode}
                                 </button>
-                                <div className="text-[7px] text-slate-500 font-mono italic">
+                                <div className="text-[7px] text-slate-200 font-mono italic">
                                     {lightingMode === 'circles' && 'Circles Only'}
                                     {lightingMode === 'intensity' && 'Heatmap + Stats'}
                                     {lightingMode === 'fixture' && 'Fixture Only'}
                                 </div>
                             </div>
                         )}
-                        <div className="text-[7px] text-slate-400 font-mono uppercase tracking-tighter leading-tight flex justify-between items-center">
+                        <div className="text-[7px] text-white font-mono uppercase tracking-tighter leading-tight flex justify-between items-center">
                             <span>{(l.opacity * 100).toFixed(0)}% • Z:{l.zIndex}</span>
-                            {l.locked && <span className="text-[7px] text-slate-600">LOCKED</span>}
+                            {l.locked && <span className="text-[7px] text-slate-100 italic">LOCKED</span>}
                         </div>
                     </div>
 
@@ -169,7 +169,7 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                             }}
                             className={`w-9 h-4 flex items-center justify-center rounded transition-all text-[7px] font-bold ${activeLayerId === l.id && editor?.isOverlayAlignmentMode
                                 ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
-                                : 'text-slate-500 hover:text-slate-300 hover:bg-slate-700'
+                                : 'text-slate-200 hover:text-slate-300 hover:bg-slate-700'
                                 }`}
                             title="Shimmy Overlay"
                         >
@@ -187,7 +187,7 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                     <div className="px-3 pb-3 pt-1.5 space-y-3 border-t border-slate-700/50 mt-0.5">
                         <div className="space-y-1">
                             <div className="flex justify-between items-center">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase">Opacity</label>
+                                <label className="text-[10px] font-bold text-slate-100 uppercase">Opacity</label>
                                 <span className="text-[10px] text-blue-400 font-mono">{(l.opacity * 100).toFixed(0)}%</span>
                             </div>
                             <input
@@ -200,7 +200,7 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                             <>
                                 <div className="space-y-1">
                                     <div className="flex justify-between items-center">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase">Scale</label>
+                                        <label className="text-[10px] font-bold text-slate-100 uppercase">Scale</label>
                                         <span className="text-[10px] text-blue-400 font-mono">{l.transform.scale.x.toFixed(2)}x</span>
                                     </div>
                                     <input
@@ -213,7 +213,7 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                                 </div>
                                 <div className="space-y-1">
                                     <div className="flex justify-between items-center">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase">Rotation</label>
+                                        <label className="text-[10px] font-bold text-slate-100 uppercase">Rotation</label>
                                         <span className="text-[10px] text-blue-400 font-mono">{((l.transform.rotation * 180) / Math.PI).toFixed(1)}°</span>
                                     </div>
                                     <input
@@ -237,32 +237,32 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
             {/* Header - Auto-hide when panel is collapsed (AUTO-ULTIMATE-POLISH-P25) */}
             {isLocked && (
                 <div className="p-4 border-b border-slate-800 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Quick Controls</h3>
+                    <h3 className="text-xs font-bold text-slate-100 uppercase tracking-widest mb-3">Quick Controls</h3>
                     <div className="grid grid-cols-3 gap-1">
                         <button
                             onClick={() => handleQuickAction('base')}
-                            className="px-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-[8px] font-bold rounded border border-slate-700 text-slate-300"
+                            className="px-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-[8px] font-bold rounded border border-slate-700 text-slate-100"
                             title="Show only Base and Masking"
                         >
                             [BASE]
                         </button>
                         <button
                             onClick={() => handleQuickAction('context')}
-                            className="px-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-[8px] font-bold rounded border border-slate-700 text-slate-300"
+                            className="px-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-[8px] font-bold rounded border border-slate-700 text-slate-100"
                             title="Show all Foundational layers"
                         >
                             [CONTEXT]
                         </button>
                         <button
                             onClick={() => handleQuickAction('clear')}
-                            className="px-1 py-1.5 bg-slate-800 hover:bg-red-900/30 text-[8px] font-bold rounded border border-slate-700 text-slate-400"
+                            className="px-1 py-1.5 bg-slate-800 hover:bg-red-900/30 text-[8px] font-bold rounded border border-slate-700 text-slate-100"
                             title="Hide all Device data"
                         >
                             [CLEAR]
                         </button>
                     </div>
                     <div className="mt-2 pt-2 border-t border-slate-800/50">
-                        <div className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter mb-1">Debug</div>
+                        <div className="text-[8px] font-bold text-slate-200 uppercase tracking-tighter mb-1">Debug</div>
                         <button
                             onClick={() => {
                                 const newValue = !zoomCursorEnabled;
@@ -271,7 +271,7 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                             }}
                             className={`w-full px-2 py-1.5 text-[8px] font-bold rounded border transition-colors ${zoomCursorEnabled
                                 ? 'bg-blue-900/40 border-blue-500/50 text-blue-400 hover:bg-blue-900/60'
-                                : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
+                                : 'bg-slate-800 border-slate-700 text-slate-100 hover:bg-slate-700'
                                 }`}
                             title="Toggle Zoom Cursor (Magnified Viewport)"
                         >
@@ -285,14 +285,14 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
             <div className="flex-1 overflow-y-auto bg-slate-950/50 pb-20">
                 {technicalLayers.length > 0 && (
                     <div className="mt-2">
-                        <div className="px-3 py-1 text-[8px] font-bold text-blue-400/70 uppercase tracking-tighter">Technical Systems</div>
+                        <div className="px-3 py-1 text-[9px] font-black text-blue-400 uppercase tracking-tighter">Technical Systems</div>
                         <div className="px-2">{technicalLayers.map(renderLayerItem)}</div>
                     </div>
                 )}
 
                 {utilityLayers.length > 0 && (
                     <div className="mt-4">
-                        <div className="px-3 py-1 text-[8px] font-bold text-slate-400/70 uppercase tracking-tighter">Utility</div>
+                        <div className="px-3 py-1 text-[8px] font-bold text-slate-100/70 uppercase tracking-tighter">Utility</div>
                         <div className="px-2">{utilityLayers.map(renderLayerItem)}</div>
                     </div>
                 )}
@@ -311,16 +311,16 @@ export const LayersSidebar: React.FC<LayersSidebarProps> = React.memo(({
                 {selectedIds.length > 0 ? (
                     <div className="space-y-2">
                         <div className="flex justify-between">
-                            <span className="text-[10px] text-slate-400">Selection</span>
+                            <span className="text-[10px] text-slate-100">Selection</span>
                             <span className="text-[10px] text-blue-400 font-mono">{selectedIds.length} Object{selectedIds.length > 1 ? 's' : ''}</span>
                         </div>
                         <div className="flex justify-between text-[10px]">
-                            <span className="text-slate-400">Active Tool</span>
+                            <span className="text-slate-100">Active Tool</span>
                             <span className="text-blue-500 font-bold uppercase">{activeTool}</span>
                         </div>
                     </div>
                 ) : (
-                    <div className="text-[10px] italic text-slate-600">No selection</div>
+                    <div className="text-[10px] italic text-slate-300">No selection</div>
                 )}
             </div>
         </div>

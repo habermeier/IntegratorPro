@@ -72,6 +72,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
     const [swapData, setSwapData] = React.useState<any>(null);
     const [newNameData, setNewNameData] = React.useState<{ defaultName: string; onConfirm: (name: string) => void } | null>(null);
     const [deleteModalData, setDeleteModalData] = React.useState<{ typeId: string; typeName: string; count: number; replacements: SymbolDefinition[] } | null>(null);
+    const [isSwapMode, setIsSwapMode] = React.useState(false);
 
     const {
         editingDevice,
@@ -127,12 +128,8 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
         if (activeTool === 'place-symbol' && selectedSymbolType && editor) {
             const toolAttrs: any = { symbolType: selectedSymbolType };
 
-            // AUTO-SPEC-SYSTEM-P28: Sync Preview Metadata to Placement Tool
-            // This ensures that when the user places the device, it uses the 
-            // metadata configured in the library preview.
             if (draftMetadata && !editingDevice) {
                 toolAttrs.metadata = draftMetadata;
-                // If the metadata contains a productId, prioritize it
                 const symbolDef = SYMBOL_LIBRARY[selectedSymbolType];
                 toolAttrs.productId = draftMetadata.productId || symbolDef?.productId || 'generic-product';
             } else {
@@ -140,7 +137,6 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                 if (symbolDef?.productId) toolAttrs.productId = symbolDef.productId;
             }
 
-            // Sync Lighting/Fan Configuration
             const m = draftMetadata || (SYMBOL_LIBRARY[selectedSymbolType] as any)?.metadata;
             if (m) {
                 if (m.lumens !== undefined) toolAttrs.lumens = m.lumens;
@@ -156,6 +152,12 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
 
     // 4. Workflow Handlers
     const handleSelectSymbol = (type: string) => {
+        if (isSwapMode && editingDevice) {
+            setSwapData({ targetTypeId: type, targetDeviceName: SYMBOL_LIBRARY[type]?.name || type });
+            setIsSwapMode(false);
+            return;
+        }
+
         const symbolDef = SYMBOL_LIBRARY[type] as any;
         setSelectedSymbolType(type);
         localStorage.setItem('integrator-pro-last-symbol-type', type);
@@ -163,7 +165,6 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
             const toolAttrs: any = { symbolType: type };
             if (symbolDef?.productId) toolAttrs.productId = symbolDef.productId;
 
-            // Sync Lighting/Fan Configuration
             const m = symbolDef?.metadata;
             if (m) {
                 if (m.lumens !== undefined) toolAttrs.lumens = m.lumens;
@@ -180,79 +181,55 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
         if (!editor) return;
 
         let repairCount = 0;
-
-        // 1. Repair Device Instances
         const devicesToFix = devices.filter(d => {
             const isGenericId = !d.productId || d.productId === 'generic-light' || d.productId === 'generic-product';
             if (!isGenericId) return false;
-
-            // 1. If it's already a 2DS type, it should have the right product ID
             const isExplicit2DS = d.deviceTypeId.includes('2ds');
-
-            // 2. If it's a generic recessed-light, only repair if it's CRYING OUT that it's a 2DS
             const typeLabel = (SYMBOL_LIBRARY[d.deviceTypeId] as any)?.metadata?.shorthand || '';
             const isImplied2DS = d.name.toLowerCase().includes('2ds') || typeLabel.toLowerCase().includes('2ds');
             const isGenericRecessed = d.deviceTypeId === 'recessed-light' || d.deviceTypeId === 'generic-lighting';
-
             return isExplicit2DS || (isGenericRecessed && isImplied2DS);
         });
 
         if (devicesToFix.length > 0) {
-            console.log(`[AutoRepair] Detected ${devicesToFix.length} 2DS-variant devices with generic IDs. repairing...`);
             devicesToFix.forEach(d => {
-                // Force to '2DS-L9' (the permanent catalog ID)
                 if (updateDevice(d.id, { productId: '2DS-L9' })) repairCount++;
             });
         }
 
-        // 2. Repair Custom Symbol Definitions in DataService cache
         const projectData = dataService.getCachedProject();
         if (projectData?.customSymbols) {
             let defsRepaired = false;
             projectData.customSymbols.forEach(sym => {
                 const isGenericId = !sym.productId || sym.productId === 'generic-light' || sym.productId === 'generic-product';
                 const is2DS = sym.name.includes('2DS') || sym.metadata?.shorthand?.includes('2DS');
-
                 if (isGenericId && is2DS) {
-                    console.log(`[AutoRepair] Fixing Custom Symbol Preset: ${sym.id}`);
                     sym.productId = '2DS-L9';
                     if (!sym.metadata) sym.metadata = {};
                     sym.metadata.productId = '2DS-L9';
                     defsRepaired = true;
                 }
             });
-
-            if (defsRepaired) {
-                // Persist the repaired definitions
-                dataService.saveProject(projectData, true).catch(console.error);
-            }
+            if (defsRepaired) dataService.saveProject(projectData, true).catch(console.error);
         }
 
-        // 3. Fan Size Repair (AUTO-SCALE-FAN)
         if (projectData?.customSymbols) {
             let sizeRepaired = false;
             projectData.customSymbols.forEach(sym => {
                 const isFan = sym.productId?.toLowerCase().includes('haiku') ||
                     sym.productId?.toLowerCase().includes('fan') ||
                     sym.name.toLowerCase().includes('fan');
-
-                // If it's a fan but has the tiny 16x16 size or legacy 48x48 size
                 if (isFan && (sym.size.width === 16 || sym.size.width === 48)) {
-                    console.log(`[AutoRepair] Scaling Fan symbol to 96x96: ${sym.id}`);
                     sym.size = { width: 96, height: 96 };
                     sym.meshType = 'fan';
                     sizeRepaired = true;
                 }
             });
-
-            if (sizeRepaired) {
-                dataService.saveProject(projectData, true).catch(console.error);
-            }
+            if (sizeRepaired) dataService.saveProject(projectData, true).catch(console.error);
         }
 
         if (repairCount > 0) {
             editor.emit('layers-changed', editor.layerSystem.getAllLayers());
-            console.log(`[AutoRepair] Successfully repaired ${repairCount} device instances.`);
         }
     }, [editor, devices, updateDevice]);
 
@@ -272,100 +249,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
         }
     };
 
-    const handleUpdateType = async (typeId: string, updates: any) => {
-        if (!editor) return;
-
-        // Mode 1: If we have an editing device (Instance), and its type matches the typeId, update the instance
-        if (editingDevice && editingDevice.deviceTypeId === typeId) {
-            const success = updateDevice(editingDevice.id, updates);
-            if (success) {
-                editor.emit('layers-changed', editor.layerSystem.getAllLayers());
-                editor.setDirty();
-            }
-        }
-
-        // Mode 2: Update global type registry
-        try {
-            await dataService.updateGlobalSymbolType(typeId, updates);
-            // Refresh library
-            editor?.emit('layers-changed', editor.layerSystem.getAllLayers());
-        } catch (err) {
-            console.error('Failed to update global type:', err);
-        }
-    };
-
-    /**
-     * Specialized wrapper for DeviceEditor which expects a single typeId string
-     */
-    const handleDeviceTypeChange = (newTypeId: string) => {
-        if (!editingDevice || !editor) return;
-        const symbolDef = SYMBOL_LIBRARY[newTypeId] as any;
-        const updates: any = { deviceTypeId: newTypeId };
-
-        // AUTO-SPEC-SYSTEM-P27: Preserve Product ID Logic
-        // When changing symbol style (e.g. 2DS-L9 -> 2DS-L12), we must NOT overwrite 
-        // a specific product (e.g. HE Williams) with a generic one from the new symbol definition.
-
-        const proposedProductId = symbolDef?.productId;
-        const currentProductId = editingDevice.productId;
-
-        // Define what constitutes a "Generic" product that should never overwrite a specific one
-        const isGeneric = (id: string | undefined) => {
-            return !id || ['generic-product', 'generic-light', 'generic-switch'].includes(id);
-        };
-
-        // Only apply the symbol's product ID if:
-        // 1. The new symbol explicitly has one
-        // 2. AND the proposed product is NOT generic
-        // 3. OR the current product IS generic (upgrading from generic to specific or generic to generic)
-        if (proposedProductId && (!isGeneric(proposedProductId) || isGeneric(currentProductId))) {
-            updates.productId = proposedProductId;
-        }
-
-        if (updateDevice(editingDevice.id, updates)) {
-            editor.emit('layers-changed', editor.layerSystem.getAllLayers());
-        }
-    };
-
-    const handleUpdateRoom = async (updates: Partial<Room>) => {
-        if (!selectedRoom || !editor) return;
-
-        // 1. Update in LayerSystem (immediate UI)
-        const roomLayer = editor.layerSystem.getLayer('room');
-        if (roomLayer && roomLayer.type === 'vector' && roomLayer.content) {
-            const content = roomLayer.content as any;
-            const rooms = content.rooms || [];
-            const roomIndex = rooms.findIndex((r: any) => r.id === selectedRoom.id);
-            if (roomIndex !== -1) {
-                const updatedRoom = { ...rooms[roomIndex], ...updates };
-                rooms[roomIndex] = updatedRoom;
-                editor.layerSystem.markDirty('room');
-                editor.emit('layers-changed', editor.layerSystem.getAllLayers());
-                editor.setDirty();
-
-                // Keep UI in sync by forcing a selection change re-eval
-                editor.emit('selection-changed', [selectedRoom.id]);
-            }
-        }
-
-        // 2. Persistent Save
-        try {
-            const currentData = await dataService.loadProject();
-            if (currentData) {
-                const polygons = currentData.floorPlan.polygons;
-                const polyIndex = polygons.findIndex(p => p.id === selectedRoom.id);
-                if (polyIndex !== -1) {
-                    polygons[polyIndex] = { ...polygons[polyIndex], ...updates };
-                    await dataService.saveProject(currentData);
-                }
-            }
-        } catch (err) {
-            console.error('Failed to save room update:', err);
-        }
-    };
-
     const handleSaveAsNewType = async () => {
-        // Mode 1: Editing an existing device
         if (editingDevice) {
             const currentType = SYMBOL_LIBRARY[editingDevice.deviceTypeId];
             const defaultName = currentType?.name || editingDevice.name || 'New Fixture';
@@ -373,9 +257,6 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
             setNewNameData({
                 defaultName: defaultName,
                 onConfirm: async (name) => {
-                    // Robustly resolve Product ID from formData (user dropdown) or metadata
-                    // AUTO-SPEC-SYSTEM-P27: Fix Cloning Bug where 2DS lost its specific product ID
-                    // Prioritize specific ID from metadata (spec builder output) > existing device ID > form data > generic
                     const effectiveProductId =
                         (draftMetadata?.productId && draftMetadata.productId !== 'generic-product') ? draftMetadata.productId :
                             (editingDevice.productId && editingDevice.productId !== 'generic-product') ? editingDevice.productId :
@@ -391,15 +272,11 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                             name,
                             productId: effectiveProductId,
                             metadata: { ...draftMetadata, shorthand: name },
-                            // AUTO-SCALE-FAN: Ensure fans have appropriate physical scaling (96x96 vs 16x16)
                             meshType: isFan ? 'fan' : 'universal',
                             ...(isFan ? { size: { width: 96, height: 96 } } : {})
                         };
                         await dataService.addCustomSymbol(newType);
 
-                        // 1. Update the instance to point to the new type
-                        // 2. Also update its 'name' to the new type name for clarity
-                        // 3. Update productId
                         const updates: any = {
                             deviceTypeId: newType.id,
                             productId: effectiveProductId,
@@ -407,28 +284,12 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                         };
 
                         if (updateDevice(editingDevice.id, updates)) {
-                            // Sync updates to FloorPlanEditor's internal layer state immediately for visual refresh
-                            const targetLayerId = editingDevice.layerId || 'lighting';
-                            const layer = editor?.layerSystem.getLayer(targetLayerId);
-                            if (layer && layer.content && (layer.content as any).symbols) {
-                                const symbol = (layer.content as any).symbols.find((s: any) => s.id === editingDevice.id);
-                                if (symbol) {
-                                    symbol.type = updates.deviceTypeId; // Map deviceTypeId -> type
-                                    if (updates.productId) symbol.productId = updates.productId;
-                                    if (updates.metadata) symbol.metadata = updates.metadata;
-                                    editor?.layerSystem.markDirty(targetLayerId);
-                                }
-                            }
-
                             editor?.emit('layers-changed', editor.layerSystem.getAllLayers());
-                            // Force selection refresh so panels update immediately
                             editor?.selectionSystem.select(editingDevice.id);
                         }
 
-                        // Sticky selection: Update state so next 'Place' action uses this new type
                         setSelectedSymbolType(newType.id);
                         localStorage.setItem('integrator-pro-last-symbol-type', newType.id);
-
                         setNewNameData(null);
                     } catch (e) {
                         console.error(e);
@@ -437,7 +298,6 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                 }
             });
         }
-        // Mode 2: Creating from Library (Add New)
         else if (productId && isAddingNew) {
             const catalogV2 = catalog as any;
             const product = (catalogV2.registry.loads as any[]).find(p => p.id === productId);
@@ -446,9 +306,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                 defaultName: `${product?.name || 'New Fixture'} Custom`,
                 onConfirm: async (name) => {
                     try {
-                        // Use a default base symbol (e.g. generic-lighting) since we don't have a source symbol
                         const baseSymbol = SYMBOL_LIBRARY['recessed-light'] || Object.values(SYMBOL_LIBRARY)[0];
-
                         const isFan = productId?.toLowerCase().includes('haiku') ||
                             productId?.toLowerCase().includes('fan') ||
                             name.toLowerCase().includes('fan');
@@ -466,7 +324,6 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                         await dataService.addCustomSymbol(newType);
                         setIsAddingNew(false);
                         setSelectedCategory(baseSymbol.category);
-                        // Activate immediately for placement
                         handleSelectSymbol(newType.id);
                         setNewNameData(null);
                     } catch (e) {
@@ -478,43 +335,57 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
         }
     };
 
+    const handleExecuteSwap = async (scope: 'instance' | 'room' | 'project') => {
+        if (!editingDevice || !swapData || !editor) return;
+
+        const targetTypeId = swapData.targetTypeId;
+        const targetSymbol = SYMBOL_LIBRARY[targetTypeId];
+        if (!targetSymbol) return;
+
+        const updates = {
+            deviceTypeId: targetTypeId,
+            productId: targetSymbol.productId || 'generic-product'
+        };
+
+        if (scope === 'instance') {
+            updateDevice(editingDevice.id, updates);
+        } else if (scope === 'room') {
+            const roomId = editingDevice.roomId;
+            devices.filter(d => d.roomId === roomId && d.deviceTypeId === editingDevice.deviceTypeId)
+                .forEach(d => updateDevice(d.id, updates));
+        } else if (scope === 'project') {
+            devices.filter(d => d.deviceTypeId === editingDevice.deviceTypeId)
+                .forEach(d => updateDevice(d.id, updates));
+        }
+
+        setSwapData(null);
+        editor.emit('layers-changed', editor.layerSystem.getAllLayers());
+    };
+
     const handleFieldChange = (field: string, value: any) => {
         if (!editor) return;
-
-        // Update local form state immediately
         setFormData((prev: any) => ({ ...prev, [field]: value }));
-
-        // Mode 1: Editing a placed instance
         if (editingDevice) {
             const updateObj = field.startsWith('metadata.')
                 ? { metadata: { ...editingDevice.metadata, [field.split('.')[1]]: value } }
                 : { [field]: value };
-
             if (updateDevice(editingDevice.id, updateObj)) {
                 editor.emit('layers-changed', editor.layerSystem.getAllLayers());
             }
-        }
-        // Mode 2: Library Preview (No editingDevice)
-        else if (librarySelectedSymbol) {
+        } else if (librarySelectedSymbol) {
             if (field === 'productId') {
-                // Changing product in library preview should reset metadata to catalog defaults
                 const catalogV2 = catalog as any;
-                const product = (catalogV2.registry.loads as any[]).find(p => p.id === value);
+                const product = (catalogV2.registry.loads as any[]).find((p: any) => p.id === value);
                 setDraftMetadata(product?.metadata || {});
             }
-            // For other fields, they just stay in formData/draftMetadata 
-            // and are picked up by the placement tool sync effect
         }
     };
 
     const handleMetadataChange = (newMetadata: any) => {
         setDraftMetadata(newMetadata);
-
-        // AUTO-SPEC-SYSTEM-P28: Auto-save spec builder changes to instance
         if (editingDevice && editor) {
             const updates = { metadata: { ...editingDevice.metadata, ...newMetadata } };
             if (updateDevice(editingDevice.id, updates)) {
-                // Also update the in-memory symbol for immediate visual feedback if the symbol uses metadata (e.g. shorthand)
                 const targetLayerId = editingDevice.layerId || 'lighting';
                 const layer = editor.layerSystem.getLayer(targetLayerId);
                 if (layer && layer.type === 'vector' && layer.content) {
@@ -530,16 +401,56 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
         }
     };
 
+    const handleDeviceTypeChange = (newTypeId: string) => {
+        if (!editingDevice || !editor) return;
+        const symbolDef = SYMBOL_LIBRARY[newTypeId] as any;
+        const updates: any = { deviceTypeId: newTypeId };
+        const proposedProductId = symbolDef?.productId;
+        const currentProductId = editingDevice.productId;
+        const isGeneric = (id: string | undefined) => !id || ['generic-product', 'generic-light', 'generic-switch'].includes(id);
+        if (proposedProductId && (!isGeneric(proposedProductId) || isGeneric(currentProductId))) {
+            updates.productId = proposedProductId;
+        }
+        if (updateDevice(editingDevice.id, updates)) {
+            editor.emit('layers-changed', editor.layerSystem.getAllLayers());
+        }
+    };
+
+    const handleUpdateRoom = async (updates: Partial<Room>) => {
+        if (!selectedRoom || !editor) return;
+        const roomLayer = editor.layerSystem.getLayer('room');
+        if (roomLayer && roomLayer.type === 'vector' && roomLayer.content) {
+            const content = roomLayer.content as any;
+            const rooms = content.rooms || [];
+            const roomIndex = rooms.findIndex((r: any) => r.id === selectedRoom.id);
+            if (roomIndex !== -1) {
+                rooms[roomIndex] = { ...rooms[roomIndex], ...updates };
+                editor.layerSystem.markDirty('room');
+                editor.emit('layers-changed', editor.layerSystem.getAllLayers());
+                editor.setDirty();
+                editor.emit('selection-changed', [selectedRoom.id]);
+            }
+        }
+        try {
+            const currentData = await dataService.loadProject();
+            if (currentData) {
+                const polygons = currentData.floorPlan.polygons;
+                const polyIndex = polygons.findIndex(p => p.id === selectedRoom.id);
+                if (polyIndex !== -1) {
+                    polygons[polyIndex] = { ...polygons[polyIndex], ...updates };
+                    await dataService.saveProject(currentData);
+                }
+            }
+        } catch (err) {
+            console.error('Failed to save room update:', err);
+        }
+    };
+
     const handleDeleteType = async () => {
         if (!selectedSymbolType) return;
         const usageCount = devices.filter(d => d.deviceTypeId === selectedSymbolType).length;
-
-        // Prepare replacements (same category, different ID)
         const currentCat = SYMBOL_LIBRARY[selectedSymbolType]?.category;
-        const replacements = Object.values(SYMBOL_LIBRARY).filter(s =>
-            s.category === currentCat && s.id !== selectedSymbolType
-        );
-
+        const replacements = Object.values(SYMBOL_LIBRARY).filter(s => s.category === currentCat && s.id !== selectedSymbolType);
         setDeleteModalData({
             typeId: selectedSymbolType,
             typeName: SYMBOL_LIBRARY[selectedSymbolType]?.name || selectedSymbolType,
@@ -550,17 +461,9 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
 
     const handleConfirmDeleteAll = async () => {
         if (!deleteModalData) return;
-
-        // 1. Delete all instances
         const toDeleteIds = devices.filter(d => d.deviceTypeId === deleteModalData.typeId).map(d => d.id);
-        if (toDeleteIds.length > 0) {
-            toDeleteIds.forEach(id => editor?.deleteDevice(id));
-        }
-
-        // 2. Delete the type
+        if (toDeleteIds.length > 0) toDeleteIds.forEach(id => editor?.deleteDevice(id));
         await dataService.removeCustomSymbol(deleteModalData.typeId);
-
-        // 3. Cleanup
         setDeleteModalData(null);
         setSelectedSymbolType(null);
         editor?.emit('layers-changed', editor.layerSystem.getAllLayers());
@@ -568,32 +471,10 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
 
     const handleConfirmReplace = async (newTypeId: string) => {
         if (!deleteModalData) return;
-
-        // 1. Replace all instances
         const toUpdate = devices.filter(d => d.deviceTypeId === deleteModalData.typeId);
         const newSymbol = SYMBOL_LIBRARY[newTypeId];
-
-        const updates = toUpdate.map(d => ({
-            id: d.id,
-            // Update type and name (to match new type name + index or keep custom?)
-            // Usually reset name to new type defaults
-            deviceTypeId: newTypeId,
-            productId: newSymbol.productId || 'generic-product', // Propagate product ID
-            // We can optionally update the name, but user might have custom names. 
-            // Safest is to keep name or append? 
-            // The user prompt said: "replace existing devices with a different model type"
-            // Let's assume minimal disruption, just type swap.
-        }));
-
-        // Batch update if possible, else loop
-        // editor.updateDevice accepts single ID. We might need a batch method or loop.
-        // Loop for now.
-        updates.forEach(u => updateDevice(u.id, { deviceTypeId: u.deviceTypeId, productId: u.productId }));
-
-        // 2. Delete the type
+        toUpdate.forEach(u => updateDevice(u.id, { deviceTypeId: newTypeId, productId: newSymbol.productId || 'generic-product' }));
         await dataService.removeCustomSymbol(deleteModalData.typeId);
-
-        // 3. Cleanup
         setDeleteModalData(null);
         setSelectedSymbolType(null);
         editor?.emit('layers-changed', editor.layerSystem.getAllLayers());
@@ -638,19 +519,23 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                         formData={formData}
                         draftMetadata={draftMetadata}
                         onFieldChange={handleFieldChange}
-                        onFieldBlur={() => { }}
                         onUpdateType={handleDeviceTypeChange}
                         onClearSelection={() => {
                             if (editingDevice) {
                                 editor?.selectionSystem.clearSelection();
                                 editor?.emit('selection-changed', []);
                             } else {
-                                // Transition back to library list from preview
                                 setActiveTab('library');
                             }
                         }}
-                        onSaveNewType={handleSaveAsNewType}
                         onUpdateGlobal={handleUpdateGlobalType}
+                        onSwap={() => {
+                            if (editingDevice) {
+                                setActiveTab('library');
+                                setIsSwapMode(true);
+                            }
+                        }}
+                        onSaveNewType={handleSaveAsNewType}
                         setDraftMetadata={handleMetadataChange}
                         unitPreference={unitPreference}
                         devices={devices}
@@ -712,22 +597,19 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                                 />
                             </div>
                         )}
+                        {isSwapMode && (
+                            <div className="p-2 border-b border-amber-500/50 bg-amber-500/10">
+                                <span className="text-[8px] text-amber-500 font-bold uppercase">Select replacement type...</span>
+                                <button onClick={() => setIsSwapMode(false)} className="ml-2 text-[8px] text-slate-400 hover:text-white">Cancel</button>
+                            </div>
+                        )}
                         <div className="flex-1 overflow-y-auto">
                             <DeviceLibrary
                                 selectedCategory={selectedCategory}
                                 setSelectedCategory={setSelectedCategory}
                                 selectedSymbolType={selectedSymbolType}
                                 onSelectSymbol={handleSelectSymbol}
-                                onDeleteType={() => {
-                                    if (selectedSymbolType) {
-                                        setDeleteModalData({
-                                            typeId: selectedSymbolType,
-                                            typeName: SYMBOL_LIBRARY[selectedSymbolType].name,
-                                            count: devices.filter(d => d.deviceTypeId === selectedSymbolType).length,
-                                            replacements: Object.values(SYMBOL_LIBRARY).filter(s => s.id !== selectedSymbolType)
-                                        });
-                                    }
-                                }}
+                                onDeleteType={handleDeleteType}
                                 isAddingNew={isAddingNew}
                                 setIsAddingNew={setIsAddingNew}
                                 categoryCounts={categoryCounts}
@@ -756,7 +638,10 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                 <DeviceConversionModal isOpen={true} {...conversionData} onConfirm={() => { }} onCancel={() => setShowConversionModal(false)} />
             )}
             {swapData && <SwapDeviceModal isOpen={true} currentDeviceName={editingDevice?.name} newDeviceName={swapData.targetDeviceName}
-                onSwapInstance={() => { }} onSwapRoom={() => { }} onSwapProject={() => { }} onCancel={() => setSwapData(null)} />}
+                onSwapInstance={() => handleExecuteSwap('instance')}
+                onSwapRoom={() => handleExecuteSwap('room')}
+                onSwapProject={() => handleExecuteSwap('project')}
+                onCancel={() => setSwapData(null)} />}
 
             {newNameData && (
                 <NameNewTypeModal
