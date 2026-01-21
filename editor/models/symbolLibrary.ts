@@ -212,6 +212,17 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         meshType: 'fan',
         productId: 'BAF-HAIKU'
     },
+    'haiku-fan': {
+        id: 'haiku-fan',
+        name: 'Haiku Fan',
+        category: 'lighting',
+        description: 'Premium Big Ass Fans Haiku Series',
+        color: 0x000000,
+        size: { width: 96, height: 96 },
+        createMesh: createCeilingFanMesh,
+        meshType: 'fan',
+        productId: 'BAF-HAIKU'
+    },
     '2DS-L12': {
         id: '2DS-L12',
         name: '2DS-L12',

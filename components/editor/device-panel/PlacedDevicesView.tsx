@@ -40,11 +40,33 @@ export const PlacedDevicesView: React.FC<PlacedDevicesViewProps> = ({
         map['unassigned'] = { name: 'Unassigned / Hallway', items: [] };
 
         filtered.forEach(d => {
-            const roomId = d.roomId || 'unassigned';
-            if (!map[roomId]) {
-                map[roomId] = { name: 'Unknown Room', items: [] };
+            const rawRoomId = d.roomId;
+            let targetGroupId = 'unassigned';
+
+            if (rawRoomId) {
+                // 1. Direct ID match
+                if (map[rawRoomId]) {
+                    targetGroupId = rawRoomId;
+                } else {
+                    // 2. Name match (case-insensitive fallback with fuzzy prefix)
+                    const foundRoom = rooms.find(r =>
+                        r.name.toLowerCase() === rawRoomId.toLowerCase() ||
+                        r.id.toLowerCase() === rawRoomId.toLowerCase() ||
+                        rawRoomId.toLowerCase().startsWith(r.name.toLowerCase())
+                    );
+                    if (foundRoom) {
+                        targetGroupId = foundRoom.id;
+                    } else {
+                        // 3. Fallback: Use the string itself as the room name if it looks like a name
+                        targetGroupId = rawRoomId;
+                        if (!map[targetGroupId]) {
+                            map[targetGroupId] = { name: rawRoomId, items: [] };
+                        }
+                    }
+                }
             }
-            map[roomId].items.push(d);
+
+            map[targetGroupId].items.push(d);
         });
 
         return Object.entries(map)

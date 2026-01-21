@@ -247,6 +247,10 @@ export class PlaceSymbolTool implements Tool {
         remoteDebug('✓ No device found, proceeding with placement', 'PlaceSymbolTool');
         const worldPos = this.editor.cameraSystem.screenToWorld(x, y);
         const def = SYMBOL_LIBRARY[this.symbolType];
+        if (!def) {
+            remoteDebug(`[PlaceSymbolTool] Ignoring click - definition not found for ${this.symbolType}`, 'PlaceSymbolTool');
+            return;
+        }
 
         // Find room at position using spatial utilities
         const roomLayer = this.editor.layerSystem.getLayer('room');

@@ -101,6 +101,14 @@ export class LayerSystem {
         return this.layers.get(id);
     }
 
+    public getSceneObject(id: string): THREE.Object3D | undefined {
+        // Search through all cached meshes across all layers
+        for (const [key, obj] of this.meshCache.entries()) {
+            if (key.endsWith(`-${id}`)) return obj;
+        }
+        return undefined;
+    }
+
     public getAllLayers(): Layer[] {
         return Array.from(this.layers.values()).sort((a, b) => a.zIndex - b.zIndex);
     }

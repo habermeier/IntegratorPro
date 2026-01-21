@@ -65,6 +65,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
     const [isAddingNew, setIsAddingNew] = React.useState(false);
     const [searchQuery, setSearchQuery] = React.useState('');
     const [productId, setProductId] = React.useState('generic-product');
+    const [rooms, setRooms] = React.useState<Room[]>([]);
     const [unitPreference] = React.useState<'IMPERIAL' | 'METRIC'>('METRIC');
 
     const [showConversionModal, setShowConversionModal] = React.useState(false);
@@ -109,9 +110,21 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
         syncMode();
         editor.on('lighting-mode-changed', handleModeChange);
         editor.on('hover-room-changed', handleHoverRoom);
+
+        // Sync Rooms for list view
+        const syncRooms = () => {
+            const roomLayer = editor.layerSystem.getLayer('room');
+            if (roomLayer && roomLayer.type === 'vector' && roomLayer.content) {
+                setRooms((roomLayer.content as any).rooms || []);
+            }
+        };
+        syncRooms();
+        editor.on('layers-changed', syncRooms);
+
         return () => {
             editor.off('lighting-mode-changed', handleModeChange);
             editor.off('hover-room-changed', handleHoverRoom);
+            editor.off('layers-changed', syncRooms);
         };
     }, [editor]);
 
@@ -364,12 +377,33 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
 
     const handleFieldChange = (field: string, value: any) => {
         if (!editor) return;
+
+        // 1. Immediate UI update for the panel itself
         setFormData((prev: any) => ({ ...prev, [field]: value }));
+
         if (editingDevice) {
             const updateObj = field.startsWith('metadata.')
                 ? { metadata: { ...editingDevice.metadata, [field.split('.')[1]]: value } }
                 : { [field]: value };
-            if (updateDevice(editingDevice.id, updateObj)) {
+
+            // 2. Perform registry update (fast)
+            updateDevice(editingDevice.id, updateObj);
+
+            // 3. Conditional Scene Update
+            // For high-frequency things like rotation, we can update the internal Three.js object 
+            // directly to avoid the massive overhead of layers-changed re-render.
+            if (field === 'rotation') {
+                const group = editor.layerSystem.getSceneObject(editingDevice.id);
+                if (group) {
+                    group.rotation.z = (value * Math.PI) / 180;
+                    editor.setDirty();
+                }
+            } else if (field === 'installationHeight') {
+                // For height, we might need a full re-render if it affects coverage circles, 
+                // but let's try to keep it relatively fast.
+                editor.emit('layers-changed', editor.layerSystem.getAllLayers());
+            } else {
+                // For everything else (name, product change), full re-render is fine
                 editor.emit('layers-changed', editor.layerSystem.getAllLayers());
             }
         } else if (librarySelectedSymbol) {
@@ -490,7 +524,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
     if (!isOpen) return null;
 
     return (
-        <div className="w-64 h-full bg-slate-900 border-r border-slate-800 flex flex-col z-20 shadow-xl overflow-x-hidden">
+        <div className="w-80 h-full bg-slate-900 border-r border-slate-800 flex flex-col z-20 shadow-xl overflow-x-hidden">
             <div className="p-3 border-b border-slate-700 bg-slate-950 flex justify-between items-center h-10">
                 <h3 className="text-[10px] font-black text-slate-200 uppercase tracking-widest leading-none">
                     {editingDevice ? 'Hardware Config' : selectedRoom ? 'Room Editor' : 'Devices'}
@@ -630,6 +664,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                         onFocusDevice={(id) => editor?.focusOnDevice(id)}
                         onDeleteDevice={(id) => editor?.deleteDevice(id)}
                         onSelectDevice={(id) => editor?.selectionSystem.select(id)}
+                        rooms={rooms}
                     />
                 )}
             </div>

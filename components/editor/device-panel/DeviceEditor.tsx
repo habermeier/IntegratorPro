@@ -1,10 +1,11 @@
 import React from 'react';
-import { Target, Box, ChevronLeft, ChevronRight, Save, Trash2, Cpu, Activity, Lightbulb, Zap } from 'lucide-react';
+import { Target, Box, ChevronLeft, ChevronRight, Save, Trash2, Cpu, Activity, Lightbulb, Zap, ArrowLeftRight, Settings2, Copy, X } from 'lucide-react';
 import { SYMBOL_LIBRARY } from '../../../editor/models/symbolLibrary';
 import { getSpecBuilder } from './SpecBuilderRegistry';
 import catalog from '../../../catalog.json';
 import { AmpereEngine } from '../../../src/services/AmpereEngine';
 import { CatalogV2 } from '../../../src/models/Blueprint';
+import { SymbolIcon } from '../SymbolIcon';
 
 interface DeviceEditorProps {
     editingDevice: any;
@@ -78,114 +79,116 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
     }, [catalogV2]);
 
     return (
-        <div className="p-3 space-y-3 pb-20 overflow-y-auto h-full custom-scrollbar">
-            {/* Header - Compact */}
-            <div className="flex items-center justify-between pb-2 border-b border-slate-700 sticky top-0 bg-slate-900 z-10">
-                <div className="flex flex-col">
-                    <span className="text-[7px] text-slate-500 uppercase font-black">Currently Selecting</span>
-                    <h3 className="text-[11px] font-black text-slate-100 truncate w-32">{editingDevice.name}</h3>
-                </div>
+        <div className="p-2 space-y-2 pb-20 overflow-y-auto h-full custom-scrollbar bg-slate-900/40">
+            {/* Header - ultra compact */}
+            <div className="flex items-center justify-between pb-1.5 border-b border-slate-700/50 sticky top-0 bg-slate-950 z-20 px-1">
+                <h3 className="text-[12px] font-black text-white truncate max-w-[220px] uppercase tracking-tight">{editingDevice.name}</h3>
                 <button
                     onClick={onClearSelection}
-                    className="text-[9px] px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors uppercase font-bold border border-slate-600"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-all border border-transparent hover:border-slate-700 group"
+                    title="Close Panel (Deselect)"
                 >
-                    Done
+                    <X size={16} className="opacity-70 group-hover:opacity-100" />
                 </button>
             </div>
 
-            {/* SECTION 1: IDENTITY (Read Only unless instance override) */}
-            <div className="bg-slate-950/50 rounded-lg p-3 border border-slate-800 space-y-3">
-                <div className="flex justify-between items-start">
-                    <div className="space-y-1">
-                        <label className="text-[7px] text-slate-500 uppercase font-black">Master Device Type</label>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[12px] font-black text-blue-300">{SYMBOL_LIBRARY[editingDevice.deviceTypeId]?.name || editingDevice.deviceTypeId}</span>
-                        </div>
+            {/* SECTION 1: IDENTITY & MASTER ACTIONS */}
+            <div className="bg-slate-950 rounded-xl p-3 border border-slate-800 shadow-xl relative overflow-hidden">
+                <div className="flex gap-3 items-center relative z-10">
+                    <div className="w-12 h-12 bg-slate-900 rounded-lg border border-slate-700 flex items-center justify-center shrink-0 shadow-inner">
+                        <SymbolIcon
+                            symbolType={editingDevice.deviceTypeId}
+                            color="#3b82f6"
+                            size={42}
+                            showShorthand={false}
+                            meshType={SYMBOL_LIBRARY[editingDevice.deviceTypeId]?.meshType}
+                            metadata={editingDevice.metadata}
+                            rotation={formData.rotation || 0}
+                        />
                     </div>
-                    <div className="text-right">
-                        <label className="text-[7px] text-slate-500 uppercase font-black px-1">Symbol</label>
-                        <div className="w-8 h-8 bg-slate-900 rounded border border-slate-700 flex items-center justify-center">
-                            {/* Symbol Preview Placeholder */}
-                            <Box size={16} className="text-slate-500" />
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline justify-between gap-2 max-w-full">
+                            <h2 className="text-[13px] font-black text-white leading-none uppercase tracking-tighter truncate">
+                                {SYMBOL_LIBRARY[editingDevice.deviceTypeId]?.name || editingDevice.deviceTypeId}
+                            </h2>
+                        </div>
+                        <div className="mt-1.5 flex flex-col gap-0.5">
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-[8px] text-sky-400 uppercase font-black tracking-widest shrink-0 w-8">Model</span>
+                                <span className="text-[10px] text-white font-bold truncate">{product?.name || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-[8px] text-sky-400 uppercase font-black tracking-widest shrink-0 w-8">Make</span>
+                                <span className="text-[10px] text-slate-300 font-bold truncate">{product?.manufacturer || 'Generic'}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-2 border-t border-slate-800/50">
-                    <div>
-                        <label className="text-[7px] text-slate-500 uppercase font-black">Manufacturer</label>
-                        <p className="text-[10px] font-bold text-slate-300 truncate">{product?.manufacturer || 'Generic'}</p>
-                    </div>
-                    <div>
-                        <label className="text-[7px] text-slate-500 uppercase font-black">Model / Catalog</label>
-                        <p className="text-[10px] font-bold text-slate-300 truncate">{product?.name || 'N/A'}</p>
-                    </div>
-                </div>
-
-                {/* TYPE ACTIONS */}
-                <div className="flex gap-1.5 pt-2">
-                    <button
+                {/* TYPE ACTIONS - Condensed Grid */}
+                <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-800/80 relative z-10">
+                    <ActionButton
                         onClick={onSwap}
-                        className="flex-1 py-1 px-2 bg-slate-800 hover:bg-slate-700 rounded text-[8px] font-bold uppercase text-slate-300 border border-slate-700 transition-all hover:border-blue-500/50"
-                    >
-                        Swap
-                    </button>
-                    <button
+                        icon={<ArrowLeftRight size={11} />}
+                        label="Swap"
+                        variant="blue"
+                    />
+                    <ActionButton
                         onClick={onUpdateGlobal}
-                        className="flex-1 py-1 px-2 bg-slate-800 hover:bg-slate-700 rounded text-[8px] font-bold uppercase text-slate-300 border border-slate-700 transition-all hover:border-blue-500/50"
-                    >
-                        Edit All
-                    </button>
-                    <button
+                        icon={<Settings2 size={11} />}
+                        label="Edit All"
+                        variant="slate"
+                    />
+                    <ActionButton
                         onClick={onSaveNewType}
-                        className="flex-1 py-1 px-2 bg-slate-800 hover:bg-slate-700 rounded text-[8px] font-bold uppercase text-slate-300 border border-slate-700 transition-all hover:border-emerald-500/50"
-                    >
-                        Clone
-                    </button>
+                        icon={<Copy size={11} />}
+                        label="Clone"
+                        variant="slate"
+                    />
                 </div>
             </div>
 
             {/* SECTION 2: INSTANCE OVERRIDES (Editable) */}
-            <div className="bg-slate-800/30 rounded-lg p-3 border border-blue-500/20 space-y-3">
-                <div className="flex items-center gap-2 mb-1">
-                    <Target size={10} className="text-blue-400" />
-                    <span className="text-[9px] font-black text-blue-400 uppercase tracking-tighter">Instance Properties</span>
+            <div className="bg-slate-950 rounded-xl p-3 border border-blue-500/30 shadow-lg space-y-2.5">
+                <div className="flex items-center gap-2 mb-0.5">
+                    <Target size={11} className="text-blue-400" />
+                    <span className="text-[10px] font-black text-sky-400 uppercase tracking-widest">Instance Context</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                    <div>
-                        <label className="text-[8px] text-slate-400 uppercase font-black block mb-1">Floor Offset ({unitPreference === 'IMPERIAL' ? 'ft' : 'm'})</label>
+                    <div className="flex items-center gap-2 bg-slate-900 px-2 py-1 rounded border border-slate-800">
+                        <label className="text-[8px] text-sky-300 uppercase font-black shrink-0">Hgt ({unitPreference === 'IMPERIAL' ? 'ft' : 'm'})</label>
                         <input
                             type="text"
                             value={formData.installationHeight || ''}
                             onChange={(e) => onFieldChange('installationHeight', e.target.value)}
-                            className="w-full text-[11px] text-slate-100 font-bold font-mono px-2 py-1.5 bg-slate-950 rounded border border-slate-600 focus:border-blue-400 focus:outline-none transition-colors"
+                            className="bg-transparent text-[11px] text-white font-black font-mono w-full text-right focus:outline-none"
                         />
                     </div>
-                    <div>
-                        <label className="text-[8px] text-slate-400 uppercase font-black block mb-1">Rotation</label>
-                        <div className="flex items-center gap-2 h-8">
+                    <div className="flex items-center gap-2 bg-slate-900 px-2 py-1 rounded border border-slate-800">
+                        <label className="text-[8px] text-sky-300 uppercase font-black shrink-0">Deg</label>
+                        <div className="flex-1 flex items-center min-w-0">
                             <input
                                 type="range"
                                 min="0"
                                 max="360"
                                 value={formData.rotation || 0}
                                 onChange={(e) => onFieldChange('rotation', parseInt(e.target.value))}
-                                className="flex-1 h-1 bg-slate-700 rounded-full appearance-none cursor-pointer accent-blue-500"
+                                className="flex-1 h-1 bg-slate-800 rounded-full appearance-none cursor-pointer accent-blue-500"
                             />
-                            <span className="text-[9px] text-slate-200 font-mono w-6 text-right leading-none">{formData.rotation}°</span>
+                            <span className="text-[10px] text-emerald-400 font-black font-mono ml-2 shrink-0">{formData.rotation}°</span>
                         </div>
                     </div>
                 </div>
 
-                <div>
-                    <label className="text-[8px] text-slate-400 uppercase font-black block mb-1">Custom UID / Label</label>
+                <div className="flex items-center gap-2 bg-slate-900 px-2 py-1.5 rounded border border-slate-800 group focus-within:border-blue-500/50">
+                    <label className="text-[8px] text-sky-300 uppercase font-black shrink-0">Label / UID</label>
                     <input
                         type="text"
                         value={formData.name || ''}
                         onChange={(e) => onFieldChange('name', e.target.value)}
-                        className="w-full text-[11px] text-slate-100 font-bold font-mono px-2 py-1.5 bg-slate-950 rounded border border-slate-600 focus:border-blue-400 focus:outline-none transition-colors"
-                        placeholder="Instance unique name..."
+                        className="bg-transparent text-[11px] text-white font-black font-mono w-full text-right focus:outline-none placeholder:text-slate-600"
+                        placeholder="Instance ID..."
                     />
                 </div>
             </div>
@@ -196,54 +199,38 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
                 title="System Connectivity"
                 isExpanded={isPlacementExpanded}
                 toggle={() => setIsPlacementExpanded(!isPlacementExpanded)}
-                icon={<Activity className="w-3 h-3 text-emerald-400" />}
+                icon={<Activity className="w-3.5 h-3.5 text-emerald-400" />}
             >
-                <div className="p-2 space-y-2">
-                    <div className="flex bg-slate-950 p-2 rounded border border-slate-800 justify-between items-center">
-                        <div className="flex flex-col">
-                            <span className="text-[7px] text-slate-500 uppercase font-black">Circuit Assignment</span>
-                            <span className="text-[10px] text-slate-200 font-mono">{editingDevice.lcpAssignment || 'Unassigned'}</span>
-                        </div>
-                        <div className="text-right">
-                            <span className="text-[7px] text-slate-500 uppercase font-black">Circuit Load</span>
-                            <div className={`text-[10px] font-mono ${circuitLoad?.isOverloaded ? 'text-rose-500 font-bold' : 'text-emerald-400'}`}>
-                                {circuitLoad?.totalAmps.toFixed(2) || '0.00'}A / 12A
+                <div className="p-2.5 space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-slate-950/60 p-2 rounded-lg border border-slate-800 flex items-center justify-between gap-2 overflow-hidden">
+                            <span className="text-[8px] text-sky-400 uppercase font-black shrink-0">Circ</span>
+                            <div className="flex flex-col items-end min-w-0">
+                                <span className="text-[10px] text-white font-black font-mono truncate w-full text-right">{editingDevice.lcpAssignment || 'NONE'}</span>
+                                <span className={`text-[9px] font-black font-mono leading-none ${circuitLoad?.isOverloaded ? 'text-rose-500' : 'text-emerald-400'}`}>
+                                    {circuitLoad?.totalAmps.toFixed(2) || '0.00'}A
+                                </span>
                             </div>
                         </div>
-                    </div>
 
-                    <div className="flex bg-slate-950 p-2 rounded border border-slate-800 justify-between items-center">
-                        <div className="flex flex-col">
-                            <span className="text-[7px] text-slate-500 uppercase font-black">Bus / Universe</span>
-                            <span className="text-[10px] text-slate-200 font-mono">{editingDevice.busAssignment || 'Unassigned'}</span>
-                        </div>
-                        <div className="text-right">
-                            <span className="text-[7px] text-slate-500 uppercase font-black">Bus Load</span>
-                            <div className={`text-[10px] font-mono ${busLoad?.isOverloaded ? 'text-rose-500 font-bold' : 'text-blue-400'}`}>
-                                {busLoad?.totalMa || 0}mA / 250mA
+                        <div className="bg-slate-950/60 p-2 rounded-lg border border-slate-800 flex items-center justify-between gap-2 overflow-hidden">
+                            <span className="text-[8px] text-sky-400 uppercase font-black shrink-0">Bus</span>
+                            <div className="flex flex-col items-end min-w-0">
+                                <span className="text-[10px] text-white font-black font-mono truncate w-full text-right">{editingDevice.busAssignment || 'NONE'}</span>
+                                <span className={`text-[9px] font-black font-mono leading-none ${busLoad?.isOverloaded ? 'text-rose-500' : 'text-blue-400'}`}>
+                                    {busLoad?.totalMa || 0}mA
+                                </span>
                             </div>
                         </div>
                     </div>
 
                     {blueprint && (
-                        <div className="mt-3">
-                            <label className="text-[9px] text-slate-500 uppercase font-bold block mb-1">Components</label>
-                            <div className="space-y-1">
-                                <div className="flex items-center gap-2 p-1.5 bg-slate-800/50 rounded border border-slate-700/50">
-                                    <Lightbulb size={10} className="text-pink-400" />
-                                    <span className="text-[9px] text-slate-300 truncate">{blueprint.components.loadId}</span>
-                                </div>
-                                {blueprint.components.driverId && (
-                                    <div className="flex items-center gap-2 p-1.5 bg-slate-800/50 rounded border border-slate-700/50">
-                                        <Zap size={10} className="text-amber-400" />
-                                        <span className="text-[9px] text-slate-300 truncate">{blueprint.components.driverId}</span>
-                                    </div>
-                                )}
+                        <div className="mt-1 pt-2 border-t border-slate-800/50">
+                            <div className="flex flex-wrap gap-1.5">
+                                <ComponentTag icon={<Lightbulb size={9} />} id={blueprint.components.loadId} color="pink" />
+                                {blueprint.components.driverId && <ComponentTag icon={<Zap size={9} />} id={blueprint.components.driverId} color="amber" />}
                                 {blueprint.components.logicIds.map((lid: string) => (
-                                    <div key={lid} className="flex items-center gap-2 p-1.5 bg-slate-800/50 rounded border border-slate-700/50">
-                                        <Cpu size={10} className="text-emerald-400" />
-                                        <span className="text-[9px] text-slate-300 truncate">{lid}</span>
-                                    </div>
+                                    <ComponentTag key={lid} icon={<Cpu size={9} />} id={lid} color="emerald" />
                                 ))}
                             </div>
                         </div>
@@ -253,35 +240,87 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
 
             {/* SECTION 3: SPECIFICATION */}
             <CollapsibleSection
-                title={SpecBuilder ? "Spec Builder" : "Specifications"}
+                title="Device Specification"
                 isExpanded={isConfigExpanded}
                 toggle={() => setIsConfigExpanded(!isConfigExpanded)}
-                icon={<Box className="w-3 h-3 text-blue-300" />}
+                icon={<Box className="w-3.5 h-3.5 text-blue-300" />}
             >
-                <div className="p-2 space-y-3">
-                    <div className="text-[9px] text-slate-400 font-mono mb-2 flex justify-between">
-                        <span>{product?.name || "Generic Hardware"}</span>
-                        <span className={SpecBuilder ? "text-emerald-400 font-bold" : "text-amber-400 font-bold"}>
-                            {SpecBuilder ? 'BUILDER ACTIVE' : 'MANUAL'}
-                        </span>
+                <div className="p-3 space-y-4">
+                    <div className="text-[10px] text-slate-300 font-black flex justify-between items-center uppercase tracking-widest pb-2 border-b border-slate-800">
+                        <span className="truncate pr-4">{product?.name || "Generic Hardware"}</span>
+                        <div className="flex gap-1">
+                            {SpecBuilder && (
+                                <span className="text-[8px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded leading-none">
+                                    LOGIC ACTIVE
+                                </span>
+                            )}
+                        </div>
                     </div>
 
-                    {SpecBuilder ? (
-                        <div className="bg-slate-950/30 rounded border border-slate-800/50">
-                            <SpecBuilder
-                                deviceId={editingDevice.id}
-                                initialMetadata={draftMetadata || editingDevice.metadata || {}}
-                                onChange={(spec) => setDraftMetadata(spec)}
-                            />
+                    <div className="py-2">
+                        <button
+                            onClick={() => {
+                                // Potentially navigate to full screen builder or open a dedicated large modal
+                                window.location.hash = `/registry/${product?.id || ''}`;
+                            }}
+                            className="w-full group flex items-center justify-between p-3 bg-slate-950 border border-blue-500/30 rounded-xl hover:bg-blue-600/10 transition-all hover:border-blue-500/60 shadow-lg shadow-blue-900/10"
+                        >
+                            <div className="flex flex-col text-left">
+                                <span className="text-[7px] text-blue-400 uppercase font-black mb-1">Configuration Utility</span>
+                                <span className="text-[11px] text-white font-black uppercase">Open Full-Screen Builder</span>
+                            </div>
+                            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-600/30 group-hover:scale-110 transition-transform">
+                                <Settings2 size={16} />
+                            </div>
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-[8px] font-black uppercase tracking-widest text-slate-500 px-1">
+                        <div className="flex flex-col">
+                            <span>Shorthand</span>
+                            <span className="text-[10px] text-slate-300 font-mono mt-0.5 truncate">{draftMetadata?.shorthand || 'Not Set'}</span>
                         </div>
-                    ) : (
-                        <div className="text-[9px] text-slate-400 italic p-4 text-center border border-dashed border-slate-700 rounded bg-slate-900/50">
-                            No specialized builder for this product.
+                        <div className="flex flex-col text-right">
+                            <span>Order Code</span>
+                            <span className="text-[10px] text-slate-300 font-mono mt-0.5 truncate">{draftMetadata?.orderingCode || 'STD'}</span>
                         </div>
-                    )}
+                    </div>
                 </div>
             </CollapsibleSection>
         </div>
+    );
+};
+
+const ComponentTag: React.FC<{ icon: React.ReactNode; id: string; color: 'pink' | 'amber' | 'emerald' }> = ({ icon, id, color }) => {
+    const colors = {
+        pink: 'bg-pink-500/10 text-pink-400 border-pink-500/20',
+        amber: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+        emerald: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+    };
+
+    return (
+        <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded border text-[9px] font-black truncate max-w-[120px] ${colors[color]}`}>
+            {icon}
+            <span className="truncate uppercase tracking-tighter">{id}</span>
+        </div>
+    );
+};
+
+const ActionButton: React.FC<{ onClick: () => void; icon: React.ReactNode; label: string; variant: 'blue' | 'slate' | 'emerald' }> = ({ onClick, icon, label, variant }) => {
+    const variants = {
+        blue: 'bg-blue-600/20 text-blue-300 border-blue-500/50 hover:bg-blue-600/40 hover:border-blue-400 hover:text-white shadow-lg shadow-blue-900/20',
+        slate: 'bg-slate-800/60 text-slate-200 border-slate-700 hover:bg-slate-700 hover:border-slate-500 hover:text-white',
+        emerald: 'bg-emerald-600/20 text-emerald-300 border-emerald-500/50 hover:bg-emerald-600/40 hover:border-emerald-400 hover:text-white shadow-lg shadow-emerald-900/20'
+    };
+
+    return (
+        <button
+            onClick={onClick}
+            className={`flex flex-col items-center justify-center gap-1 py-1.5 px-1 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all duration-150 ${variants[variant]}`}
+        >
+            <div className="shrink-0">{icon}</div>
+            <span className="leading-none">{label}</span>
+        </button>
     );
 };
 
@@ -292,17 +331,17 @@ const CollapsibleSection: React.FC<{
     children: React.ReactNode;
     icon?: React.ReactNode;
 }> = ({ title, isExpanded, toggle, children, icon }) => (
-    <div className="border border-slate-700 rounded bg-slate-900/80 overflow-hidden">
+    <div className="border border-slate-800 rounded-xl bg-slate-900/80 overflow-hidden shadow-sm">
         <button
             onClick={toggle}
-            className="w-full flex items-center justify-between p-2 bg-slate-800/80 hover:bg-slate-700 transition-colors border-b border-slate-700/50"
+            className="w-full flex items-center justify-between p-3 bg-slate-800/40 hover:bg-slate-700/60 transition-colors border-b border-slate-800"
         >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
                 {icon}
-                <span className="text-[9px] text-slate-200 uppercase font-bold tracking-wider">{title}</span>
+                <span className="text-[10px] text-white uppercase font-black tracking-widest leading-none">{title}</span>
             </div>
-            {isExpanded ? <ChevronLeft className="w-3 h-3 text-slate-400 rotate-270" /> : <ChevronRight className="w-3 h-3 text-slate-400 rotate-90" />}
+            {isExpanded ? <ChevronLeft className="w-3.5 h-3.5 text-slate-400 -rotate-90" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400 rotate-90" />}
         </button>
-        {isExpanded && <div className="animate-in slide-in-from-top-1">{children}</div>}
+        {isExpanded && <div className="animate-in fade-in slide-in-from-top-1 duration-200">{children}</div>}
     </div>
 );

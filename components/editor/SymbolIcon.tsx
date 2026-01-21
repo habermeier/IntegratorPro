@@ -9,6 +9,7 @@ interface SymbolIconProps {
     customShorthand?: string;
     meshType?: string;
     metadata?: Record<string, any>;
+    rotation?: number;
 }
 
 import { getSymbolShorthand } from '../../editor/models/symbolLibrary';
@@ -25,7 +26,8 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
     secondaryLabel,
     customShorthand,
     meshType,
-    metadata
+    metadata,
+    rotation = 0
 }) => {
     const strokeWidth = size / 16; // Proportional stroke width
     const fontSize = size * 0.3; // Shorthand text size (slightly smaller)
@@ -206,5 +208,12 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
         );
     };
 
-    return <div className="flex items-center justify-center">{renderSymbol()}</div>;
+    return (
+        <div
+            className="flex items-center justify-center transition-transform duration-150"
+            style={{ transform: `rotate(${rotation}deg)` }}
+        >
+            {renderSymbol()}
+        </div>
+    );
 };

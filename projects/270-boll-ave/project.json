@@ -1,11 +1,11 @@
 {
   "version": "2.0",
-  "timestamp": "2026-01-15T01:49:21.550Z",
+  "timestamp": "2026-01-17T08:59:28.119Z",
   "metadata": {
     "name": "270 Boll Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2026-01-15T01:49:21.540Z"
+    "modified": "2026-01-17T08:59:28.103Z"
   },
   "floorPlan": {
     "scale": {
@@ -8060,52 +8060,6 @@
       "symbolType": "recessed-light"
     },
     {
-      "id": "lighting-1768176191654",
-      "deviceTypeId": "recessed-light",
-      "productId": "GENERIC-LIGHT",
-      "name": "Device 83",
-      "position": {
-        "x": 927.9284819840798,
-        "y": -316.6498595045605
-      },
-      "rotation": 0,
-      "roomId": null,
-      "layerId": "lighting",
-      "installationHeight": 2.4,
-      "networkConnections": [],
-      "lcpAssignment": null,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "id": "lighting-1768176191654",
-        "type": "generic-lighting",
-        "category": "lighting",
-        "x": 927.9284819840798,
-        "y": -316.6498595045605,
-        "rotation": 0,
-        "scale": 1,
-        "room": "Utility Closet",
-        "productId": "generic-light",
-        "installationHeight": 2.4,
-        "busAssignment": "Bus 1",
-        "metadata": {
-          "productId": "generic-light",
-          "lumens": 800,
-          "beamAngle": 60,
-          "range": 10,
-          "cableType": "Cat6"
-        },
-        "createdAt": "2026-01-12T00:03:11.654Z",
-        "_migratedFrom": "generic-lighting",
-        "_migrationTimestamp": 1768181846550
-      },
-      "createdAt": "2026-01-12T00:03:11.654Z",
-      "x": 927.9284819840798,
-      "y": -316.6498595045605,
-      "type": "recessed-light",
-      "category": "lighting",
-      "symbolType": "recessed-light"
-    },
-    {
       "id": "lighting-1768333212116",
       "deviceTypeId": "HAIKU-52-ALU",
       "productId": "HAIKU-52-ALU",
@@ -8308,7 +8262,7 @@
   "customSymbols": [
     {
       "id": "custom-2ds-l9",
-      "name": "Recessed Light - 2DS-L9",
+      "name": "2DS-L9",
       "category": "lighting",
       "description": "Recessed Light Preset - Shorthand: 2DS-L9. Product: 2DS-L9, Bus: Bus 1, Cable: Cat6",
       "color": 0,
@@ -8374,7 +8328,7 @@
     },
     {
       "id": "custom-haiku-52-alu-1768174111818",
-      "name": "Haiku-52-alu",
+      "name": "HAIKU-52-ALU",
       "category": "lighting",
       "description": "Filled black square with crosshairs",
       "color": 0,

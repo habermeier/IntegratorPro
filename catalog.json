@@ -704,8 +704,8 @@
       }
     },
     {
-      "id": "GENERIC-LIGHT",
-      "name": "Generic Light",
+      "id": "BASIC-LIGHT",
+      "name": "Basic Light",
       "category": "lighting",
       "symbolType": "recessed-light",
       "components": {
@@ -715,6 +715,22 @@
       "calculatedStats": {
         "totalCost": 50,
         "hvAmps": 0.125,
+        "lvMa": 0,
+        "totalAddresses": 0
+      }
+    },
+    {
+      "id": "BASIC-FAN",
+      "name": "Basic Fan",
+      "category": "lighting",
+      "symbolType": "ceiling-fan",
+      "components": {
+        "loadId": "generic-light",
+        "logicIds": []
+      },
+      "calculatedStats": {
+        "totalCost": 150,
+        "hvAmps": 0.25,
         "lvMa": 0,
         "totalAddresses": 0
       }
