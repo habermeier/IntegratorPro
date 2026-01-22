@@ -12,6 +12,7 @@ export class LayerSystem {
     public scene: THREE.Scene;
     private dirtyLayers: Set<string> = new Set();
     private isMaskEditMode: boolean = false;
+    private isRoomEditMode: boolean = false;
     private textureLoader: THREE.TextureLoader = new THREE.TextureLoader();
     private vertexMaterial: THREE.SpriteMaterial | null = null;
     private lightingMode: 'circles' | 'intensity' | 'fixture' = 'fixture';
@@ -184,6 +185,18 @@ export class LayerSystem {
             this.markDirty('mask');
         }
     }
+
+    public getRoomEditMode(): boolean {
+        return this.isRoomEditMode;
+    }
+
+    public setRoomEditMode(enabled: boolean): void {
+        if (this.isRoomEditMode !== enabled) {
+            this.isRoomEditMode = enabled;
+            this.markDirty('room');
+        }
+    }
+
     public getLightingMode(): 'circles' | 'intensity' | 'fixture' {
         return this.lightingMode;
     }

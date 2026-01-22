@@ -28,6 +28,7 @@ import { TransformLayerCommand } from './commands/TransformLayerCommand';
 import { SelectionSystem } from './systems/SelectionSystem';
 import { remoteDebug } from '../src/utils/logger';
 import { findRoomObjectAt } from '../utils/spatialUtils';
+import { LabelSpringSystem } from './systems/LabelSpringSystem';
 
 export class FloorPlanEditor {
     /**
@@ -51,6 +52,7 @@ export class FloorPlanEditor {
     public toolSystem: ToolSystem;
     public commandManager: CommandManager;
     public selectionSystem: SelectionSystem;
+    public labelSpringSystem: LabelSpringSystem;
 
     public isOverlayAlignmentMode: boolean = false;
     public activeLayerId: string | null = null;
@@ -149,6 +151,7 @@ export class FloorPlanEditor {
             this.emit('layers-changed', this.layerSystem.getAllLayers());
         });
         this.selectionSystem = new SelectionSystem(this.cameraSystem, this.layerSystem);
+        this.labelSpringSystem = new LabelSpringSystem();
 
         // Register Tools
         this.toolSystem.registerTool(new ScaleCalibrateTool(this));
@@ -1253,6 +1256,9 @@ export class FloorPlanEditor {
         const isMaskFocus = isFocusActive && this.activeLayerId === 'mask';
         this.layerSystem.setMaskEditMode(isMaskFocus);
 
+        const isRoomFocus = isFocusActive && this.activeLayerId === 'room';
+        this.layerSystem.setRoomEditMode(isRoomFocus);
+
         if (isFocusActive) {
             // ENTERING Focus Mode
             // 1. Snapshot current state if we haven't already (and aren't just switching focus layers)
@@ -1334,7 +1340,11 @@ export class FloorPlanEditor {
                 this.needsRender = true;
             }
 
-            if (this.needsRender) {
+            // 3. Label Physics (Springs)
+            const zoom = this.cameraSystem.getState().zoom;
+            const isLabelMoving = this.labelSpringSystem.update(zoom, this.scene);
+
+            if (this.needsRender || isLabelMoving) {
                 this.update();
                 this.render();
                 this.needsRender = false;
@@ -1378,6 +1388,7 @@ export class FloorPlanEditor {
 
     public setDirty(): void {
         this.needsRender = true;
+        this.labelSpringSystem.wakeUp();
     }
 
     public setZoomCursorRef(ref: React.RefObject<HTMLDivElement | null>): void {
