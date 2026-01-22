@@ -1329,7 +1329,8 @@ export class FloorPlanEditor {
             this.animationFrameId = requestAnimationFrame(animate);
 
             // Continuous Pulse for selections
-            if (this.selectionSystem.getSelectedIds().length > 0) {
+            // PERFORMANCE: Only force every frame if NOT in intensity mode (intensity updates are throttled in LayerSystem)
+            if (this.selectionSystem.getSelectedIds().length > 0 && this.layerSystem.getLightingMode() !== 'intensity') {
                 this.needsRender = true;
             }
 

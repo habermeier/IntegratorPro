@@ -6,6 +6,7 @@ export interface LightIntensityStats {
     min: number;
     max: number;
     mean: number;
+    optimizedFixtures?: any[]; // For heatmap reuse
 }
 
 /**
@@ -18,42 +19,29 @@ export const DEFAULT_LUMENS = 800;
 
 export function calculatePointIntensity(
     point: Vector2,
-    fixtures: PlacedSymbol[],
+    fixtures: any[], // Use pre-calculated fixtures for speed
     pixelsPerMeter: number
 ): number {
     let totalLux = 0;
 
     for (const fixture of fixtures) {
-        const metadata = fixture.metadata || {};
-        const lumens = (metadata as any).lumens !== undefined ? (metadata as any).lumens : DEFAULT_LUMENS;
-        const beamAngle = (metadata as any).beamAngle || 60;
-        const height = fixture.installationHeight || 2.74; // Distance fixture-to-floor (m)
-
+        const height = fixture.height;
         const dx = (point.x - fixture.x) / pixelsPerMeter;
         const dy = (point.y - fixture.y) / pixelsPerMeter;
-        const dist2D = Math.sqrt(dx * dx + dy * dy);
-
-        // Physics-based model:
-        // 1. Calculate Center Luminous Intensity (Candelas)
-        const halfBeamRad = (beamAngle / 2) * (Math.PI / 180);
-        const omega = 2 * Math.PI * (1 - Math.cos(halfBeamRad));
-        const I0 = lumens / (omega || 1); // Candelas at center
-
-        // 2. Inverse Square Law on plane: E = (I * cos(theta)) / r^2
-        // r = direct distance to source, theta = angle from normal
-        const r2 = dist2D * dist2D + height * height;
+        
+        // Inverse Square Law on plane: E = (I * cos(theta)) / r^2
+        const r2 = dx * dx + dy * dy + fixture.height2;
         const r = Math.sqrt(r2);
         const cosTheta = height / r;
 
-        // 3. Beam Profile: Smooth Gaussian falloff
-        // Standard definition of beam angle is the angle where intensity is 50% (half-power).
-        // This Gaussian hits exactly 0.5 at relativeAngle = 1.0.
+        // Beam Profile: Smooth Gaussian falloff
+        const dist2D = Math.sqrt(dx * dx + dy * dy);
         const angle = Math.atan2(dist2D, height);
-        const relativeAngle = angle / halfBeamRad;
-        const falloff = Math.exp(-0.693147 * Math.pow(relativeAngle, 2));
+        const relativeAngle = angle / fixture.halfBeamRad;
+        const falloff = Math.exp(-0.693147 * relativeAngle * relativeAngle);
 
         if (falloff > 0.001) {
-            const lux = (I0 * cosTheta / r2) * falloff;
+            const lux = (fixture.I0 * cosTheta / r2) * falloff;
             totalLux += lux;
         }
     }
@@ -77,61 +65,71 @@ export function calculateRoomLightingStats(
     // 10-meter bleed threshold for light contribution from outside the room
     const bleed = 10 * pixelsPerMeter;
 
-    // Robust Filter: Include those assigned via ID, name, or physical proximity (Bleed)
-    const fixturesInRoom = fixturesInTotal.filter(f => {
-        if (f.category !== 'lighting') return false;
+    // Pre-calculate fixture constants once per room to save O(SamplePoints * Fixtures) work
+    const optimizedFixtures = fixturesInTotal
+        .filter(f => {
+            if (f.category !== 'lighting') return false;
+            // Physical proximity (Bleed fallback) - fast check
+            return (f.x >= minX - bleed && f.x <= maxX + bleed &&
+                f.y >= minY - bleed && f.y <= maxY + bleed);
+        })
+        .map(fixture => {
+            const metadata = fixture.metadata || {};
+            const lumens = (metadata as any).lumens !== undefined ? (metadata as any).lumens : DEFAULT_LUMENS;
+            const beamAngle = (metadata as any).beamAngle || 60;
+            const height = fixture.installationHeight || 2.74;
+            
+            const halfBeamRad = (beamAngle / 2) * (Math.PI / 180);
+            const omega = 2 * Math.PI * (1 - Math.cos(halfBeamRad));
+            
+            return {
+                x: fixture.x,
+                y: fixture.y,
+                height,
+                height2: height * height,
+                halfBeamRad,
+                I0: lumens / (omega || 1)
+            };
+        });
 
-        // 1. Exact ID match
-        if (f.room === room.id) return true;
-
-        // 2. Soft name match (case-insensitive)
-        if (f.room && typeof f.room === 'string') {
-            const roomMatchName = `${room.name} ${room.roomType}`.toLowerCase().trim();
-            const fRoom = f.room.toLowerCase().trim();
-            if (fRoom === roomMatchName || fRoom === room.name.toLowerCase().trim()) return true;
-        }
-
-        // 3. Physical proximity (Bleed fallback)
-        return (f.x >= minX - bleed && f.x <= maxX + bleed &&
-            f.y >= minY - bleed && f.y <= maxY + bleed);
-    });
-
-    if (fixturesInRoom.length === 0) {
-        return { min: 0, max: 0, mean: 0 };
+    if (optimizedFixtures.length === 0) {
+        return { min: 0, max: 0, mean: 0, optimizedFixtures: [] };
     }
 
     // Sampling grid strategy: Adaptive step based on room size for balance of speed/accuracy
-    const samplePoints: Vector2[] = [];
     const roomWidth = maxX - minX;
     const roomHeight = maxY - minY;
 
-    // Step size in pixels, aiming for ~0.4m resolution capped for performance
-    const step = Math.max(12, Math.min(48, Math.min(roomWidth, roomHeight) / 20));
-
-    for (let x = minX; x <= maxX; x += step) {
-        for (let y = minY; y <= maxY; y += step) {
-            if (isPointInPolygon({ x, y }, room.points)) {
-                samplePoints.push({ x, y });
-            }
-        }
-    }
-
-    if (samplePoints.length === 0) return { min: 0, max: 0, mean: 0 };
+    // PERFORMANCE: Use coarser sampling for large rooms
+    // Target ~400 sample points per room max
+    const targetPoints = 400;
+    const area = roomWidth * roomHeight;
+    const step = Math.sqrt(area / targetPoints);
+    const finalStep = Math.max(20, step); // Minimum 20px step (~0.4m)
 
     let sum = 0;
     let min = Infinity;
     let max = -Infinity;
+    let count = 0;
 
-    samplePoints.forEach(p => {
-        const I = calculatePointIntensity(p, fixturesInRoom, pixelsPerMeter);
-        sum += I;
-        min = Math.min(min, I);
-        max = Math.max(max, I);
-    });
+    for (let x = minX; x <= maxX; x += finalStep) {
+        for (let y = minY; y <= maxY; y += finalStep) {
+            if (isPointInPolygon({ x, y }, room.points)) {
+                const I = calculatePointIntensity({ x, y }, optimizedFixtures, pixelsPerMeter);
+                sum += I;
+                min = Math.min(min, I);
+                max = Math.max(max, I);
+                count++;
+            }
+        }
+    }
+
+    if (count === 0) return { min: 0, max: 0, mean: 0, optimizedFixtures };
 
     return {
         min: Math.round(min),
         max: Math.round(max),
-        mean: Math.round(sum / samplePoints.length)
+        mean: Math.round(sum / count),
+        optimizedFixtures
     };
 }

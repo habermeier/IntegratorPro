@@ -21,6 +21,11 @@ export class LayerSystem {
     private clock: THREE.Clock = new THREE.Clock();
     private hasLoggedLighting: boolean = false;
 
+    // Performance Throttling
+    private lastHeatmapUpdateTime: number = 0;
+    private readonly HEATMAP_UPDATE_INTERVAL = 250; // ms (4 updates per second)
+    private pendingLightingVisualsUpdate: boolean = false;
+
     constructor(scene: THREE.Scene) {
         this.scene = scene;
 
@@ -167,6 +172,9 @@ export class LayerSystem {
 
     public markDirty(id: string): void {
         this.dirtyLayers.add(id);
+        if (id === 'lighting' || id === 'room') {
+            this.pendingLightingVisualsUpdate = true;
+        }
     }
 
     public getMaskEditMode(): boolean {
@@ -186,6 +194,7 @@ export class LayerSystem {
     public setLightingMode(mode: 'circles' | 'intensity' | 'fixture'): void {
         if (this.lightingMode !== mode) {
             this.lightingMode = mode;
+            this.pendingLightingVisualsUpdate = true;
             this.markDirty('lighting');
             (this.scene.userData.editor as any)?.emit('lighting-mode-changed', mode);
         }
@@ -195,6 +204,8 @@ export class LayerSystem {
 
     public update(): void {
         this.debugTick++;
+        const now = Date.now();
+
         if (this.debugTick % 300 === 0) { // Every ~5 seconds
             console.log(`[LayerSystem] Update Loop Alive. Mode: ${this.lightingMode}, DirtyLayers: ${this.dirtyLayers.size}`);
             // Check if heatmap exists in scene
@@ -222,7 +233,7 @@ export class LayerSystem {
             }
         }
 
-        // 2. Selection Pulse (Always if anything selected)
+        // 2. Selection Pulse (Optimized: Avoid heavy work if no selection)
         const selectedIds = new Set(this.scene.userData.editor?.selectionSystem.getSelectedIds() || []);
         if (selectedIds.size > 0) {
             this.layers.forEach(layer => {
@@ -291,8 +302,8 @@ export class LayerSystem {
                                 shadowMat.opacity = 0.4 + pulse * 0.1; // Breathe shadow
                             }
                         }
-                    } else {
-                        // Not Selected - Reset Visuals
+                    } else if (group.userData.wasSelected) {
+                        // Not Selected - Reset Visuals (Only if it was previously selected to avoid deep traversal)
                         const fill = group.getObjectByName('fill') as THREE.Mesh;
                         const itemType = group.userData.type;
                         const isSymbol = itemType === 'symbol' || itemType === 'furniture';
@@ -304,10 +315,6 @@ export class LayerSystem {
                                 fill.material.opacity = 1.0;
                             } else {
                                 // Reset Room/Mask via renderVectorLayer (it handles hash check, but we need to reset temp overrides)
-                                // The loop in renderVectorLayer sets the base color. 
-                                // Here we just need to determine if we should revert.
-                                // It's safer to let renderVectorLayer normalize it, BUT update() runs every frame.
-                                // We must reset if we modified it in previous frames.
                                 const isMask = itemType === 'mask';
                                 const baseColor = isMask ? 0xffffff : (group.userData.color || 0x3b82f6);
                                 const baseOpacity = isMask ? (this.isMaskEditMode ? 0.6 : 1.0) : 0.15;
@@ -328,27 +335,29 @@ export class LayerSystem {
                         // Hide Shadow
                         const shadow = group.getObjectByName('selection-shadow');
                         if (shadow) shadow.visible = false;
+                        
+                        group.userData.wasSelected = false;
                     }
                 });
             });
-        }
-
-        // 3. One-time debug logging for lighting layer (AUTO-DEBUG-P16)
-        if (!this.hasLoggedLighting) {
-            const lightingLayer = this.layers.get('lighting');
-            if (lightingLayer && lightingLayer.type === 'vector') {
-                const content = lightingLayer.content as VectorLayerContent;
-                if (content && content.symbols && content.symbols.length > 0) {
-                    // remoteLog(`[AUTO-DEBUG] Triggering one-time debugLayer('lighting') - symbols detected: ${content.symbols.length}`, 'info', '🔍 AUTO-DEBUG');
-                    // this.debugLayer('lighting');
-                    this.hasLoggedLighting = true;
+            
+            // Mark selected items as "wasSelected" for cleanup in next frame
+            selectedIds.forEach(id => {
+                if (typeof id === 'string') {
+                    const obj = this.getSceneObject(id);
+                    if (obj) obj.userData.wasSelected = true;
                 }
-            }
+            });
         }
 
-        // 4. Update Lighting Visuals (Heatmaps & Modes)
-        if (dirtyIds.has('lighting') || dirtyIds.has('room')) {
-            this.updateLightingVisuals();
+        // 3. Update Lighting Visuals (Heatmaps & Modes)
+        // Throttled: Only update heatmaps if sufficient time has passed AND we have pending changes
+        if (this.pendingLightingVisualsUpdate) {
+            if (this.lightingMode !== 'intensity' || (now - this.lastHeatmapUpdateTime > this.HEATMAP_UPDATE_INTERVAL)) {
+                this.updateLightingVisuals();
+                this.lastHeatmapUpdateTime = now;
+                this.pendingLightingVisualsUpdate = false;
+            }
         }
     }
 
@@ -389,9 +398,9 @@ export class LayerSystem {
 
                 // Update Heatmap Texture
                 if (heatmap) {
-                    if (!heatmap.visible) console.log(`[LayerSystem] Showing Heatmap for ${roomName}`);
                     heatmap.visible = true;
-                    this.updateHeatmapTexture(heatmap, room, fixtures, pixelsPerMeter, stats);
+                    // Pass optimized fixtures from stats for faster render
+                    this.updateHeatmapTexture(heatmap, room, stats.optimizedFixtures || [], pixelsPerMeter, stats);
                 } else {
                     console.warn(`[LayerSystem] Heatmap mesh missing for room: ${roomName}`);
                 }
@@ -431,12 +440,15 @@ export class LayerSystem {
                 }
             }
         });
+        
+        // Finalize: Lighting visuals are now in sync with current state
+        this.pendingLightingVisualsUpdate = false;
     }
 
     private heatmapCanvases: Map<string, HTMLCanvasElement> = new Map();
     private heatmapTextures: Map<string, THREE.CanvasTexture> = new Map();
 
-    private updateHeatmapTexture(mesh: THREE.Mesh, room: Room, fixtures: PlacedSymbol[], pixelsPerMeter: number, stats: LightIntensityStats): void {
+    private updateHeatmapTexture(mesh: THREE.Mesh, room: Room, optimizedFixtures: any[], pixelsPerMeter: number, stats: LightIntensityStats): void {
         const cacheKey = `heatmap-${room.id}`;
 
         // 1. Get or Create Canvas for this specific room
@@ -467,20 +479,7 @@ export class LayerSystem {
         // Clear canvas explicitly to ensure transparency
         ctx.clearRect(0, 0, res, res);
 
-        // DEBUG: Fill with semi-transparent blue to prove texture is updating
-        // If we see blue squares, the texture pipeline works.
-        // ctx.fillStyle = 'rgba(0, 0, 255, 0.5)';
-        // ctx.fillRect(0, 0, res, res);
-
-        // PERFORMANCE: Filter to fixtures near the room bounding box to avoid O(N*M) loop
-        // We use a 12-meter bleed to catch nearby fixtures that might affect this room
-        const bleed = 12 * pixelsPerMeter;
-        const relevantFixtures = fixtures.filter(f => {
-            return f.x >= minX - bleed && f.x <= maxX + bleed &&
-                f.y >= minY - bleed && f.y <= maxY + bleed;
-        });
-
-        if (relevantFixtures.length > 0) {
+        if (optimizedFixtures.length > 0) {
             // Draw intensity
             for (let ix = 0; ix < res; ix++) {
                 for (let iy = 0; iy < res; iy++) {
@@ -488,7 +487,7 @@ export class LayerSystem {
                     // FIX: Map iy=0 (Top) to maxY (Top) -> Upright Image for correct UV mapping
                     const py = maxY - (iy / res) * rh;
 
-                    const intensity = calculatePointIntensity({ x: px, y: py }, relevantFixtures, pixelsPerMeter);
+                    const intensity = calculatePointIntensity({ x: px, y: py }, optimizedFixtures, pixelsPerMeter);
 
                     // Use 500 LUX as the normalization ceiling for better low-light sensitivity
                     const normalized = Math.min(1.0, intensity / 500);
