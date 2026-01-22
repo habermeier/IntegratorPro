@@ -1,6 +1,6 @@
 {
-  "totalCost": 3847.5,
-  "totalPower": 48,
+  "totalCost": 4137.5,
+  "totalPower": 62.3,
   "items": [
     {
       "name": "DMF Test Light",
@@ -25,6 +25,38 @@
       "total": 247.5,
       "description": "Precision PWM to 0-10V control",
       "manufacturer": "Lunatone"
+    },
+    {
+      "name": "DMF X-Series Square Housing",
+      "quantity": 1,
+      "cost": 65,
+      "total": 65,
+      "description": "Housing",
+      "manufacturer": "DMF Lighting"
+    },
+    {
+      "name": "DMF X-Series Square Mud-Plate",
+      "quantity": 1,
+      "cost": 35,
+      "total": 35,
+      "description": "Mud-in Plate",
+      "manufacturer": "DMF Lighting"
+    },
+    {
+      "name": "DMF X-Series Square Flangeless Trim",
+      "quantity": 1,
+      "cost": 45,
+      "total": 45,
+      "description": "Square Trim",
+      "manufacturer": "DMF Lighting"
+    },
+    {
+      "name": "DMF X-Series LED Module",
+      "quantity": 1,
+      "cost": 145,
+      "total": 145,
+      "description": "DALI-2 LED Module",
+      "manufacturer": "DMF Lighting"
     }
   ]
 }

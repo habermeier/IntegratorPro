@@ -3,7 +3,7 @@
 
 **Project:** Residential Retrofit/New Build (Contra Costa County, CA)  
 **Document Purpose:** Single standard for boxes, cabling, mixing rules, and load-control patterns  
-**Revision:** v2.1 (Programming clarifications)  
+**Revision:** v2.7 (Environmental Monitoring & PM2.5)  
 **Date:** January 21, 2026
 
 ---
@@ -274,3 +274,100 @@ The project standard for indoor environmental sensing and presence detection in 
   - Assign physical addresses hierarchically across the Load Control Panels (LCPs).
   - Share group addresses for coordinated fan control across the KNX/DALI bridge.
   - Use Line Couplers or IP Routers for reliable communication between panels.
+
+### 10.4 Whole-House Fan (Ducted, Attic-Mounted, High-Efficiency)
+The project standard for whole-house cooling is the **QuietCool Trident Pro 7.0X**.
+
+- **Model Specification:** QuietCool Trident Pro 7.0X (EC Motor, variable speed via 0-10V).
+- **Quantity:** **2** (One per arm of U-shaped layout for even airflow; total 14,000 CFM over-spec for 4,200 sq ft house).
+- **Pricing:** Unit Price ≈ $1,250 each.
+- **DALI-2 Integration Components (Per Fan):**
+  - **Relay:** Sunricher SR-2701S-DT7 (DALI-2 Relay, 300W/240V AC rated): $110 each.
+  - **Converter:** Sunricher SR-2401-10V (DALI-2 to 0-10V signal): $65 each.
+- **Total Integration Qty:** 2 relays + 2 converters.
+- **Operation Notes:**
+  - **Acoustics:** 45-55 dBA on low-high; typically run at 50-70% for maximum quiet/efficiency.
+  - **Mounting:** Hung mounting with included vibration isolation kit.
+  - **ETS Logic:** Program for low-speed baseline (4-6V) and high-boost (10V) on thresholds/interlocks.
+
+### 10.5 Attic Exhaust Fan (Gable-Mounted, Variable Speed)
+Standardized gable exhaust to assist whole-house airflow and manage attic heat.
+
+- **Model Specification:** QuietCool AFG PRO-3.0 (EC Motor, variable speed via 0-10V).
+- **Quantity:** **4** (Two per gable end for balanced exhaust; total 12,000 CFM over-spec).
+- **Pricing:** Unit Price ≈ $450 each.
+- **DALI-2 Integration Components (Per Fan):**
+  - **Relay:** Sunricher SR-2701S-DT7: $110 each.
+  - **Converter:** Sunricher SR-2401-10V: $65 each.
+- **Total Integration Qty:** 4 relays + 4 converters.
+- **Operation Notes:**
+  - **Acoustics:** Ultra-quiet 35-45 dBA.
+  - **Interlock:** Program via ETS to assist whole-house fans (e.g., 50% speed assist) to prevent backpressure and backdrafting.
+
+### 10.6 Motorized Skylight System (Standardized Integration)
+The project utilizes a centralized KNX-based approach to control motorized skylights across the home, ensuring architectural consistency and integration with the ventilation/HVAC logic.
+
+- **Units (8 Total):**
+  - **Hallway:** 1 × Velux VSE M08 (~2'×4')
+  - **Dining Room:** 6 × Velux VSE C01 (~2'×2')
+  - **Laundry:** 1 × Velux VSE C01 (~2'×2')
+- **Control Groups (3 Logical Zones):**
+  - **Group 1 (Hallway):** 1 skylight.
+  - **Group 2 (Dining Room):** 6 skylights (daisy-chained).
+  - **Group 3 (Laundry):** 1 skylight.
+- **Control & Feedback Hardware (LCP-Resident):**
+  - **KNX Actuator:** MDT JAL-0810M.02 (8-channel, 24V DC). Controls 3 groups via polarity reversal (Open/Close/Stop).
+  - **Power Supply:** Mean Well MDR-100-24 (100W, DIN-rail). Provides 24V DC bus for skylight motors.
+  - **Binary Input:** MDT BE-08000.02 (8-fold). Receives 3 reed switch feedback signals for state confirmation.
+- **Feedback Mechanism:**
+  - **Sensors:** Surface-mount reed / magnetic contact switches (8 total, wired in parallel per group).
+  - **Single Point Feedback:** Each group returns a single feedback pair to the binary input (Open vs Closed).
+- **Cabling Strategy:**
+  - 3 × Southwire MC-PCS Duo / NM-B-PCS Duo home-run from LCP (one per group).
+  - Power and control signals share the primary conductors; the LV pair carries the parallel reed switch feedback loop.
+- **Operation & Safety Logic:**
+  - **Position Tracking:** Determined by calibrated travel time with absolute confirmation from reed switches at end-of-travel.
+  - **Fault Detection:** If a Close command is sent but the reed switch still reports Open after a timeout, the ETS logic flags an error (alert, retry, or safety HVAC interlock).
+  - **Interlock Logic:** ETS groups facilitate priority control for weather safety (rain sensors), fan interlocks, and HVAC energy conservation.
+
+### 10.7 Weather Station (KNX Secure)
+The project utilizes the **Warema KNX secure Weather station pro REG** (Article No. #2064965) for real-time environmental data and automation triggers.
+
+- **Model Specification:** Warema Weather Station Pro REG (DIN-rail module + outdoor sensor head).
+  - **Sensors:** Ultrasonic wind speed/direction, optical rain/snow, 360° brightness + twilight, global radiation, temperature, and GPS (sun position/time).
+  - **Compliance:** KNX Secure certified; no moving parts (solid-state).
+- **Physical Integration:**
+  - **Outdoor Sensor:** Compact dome mounted to the **North-facing wall** on the left side of the house.
+  - **Mounting Height:** **9–10 feet** above ground level (serviceable from a standard 6-foot ladder).
+  - **Indoor Module:** DIN-rail mounted in **LCP-2 (Office)**.
+  - **Power:** 24V DC (~13mA max). Supplied via KNX bus or dedicated DR-15-24 PSU.
+- **Cabling:** UV-resistant 4-conductor cable (AWG 18–20) home-run to LCP-2 (~10–65 ft typical).
+- **Placement Logic:** Avoid deep eaves to ensure clear "sky view" for precipitation and brightness sensors.
+
+### 10.8 Outdoor Air Quality Sensor (Wildfire PM2.5 Focus)
+Real-time PM2.5 monitoring for smoke detection to protect indoor air quality during wildfire events.
+
+- **Model Specification:** **Temco Outdoor Air Lab PM2.5 Sensor (OAL-PM2.5)**.
+  - **Interface:** RS485 Modbus RTU.
+  - **Power:** 15–24 V DC/AC (~2 W).
+- **Integration Hardware (LCP-2):**
+  - **KNX/Modbus Gateway:** MDT SCN-MB.01.
+  - **Power Supply:** Mean Well DR-15-24 (dedicated 24V rail).
+- **Physical Integration & Cabling:**
+  - **Location:** Left side of the house, North-facing wall-mounted at **5–7 feet** above ground level.
+  - **Cabling:** One Cat6 cable home-run to LCP-2. Pair 1 for Modbus Data (A/B), Pair 2 for 24V Power.
+  - **Placement Logic:** Protected from direct rain/sun but with adequate airflow; away from vents or exhaust outlets.
+- **Approx. Pricing:** Sensor (~$250) + MDT Gateway (~$280).
+
+### 10.9 Data Flow & Automation Logic (Environmental)
+All environmental data terminates in LCP-2 (Office) and is exposed to the KNX bus and Home Assistant (via IP Router).
+
+- **PM2.5 Thresholds:** When PM2.5 exceeds **50–100 µg/m³**:
+  - Automatically close all motorized skylights.
+  - Stop all whole-house and attic exhaust fans.
+  - Signal HVAC system to switch to 100% recirculation mode (via Modbus/Intesis gateway).
+- **Weather Logic:**
+  - **High Wind/Rain:** Trigger safety closing of skylights and adjust shading positions.
+  - **Brightness/Global Radiation:** Orchestrate shading and ventilation for passive cooling and glare control.
+  - **GPS Sun Position:** Real-time tracking for automated "Sun Following" blind logic.
+- **System Bridging:** Real-time objects are pushed from KNX to the Linux NUC for high-level AI logic and SmartThings bridging.
