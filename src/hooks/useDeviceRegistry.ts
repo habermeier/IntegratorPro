@@ -58,59 +58,85 @@ export function useDeviceRegistry() {
                 return;
             }
 
-            // 1. Resolve Load
-            const load = registry.loads.find((l: any) => l.id === blueprint.components.loadId);
-            if (load) {
-                flattenedItems.push({
-                    sku: load.id,
-                    name: `${blueprint.name} - ${load.name}`,
-                    manufacturer: load.manufacturer,
-                    description: load.description,
-                    cost: load.cost,
-                    wattage: load.efficiency
-                        ? load.wattage * (1 + (1 - load.efficiency))
-                        : load.wattage,
-                    busDrawMa: load.busDrawMa || 0,
-                    category: blueprint.category,
-                    instance: device
+            // --- RESOLVE COMPONENTS (New Modular Pattern or Legacy Load/Driver/Logic) ---
+            if (Array.isArray(blueprint.components)) {
+                // MODULAR SYSTEM (e.g. DMF X-Series)
+                blueprint.components.forEach((comp: any) => {
+                    const load = registry.loads.find((l: any) => l.id === comp.productId);
+                    if (load) {
+                        for (let i = 0; i < (comp.quantity || 1); i++) {
+                            flattenedItems.push({
+                                sku: load.id,
+                                name: load.name,
+                                manufacturer: load.manufacturer,
+                                description: comp.description || load.description,
+                                cost: load.cost,
+                                wattage: load.wattage || 0,
+                                busDrawMa: load.metadata?.daliMaDraw || 0,
+                                category: load.category || blueprint.category,
+                                url: load.url,
+                                instance: device
+                            });
+                        }
+                    }
+                });
+            } else {
+                // LEGACY SYSTEM (loadId, driverId, logicIds)
+                // 1. Resolve Load
+                const load = registry.loads.find((l: any) => l.id === blueprint.components.loadId);
+                if (load) {
+                    flattenedItems.push({
+                        sku: load.id,
+                        name: `${blueprint.name} - ${load.name}`,
+                        manufacturer: load.manufacturer,
+                        description: load.description,
+                        cost: load.cost,
+                        wattage: load.efficiency
+                            ? load.wattage * (1 + (1 - load.efficiency))
+                            : load.wattage,
+                        busDrawMa: load.busDrawMa || 0,
+                        category: blueprint.category,
+                        url: load.url,
+                        instance: device
+                    });
+                }
+
+                // 2. Resolve Driver
+                if (blueprint.components.driverId) {
+                    const driver = registry.drivers.find((d: any) => d.id === blueprint.components.driverId);
+                    if (driver) {
+                        flattenedItems.push({
+                            sku: driver.id,
+                            name: driver.name,
+                            manufacturer: driver.manufacturer,
+                            description: driver.description,
+                            cost: driver.cost,
+                            wattage: driver.maxWatts * (1 - driver.efficiency),
+                            busDrawMa: driver.busDrawMa || 0,
+                            category: 'lcps',
+                            instance: device
+                        });
+                    }
+                }
+
+                // 3. Resolve Logic (Pucks)
+                (blueprint.components.logicIds || []).forEach((logicId: string) => {
+                    const logic = registry.logic.find((l: any) => l.id === logicId);
+                    if (logic) {
+                        flattenedItems.push({
+                            sku: logic.id,
+                            name: logic.name,
+                            manufacturer: logic.manufacturer,
+                            description: logic.description,
+                            cost: logic.cost,
+                            wattage: 1,
+                            busDrawMa: logic.busDrawMa,
+                            category: 'lcps',
+                            instance: device
+                        });
+                    }
                 });
             }
-
-            // 2. Resolve Driver
-            if (blueprint.components.driverId) {
-                const driver = registry.drivers.find((d: any) => d.id === blueprint.components.driverId);
-                if (driver) {
-                    flattenedItems.push({
-                        sku: driver.id,
-                        name: driver.name,
-                        manufacturer: driver.manufacturer,
-                        description: driver.description,
-                        cost: driver.cost,
-                        wattage: driver.maxWatts * (1 - driver.efficiency),
-                        busDrawMa: driver.busDrawMa || 0,
-                        category: 'lcps',
-                        instance: device
-                    });
-                }
-            }
-
-            // 3. Resolve Logic (Pucks)
-            (blueprint.components.logicIds || []).forEach((logicId: string) => {
-                const logic = registry.logic.find((l: any) => l.id === logicId);
-                if (logic) {
-                    flattenedItems.push({
-                        sku: logic.id,
-                        name: logic.name,
-                        manufacturer: logic.manufacturer,
-                        description: logic.description,
-                        cost: logic.cost,
-                        wattage: 1,
-                        busDrawMa: logic.busDrawMa,
-                        category: 'lcps',
-                        instance: device
-                    });
-                }
-            });
         });
 
         // Group flattened items by SKU for BOM view
@@ -135,8 +161,8 @@ export function useDeviceRegistry() {
                 powerWatts: first.wattage || 0,
                 busDrawMa: first.busDrawMa || 0,
                 quantity: items.length,
-                url: '',
-                linkStatus: 'MARKET',
+                url: first.url || '',
+                linkStatus: first.url ? 'MARKET' : 'NONE',
                 genericRole: first.category,
                 instances: items.map(i => ({
                     id: i.instance.id,

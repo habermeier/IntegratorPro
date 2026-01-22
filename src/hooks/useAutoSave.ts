@@ -11,7 +11,9 @@ import { useCallback, useRef } from 'react';
 import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
 import { VectorLayerContent } from '../../editor/models/types';
 import { dataService } from '../services/DataService';
+import { AmpereEngine } from '../services/AmpereEngine';
 import { remoteDebug } from '../utils/logger';
+import catalog from '../../catalog.json';
 
 export interface AutoSaveHookReturn {
   debouncedSaveProject: (force?: boolean) => void;
@@ -115,6 +117,27 @@ export function useAutoSave(
       }
 
       // 3. Safety Guards & Heuristics
+
+      // -- Electrical Overload Check (AUTO-SAFETY-P28) --
+      if (allDevices.length > 0) {
+        const { circuits, buses } = AmpereEngine.calculateLoads(allDevices as any, catalog as any);
+        const overloadedCircuit = circuits.find(c => c.isOverloaded);
+        const overloadedBus = buses.find(b => b.isOverloaded);
+
+        if (overloadedCircuit || overloadedBus) {
+          const type = overloadedCircuit ? 'HV Circuit' : 'LV Bus';
+          const name = overloadedCircuit ? overloadedCircuit.id : overloadedBus?.id;
+          const current = overloadedCircuit ? overloadedCircuit.totalAmps.toFixed(2) + 'A' : overloadedBus?.totalMa.toFixed(0) + 'mA';
+          const limit = overloadedCircuit ? overloadedCircuit.limit + 'A' : overloadedBus?.limit + 'mA';
+
+          console.warn(`[useAutoSave] Electrical Overload Detected: ${type} ${name} (${current} / ${limit})`);
+          window.dispatchEvent(new CustomEvent('circuit-overload-detected', {
+            detail: { type, name, current, limit }
+          }));
+          // We still allow the save for now, but the UI will warn the user.
+          // This matches the "Non-Blocking Validation" requirement.
+        }
+      }
 
       // -- Polygons Massive Loss Check --
       const lastCount = allPolygons.length;

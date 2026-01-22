@@ -637,6 +637,57 @@
         "category": "lighting"
       },
       {
+        "id": "dmf-xmd12930wfd",
+        "name": "DMF X-Series LED Module",
+        "manufacturer": "DMF Lighting",
+        "description": "1250lm, 3000K, Wide Flood, DALI-2 (Modular)",
+        "cost": 145,
+        "url": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
+        "type": "load",
+        "wattage": 14.3,
+        "hvAmps": 0.12,
+        "category": "lighting",
+        "metadata": {
+          "beamAngle": 50,
+          "initialLumens": 1250,
+          "isDali": true,
+          "daliMaDraw": 2
+        }
+      },
+      {
+        "id": "dmf-x2ncs",
+        "name": "DMF X-Series Square Housing",
+        "manufacturer": "DMF Lighting",
+        "description": "New Construction Square Housing",
+        "cost": 65,
+        "url": "https://www.prolighting.com/search/result/?q=X2NCS",
+        "type": "load",
+        "wattage": 0,
+        "category": "lighting"
+      },
+      {
+        "id": "dmf-x2ksmud",
+        "name": "DMF X-Series Square Mud-Plate",
+        "manufacturer": "DMF Lighting",
+        "description": "Square Flangeless Mud-In Kit",
+        "cost": 35,
+        "url": "https://www.prolighting.com/search/result/?q=X2KSMUD",
+        "type": "load",
+        "wattage": 0,
+        "category": "lighting"
+      },
+      {
+        "id": "dmf-x2tsdswhfl",
+        "name": "DMF X-Series Square Flangeless Trim",
+        "manufacturer": "DMF Lighting",
+        "description": "White Flangeless Trim",
+        "cost": 45,
+        "url": "https://www.prolighting.com/search/result/?q=X2TSDSWHFL",
+        "type": "load",
+        "wattage": 0,
+        "category": "lighting"
+      },
+      {
         "id": "acc-ssd-990pro-4tb",
         "name": "Samsung 990 Pro 4TB Heatsink",
         "manufacturer": "Samsung",
@@ -650,6 +701,28 @@
     ]
   },
   "blueprints": [
+    {
+      "id": "DMF-X2-SQ-FL",
+      "name": "DMF X-Series Square Flangeless",
+      "category": "lighting",
+      "symbolType": "recessed-light",
+      "components": [
+        { "productId": "dmf-x2ncs", "quantity": 1, "description": "Housing" },
+        { "productId": "dmf-x2ksmud", "quantity": 1, "description": "Mud-in Plate" },
+        { "productId": "dmf-x2tsdswhfl", "quantity": 1, "description": "Square Trim" },
+        { "productId": "dmf-xmd12930wfd", "quantity": 1, "description": "DALI-2 LED Module" }
+      ],
+      "calculatedStats": {
+        "totalCost": 290,
+        "hvAmps": 0.12,
+        "lvMa": 2,
+        "totalAddresses": 1
+      },
+      "metadata": {
+        "isCombination": true,
+        "shorthand": "DMF-X"
+      }
+    },
     {
       "id": "HAIKU-52-ALU",
       "name": "HAIKU-52-ALU",

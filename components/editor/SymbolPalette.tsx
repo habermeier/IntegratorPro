@@ -55,7 +55,12 @@ export const SymbolPalette: React.FC<SymbolPaletteProps> = ({ activeCategory, on
 
         // 3. Blueprints (The new standard)
         const relevantBlueprints = blueprints
-            .filter(bp => bp.category === activeCategory && placedBlueprintIds.has(bp.id))
+            .filter(bp => {
+                if (bp.category !== activeCategory) return false;
+                // DMF-X2-SQ-FL is our new default - show even if not placed yet (AUTO-DEFAULT-P28)
+                if (bp.id === 'DMF-X2-SQ-FL') return true;
+                return placedBlueprintIds.has(bp.id);
+            })
             .map(bp => {
                 const def: SymbolDefinition = {
                     id: bp.id,

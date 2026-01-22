@@ -965,7 +965,13 @@ export class LayerSystem {
 
                 const metadata = symbolData.metadata || {};
                 const fallbackShorthand = getSymbolShorthand(symbolData.type);
-                const effectiveShorthand = (metadata as any).shorthand || fallbackShorthand;
+                let effectiveShorthand = (metadata as any).shorthand || fallbackShorthand;
+
+                // MULTI-PART INDICATOR: Add asterisk if it's a combination device (modular assembly)
+                const isCombination = (metadata as any).isCombination === true;
+                if (isCombination && effectiveShorthand && !effectiveShorthand.endsWith('*')) {
+                    effectiveShorthand += '*';
+                }
 
                 // Add label ONLY if symbol has a specific user-assigned label
                 // OR if it's a non-generic product and we DON'T have a shorthand to represent it.

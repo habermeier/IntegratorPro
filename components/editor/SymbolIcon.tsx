@@ -1,4 +1,5 @@
 import React from 'react';
+import { getSymbolShorthand } from '../../editor/models/symbolLibrary';
 
 interface SymbolIconProps {
     symbolType: string;
@@ -11,8 +12,6 @@ interface SymbolIconProps {
     metadata?: Record<string, any>;
     rotation?: number;
 }
-
-import { getSymbolShorthand } from '../../editor/models/symbolLibrary';
 
 /**
  * SVG-based symbol icon renderer for device palette
@@ -32,117 +31,13 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
     const strokeWidth = size / 16; // Proportional stroke width
     const fontSize = size * 0.3; // Shorthand text size (slightly smaller)
 
-    // Symbol type to shorthand is now centralized in symbolLibrary.ts
+    const isCombination = metadata?.isCombination === true;
+    let displayShorthand = customShorthand || getSymbolShorthand(symbolType);
+    if (isCombination && displayShorthand && !displayShorthand.endsWith('*')) {
+        displayShorthand += '*';
+    }
 
-    // Universal symbol design for ALL types
-    const renderSymbol = () => {
-        const center = 16;
-
-        // Specialized Icon: Ceiling Fan
-        if (meshType === 'fan' || symbolType === 'ceiling-fan' || symbolType === 'haiku-fan' || symbolType.toLowerCase().includes('fan') || symbolType.toLowerCase().includes('haiku')) {
-            const hubRadius = 4;
-            const bladeWidth = 4;
-            const bladeLength = 20; // Twice as long (10 -> 20)
-            const iconCenter = 24; // Expanded for 'zoom out' effect (16 -> 24)
-
-            // Determine if we should show the light hub
-            // If NL is specified, or lumens is 0, hide it. Default to true if unknown.
-            const hasLight = metadata?.fanLightKit !== 'NL' && metadata?.lumens !== 0;
-
-            return (
-                <svg width={size} height={size} viewBox="0 0 48 48" style={{ overflow: 'visible' }}>
-                    {/* White Halos for Fan */}
-                    {hasLight && <circle cx={iconCenter} cy={iconCenter} r={hubRadius + 1.5} fill="#FFF" />}
-                    {[0, 120, 240].map((angle) => (
-                        <g key={`halo-${angle}`} transform={`rotate(${angle}, ${iconCenter}, ${iconCenter})`}>
-                            <rect x={iconCenter - bladeWidth / 2 - 1} y={iconCenter - hubRadius - bladeLength - 1} width={bladeWidth + 2} height={bladeLength + 2} fill="#FFF" rx="2" />
-                        </g>
-                    ))}
-
-                    {/* Black Fan Parts */}
-                    {hasLight && <circle cx={iconCenter} cy={iconCenter} r={hubRadius} fill="#000" />}
-                    {[0, 120, 240].map((angle) => (
-                        <g key={`blade-${angle}`} transform={`rotate(${angle}, ${iconCenter}, ${iconCenter})`}>
-                            <rect x={iconCenter - bladeWidth / 2} y={iconCenter - hubRadius - bladeLength} width={bladeWidth} height={bladeLength} fill="#000" rx="1" />
-                        </g>
-                    ))}
-
-                    {/* Shorthand & Labels (Shared logic) */}
-                    {renderLabels(iconCenter, 8)}
-                </svg>
-            );
-        }
-
-        const squareSize = 16;
-        const squareHalf = squareSize / 2;
-        const crosshairExt = squareHalf; // Jut out by 1/2 width (8px extension on 8px half)
-
-        return (
-            <svg width={size} height={size} viewBox="0 0 32 32" style={{ overflow: 'visible' }}>
-                {/* White Halos (Backgrounds) for high contrast */}
-                {/* Square Halo */}
-                <rect
-                    x={center - squareHalf - 1}
-                    y={center - squareHalf - 1}
-                    width={squareSize + 2}
-                    height={squareSize + 2}
-                    fill="#FFF"
-                />
-
-                {/* Crosshair Halos (wider white lines) */}
-                <line
-                    x1={center - squareHalf - crosshairExt - 1}
-                    y1={center}
-                    x2={center + squareHalf + crosshairExt + 1}
-                    y2={center}
-                    stroke="#FFF"
-                    strokeWidth={strokeWidth + 2}
-                />
-                <line
-                    x1={center}
-                    y1={center - squareHalf - crosshairExt - 1}
-                    x2={center}
-                    y2={center + squareHalf + crosshairExt + 1}
-                    stroke="#FFF"
-                    strokeWidth={strokeWidth + 2}
-                />
-
-                {/* Filled black square */}
-                <rect
-                    x={center - squareHalf}
-                    y={center - squareHalf}
-                    width={squareSize}
-                    height={squareSize}
-                    fill="#000"
-                />
-
-                {/* Crosshairs - horizontal line */}
-                <line
-                    x1={center - squareHalf - crosshairExt}
-                    y1={center}
-                    x2={center + squareHalf + crosshairExt}
-                    y2={center}
-                    stroke="#000"
-                    strokeWidth={strokeWidth}
-                />
-
-                {/* Crosshairs - vertical line */}
-                <line
-                    x1={center}
-                    y1={center - squareHalf - crosshairExt}
-                    x2={center}
-                    y2={center + squareHalf + crosshairExt}
-                    stroke="#000"
-                    strokeWidth={strokeWidth}
-                />
-
-                {/* Labels */}
-                {renderLabels(center, squareHalf)}
-            </svg>
-        );
-    };
-
-    const renderLabels = (center: number, offset: number) => {
+    const renderLabels = (center: number, offset: number, displayShorthand: string) => {
         return (
             <>
                 {/* Shorthand text with white halo */}
@@ -159,7 +54,7 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
                             stroke="#FFF"
                             strokeWidth={2}
                         >
-                            {customShorthand || getSymbolShorthand(symbolType)}
+                            {displayShorthand}
                         </text>
                         <text
                             x={center + offset + 2}
@@ -170,7 +65,7 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
                             fontWeight="bold"
                             fill="#000"
                         >
-                            {customShorthand || getSymbolShorthand(symbolType)}
+                            {displayShorthand}
                         </text>
                     </>
                 )}
@@ -205,6 +100,103 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
                     </>
                 )}
             </>
+        );
+    };
+
+    const renderSymbol = () => {
+        // Specialized Icon: Ceiling Fan
+        if (meshType === 'fan' || symbolType === 'ceiling-fan' || symbolType === 'haiku-fan' || symbolType.toLowerCase().includes('fan') || symbolType.toLowerCase().includes('haiku')) {
+            const hubRadius = 4;
+            const bladeWidth = 4;
+            const bladeLength = 20; 
+            const iconCenter = 24; 
+
+            const hasLight = metadata?.fanLightKit !== 'NL' && metadata?.lumens !== 0;
+
+            return (
+                <svg width={size} height={size} viewBox="0 0 48 48" style={{ overflow: 'visible' }}>
+                    {/* White Halos for Fan */}
+                    {hasLight && <circle cx={iconCenter} cy={iconCenter} r={hubRadius + 1.5} fill="#FFF" />}
+                    {[0, 120, 240].map((angle) => (
+                        <g key={`halo-${angle}`} transform={`rotate(${angle}, ${iconCenter}, ${iconCenter})`}>
+                            <rect x={iconCenter - bladeWidth / 2 - 1} y={iconCenter - hubRadius - bladeLength - 1} width={bladeWidth + 2} height={bladeLength + 2} fill="#FFF" rx="2" />
+                        </g>
+                    ))}
+
+                    {/* Black Fan Parts */}
+                    {hasLight && <circle cx={iconCenter} cy={iconCenter} r={hubRadius} fill="#000" />}
+                    {[0, 120, 240].map((angle) => (
+                        <g key={`blade-${angle}`} transform={`rotate(${angle}, ${iconCenter}, ${iconCenter})`}>
+                            <rect x={iconCenter - bladeWidth / 2} y={iconCenter - hubRadius - bladeLength} width={bladeWidth} height={bladeLength} fill="#000" rx="1" />
+                        </g>
+                    ))}
+
+                    {/* Shorthand & Labels (Shared logic) */}
+                    {renderLabels(iconCenter, 8, displayShorthand)}
+                </svg>
+            );
+        }
+
+        const center = 16;
+        const squareSize = 16;
+        const squareHalf = squareSize / 2;
+        const crosshairExt = squareHalf; 
+
+        return (
+            <svg width={size} height={size} viewBox="0 0 32 32" style={{ overflow: 'visible' }}>
+                <rect
+                    x={center - squareHalf - 1}
+                    y={center - squareHalf - 1}
+                    width={squareSize + 2}
+                    height={squareSize + 2}
+                    fill="#FFF"
+                />
+
+                <line
+                    x1={center - squareHalf - crosshairExt - 1}
+                    y1={center}
+                    x2={center + squareHalf + crosshairExt + 1}
+                    y2={center}
+                    stroke="#FFF"
+                    strokeWidth={strokeWidth + 2}
+                />
+                <line
+                    x1={center}
+                    y1={center - squareHalf - crosshairExt - 1}
+                    x2={center}
+                    y2={center + squareHalf + crosshairExt + 1}
+                    stroke="#FFF"
+                    strokeWidth={strokeWidth + 2}
+                />
+
+                <rect
+                    x={center - squareHalf}
+                    y={center - squareHalf}
+                    width={squareSize}
+                    height={squareSize}
+                    fill="#000"
+                />
+
+                <line
+                    x1={center - squareHalf - crosshairExt}
+                    y1={center}
+                    x2={center + squareHalf + crosshairExt}
+                    y2={center}
+                    stroke="#000"
+                    strokeWidth={strokeWidth}
+                />
+
+                <line
+                    x1={center}
+                    y1={center - squareHalf - crosshairExt}
+                    x2={center}
+                    y2={center + squareHalf + crosshairExt}
+                    stroke="#000"
+                    strokeWidth={strokeWidth}
+                />
+
+                {renderLabels(center, squareHalf, displayShorthand)}
+            </svg>
         );
     };
 

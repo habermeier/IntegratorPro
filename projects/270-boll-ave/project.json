@@ -4000,6 +4000,35 @@
   ],
   "devices": [
     {
+      "id": "lighting-dmf-test-001",
+      "deviceTypeId": "DMF-X2-SQ-FL",
+      "productId": "DMF-X2-SQ-FL",
+      "name": "DMF Test Light",
+      "position": {
+        "x": 500,
+        "y": 500
+      },
+      "rotation": 0,
+      "roomId": "Family Room",
+      "layerId": "lighting",
+      "installationHeight": 2.74,
+      "networkConnections": [],
+      "lcpAssignment": "LCP-1",
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "isCombination": true,
+        "shorthand": "DMF-X",
+        "lumens": 1250,
+        "beamAngle": 50
+      },
+      "createdAt": 1768153942455,
+      "x": 500,
+      "y": 500,
+      "type": "recessed-light",
+      "category": "lighting",
+      "symbolType": "recessed-light"
+    },
+    {
       "id": "lighting-1768153942455",
       "deviceTypeId": "recessed-light",
       "productId": "2DS-L12",
