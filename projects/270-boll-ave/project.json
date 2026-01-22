@@ -1,11 +1,11 @@
 {
   "version": "2.0",
-  "timestamp": "2026-01-21T20:35:25.383Z",
+  "timestamp": "2026-01-22T00:55:14.150Z",
   "metadata": {
     "name": "270 Boll Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2026-01-21T20:35:25.376Z"
+    "modified": "2026-01-22T00:55:14.122Z"
   },
   "floorPlan": {
     "scale": {
@@ -4001,7 +4001,7 @@
   "devices": [
     {
       "id": "lighting-dmf-test-001",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF Test Light",
       "position": {
@@ -4030,7 +4030,7 @@
     },
     {
       "id": "lighting-1768153942455",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 1",
       "position": {
@@ -4078,7 +4078,7 @@
     },
     {
       "id": "lighting-1768153982816",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 2",
       "position": {
@@ -4126,7 +4126,7 @@
     },
     {
       "id": "lighting-1768153985116",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 3",
       "position": {
@@ -4174,7 +4174,7 @@
     },
     {
       "id": "lighting-1768153992266",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 4",
       "position": {
@@ -4222,7 +4222,7 @@
     },
     {
       "id": "lighting-1768153994733",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 5",
       "position": {
@@ -4270,7 +4270,7 @@
     },
     {
       "id": "lighting-1768154017916",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 6",
       "position": {
@@ -4318,7 +4318,7 @@
     },
     {
       "id": "lighting-1768154019683",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 7",
       "position": {
@@ -4366,7 +4366,7 @@
     },
     {
       "id": "lighting-1768160899624",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 8",
       "position": {
@@ -4414,7 +4414,7 @@
     },
     {
       "id": "lighting-1768161243512",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 9",
       "position": {
@@ -4462,7 +4462,7 @@
     },
     {
       "id": "lighting-1768161246659",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 10",
       "position": {
@@ -4510,7 +4510,7 @@
     },
     {
       "id": "lighting-1768161263345",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 11",
       "position": {
@@ -4558,7 +4558,7 @@
     },
     {
       "id": "lighting-1768161266216",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 12",
       "position": {
@@ -4606,7 +4606,7 @@
     },
     {
       "id": "lighting-1768161269247",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 13",
       "position": {
@@ -4654,7 +4654,7 @@
     },
     {
       "id": "lighting-1768161274709",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 14",
       "position": {
@@ -4702,7 +4702,7 @@
     },
     {
       "id": "lighting-1768161276609",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 15",
       "position": {
@@ -4750,7 +4750,7 @@
     },
     {
       "id": "lighting-1768161278292",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 16",
       "position": {
@@ -4798,7 +4798,7 @@
     },
     {
       "id": "lighting-1768161280346",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 17",
       "position": {
@@ -4846,7 +4846,7 @@
     },
     {
       "id": "lighting-1768161285198",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 18",
       "position": {
@@ -4894,7 +4894,7 @@
     },
     {
       "id": "lighting-1768161287082",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 19",
       "position": {
@@ -4942,7 +4942,7 @@
     },
     {
       "id": "lighting-1768161289628",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 20",
       "position": {
@@ -4990,7 +4990,7 @@
     },
     {
       "id": "lighting-1768161293231",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 21",
       "position": {
@@ -5038,7 +5038,7 @@
     },
     {
       "id": "lighting-1768162373296",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 22",
       "position": {
@@ -5086,7 +5086,7 @@
     },
     {
       "id": "lighting-1768162375532",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 23",
       "position": {
@@ -5134,7 +5134,7 @@
     },
     {
       "id": "lighting-1768162377876",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 24",
       "position": {
@@ -5182,7 +5182,7 @@
     },
     {
       "id": "lighting-1768162380174",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 25",
       "position": {
@@ -5230,7 +5230,7 @@
     },
     {
       "id": "lighting-1768162404377",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 26",
       "position": {
@@ -5278,7 +5278,7 @@
     },
     {
       "id": "lighting-1768162407499",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 27",
       "position": {
@@ -5326,7 +5326,7 @@
     },
     {
       "id": "lighting-1768162408966",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 28",
       "position": {
@@ -5374,7 +5374,7 @@
     },
     {
       "id": "lighting-1768162410581",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 29",
       "position": {
@@ -5422,7 +5422,7 @@
     },
     {
       "id": "lighting-1768162412548",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 30",
       "position": {
@@ -5470,7 +5470,7 @@
     },
     {
       "id": "lighting-1768162415033",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 31",
       "position": {
@@ -5518,7 +5518,7 @@
     },
     {
       "id": "lighting-1768162417010",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 32",
       "position": {
@@ -5566,7 +5566,7 @@
     },
     {
       "id": "lighting-1768162421009",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 33",
       "position": {
@@ -5614,7 +5614,7 @@
     },
     {
       "id": "lighting-1768162423975",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 34",
       "position": {
@@ -5662,7 +5662,7 @@
     },
     {
       "id": "lighting-1768162425891",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 35",
       "position": {
@@ -5710,7 +5710,7 @@
     },
     {
       "id": "lighting-1768162427674",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 36",
       "position": {
@@ -5758,7 +5758,7 @@
     },
     {
       "id": "lighting-1768162429892",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 37",
       "position": {
@@ -5806,7 +5806,7 @@
     },
     {
       "id": "lighting-1768162435997",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 38",
       "position": {
@@ -5854,7 +5854,7 @@
     },
     {
       "id": "lighting-1768162439683",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 39",
       "position": {
@@ -5902,7 +5902,7 @@
     },
     {
       "id": "lighting-1768162441779",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 40",
       "position": {
@@ -5950,7 +5950,7 @@
     },
     {
       "id": "lighting-1768162443693",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 41",
       "position": {
@@ -5998,7 +5998,7 @@
     },
     {
       "id": "lighting-1768162455647",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 42",
       "position": {
@@ -6046,7 +6046,7 @@
     },
     {
       "id": "lighting-1768162458950",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 43",
       "position": {
@@ -6094,7 +6094,7 @@
     },
     {
       "id": "lighting-1768162461080",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 44",
       "position": {
@@ -6142,7 +6142,7 @@
     },
     {
       "id": "lighting-1768162463864",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 45",
       "position": {
@@ -6190,7 +6190,7 @@
     },
     {
       "id": "lighting-1768162468547",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 46",
       "position": {
@@ -6238,7 +6238,7 @@
     },
     {
       "id": "lighting-1768162471332",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 47",
       "position": {
@@ -6286,7 +6286,7 @@
     },
     {
       "id": "lighting-1768162473878",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 48",
       "position": {
@@ -6334,7 +6334,7 @@
     },
     {
       "id": "lighting-1768162476680",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 49",
       "position": {
@@ -6382,7 +6382,7 @@
     },
     {
       "id": "lighting-1768162514982",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 50",
       "position": {
@@ -6430,7 +6430,7 @@
     },
     {
       "id": "lighting-1768162519982",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 51",
       "position": {
@@ -6478,7 +6478,7 @@
     },
     {
       "id": "lighting-1768162538499",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 52",
       "position": {
@@ -6526,7 +6526,7 @@
     },
     {
       "id": "lighting-1768162545815",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 53",
       "position": {
@@ -6574,7 +6574,7 @@
     },
     {
       "id": "lighting-1768162742844",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 54",
       "position": {
@@ -6622,7 +6622,7 @@
     },
     {
       "id": "lighting-1768162744693",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 55",
       "position": {
@@ -6670,7 +6670,7 @@
     },
     {
       "id": "lighting-1768162961239",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 56",
       "position": {
@@ -6718,7 +6718,7 @@
     },
     {
       "id": "lighting-1768163032688",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 57",
       "position": {
@@ -6766,7 +6766,7 @@
     },
     {
       "id": "lighting-1768163040088",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 58",
       "position": {
@@ -6814,7 +6814,7 @@
     },
     {
       "id": "lighting-1768163097277",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 59",
       "position": {
@@ -6862,7 +6862,7 @@
     },
     {
       "id": "lighting-1768163101979",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 60",
       "position": {
@@ -6910,7 +6910,7 @@
     },
     {
       "id": "lighting-1768163111077",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 61",
       "position": {
@@ -6958,7 +6958,7 @@
     },
     {
       "id": "lighting-1768163112944",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 62",
       "position": {
@@ -7006,7 +7006,7 @@
     },
     {
       "id": "lighting-1768168228046",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 63",
       "position": {
@@ -7054,7 +7054,7 @@
     },
     {
       "id": "lighting-1768168231511",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 64",
       "position": {
@@ -7102,7 +7102,7 @@
     },
     {
       "id": "lighting-1768168233844",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 65",
       "position": {
@@ -7150,7 +7150,7 @@
     },
     {
       "id": "lighting-1768168235910",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 66",
       "position": {
@@ -7198,7 +7198,7 @@
     },
     {
       "id": "lighting-1768172017297",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 67",
       "position": {
@@ -7246,7 +7246,7 @@
     },
     {
       "id": "lighting-1768172618942",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 68",
       "position": {
@@ -7294,7 +7294,7 @@
     },
     {
       "id": "lighting-1768172621373",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 69",
       "position": {
@@ -7342,7 +7342,7 @@
     },
     {
       "id": "lighting-1768172625172",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 70",
       "position": {
@@ -7390,7 +7390,7 @@
     },
     {
       "id": "lighting-1768172627038",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 71",
       "position": {
@@ -7438,7 +7438,7 @@
     },
     {
       "id": "lighting-1768172983538",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 72",
       "position": {
@@ -7486,7 +7486,7 @@
     },
     {
       "id": "lighting-1768172992634",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 73",
       "position": {
@@ -7534,7 +7534,7 @@
     },
     {
       "id": "lighting-1768172993667",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 74",
       "position": {
@@ -7582,7 +7582,7 @@
     },
     {
       "id": "lighting-1768172994917",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 75",
       "position": {
@@ -7630,7 +7630,7 @@
     },
     {
       "id": "lighting-1768173194955",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 76",
       "position": {
@@ -7678,7 +7678,7 @@
     },
     {
       "id": "lighting-1768173197038",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF 77",
       "position": {
@@ -7726,7 +7726,7 @@
     },
     {
       "id": "lighting-1768175363988",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF Device 78",
       "position": {
@@ -7808,7 +7808,7 @@
     },
     {
       "id": "lighting-1768175440243",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF Device 79",
       "position": {
@@ -7876,7 +7876,7 @@
     },
     {
       "id": "lighting-1768175485521",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF Device 80",
       "position": {
@@ -7944,7 +7944,7 @@
     },
     {
       "id": "lighting-1768175494571",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF Device 81",
       "position": {
@@ -8026,7 +8026,7 @@
     },
     {
       "id": "lighting-1768175568092",
-      "deviceTypeId": "DMF-X2-SQ-FL",
+      "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
       "name": "DMF Device 82",
       "position": {

@@ -229,11 +229,30 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
                     {blueprint && (
                         <div className="mt-1 pt-2 border-t border-slate-800/50">
                             <div className="flex flex-wrap gap-1.5">
-                                <ComponentTag icon={<Lightbulb size={9} />} id={blueprint.components.loadId} color="pink" />
-                                {blueprint.components.driverId && <ComponentTag icon={<Zap size={9} />} id={blueprint.components.driverId} color="amber" />}
-                                {blueprint.components.logicIds.map((lid: string) => (
-                                    <ComponentTag key={lid} icon={<Cpu size={9} />} id={lid} color="emerald" />
-                                ))}
+                                {Array.isArray(blueprint.components) ? (
+                                    // MODULAR SYSTEM (New)
+                                    blueprint.components.map((comp: any) => (
+                                        <ComponentTag
+                                            key={comp.productId}
+                                            icon={<Box size={9} />}
+                                            id={comp.productId}
+                                            color="emerald"
+                                        />
+                                    ))
+                                ) : (
+                                    // LEGACY SYSTEM
+                                    <>
+                                        {blueprint.components.loadId && (
+                                            <ComponentTag icon={<Lightbulb size={9} />} id={blueprint.components.loadId} color="pink" />
+                                        )}
+                                        {blueprint.components.driverId && (
+                                            <ComponentTag icon={<Zap size={9} />} id={blueprint.components.driverId} color="amber" />
+                                        )}
+                                        {(blueprint.components.logicIds || []).map((lid: string) => (
+                                            <ComponentTag key={lid} icon={<Cpu size={9} />} id={lid} color="emerald" />
+                                        ))}
+                                    </>
+                                )}
                             </div>
                         </div>
                     )}
