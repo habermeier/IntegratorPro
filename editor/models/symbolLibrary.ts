@@ -348,6 +348,7 @@ export const SHORTHAND_MAP: Record<string, string> = {
     'haiku-fan': 'HAIKU-52-ALU',
     '2DS-L12': '2DS-L12',
     '2DS-L9': '2DS-L9',
+    'DMF-X2-SQ-FL': 'DMF-X',
     'GENERIC-LIGHT': 'LIGHT',
     'exterior-light': 'OSC',
     'knx-switch': 'LV',

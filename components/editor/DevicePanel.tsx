@@ -199,7 +199,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
             if (!isGenericId) return false;
             const isExplicit2DS = d.deviceTypeId.includes('2ds');
             const typeLabel = (SYMBOL_LIBRARY[d.deviceTypeId] as any)?.metadata?.shorthand || '';
-            const isImplied2DS = d.name.toLowerCase().includes('2ds') || typeLabel.toLowerCase().includes('2ds');
+            const isImplied2DS = (d.name || '').toLowerCase().includes('2ds') || typeLabel.toLowerCase().includes('2ds');
             const isGenericRecessed = d.deviceTypeId === 'recessed-light' || d.deviceTypeId === 'generic-lighting';
             return isExplicit2DS || (isGenericRecessed && isImplied2DS);
         });
@@ -231,7 +231,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
             projectData.customSymbols.forEach(sym => {
                 const isFan = sym.productId?.toLowerCase().includes('haiku') ||
                     sym.productId?.toLowerCase().includes('fan') ||
-                    sym.name.toLowerCase().includes('fan');
+                    (sym.name || '').toLowerCase().includes('fan');
                 if (isFan && (sym.size.width === 16 || sym.size.width === 48)) {
                     sym.size = { width: 96, height: 96 };
                     sym.meshType = 'fan';
@@ -322,7 +322,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                         const baseSymbol = SYMBOL_LIBRARY['recessed-light'] || Object.values(SYMBOL_LIBRARY)[0];
                         const isFan = productId?.toLowerCase().includes('haiku') ||
                             productId?.toLowerCase().includes('fan') ||
-                            name.toLowerCase().includes('fan');
+                            (name || '').toLowerCase().includes('fan');
 
                         const newType: SymbolDefinition = {
                             ...baseSymbol,

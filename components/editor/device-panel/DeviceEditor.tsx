@@ -63,9 +63,9 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
 
     // Attempt to find in catalog (Case Insensitive)
     const catalogProduct = (catalogV2.registry.loads as any[]).find(p =>
-        p.id.toLowerCase() === effectiveProductId?.toLowerCase()
+        (p.id || '').toLowerCase() === (effectiveProductId || '').toLowerCase()
     ) || (catalogV2.blueprints as any[]).find(bp =>
-        bp.id.toLowerCase() === effectiveProductId?.toLowerCase()
+        (bp.id || '').toLowerCase() === (effectiveProductId || '').toLowerCase()
     );
 
     const product = catalogProduct || (effectiveProductId && !isGeneric(effectiveProductId) ? {

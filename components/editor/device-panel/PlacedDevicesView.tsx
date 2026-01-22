@@ -24,9 +24,9 @@ export const PlacedDevicesView: React.FC<PlacedDevicesViewProps> = ({
     // 1. Group by Room
     const groupedByRoom = React.useMemo(() => {
         const filtered = devices.filter(d =>
-            d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            d.productId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            d.deviceTypeId?.toLowerCase().includes(searchQuery.toLowerCase())
+            (d.name || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+            (d.productId || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+            (d.deviceTypeId || '').toLowerCase().includes((searchQuery || '').toLowerCase())
         );
 
         const map: Record<string, { name: string, items: any[] }> = {};
@@ -50,9 +50,9 @@ export const PlacedDevicesView: React.FC<PlacedDevicesViewProps> = ({
                 } else {
                     // 2. Name match (case-insensitive fallback with fuzzy prefix)
                     const foundRoom = rooms.find(r =>
-                        r.name.toLowerCase() === rawRoomId.toLowerCase() ||
-                        r.id.toLowerCase() === rawRoomId.toLowerCase() ||
-                        rawRoomId.toLowerCase().startsWith(r.name.toLowerCase())
+                        (r.name || '').toLowerCase() === (rawRoomId || '').toLowerCase() ||
+                        (r.id || '').toLowerCase() === (rawRoomId || '').toLowerCase() ||
+                        (rawRoomId || '').toLowerCase().startsWith((r.name || '').toLowerCase())
                     );
                     if (foundRoom) {
                         targetGroupId = foundRoom.id;

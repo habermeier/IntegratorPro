@@ -71,7 +71,7 @@ export const SymbolPalette: React.FC<SymbolPaletteProps> = ({ activeCategory, on
                     size: SYMBOL_LIBRARY[bp.symbolType]?.size || { width: 16, height: 16 },
                     createMesh: SYMBOL_LIBRARY[bp.symbolType]?.createMesh || SYMBOL_LIBRARY['recessed-light'].createMesh,
                     meshType: SYMBOL_LIBRARY[bp.symbolType]?.meshType || 'universal',
-                    metadata: { ...bp, isBlueprint: true }
+                    metadata: { ...bp, ...(bp.metadata || {}), isBlueprint: true }
                 };
 
                 // Inject into global library (AUTO-BRIDGE-P28)

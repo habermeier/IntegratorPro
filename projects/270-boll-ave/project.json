@@ -1,11 +1,11 @@
 {
   "version": "2.0",
-  "timestamp": "2026-01-22T02:41:23.000Z",
+  "timestamp": "2026-01-22T03:05:54.585Z",
   "metadata": {
     "name": "270 Boll Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2026-01-22T02:41:22.991Z"
+    "modified": "2026-01-22T03:05:54.575Z"
   },
   "floorPlan": {
     "scale": {
@@ -8162,7 +8162,25 @@
         },
         "createdAt": "2026-01-13T19:40:12.116Z",
         "_migratedFrom": "generic-lighting",
-        "_migrationTimestamp": 1768352475500
+        "_migrationTimestamp": 1768352475500,
+        "orderingCode": "HK-60-I-AL-WH-STD-L",
+        "shorthand": "HK-60",
+        "pdfUrl": "https://bigassfans.com/docs/haiku/haiku/cutsheet-haiku-en.pdf",
+        "shoppingLink": "",
+        "fanSeries": "HK",
+        "fanSize": "60",
+        "fanFinish": "WH",
+        "fanMount": "STD",
+        "fanMaterial": "AL",
+        "fanEnvironment": "I",
+        "fanLightKit": "L",
+        "fanVoltage": "UNV",
+        "cfm": 8629,
+        "maxPower": 26.8,
+        "lumens": 1200,
+        "beamAngle": 120,
+        "range": 0,
+        "lightKit": "L"
       },
       "createdAt": "2026-01-13T19:40:12.116Z",
       "x": -2157.9409102828126,
@@ -8300,6 +8318,66 @@
       "type": "HAIKU-52-ALU",
       "category": "lighting",
       "symbolType": "HAIKU-52-ALU"
+    },
+    {
+      "id": "lighting-1769051153072",
+      "type": "DMF-X2-SQ-FL",
+      "category": "lighting",
+      "x": -2334.6942228063544,
+      "y": 589.0890575554731,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Primary WC Bathroom",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL",
+        "name": "DMF X-Series Square Flangeless",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl",
+            "quantity": 1,
+            "description": "Square Trim"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF-X"
+        },
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-22T03:05:53.072Z",
+      "deviceTypeId": "DMF-X2-SQ-FL"
     }
   ],
   "cables": [],
