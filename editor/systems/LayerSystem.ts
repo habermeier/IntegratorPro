@@ -553,6 +553,8 @@ export class LayerSystem {
                     sprite.position.set(p.x, p.y, 0.2);
                     sprite.scale.set(12, 12, 1);
                     sprite.name = `vertex-${idx}`;
+                    // VERIFIED: Control points for masks ONLY show when explicitly editing masks
+                    sprite.visible = !isMask || this.isMaskEditMode;
                     group.add(sprite);
                 });
 
