@@ -1,4 +1,4 @@
-import { RoomType } from '../editor/models/types';
+import { RoomType } from '../../editor/models/types';
 
 export interface LightingTarget {
     avg: number;

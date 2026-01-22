@@ -26,6 +26,7 @@ import { Device } from '../src/models/Device';
 
 interface ProjectBOMProps {
     modules: HardwareModule[];
+    devices?: Device[];
     summaryOnly?: boolean;
     highlightedModuleId?: string | null;
     linkPrefix?: string;
@@ -65,7 +66,7 @@ const CABLE_PRICING: Record<string, number> = {
     'GENERIC': 1.00
 };
 
-const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, highlightedModuleId, linkPrefix = 'dashboard' }) => {
+const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, devices, summaryOnly = false, highlightedModuleId, linkPrefix = 'dashboard' }) => {
     const [sortConfig, setSortConfig] = useState<SortConfig[]>([]);
     const [units, setUnits] = useState<'METRIC' | 'IMPERIAL'>(() => {
         return (localStorage.getItem('integrator-pro-units') as 'METRIC' | 'IMPERIAL') || 'IMPERIAL';
@@ -129,9 +130,12 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
     }, [layoutData]);
 
     // --- INTEGRATION: Convert Devices from DeviceRegistry to BOM Modules (Grouped by SKU) ---
-    const { devices, deviceModules } = useDeviceRegistry();
+    // deviceModules are now passed via the 'modules' prop from App.tsx.
+    // We only need the raw 'devices' for the technical reports below.
+    const { devices: registryDevices } = useDeviceRegistry();
+    const effectiveDevices = devices || registryDevices;
 
-    const allModules = useMemo(() => [...modules, ...virtualCableModules, ...deviceModules], [modules, virtualCableModules, deviceModules]);
+    const allModules = useMemo(() => [...modules, ...virtualCableModules], [modules, virtualCableModules]);
 
     // Use allModules instead of modules for the rest of the file
     const effectiveModules = allModules;
@@ -316,7 +320,7 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                                 {/* TECHNICAL REPORTS (AUTO-REPORTS-P28) */}
                                 <div className="flex gap-2">
                                     <PDFDownloadLink
-                                        document={<HVCircuitSchedule projectName="Current Project" circuits={AmpereEngine.calculateLoads(devices as any, catalog as any).circuits} />}
+                                        document={<HVCircuitSchedule projectName="Current Project" circuits={AmpereEngine.calculateLoads(effectiveDevices as any, catalog as any).circuits} />}
                                         fileName="HV_Circuit_Schedule.pdf"
                                         style={{ textDecoration: 'none' }}
                                     >
@@ -329,7 +333,7 @@ const ProjectBOM: React.FC<ProjectBOMProps> = ({ modules, summaryOnly = false, h
                                     </PDFDownloadLink>
 
                                     <PDFDownloadLink
-                                        document={<DaliUniverseMap projectName="Current Project" buses={AmpereEngine.calculateLoads(devices as any, catalog as any).buses} />}
+                                        document={<DaliUniverseMap projectName="Current Project" buses={AmpereEngine.calculateLoads(effectiveDevices as any, catalog as any).buses} />}
                                         fileName="DALI_Universe_Map.pdf"
                                         style={{ textDecoration: 'none' }}
                                     >

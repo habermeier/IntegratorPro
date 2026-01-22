@@ -30,18 +30,23 @@ export function useDeviceRegistry() {
     const deviceModules = useMemo(() => {
         if (devices.length === 0) return [];
 
-        const catalogV2 = catalog as any; // Cast as V2 for now
+        const catalogV2 = catalog as any;
         const { registry, blueprints } = catalogV2;
 
         const flattenedItems: any[] = [];
 
         devices.forEach(device => {
-            const blueprint = blueprints.find((bp: any) => bp.id === device.deviceTypeId);
+            const rawTypeId = (device.deviceTypeId || '').trim();
+            const blueprint = blueprints.find((bp: any) =>
+                bp.id.toLowerCase() === rawTypeId.toLowerCase()
+            );
+
             if (!blueprint) {
                 // Fallback for legacy/non-blueprint devices
+                const sku = (device.deviceTypeId || device.productId || 'generic-hardware').trim();
                 flattenedItems.push({
-                    sku: device.productId || 'generic-hardware',
-                    name: device.name,
+                    sku: sku,
+                    name: device.name || sku,
                     manufacturer: (device.metadata as any)?.manufacturer || 'Generic',
                     description: (device.metadata as any)?.description || 'Unidentified Component',
                     cost: (device.metadata as any)?.cost || 0,
@@ -63,7 +68,7 @@ export function useDeviceRegistry() {
                     description: load.description,
                     cost: load.cost,
                     wattage: load.efficiency
-                        ? load.wattage * (1 + (1 - load.efficiency)) // Simple loss approximation
+                        ? load.wattage * (1 + (1 - load.efficiency))
                         : load.wattage,
                     busDrawMa: load.busDrawMa || 0,
                     category: blueprint.category,
@@ -81,7 +86,7 @@ export function useDeviceRegistry() {
                         manufacturer: driver.manufacturer,
                         description: driver.description,
                         cost: driver.cost,
-                        wattage: driver.maxWatts * (1 - driver.efficiency), // Loss as heat
+                        wattage: driver.maxWatts * (1 - driver.efficiency),
                         busDrawMa: driver.busDrawMa || 0,
                         category: 'lcps',
                         instance: device
@@ -90,7 +95,7 @@ export function useDeviceRegistry() {
             }
 
             // 3. Resolve Logic (Pucks)
-            blueprint.components.logicIds.forEach((logicId: string) => {
+            (blueprint.components.logicIds || []).forEach((logicId: string) => {
                 const logic = registry.logic.find((l: any) => l.id === logicId);
                 if (logic) {
                     flattenedItems.push({
@@ -99,7 +104,7 @@ export function useDeviceRegistry() {
                         manufacturer: logic.manufacturer,
                         description: logic.description,
                         cost: logic.cost,
-                        wattage: 1, // Logic draw is negligible but non-zero
+                        wattage: 1,
                         busDrawMa: logic.busDrawMa,
                         category: 'lcps',
                         instance: device
@@ -111,18 +116,19 @@ export function useDeviceRegistry() {
         // Group flattened items by SKU for BOM view
         const groupedMap = new Map<string, any[]>();
         flattenedItems.forEach(item => {
-            if (!groupedMap.has(item.sku)) groupedMap.set(item.sku, []);
-            groupedMap.get(item.sku)!.push(item);
+            const key = (item.sku || 'unknown').trim().toLowerCase();
+            if (!groupedMap.has(key)) groupedMap.set(key, []);
+            groupedMap.get(key)!.push(item);
         });
 
-        return Array.from(groupedMap.entries()).map(([sku, items]) => {
+        const result = Array.from(groupedMap.entries()).map(([skuKey, items]) => {
             const first = items[0];
             return {
-                id: `bom-${sku}`,
+                id: `bom-${skuKey}`,
                 name: first.name,
                 manufacturer: first.manufacturer,
-                description: first.description || sku,
-                type: first.category.toUpperCase(),
+                description: first.description || first.sku,
+                type: (first.category || 'lighting').toUpperCase(),
                 mountType: MountType.NA,
                 size: 0,
                 cost: first.cost,
@@ -140,6 +146,9 @@ export function useDeviceRegistry() {
                 }))
             } as any;
         });
+
+        console.debug(`[BOM-DIAG] Grouped ${flattenedItems.length} items into ${result.length} modules. SKUs:`, Array.from(groupedMap.keys()));
+        return result;
     }, [devices]);
 
     return {

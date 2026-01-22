@@ -306,8 +306,10 @@ export class FloorPlanEditor {
         if (this.isMouseOverCanvas && !isTyping) {
             // Smart Focus: If over canvas and NOT typing, we claim the event
             // and stop it from reaching ANY other components (dialogs, sidebars).
-            // (AGGRESSIVE-HIJACK-P28)
-            e.stopImmediatePropagation();
+            // EXCEPT for panel toggles and Escape which we want to propagate to React.
+            if (!['BracketLeft', 'BracketRight', 'Slash', 'Escape'].includes(e.code)) {
+                e.stopImmediatePropagation();
+            }
 
             // Aggressively prevent default for navigation/common keys to stop browser side effects
             if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyR'].includes(e.code)) {
@@ -476,8 +478,8 @@ export class FloorPlanEditor {
                 case 'f': this.setActiveTool('place-furniture'); break;
                 case 's': this.setActiveTool('scale-calibrate'); break;
                 case 'd': this.setActiveTool('measure'); break;
-                case '[': this.cycleDevices('prev'); break;
-                case ']': this.cycleDevices('next'); break;
+                case ',': this.cycleDevices('prev'); break;
+                case '.': this.cycleDevices('next'); break;
             }
         }
 

@@ -1,11 +1,11 @@
 {
   "version": "2.0",
-  "timestamp": "2026-01-17T08:59:28.119Z",
+  "timestamp": "2026-01-21T20:35:25.383Z",
   "metadata": {
     "name": "270 Boll Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2026-01-17T08:59:28.103Z"
+    "modified": "2026-01-21T20:35:25.376Z"
   },
   "floorPlan": {
     "scale": {
@@ -463,6 +463,31 @@
         "name": "Kitchen",
         "roomType": "open",
         "color": 5105113,
+        "type": "room"
+      },
+      {
+        "id": "305k1p",
+        "points": [
+          {
+            "x": 1233.0045471191406,
+            "y": 280.5192108154297
+          },
+          {
+            "x": 1236.9337900111686,
+            "y": 1028.3390100610966
+          },
+          {
+            "x": 60.90713776571215,
+            "y": 1026.0635902599572
+          },
+          {
+            "x": 56.03716004778846,
+            "y": 284.4602163892679
+          }
+        ],
+        "name": "Family Room",
+        "roomType": "open",
+        "color": 15027578,
         "type": "room"
       },
       {
@@ -3953,26 +3978,6 @@
       }
     },
     {
-      "id": "furn-1766345655365",
-      "type": "furniture",
-      "category": "furniture",
-      "x": 0,
-      "y": 0,
-      "width": 1.2191999999999998,
-      "length": 0.6095999999999999,
-      "rotation": 0,
-      "scale": 1,
-      "color": 8947848,
-      "isBlocking": true,
-      "room": "Patio",
-      "label": "Verification Table",
-      "createdAt": "2025-12-21T19:34:15.365Z",
-      "position": {
-        "x": 0,
-        "y": 0
-      }
-    },
-    {
       "id": "furn-1766425168981",
       "type": "furniture",
       "category": "furniture",
@@ -3997,7 +4002,7 @@
     {
       "id": "lighting-1768153942455",
       "deviceTypeId": "recessed-light",
-      "productId": "2DS-L9",
+      "productId": "2DS-L12",
       "name": "2DS-L12",
       "position": {
         "x": 312.0891421517307,
@@ -4011,8 +4016,8 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "productId": "2DS-L9",
-        "shorthand": "2DS-L9",
+        "productId": "2DS-L12",
+        "shorthand": "2DS-L12",
         "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
@@ -6301,8 +6306,8 @@
     {
       "id": "lighting-1768162476680",
       "deviceTypeId": "recessed-light",
-      "productId": "2DS-L9",
-      "name": "2DS-L9",
+      "productId": "2DS-L12",
+      "name": "2DS-L12",
       "position": {
         "x": -1373.1544830384698,
         "y": -145.10532086323997
@@ -6317,7 +6322,7 @@
       "metadata": {
         "productId": "generic-product",
         "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
-        "shorthand": "2DS-L9",
+        "shorthand": "2DS-L12",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
         "specLumens": "L9",
@@ -6973,8 +6978,8 @@
     {
       "id": "lighting-1768168228046",
       "deviceTypeId": "recessed-light",
-      "productId": "2DS-L9",
-      "name": "2DS-L9",
+      "productId": "2DS-L12",
+      "name": "2DS-L12",
       "position": {
         "x": -2743.8653591889465,
         "y": 6.048871265523729
@@ -6987,8 +6992,8 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "productId": "2DS-L9",
-        "shorthand": "2DS-L9",
+        "productId": "2DS-L12",
+        "shorthand": "2DS-L12",
         "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
@@ -7009,7 +7014,7 @@
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "_migratedFrom": "custom-2ds-l12-1767158007452"
       },
       "createdAt": 1768168228046,
       "x": -2743.8653591889465,
@@ -7021,8 +7026,8 @@
     {
       "id": "lighting-1768168231511",
       "deviceTypeId": "recessed-light",
-      "productId": "2DS-L9",
-      "name": "2DS-L9",
+      "productId": "2DS-L12",
+      "name": "2DS-L12",
       "position": {
         "x": -2738.0555346998044,
         "y": -271.370248091009
@@ -7035,8 +7040,8 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "productId": "2DS-L9",
-        "shorthand": "2DS-L9",
+        "productId": "2DS-L12",
+        "shorthand": "2DS-L12",
         "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
@@ -7057,7 +7062,7 @@
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "_migratedFrom": "custom-2ds-l12-1767158007452"
       },
       "createdAt": 1768168231511,
       "x": -2738.0555346998044,
@@ -7069,8 +7074,8 @@
     {
       "id": "lighting-1768168233844",
       "deviceTypeId": "recessed-light",
-      "productId": "2DS-L9",
-      "name": "2DS-L9",
+      "productId": "2DS-L12",
+      "name": "2DS-L12",
       "position": {
         "x": -2469.3511520769844,
         "y": -274.27516033558004
@@ -7083,8 +7088,8 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "productId": "2DS-L9",
-        "shorthand": "2DS-L9",
+        "productId": "2DS-L12",
+        "shorthand": "2DS-L12",
         "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
@@ -7105,7 +7110,7 @@
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "_migratedFrom": "custom-2ds-l12-1767158007452"
       },
       "createdAt": 1768168233844,
       "x": -2469.3511520769844,
@@ -7117,8 +7122,8 @@
     {
       "id": "lighting-1768168235910",
       "deviceTypeId": "recessed-light",
-      "productId": "2DS-L9",
-      "name": "2DS-L9",
+      "productId": "2DS-L12",
+      "name": "2DS-L12",
       "position": {
         "x": -2470.80360819927,
         "y": 8.953783510094723
@@ -7131,8 +7136,8 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "productId": "2DS-L9",
-        "shorthand": "2DS-L9",
+        "productId": "2DS-L12",
+        "shorthand": "2DS-L12",
         "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
@@ -7149,11 +7154,11 @@
         "specTrimType": "R",
         "specTrimOptions": "NONE",
         "specBracket": "F1",
-        "lumens": 800,
+        "lumens": 900,
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "_migratedFrom": "custom-2ds-l12-1767158007452"
       },
       "createdAt": 1768168235910,
       "x": -2470.80360819927,
@@ -7179,7 +7184,7 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "productId": "2DS-L9",
+        "productId": "2DS-L12",
         "orderingCode": "2DS - L12/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "shorthand": "2DS-L12",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
@@ -7213,8 +7218,8 @@
     {
       "id": "lighting-1768172618942",
       "deviceTypeId": "recessed-light",
-      "productId": "2DS-L9",
-      "name": "2DS-L9",
+      "productId": "2DS-L12",
+      "name": "2DS-L12",
       "position": {
         "x": 461.99594777868504,
         "y": -914.3065479540812
@@ -7227,8 +7232,8 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "productId": "2DS-L9",
-        "shorthand": "2DS-L9",
+        "productId": "2DS-L12",
+        "shorthand": "2DS-L12",
         "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
@@ -7249,7 +7254,7 @@
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "_migratedFrom": "custom-2ds-l12-1767158007452"
       },
       "createdAt": 1768172618942,
       "x": 461.99594777868504,
@@ -7275,7 +7280,7 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "productId": "2DS-L9",
+        "productId": "2DS-L12",
         "shorthand": "2DS-L12",
         "orderingCode": "2DS - L12/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
@@ -7297,7 +7302,7 @@
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "_migratedFrom": "custom-2ds-l12-1767158007452"
       },
       "createdAt": 1768172621373,
       "x": 461.99594777868504,
@@ -7323,7 +7328,7 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "productId": "2DS-L9",
+        "productId": "2DS-L12",
         "shorthand": "2DS-L12",
         "orderingCode": "2DS - L12/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
@@ -7345,7 +7350,7 @@
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "_migratedFrom": "custom-2ds-l12-1767158007452"
       },
       "createdAt": 1768172625172,
       "x": 828.2196154466952,
@@ -7357,8 +7362,8 @@
     {
       "id": "lighting-1768172627038",
       "deviceTypeId": "recessed-light",
-      "productId": "2DS-L9",
-      "name": "2DS-L9",
+      "productId": "2DS-L12",
+      "name": "2DS-L12",
       "position": {
         "x": 819.0640237549949,
         "y": -903.6250243137642
@@ -7371,8 +7376,8 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "productId": "2DS-L9",
-        "shorthand": "2DS-L9",
+        "productId": "2DS-L12",
+        "shorthand": "2DS-L12",
         "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
@@ -7393,7 +7398,7 @@
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "_migratedFrom": "custom-2ds-l12-1767158007452"
       },
       "createdAt": 1768172627038,
       "x": 819.0640237549949,
@@ -7405,8 +7410,8 @@
     {
       "id": "lighting-1768172983538",
       "deviceTypeId": "recessed-light",
-      "productId": "2DS-L9",
-      "name": "2DS-L9",
+      "productId": "2DS-L12",
+      "name": "2DS-L12",
       "position": {
         "x": -2432.6969587472117,
         "y": 1266.2502066191964
@@ -7419,8 +7424,8 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "productId": "2DS-L9",
-        "shorthand": "2DS-L9",
+        "productId": "2DS-L12",
+        "shorthand": "2DS-L12",
         "orderingCode": "2DS - L15/9TW - N - LD2 - UNV - M - O - OF - CS - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
@@ -7441,7 +7446,7 @@
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "_migratedFrom": "custom-2ds-l12-1767158007452"
       },
       "createdAt": 1768172983538,
       "x": -2432.6969587472117,
@@ -7453,8 +7458,8 @@
     {
       "id": "lighting-1768172992634",
       "deviceTypeId": "recessed-light",
-      "productId": "2DS-L9",
-      "name": "2DS-L9",
+      "productId": "2DS-L12",
+      "name": "2DS-L12",
       "position": {
         "x": -1880.3095933479633,
         "y": 1255.5686829788795
@@ -7467,8 +7472,8 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "productId": "2DS-L9",
-        "shorthand": "2DS-L9",
+        "productId": "2DS-L12",
+        "shorthand": "2DS-L12",
         "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
@@ -7489,7 +7494,7 @@
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "_migratedFrom": "custom-2ds-l12-1767158007452"
       },
       "createdAt": 1768172992634,
       "x": -1880.3095933479633,
@@ -7501,8 +7506,8 @@
     {
       "id": "lighting-1768172993667",
       "deviceTypeId": "recessed-light",
-      "productId": "2DS-L9",
-      "name": "2DS-L9",
+      "productId": "2DS-L12",
+      "name": "2DS-L12",
       "position": {
         "x": -1887.9392530910468,
         "y": 935.1229737693706
@@ -7515,8 +7520,8 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "productId": "2DS-L9",
-        "shorthand": "2DS-L9",
+        "productId": "2DS-L12",
+        "shorthand": "2DS-L12",
         "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
@@ -7537,7 +7542,7 @@
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "_migratedFrom": "custom-2ds-l12-1767158007452"
       },
       "createdAt": 1768172993667,
       "x": -1887.9392530910468,
@@ -7549,8 +7554,8 @@
     {
       "id": "lighting-1768172994917",
       "deviceTypeId": "recessed-light",
-      "productId": "2DS-L9",
-      "name": "2DS-L9",
+      "productId": "2DS-L12",
+      "name": "2DS-L12",
       "position": {
         "x": -2429.6450948499787,
         "y": 938.174837666604
@@ -7563,8 +7568,8 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "productId": "2DS-L9",
-        "shorthand": "2DS-L9",
+        "productId": "2DS-L12",
+        "shorthand": "2DS-L12",
         "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
@@ -7585,7 +7590,7 @@
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "_migratedFrom": "custom-2ds-l12-1767158007452"
       },
       "createdAt": 1768172994917,
       "x": -2429.6450948499787,
@@ -7597,8 +7602,8 @@
     {
       "id": "lighting-1768173194955",
       "deviceTypeId": "recessed-light",
-      "productId": "2DS-L9",
-      "name": "2DS-L9",
+      "productId": "2DS-L12",
+      "name": "2DS-L12",
       "position": {
         "x": -2168.7107316365214,
         "y": 916.8117903859702
@@ -7611,8 +7616,8 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "productId": "2DS-L9",
-        "shorthand": "2DS-L9",
+        "productId": "2DS-L12",
+        "shorthand": "2DS-L12",
         "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
@@ -7633,7 +7638,7 @@
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "_migratedFrom": "custom-2ds-l12-1767158007452"
       },
       "createdAt": 1768173194955,
       "x": -2168.7107316365214,
@@ -7645,8 +7650,8 @@
     {
       "id": "lighting-1768173197038",
       "deviceTypeId": "recessed-light",
-      "productId": "2DS-L9",
-      "name": "2DS-L9",
+      "productId": "2DS-L12",
+      "name": "2DS-L12",
       "position": {
         "x": -2165.658867739288,
         "y": 1272.3539344136634
@@ -7659,8 +7664,8 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "productId": "2DS-L9",
-        "shorthand": "2DS-L9",
+        "productId": "2DS-L12",
+        "shorthand": "2DS-L12",
         "orderingCode": "2DS - L15/9TW - N - LD2 - UNV - M - O - OF - CS - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
@@ -7681,7 +7686,7 @@
         "beamAngle": 60,
         "range": 10,
         "cableType": "Cat6",
-        "_migratedFrom": "custom-2ds-l9-1767158007452"
+        "_migratedFrom": "custom-2ds-l12-1767158007452"
       },
       "createdAt": 1768173197038,
       "x": -2165.658867739288,
@@ -7715,11 +7720,11 @@
         "rotation": 0,
         "scale": 1,
         "room": "Kids Hallway",
-        "productId": "2DS-L9",
+        "productId": "2DS-L12",
         "installationHeight": 2.4,
         "busAssignment": "Bus 1",
         "metadata": {
-          "productId": "2DS-L9",
+          "productId": "2DS-L12",
           "orderingCode": "2DS - L12/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
           "shorthand": "2DS-L12",
           "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
@@ -7789,19 +7794,19 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "id": "lighting-1768175440243",
-        "type": "custom-2ds-l9-1767158007452",
+        "type": "custom-2ds-l12-1767158007452",
         "category": "lighting",
         "x": -2315.1888343982478,
         "y": -64.13258805544899,
         "rotation": 0,
         "scale": 1,
         "room": "Bedroom 2 Closet",
-        "productId": "2DS-L9",
+        "productId": "2DS-L12",
         "installationHeight": 2.4,
         "busAssignment": "Bus 1",
         "metadata": {
-          "productId": "2DS-L9",
-          "shorthand": "2DS-L9",
+          "productId": "2DS-L12",
+          "shorthand": "2DS-L12",
           "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
           "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
           "shoppingLink": "",
@@ -7852,19 +7857,19 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "id": "lighting-1768175485521",
-        "type": "custom-2ds-l9-1767158007452",
+        "type": "custom-2ds-l12-1767158007452",
         "category": "lighting",
         "x": -1040.7777882455166,
         "y": -955.3873719661816,
         "rotation": 0,
         "scale": 1,
         "room": "Office 1 Other",
-        "productId": "2DS-L9",
+        "productId": "2DS-L12",
         "installationHeight": 2.4,
         "busAssignment": "Bus 1",
         "metadata": {
-          "productId": "2DS-L9",
-          "shorthand": "2DS-L9",
+          "productId": "2DS-L12",
+          "shorthand": "2DS-L12",
           "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
           "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
           "shoppingLink": "",
@@ -7915,19 +7920,19 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "id": "lighting-1768175494571",
-        "type": "custom-2ds-l9-1767158007452",
+        "type": "custom-2ds-l12-1767158007452",
         "category": "lighting",
         "x": -1036.613046264625,
         "y": -1213.2718908196582,
         "rotation": 0,
         "scale": 1,
         "room": "Foyer Closet",
-        "productId": "2DS-L9",
+        "productId": "2DS-L12",
         "installationHeight": 2.4,
         "busAssignment": "Bus 1",
         "metadata": {
-          "productId": "2DS-L9",
-          "shorthand": "2DS-L9",
+          "productId": "2DS-L12",
+          "shorthand": "2DS-L12",
           "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
           "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
           "shoppingLink": "",
@@ -7996,19 +8001,19 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "id": "lighting-1768175568092",
-        "type": "custom-2ds-l9-1767158007452",
+        "type": "custom-2ds-l12-1767158007452",
         "category": "lighting",
         "x": 1067.5239223241301,
         "y": -1116.9606089472256,
         "rotation": 0,
         "scale": 1,
         "room": "Guest Closet",
-        "productId": "2DS-L9",
+        "productId": "2DS-L12",
         "installationHeight": 2.4,
         "busAssignment": "Bus 1",
         "metadata": {
-          "productId": "2DS-L9",
-          "shorthand": "2DS-L9",
+          "productId": "2DS-L12",
+          "shorthand": "2DS-L12",
           "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
           "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
           "shoppingLink": "",
@@ -8151,7 +8156,7 @@
         "metadata": {
           "productId": "BAF-HAIKU",
           "orderingCode": "HK-60-I-AL-WH-STD-L",
-          "shorthand": "2DS-L9",
+          "shorthand": "2DS-L12",
           "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
           "shoppingLink": "",
           "fanSeries": "HK",
@@ -8261,18 +8266,18 @@
   "force": false,
   "customSymbols": [
     {
-      "id": "custom-2ds-l9",
-      "name": "2DS-L9",
+      "id": "custom-2ds-l12",
+      "name": "2DS-L12",
       "category": "lighting",
-      "description": "Recessed Light Preset - Shorthand: 2DS-L9. Product: 2DS-L9, Bus: Bus 1, Cable: Cat6",
+      "description": "Recessed Light Preset - Shorthand: 2DS-L12. Product: 2DS-L12, Bus: Bus 1, Cable: Cat6",
       "color": 0,
       "size": {
         "width": 16,
         "height": 16
       },
       "metadata": {
-        "shorthand": "2DS-L9",
-        "productId": "2DS-L9",
+        "shorthand": "2DS-L12",
+        "productId": "2DS-L12",
         "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
@@ -8290,14 +8295,14 @@
         "specTrimOptions": "NONE",
         "specBracket": "F1"
       },
-      "productId": "2DS-L9",
+      "productId": "2DS-L12",
       "meshType": "universal"
     },
     {
       "id": "custom-2ds-l12-1768153974533",
       "name": "2DS-L12",
       "category": "lighting",
-      "description": "Recessed Light Preset - Shorthand: 2DS-L9. Product: 2DS-L9, Bus: Bus 1, Cable: Cat6",
+      "description": "Recessed Light Preset - Shorthand: 2DS-L12. Product: 2DS-L12, Bus: Bus 1, Cable: Cat6",
       "color": 0,
       "size": {
         "width": 16,
@@ -8321,9 +8326,9 @@
         "specTrimType": "R",
         "specTrimOptions": "NONE",
         "specBracket": "F1",
-        "productId": "2DS-L9"
+        "productId": "2DS-L12"
       },
-      "productId": "2DS-L9",
+      "productId": "2DS-L12",
       "meshType": "universal"
     },
     {

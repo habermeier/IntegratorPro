@@ -95,10 +95,10 @@ export const ScaleRuler: React.FC<ScaleRulerProps> = ({ editor }) => {
             <div className="relative" style={{ width: rulerData.widthPx + 40, height: rulerData.widthPx + 40 }}>
                 <svg width={rulerData.widthPx + 40} height={rulerData.widthPx + 40} style={{ overflow: 'visible' }} className="drop-shadow-sm">
                     <defs>
-                        {/* Uniform Soft Aura Filter */}
+                        {/* Uniform Soft Aura Filter - Flipped to white glow for dark text */}
                         <filter id="aura" x="-50%" y="-50%" width="200%" height="200%">
-                            <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur" />
-                            <feFlood floodColor="#020617" floodOpacity="0.75" result="glowColor" />
+                            <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
+                            <feFlood floodColor="#ffffff" floodOpacity="0.9" result="glowColor" />
                             <feComposite in="glowColor" in2="blur" operator="in" result="softGlow" />
                             <feMerge>
                                 <feMergeNode in="softGlow" />
@@ -111,7 +111,7 @@ export const ScaleRuler: React.FC<ScaleRulerProps> = ({ editor }) => {
                         {/* X-Axis (Bottom) - Extended slightly for smooth termination */}
                         <path
                             d={`M -2 ${rulerData.widthPx} L ${rulerData.widthPx + 4} ${rulerData.widthPx}`}
-                            stroke="white"
+                            stroke="#0f172a"
                             strokeWidth="1.5"
                             strokeLinecap="round"
                             opacity="0.9"
@@ -124,7 +124,7 @@ export const ScaleRuler: React.FC<ScaleRulerProps> = ({ editor }) => {
                                 y1={rulerData.widthPx - (i % 2 === 0 ? 8 : 4)}
                                 x2={rulerData.widthPx * p}
                                 y2={rulerData.widthPx + (i % 2 === 0 ? 8 : 0)}
-                                stroke="white"
+                                stroke="#0f172a"
                                 strokeWidth={i % 2 === 0 ? 1.5 : 1}
                                 strokeLinecap="round"
                                 opacity="0.9"
@@ -134,7 +134,7 @@ export const ScaleRuler: React.FC<ScaleRulerProps> = ({ editor }) => {
                         {/* Y-Axis (Left) - Extended slightly for smooth termination */}
                         <path
                             d={`M 0 -4 L 0 ${rulerData.widthPx + 2}`}
-                            stroke="white"
+                            stroke="#0f172a"
                             strokeWidth="1.5"
                             strokeLinecap="round"
                             opacity="0.9"
@@ -147,7 +147,7 @@ export const ScaleRuler: React.FC<ScaleRulerProps> = ({ editor }) => {
                                 y1={rulerData.widthPx * (1 - p)}
                                 x2={i % 2 === 0 ? 8 : 0}
                                 y2={rulerData.widthPx * (1 - p)}
-                                stroke="white"
+                                stroke="#0f172a"
                                 strokeWidth={i % 2 === 0 ? 1.5 : 1}
                                 strokeLinecap="round"
                                 opacity="0.9"
@@ -158,7 +158,7 @@ export const ScaleRuler: React.FC<ScaleRulerProps> = ({ editor }) => {
                         <text
                             x={rulerData.widthPx + 10}
                             y={rulerData.widthPx + 4}
-                            fill="white"
+                            fill="#0f172a"
                             fontSize="11"
                             fontWeight="600"
                             textAnchor="start"
@@ -170,7 +170,7 @@ export const ScaleRuler: React.FC<ScaleRulerProps> = ({ editor }) => {
                         <text
                             x="10"
                             y="-4"
-                            fill="white"
+                            fill="#0f172a"
                             fontSize="11"
                             fontWeight="600"
                             textAnchor="start"

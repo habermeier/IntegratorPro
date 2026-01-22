@@ -712,7 +712,8 @@ export class LayerSystem {
                     const { meters: areaM2, feet: areaSqFt } = calculateRoomArea(poly.points, pixelsPerMeter);
                     const areaLabel = `${Math.round(areaSqFt)} sqft`;
 
-                    const labelSprite = this.createLabel(roomName, displayType, areaLabel);
+                    const roomTint = 'rgba(219, 234, 254, 1)'; // Sky Blue-100 (Visible)
+                    const labelSprite = this.createLabel(roomName, displayType, areaLabel, roomTint);
                     labelSprite.name = 'label';
 
                     // Calculate Centroid
@@ -763,6 +764,7 @@ export class LayerSystem {
                     group.userData.labelName = roomName;
                     group.userData.labelType = roomType;
                     group.userData.areaLabel = areaLabel;
+                    group.userData.labelColor = roomTint;
                 }
 
                 group.userData = { id, type: poly.polyType, lastHash: pointsHash };
@@ -844,7 +846,9 @@ export class LayerSystem {
                     const { meters: areaM2, feet: areaSqFt } = calculateRoomArea(poly.points, pixelsPerMeter);
                     const areaLabel = `${Math.round(areaSqFt)} sqft`;
 
-                    if (group.userData.labelName !== rName || group.userData.labelType !== rType || group.userData.areaLabel !== areaLabel) {
+                    const roomTint = 'rgba(219, 234, 254, 1)'; // Sky Blue-100
+
+                    if (group.userData.labelName !== rName || group.userData.labelType !== rType || group.userData.areaLabel !== areaLabel || group.userData.labelColor !== roomTint) {
                         const oldLabel = group.getObjectByName('label') as THREE.Sprite;
                         if (oldLabel) {
                             if (oldLabel.geometry) oldLabel.geometry.dispose();
@@ -859,7 +863,7 @@ export class LayerSystem {
                         }
 
                         const displayType = this.formatRoomType(rType);
-                        const newLabel = this.createLabel(rName, displayType, areaLabel);
+                        const newLabel = this.createLabel(rName, displayType, areaLabel, roomTint);
                         newLabel.name = 'label';
                         let cx = 0, cy = 0;
                         poly.points.forEach(p => { cx += p.x; cy += p.y; });
@@ -871,6 +875,7 @@ export class LayerSystem {
                         group.userData.labelName = rName;
                         group.userData.labelType = rType;
                         group.userData.areaLabel = areaLabel;
+                        group.userData.labelColor = roomTint;
                     }
                 }
 
@@ -1002,8 +1007,11 @@ export class LayerSystem {
                     identifier = "";
                 }
 
+                const isLighting = symbolData.category === 'lighting';
+                const tint = isLighting ? 'rgba(254, 249, 195, 1)' : 'rgba(255, 255, 255, 1)'; // Yellow-100 vs White
+
                 const willShowRegularLabel = !!identifier && identifier !== effectiveShorthand;
-                const labelsHash = `${willShowRegularLabel}|${identifier}|${effectiveShorthand}`;
+                const labelsHash = `${willShowRegularLabel}|${identifier}|${effectiveShorthand}|${tint}`;
 
                 // Sync Labels (even for cached groups)
                 if (group.userData.labelsHash !== labelsHash) {
@@ -1020,14 +1028,14 @@ export class LayerSystem {
                     const offsetY = -((symbolHeight / 2) + 12);
 
                     if (willShowRegularLabel) {
-                        const labelSprite = this.createLabel(identifier, "");
+                        const labelSprite = this.createLabel(identifier, "", tint);
                         labelSprite.name = 'label';
                         labelSprite.position.set(offsetX + 5, offsetY - 5, 0.5);
                         group.add(labelSprite);
                     }
 
                     if (effectiveShorthand) {
-                        const shorthandLabel = this.createShorthandLabel(effectiveShorthand);
+                        const shorthandLabel = this.createShorthandLabel(effectiveShorthand, tint);
                         shorthandLabel.name = 'shorthand-label';
                         shorthandLabel.position.set(offsetX, offsetY, 0.6);
                         group.add(shorthandLabel);
@@ -1186,7 +1194,7 @@ export class LayerSystem {
         });
     }
 
-    private createLabel(name: string, type: string, area?: string): THREE.Sprite {
+    private createLabel(name: string, type: string, area?: string, bgColor: string = 'rgba(255, 255, 255, 0.85)'): THREE.Sprite {
         const canvas = document.createElement('canvas');
         const fontSize = 32;
         const font = `900 ${fontSize}px Inter, sans-serif`;
@@ -1225,7 +1233,7 @@ export class LayerSystem {
         ctx.shadowBlur = 18;
         ctx.shadowOffsetY = 10;
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.fillStyle = bgColor;
         ctx.beginPath();
         // Use standard rounded rect (shim for compatibility or modern API)
         if (ctx.roundRect) {
@@ -1282,7 +1290,7 @@ export class LayerSystem {
     }
 
 
-    private createShorthandLabel(shorthandText: string): THREE.Sprite {
+    private createShorthandLabel(shorthandText: string, bgColor: string = 'rgba(255, 255, 255, 0.75)'): THREE.Sprite {
         const canvas = document.createElement('canvas');
         const fontSize = 28;
         const font = `900 ${fontSize}px Inter, sans-serif`;
@@ -1313,7 +1321,7 @@ export class LayerSystem {
         ctx.shadowBlur = 12;
         ctx.shadowOffsetY = 6;
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.75)'; // Higher transparency
+        ctx.fillStyle = bgColor; // Higher transparency
         ctx.beginPath();
         if (ctx.roundRect) {
             ctx.roundRect(centerX - rectWidth / 2, centerY - rectHeight / 2, rectWidth, rectHeight, cornerRadius);

@@ -192,6 +192,7 @@ export const FloorPlanRenderer: React.FC = () => {
     );
 
     const [showFPS, setShowFPS] = useState(false);
+    const [isPresentationMode, setIsPresentationMode] = useState(false);
 
     useEffect(() => {
         if (!editor) return;
@@ -221,12 +222,28 @@ export const FloorPlanRenderer: React.FC = () => {
         };
     }, [editor]);
 
-    // Keyboard shortcuts for toggling sidebars
+    // Keyboard shortcuts for toggling sidebars and Presentation Mode
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             // Ignore if user is typing in an input, textarea, or select
             const target = e.target as HTMLElement;
             if (['input', 'textarea', 'select'].includes(target.tagName.toLowerCase()) || target.isContentEditable) {
+                return;
+            }
+
+            if (e.key === 'Escape') {
+                if (isPresentationMode) {
+                    setIsPresentationMode(false);
+                    e.stopImmediatePropagation();
+                    return;
+                }
+
+                // Smart Esc: Only enter Zen mode if nothing is selected
+                // This allows the first Esc to clear selection, and the second to enter Zen
+                if (selectedIds.length === 0 && activeTool === 'select') {
+                    setIsPresentationMode(true);
+                    e.stopImmediatePropagation();
+                }
                 return;
             }
 
@@ -389,18 +406,20 @@ export const FloorPlanRenderer: React.FC = () => {
     return (
         <div className="h-full w-full flex flex-col bg-slate-950 overflow-hidden text-slate-200">
             {showFPS && <FPSCounter />}
-            <EditorHUD
-                editor={editor}
-                activeTool={activeTool}
-                isEditMode={isEditMode}
-                activeLayerName={layers.find(l => l.id === activeLayerId)?.name}
-                lastKey={lastKey || ''}
-                isZoomCursorEnabled={editor?.cameraSystem.getZoomCursorEnabled() ?? true}
-            />
+            {!isPresentationMode && (
+                <EditorHUD
+                    editor={editor}
+                    activeTool={activeTool}
+                    isEditMode={isEditMode}
+                    activeLayerName={layers.find(l => l.id === activeLayerId)?.name}
+                    lastKey={lastKey || ''}
+                    isZoomCursorEnabled={editor?.cameraSystem.getZoomCursorEnabled() ?? true}
+                />
+            )}
 
             <div className={`flex-1 flex overflow-hidden transition-all duration-500 ease-out`}>
                 {/* 🛠️ Vertical Tool Palette - Hidden during place-symbol mode */}
-                {activeTool !== 'place-symbol' && (
+                {activeTool !== 'place-symbol' && !isPresentationMode && (
                     <ToolPalette
                         editor={editor}
                         activeTool={activeTool}
@@ -409,7 +428,7 @@ export const FloorPlanRenderer: React.FC = () => {
                 )}
 
                 {/* 📱 Device Selection Panel (Left) - Auto-hide on hover */}
-                {editor && (
+                {editor && !isPresentationMode && (
                     <>
                         {/* Mini-strip when collapsed - glows when mouse near edge */}
                         {!panels.left.open && (
@@ -466,7 +485,7 @@ export const FloorPlanRenderer: React.FC = () => {
                 </div>
 
                 {/* 📑 Right Sidebar Area - Auto-hide on hover */}
-                {editor && (
+                {editor && !isPresentationMode && (
                     <>
                         {/* Full panel when open - AUTO-ULTIMATE-UX-P26: Staggered entry animation */}
                         {panels.right.open && (
@@ -523,7 +542,7 @@ export const FloorPlanRenderer: React.FC = () => {
                 />
             )}
 
-            <EditorFooter coordsRef={coordsRef} />
+            <EditorFooter coordsRef={coordsRef} zenMode={isPresentationMode} />
             {/* Room Properties Modal */}
             {pendingRoom && (
                 <RoomPropertiesModal

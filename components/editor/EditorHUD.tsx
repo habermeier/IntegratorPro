@@ -242,44 +242,56 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
                             </div>
 
                             {/* Tools */}
-                            <div className="space-y-2">
-                                <h4 className="text-xs font-black text-emerald-500 uppercase tracking-wider mb-2">Tool Shortcuts</h4>
-                                <div className="grid grid-cols-2 gap-1 text-xs">
-                                    <div className="flex items-center space-x-2">
-                                        <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-white font-mono border border-slate-700">V</kbd>
-                                        <span className="text-slate-300">Select</span>
+                            <div className="space-y-4">
+                                <section>
+                                    <h4 className="text-xs font-black text-emerald-500 uppercase tracking-wider mb-2">Tool Shortcuts</h4>
+                                    <div className="grid grid-cols-2 gap-y-2 gap-x-1 text-xs">
+                                        <div className="flex items-center space-x-2">
+                                            <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-white font-mono border border-slate-700 w-6 text-center">V</kbd>
+                                            <span className="text-slate-300">Select</span>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-white font-mono border border-slate-700 w-6 text-center">R</kbd>
+                                            <span className="text-slate-300">Room</span>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-white font-mono border border-slate-700 w-6 text-center">M</kbd>
+                                            <span className="text-slate-300">Mask</span>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-white font-mono border border-slate-700 w-6 text-center">P</kbd>
+                                            <span className="text-slate-300">Symbol</span>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-white font-mono border border-slate-700 w-6 text-center">F</kbd>
+                                            <span className="text-slate-300">Furniture</span>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-white font-mono border border-slate-700 w-6 text-center">S</kbd>
+                                            <span className="text-slate-300">Scale</span>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-white font-mono border border-slate-700 w-6 text-center">D</kbd>
+                                            <span className="text-slate-300">Measure</span>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center space-x-2">
-                                        <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-white font-mono border border-slate-700">R</kbd>
-                                        <span className="text-slate-300">Room</span>
+                                </section>
+
+                                <section>
+                                    <h4 className="text-xs font-black text-emerald-500 uppercase tracking-wider mb-2">Editor Controls</h4>
+                                    <div className="flex flex-col space-y-2 text-xs">
+                                        <div className="flex items-center space-x-2">
+                                            <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-white font-mono border border-slate-700 text-center">, / .</kbd>
+                                            <span className="text-slate-300 ml-1">Cycle Devices (Prev/Next)</span>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center space-x-2">
-                                        <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-white font-mono border border-slate-700">M</kbd>
-                                        <span className="text-slate-300">Mask</span>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-white font-mono border border-slate-700">P</kbd>
-                                        <span className="text-slate-300">Pan</span>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-white font-mono border border-slate-700">F</kbd>
-                                        <span className="text-slate-300">Furniture</span>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-white font-mono border border-slate-700">S</kbd>
-                                        <span className="text-slate-300">Symbol</span>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-white font-mono border border-slate-700">D</kbd>
-                                        <span className="text-slate-300">Device</span>
-                                    </div>
-                                </div>
+                                </section>
                             </div>
                         </div>
 
                         <div className="mt-4 pt-3 border-t border-slate-700">
                             <p className="text-xs text-slate-500 italic">
-                                Press <kbd className="px-1 py-0.5 bg-slate-800 rounded text-emerald-400 font-mono text-[10px]">Esc</kbd> or click outside to close
+                                Press <kbd className="px-1 py-0.5 bg-slate-800 rounded text-emerald-400 font-mono text-[10px]">Esc</kbd> to toggle Presentation Mode (when no selection) or close menus.
                             </p>
                         </div>
                     </div>

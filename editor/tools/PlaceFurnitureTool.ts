@@ -315,23 +315,28 @@ export class PlaceFurnitureTool implements Tool {
 
     private createDistanceLabel(dist: number): THREE.Sprite {
         const canvas = document.createElement('canvas');
-        canvas.width = 128;
-        canvas.height = 64;
+        canvas.width = 160;   // Increased width for better glow padding
+        canvas.height = 80;
         const ctx = canvas.getContext('2d');
         if (ctx) {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            ctx.fillRect(0, 0, 128, 64);
-            ctx.font = 'bold 24px Arial';
-            ctx.fillStyle = 'white';
+            // White Glow (Shadow) Effect
+            ctx.shadowColor = 'white';
+            ctx.shadowBlur = 8;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+
+            // Text Styling
+            ctx.font = 'bold 26px "Inter", Arial';
+            ctx.fillStyle = '#1e293b'; // Dark slate/black
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
             // Use formatDistance from measurementUtils
-            // Convert inches to meters (dist is in inches)
             const meters = dist * 0.0254;
             const text = formatDistance(meters, this.unitSystem);
 
-            ctx.fillText(text, 64, 32);
+            // Draw text multiple times for stronger shadow/glow if needed
+            ctx.fillText(text, 80, 40);
         }
 
         const texture = new THREE.CanvasTexture(canvas);

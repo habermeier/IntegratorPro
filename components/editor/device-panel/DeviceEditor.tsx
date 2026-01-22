@@ -1,5 +1,6 @@
 import React from 'react';
-import { Target, Box, ChevronLeft, ChevronRight, Save, Trash2, Cpu, Activity, Lightbulb, Zap, ArrowLeftRight, Settings2, Copy, X } from 'lucide-react';
+import { Target, Box, ChevronLeft, ChevronRight, Save, Trash2, Cpu, Activity, Lightbulb, Zap, ArrowLeftRight, Settings2, Copy, X, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { SYMBOL_LIBRARY } from '../../../editor/models/symbolLibrary';
 import { getSpecBuilder } from './SpecBuilderRegistry';
 import catalog from '../../../catalog.json';
@@ -36,6 +37,7 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
     unitPreference,
     devices
 }) => {
+    const navigate = useNavigate();
     const [isGeneralExpanded, setIsGeneralExpanded] = React.useState(true);
     const [isPlacementExpanded, setIsPlacementExpanded] = React.useState(true);
     const [isConfigExpanded, setIsConfigExpanded] = React.useState(true);
@@ -257,34 +259,32 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
                         </div>
                     </div>
 
-                    <div className="py-2">
-                        <button
-                            onClick={() => {
-                                // Potentially navigate to full screen builder or open a dedicated large modal
-                                window.location.hash = `/registry/${product?.id || ''}`;
-                            }}
-                            className="w-full group flex items-center justify-between p-3 bg-slate-950 border border-blue-500/30 rounded-xl hover:bg-blue-600/10 transition-all hover:border-blue-500/60 shadow-lg shadow-blue-900/10"
-                        >
-                            <div className="flex flex-col text-left">
-                                <span className="text-[7px] text-blue-400 uppercase font-black mb-1">Configuration Utility</span>
-                                <span className="text-[11px] text-white font-black uppercase">Open Full-Screen Builder</span>
+                    {SpecBuilder ? (
+                        <div className="space-y-4 animate-in fade-in slide-in-from-top-1 duration-300">
+                            <div className="p-3 bg-slate-900/50 rounded-lg border border-blue-500/20">
+                                <SpecBuilder
+                                    deviceId={editingDevice.id}
+                                    initialMetadata={draftMetadata || editingDevice.metadata || {}}
+                                    onChange={setDraftMetadata}
+                                />
                             </div>
-                            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-600/30 group-hover:scale-110 transition-transform">
-                                <Settings2 size={16} />
-                            </div>
-                        </button>
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-[8px] font-black uppercase tracking-widest text-slate-500 px-1">
-                        <div className="flex flex-col">
-                            <span>Shorthand</span>
-                            <span className="text-[10px] text-slate-300 font-mono mt-0.5 truncate">{draftMetadata?.shorthand || 'Not Set'}</span>
+                            <button
+                                onClick={() => navigate('/registry')}
+                                className="w-full group flex items-center justify-between p-2 bg-slate-950 border border-slate-800 rounded-lg hover:bg-slate-800 transition-all text-slate-400 hover:text-white"
+                            >
+                                <div className="flex flex-col text-left">
+                                    <span className="text-[7px] uppercase font-black">Global Registry</span>
+                                    <span className="text-[9px] font-bold">Manage Hardware Defaults</span>
+                                </div>
+                                <ExternalLink size={14} className="opacity-50 group-hover:opacity-100" />
+                            </button>
                         </div>
-                        <div className="flex flex-col text-right">
-                            <span>Order Code</span>
-                            <span className="text-[10px] text-slate-300 font-mono mt-0.5 truncate">{draftMetadata?.orderingCode || 'STD'}</span>
+                    ) : (
+                        <div className="py-8 text-center border border-dashed border-slate-800 rounded-xl">
+                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest italic">No Advanced Logic for this Item</span>
                         </div>
-                    </div>
+                    )}
                 </div>
             </CollapsibleSection>
         </div>

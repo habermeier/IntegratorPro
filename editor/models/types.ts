@@ -38,7 +38,7 @@ export interface LayerConfig {
     allowLayerEditing?: boolean; // true for image layers, false for data layers
 }
 
-export type RoomType = 'hallway' | 'closet' | 'bedroom' | 'bathroom' | 'open' | 'other' | 'garage';
+export type RoomType = 'hallway' | 'closet' | 'bedroom' | 'bathroom' | 'open' | 'other' | 'garage' | 'kitchen';
 
 export interface Polygon {
     id: string;

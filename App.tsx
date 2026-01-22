@@ -15,6 +15,7 @@ import RoughInGuide from './components/RoughInGuide';
 import FloorPlanRenderer from './components/FloorPlanRenderer';
 import Settings from './components/Settings';
 import SystemManager from './components/SystemManager';
+import { dataService } from './src/services/DataService';
 
 // Icons
 import { LayoutDashboard, Activity, Cpu, Map, FileText, Hammer, Menu, Settings as SettingsIcon, Home, Layers } from 'lucide-react';
@@ -56,6 +57,15 @@ const App = () => {
   const flatModules = useMemo(() => flattenModules(allGroupedModules), [allGroupedModules]);
 
   const [connections, setConnections] = useState<Connection[]>(MOCK_CONNECTIONS);
+
+  // AUTO-PROJECT-LOAD: Ensure project is loaded on mount so BOM/Registry is never empty after refresh
+  useEffect(() => {
+    dataService.loadProject().then(() => {
+      console.log('📦 App: Project data initialized');
+    }).catch(err => {
+      console.error('📦 App: Failed to load project', err);
+    });
+  }, []);
 
   // Helper for deep linking from components (replacing setView)
   // Components might need to navigate to '/visualizer/some-id'
@@ -205,7 +215,7 @@ const App = () => {
                 <div className="overflow-y-auto p-4 w-full h-full">
                   <div className="max-w-7xl mx-auto space-y-4">
                     <h2 className="text-2xl font-bold text-white mb-6">Bill of Materials</h2>
-                    <ProjectBOM modules={allGroupedModules} highlightedModuleId={null} linkPrefix="bom" />
+                    <ProjectBOM modules={allGroupedModules} devices={devices} highlightedModuleId={null} linkPrefix="bom" />
                   </div>
                 </div>
               } />
