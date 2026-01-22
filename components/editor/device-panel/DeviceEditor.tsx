@@ -62,8 +62,10 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
         editingDevice.productId; // Final fallback
 
     // Attempt to find in catalog (Case Insensitive)
-    const catalogProduct = catalogV2.registry.loads.find(p =>
+    const catalogProduct = (catalogV2.registry.loads as any[]).find(p =>
         p.id.toLowerCase() === effectiveProductId?.toLowerCase()
+    ) || (catalogV2.blueprints as any[]).find(bp =>
+        bp.id.toLowerCase() === effectiveProductId?.toLowerCase()
     );
 
     const product = catalogProduct || (effectiveProductId && !isGeneric(effectiveProductId) ? {

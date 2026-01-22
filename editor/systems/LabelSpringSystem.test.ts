@@ -6,6 +6,10 @@ async function testLabelSpringSystem() {
 
     const scene = new THREE.Scene();
     const springSystem = new LabelSpringSystem();
+    const mockLayerSystem = {
+        scene,
+        getLayer: (id: string) => ({ container: scene, visible: true })
+    } as any;
 
     // Create two labels close to each other
     const l1 = new THREE.Sprite();
@@ -26,14 +30,14 @@ async function testLabelSpringSystem() {
     console.log("Initial positions:", l1.position.x, l1.position.y, "|", l2.position.x, l2.position.y);
 
     // Initial update captures anchors
-    springSystem.update(1, scene);
+        springSystem.update(1, mockLayerSystem);
 
     const p1_start = l1.position.clone();
     const p2_start = l2.position.clone();
 
     // Run a few frames
     for (let i = 0; i < 10; i++) {
-        springSystem.update(1, scene);
+            springSystem.update(1, mockLayerSystem);
     }
 
     console.log("Positions after 10 frames:", l1.position.x, l1.position.y, "|", l2.position.x, l2.position.y);
@@ -51,7 +55,7 @@ async function testLabelSpringSystem() {
     // Check if it reaches equilibrium
     let iterations = 0;
     while (springSystem.isMoving() && iterations < 500) {
-        springSystem.update(1, scene);
+            springSystem.update(1, mockLayerSystem);
         iterations++;
     }
 

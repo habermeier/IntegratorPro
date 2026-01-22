@@ -1,11 +1,11 @@
 {
   "version": "2.0",
-  "timestamp": "2026-01-22T00:57:15.130Z",
+  "timestamp": "2026-01-22T02:41:23.000Z",
   "metadata": {
     "name": "270 Boll Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2026-01-22T00:57:15.113Z"
+    "modified": "2026-01-22T02:41:22.991Z"
   },
   "floorPlan": {
     "scale": {
@@ -4163,7 +4163,8 @@
         "range": 10,
         "cableType": "Cat6",
         "_migratedFrom": "custom-2ds-l12-1768153974533",
-        "isCombination": true
+        "isCombination": true,
+        "orderingCode": ""
       },
       "createdAt": 1768153985116,
       "x": 308.5338422300239,
@@ -7571,7 +7572,8 @@
         "range": 10,
         "cableType": "Cat6",
         "_migratedFrom": "custom-2ds-l12-1767158007452",
-        "isCombination": true
+        "isCombination": true,
+        "orderingCode": ""
       },
       "createdAt": 1768172993667,
       "x": -1887.9392530910468,
@@ -7619,7 +7621,8 @@
         "range": 10,
         "cableType": "Cat6",
         "_migratedFrom": "custom-2ds-l12-1767158007452",
-        "isCombination": true
+        "isCombination": true,
+        "orderingCode": ""
       },
       "createdAt": 1768172994917,
       "x": -2429.6450948499787,

@@ -704,13 +704,30 @@
     {
       "id": "DMF-X2-SQ-FL",
       "name": "DMF X-Series Square Flangeless",
+      "manufacturer": "DMF Lighting",
       "category": "lighting",
       "symbolType": "recessed-light",
       "components": [
-        { "productId": "dmf-x2ncs", "quantity": 1, "description": "Housing" },
-        { "productId": "dmf-x2ksmud", "quantity": 1, "description": "Mud-in Plate" },
-        { "productId": "dmf-x2tsdswhfl", "quantity": 1, "description": "Square Trim" },
-        { "productId": "dmf-xmd12930wfd", "quantity": 1, "description": "DALI-2 LED Module" }
+        {
+          "productId": "dmf-x2ncs",
+          "quantity": 1,
+          "description": "Housing"
+        },
+        {
+          "productId": "dmf-x2ksmud",
+          "quantity": 1,
+          "description": "Mud-in Plate"
+        },
+        {
+          "productId": "dmf-x2tsdswhfl",
+          "quantity": 1,
+          "description": "Square Trim"
+        },
+        {
+          "productId": "dmf-xmd12930wfd",
+          "quantity": 1,
+          "description": "DALI-2 LED Module"
+        }
       ],
       "calculatedStats": {
         "totalCost": 290,
@@ -726,6 +743,7 @@
     {
       "id": "HAIKU-52-ALU",
       "name": "HAIKU-52-ALU",
+      "manufacturer": "Big Ass Fans",
       "category": "hvac",
       "symbolType": "haiku-fan",
       "components": {
@@ -744,6 +762,7 @@
     {
       "id": "2DS-L12",
       "name": "2DS-L12",
+      "manufacturer": "HE Williams",
       "category": "lighting",
       "symbolType": "recessed-light",
       "components": {

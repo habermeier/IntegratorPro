@@ -47,6 +47,7 @@ export interface LoadComponent extends BaseComponent {
 export interface Blueprint {
     id: string;
     name: string;
+    manufacturer?: string;
     category: string;
     symbolType: string;
     components: {

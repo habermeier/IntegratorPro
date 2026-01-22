@@ -51,8 +51,6 @@ export class SelectTool implements Tool {
         remoteDebug('Selected IDs', 'SelectTool', { selectedIds });
         this.editor.emit('selection-changed', selectedIds);
         this.updateHandles();
-        this.editor.layerSystem.markDirty('room');
-        this.editor.layerSystem.markDirty('mask');
         this.editor.setDirty();
     }
 
@@ -210,8 +208,6 @@ export class SelectTool implements Tool {
             this.editor.selectionSystem.clearSelection();
             this.editor.emit('selection-changed', []);
             this.updateHandles();
-            this.editor.layerSystem.markDirty('room');
-            this.editor.layerSystem.markDirty('mask');
             this.editor.setDirty();
         } else if (key === 'Delete' || key === 'Backspace') {
             this.editor.deleteSelection();

@@ -1335,14 +1335,12 @@ export class FloorPlanEditor {
             this.animationFrameId = requestAnimationFrame(animate);
 
             // Continuous Pulse for selections
-            // PERFORMANCE: Only force every frame if NOT in intensity mode (intensity updates are throttled in LayerSystem)
-            if (this.selectionSystem.getSelectedIds().length > 0 && this.layerSystem.getLightingMode() !== 'intensity') {
-                this.needsRender = true;
-            }
+            // PERFORMANCE: Handled by update/render only if something actually changed or labels are moving.
+            // We no longer force every frame just because something is selected.
 
             // 3. Label Physics (Springs)
             const zoom = this.cameraSystem.getState().zoom;
-            const isLabelMoving = this.labelSpringSystem.update(zoom, this.scene);
+            const isLabelMoving = this.labelSpringSystem.update(zoom, this.layerSystem);
 
             if (this.needsRender || isLabelMoving) {
                 this.update();

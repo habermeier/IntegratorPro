@@ -6,6 +6,10 @@ async function testObstacleRepulsion() {
 
     const scene = new THREE.Scene();
     const springSystem = new LabelSpringSystem();
+    const mockLayerSystem = {
+        scene,
+        getLayer: (id: string) => ({ container: scene, visible: true })
+    } as any;
 
     // 1. Create a static obstacle (Symbol)
     const obstacle = new THREE.Group();
@@ -25,13 +29,13 @@ async function testObstacleRepulsion() {
     console.log("Initial Label position:", label.position.x, label.position.y);
 
     // Update system
-    springSystem.update(1, scene);
+    springSystem.update(1, mockLayerSystem);
 
     const p1_start = label.position.clone();
 
     // Run 5 frames
     for (let i = 0; i < 5; i++) {
-        springSystem.update(1, scene);
+        springSystem.update(1, mockLayerSystem);
     }
 
     console.log("Label position after 5 frames of Obstacle Repulsion:", label.position.x, label.position.y);
@@ -59,11 +63,11 @@ async function testObstacleRepulsion() {
     label3.uuid = 'label-3';
     scene.add(label3);
 
-    springSystem.update(1, scene);
+    springSystem.update(1, mockLayerSystem);
     const l2_start = label2.position.clone();
 
     for (let i = 0; i < 5; i++) {
-        springSystem.update(1, scene);
+        springSystem.update(1, mockLayerSystem);
     }
 
     const l2_move = label2.position.distanceTo(l2_start);

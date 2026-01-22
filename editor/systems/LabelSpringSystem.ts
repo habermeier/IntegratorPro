@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { LayerSystem } from './LayerSystem';
+import { VectorLayerContent } from '../models/types';
 
 /**
  * LabelSpringSystem handles physics-based collision avoidance for labels.
@@ -25,6 +27,8 @@ export class LabelSpringSystem {
     private lastZoom: number = -1;
     private activeFrames: number = 0;
     private readonly MAX_ACTIVE_FRAMES = 120; // Hard limit for any single "simulation run"
+    private lastSyncTime: number = 0;
+    private readonly SYNC_THROTTLE = 1000; // ms
 
     // Temporal vectors to avoid GC pressure
     private _tempVecA = new THREE.Vector3();
@@ -37,7 +41,8 @@ export class LabelSpringSystem {
      * Updates the physics for all visible labels.
      * @returns boolean true if the system is still computing/moving
      */
-    public update(zoom: number, scene: THREE.Scene): boolean {
+    public update(zoom: number, layerSystem: LayerSystem): boolean {
+        const now = Date.now();
         // 1. Wake triggers
         const zoomDelta = Math.abs(zoom - this.lastZoom);
         if (zoomDelta > 0.01) {
@@ -45,9 +50,10 @@ export class LabelSpringSystem {
             this.lastZoom = zoom;
         }
 
-        if (this.isDirty) {
-            this.syncElements(scene);
+        if (this.isDirty || (this.isActive && now - this.lastSyncTime > this.SYNC_THROTTLE)) {
+            this.syncElements(layerSystem);
             this.isDirty = false;
+            this.lastSyncTime = now;
         }
 
         // 2. Hard cutoff for stability
@@ -168,26 +174,34 @@ export class LabelSpringSystem {
         return this.isActive;
     }
 
-    private syncElements(scene: THREE.Scene): void {
+    private syncElements(layerSystem: LayerSystem): void {
         const currentLabels: THREE.Sprite[] = [];
         const currentObstacles: THREE.Object3D[] = [];
 
-        scene.traverse((object) => {
-            if (!object.visible) return;
-            if (object.parent?.visible === false) return;
+        // Layers that contain labels or obstacles
+        const targetLayerIds = ['lighting', 'room', 'furniture', 'technical'];
+        
+        targetLayerIds.forEach(id => {
+            const layer = layerSystem.getLayer(id);
+            if (!layer || !layer.visible) return;
 
-            if (object instanceof THREE.Sprite &&
-                (object.name === 'label' || object.name === 'shorthand-label')) {
-                currentLabels.push(object);
-                if (!this.anchors.has(object.uuid)) {
-                    const anchor = object.userData.anchor?.clone() || object.position.clone();
-                    this.anchors.set(object.uuid, anchor);
-                    object.userData.anchor = anchor.clone();
+            layer.container.traverse(object => {
+                // We still use traverse but only within relevant layers, which is much faster than full scene
+                if (!object.visible) return;
+
+                if (object instanceof THREE.Sprite &&
+                    (object.name === 'label' || object.name === 'shorthand-label')) {
+                    currentLabels.push(object);
+                    if (!this.anchors.has(object.uuid)) {
+                        const anchor = object.userData.anchor?.clone() || object.position.clone();
+                        this.anchors.set(object.uuid, anchor);
+                        object.userData.anchor = anchor.clone();
+                    }
                 }
-            }
-            else if (object.name.startsWith('symbol-') || object.name.startsWith('furniture-')) {
-                currentObstacles.push(object);
-            }
+                else if (object.name.startsWith('symbol-') || object.name.startsWith('furniture-')) {
+                    currentObstacles.push(object);
+                }
+            });
         });
 
         this.labels = currentLabels;

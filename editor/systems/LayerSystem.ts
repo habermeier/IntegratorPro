@@ -20,6 +20,7 @@ export class LayerSystem {
     // Cache to prevent recreating everything from scratch
     private meshCache: Map<string, THREE.Object3D> = new Map();
     private idToMesh: Map<string, THREE.Object3D> = new Map(); // O(1) lookup by ID
+    private previouslySelectedIds: Set<string> = new Set();
     private clock: THREE.Clock = new THREE.Clock();
     private hasLoggedLighting: boolean = false;
 
@@ -236,88 +237,85 @@ export class LayerSystem {
             }
         }
 
-        // 2. Selection Pulse (Optimized: O(SelectedCount) instead of O(TotalCount))
+        // 2. Selection Visuals (Static & Optimized)
         const selectedIds = this.scene.userData.editor?.selectionSystem.getSelectedIds() || [];
-        
-        // Reset previously selected items that are no longer selected
-        this.idToMesh.forEach((group, id) => {
-            if (group.userData.wasSelected && !selectedIds.includes(id)) {
-                this.resetObjectVisuals(group as THREE.Group);
-                group.userData.wasSelected = false;
+        const selectedIdsSet: Set<string> = new Set(selectedIds);
+
+        // Check if selection set actually changed
+        let selectionChanged = selectedIdsSet.size !== this.previouslySelectedIds.size;
+        if (!selectionChanged) {
+            for (const id of selectedIds) {
+                if (!this.previouslySelectedIds.has(id)) {
+                    selectionChanged = true;
+                    break;
+                }
             }
-        });
+        }
 
-        if (selectedIds.length > 0) {
-            selectedIds.forEach((id: string) => {
-                const group = this.idToMesh.get(id) as THREE.Group;
-                if (!group || !group.parent?.visible) return;
-
-                const itemType = group.userData.type; 
-                const isSymbol = itemType === 'symbol' || itemType === 'furniture';
-
-                // Pulse Logic
-                let fill = group.userData.fillMesh as THREE.Mesh;
-                if (!fill) {
-                    fill = group.getObjectByName('fill') as THREE.Mesh;
-                    group.userData.fillMesh = fill;
+        if (selectionChanged) {
+            // Reset old
+            this.previouslySelectedIds.forEach(id => {
+                if (!selectedIdsSet.has(id)) {
+                    const group = this.idToMesh.get(id) as THREE.Group;
+                    if (group) this.resetObjectVisuals(group);
                 }
-
-                if (fill && fill.material instanceof THREE.MeshBasicMaterial) {
-                    if (isSymbol) {
-                        fill.material.color.setRGB(0.2, 0.5 + pulse * 0.3, 1.0);
-                        fill.material.opacity = 0.8;
-                    } else {
-                        const isMaskItem = itemType === 'mask';
-                        fill.material.color.setRGB(0.2, 0.8 + pulse * 0.2, 1.0);
-                        fill.material.opacity = isMaskItem ? 0.3 + pulse * 0.2 : 0.1 + pulse * 0.2;
-                    }
-                }
-
-                let border = group.userData.borderMesh as THREE.Line;
-                if (!border) {
-                    border = group.getObjectByName('border') as THREE.Line;
-                    group.userData.borderMesh = border;
-                }
-
-                if (border && border.material instanceof THREE.LineBasicMaterial) {
-                    border.material.color.setRGB(1.0, 1.0, 0.0);
-                    border.material.opacity = 0.8 + pulse * 0.2;
-                }
-
-                if (isSymbol) {
-                    let shadow = group.userData.shadowMesh as THREE.Mesh;
-                    if (!shadow) {
-                        shadow = group.getObjectByName('selection-shadow') as THREE.Mesh;
-                        if (!shadow) {
-                            const fillGeo = (fill?.geometry as THREE.PlaneGeometry);
-                            const w = (fillGeo && fillGeo.parameters) ? fillGeo.parameters.width : 16;
-                            const h = (fillGeo && fillGeo.parameters) ? fillGeo.parameters.height : 16;
-                            const shadowGeo = new THREE.PlaneGeometry(w, h);
-                            const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.5, side: THREE.DoubleSide });
-                            shadow = new THREE.Mesh(shadowGeo, shadowMat);
-                            shadow.name = 'selection-shadow';
-                            shadow.position.set(4, -4, -0.1);
-                            group.add(shadow);
-                        }
-                        group.userData.shadowMesh = shadow;
-                    }
-                    shadow.visible = true;
-                    if (shadow.material instanceof THREE.MeshBasicMaterial) {
-                        shadow.material.opacity = 0.4 + pulse * 0.1;
-                    }
-                }
-                
-                group.userData.wasSelected = true;
             });
+
+            // Apply new
+            selectedIds.forEach(id => {
+                const group = this.idToMesh.get(id) as THREE.Group;
+                if (group) this.applySelectionVisuals(group);
+            });
+
+            this.previouslySelectedIds = selectedIdsSet;
         }
 
         // 3. Update Lighting Visuals (Heatmaps & Modes)
         if (this.pendingLightingVisualsUpdate) {
-            if (this.lightingMode !== 'intensity' || (now - this.lastHeatmapUpdateTime > this.HEATMAP_UPDATE_INTERVAL)) {
+            if (now - this.lastHeatmapUpdateTime > this.HEATMAP_UPDATE_INTERVAL) {
                 this.updateLightingVisuals();
                 this.lastHeatmapUpdateTime = now;
                 this.pendingLightingVisualsUpdate = false;
             }
+        }
+    }
+
+    private applySelectionVisuals(group: THREE.Group): void {
+        const itemType = group.userData.type;
+        const isSymbol = itemType === 'symbol' || itemType === 'furniture';
+
+        let fill = group.userData.fillMesh || group.getObjectByName('fill') as THREE.Mesh;
+        if (fill && fill.material instanceof THREE.MeshBasicMaterial) {
+            if (isSymbol) {
+                fill.material.color.setRGB(0.2, 0.6, 1.0); // Bright blue
+                fill.material.opacity = 0.8;
+            } else {
+                fill.material.color.setHex(0xfacc15); // Yellow highlight for rooms/masks
+                fill.material.opacity = (itemType === 'mask' ? 0.4 : 0.3);
+            }
+        }
+
+        let border = group.userData.borderMesh || group.getObjectByName('border') as THREE.Line;
+        if (border && border.material instanceof THREE.LineBasicMaterial) {
+            border.material.color.setRGB(1.0, 1.0, 0.0); // Yellow border
+            border.material.opacity = 1.0;
+        }
+
+        if (isSymbol) {
+            let shadow = group.userData.shadowMesh || group.getObjectByName('selection-shadow') as THREE.Mesh;
+            if (!shadow && fill) {
+                const fillGeo = (fill.geometry as THREE.PlaneGeometry);
+                const w = (fillGeo && fillGeo.parameters) ? fillGeo.parameters.width : 16;
+                const h = (fillGeo && fillGeo.parameters) ? fillGeo.parameters.height : 16;
+                const shadowGeo = new THREE.PlaneGeometry(w, h);
+                const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.5, side: THREE.DoubleSide });
+                shadow = new THREE.Mesh(shadowGeo, shadowMat);
+                shadow.name = 'selection-shadow';
+                shadow.position.set(4, -4, -0.1);
+                group.add(shadow);
+                group.userData.shadowMesh = shadow;
+            }
+            if (shadow) shadow.visible = true;
         }
     }
 
@@ -365,13 +363,6 @@ export class LayerSystem {
 
         const fixtures = lightingContent.symbols || [];
         const mode = this.lightingMode;
-
-        // Toggle Coverage Circle Visibility
-        lightingLayer.container.traverse(obj => {
-            if (obj.name === 'coverage-circle' || obj.name === 'coverage-circle-backing') {
-                obj.visible = (mode === 'circles');
-            }
-        });
 
         // Update Rooms (Heatmap & Stats)
         roomLayer.container.children.forEach(group => {
@@ -511,9 +502,8 @@ export class LayerSystem {
             const cacheKey = `${layer.id}-${id}`;
             let group = this.meshCache.get(cacheKey) as THREE.Group;
             const isMask = poly.polyType === 'mask';
-            const isSelected = selectedIds.has(id);
             const pointsHash = poly.points.map(p => `${(p.x ?? 0).toFixed(1)},${(p.y ?? 0).toFixed(1)}`).join('|') +
-                `|${(poly as any).name || ''}|${(poly as any).roomType || ''}|${poly.color || ''}|${isSelected}|${isMask ? this.isMaskEditMode : ''}`;
+                `|${(poly as any).name || ''}|${(poly as any).roomType || ''}|${poly.color || ''}|${isMask ? this.isMaskEditMode : ''}`;
 
             if (!group) {
                 group = new THREE.Group();
@@ -541,8 +531,8 @@ export class LayerSystem {
                 shape.closePath();
                 const geometry = new THREE.ShapeGeometry(shape);
                 const fillColor = isMask ? 0xffffff : (poly.color || 0x3b82f6);
-                const opacity = isMask ? (this.isMaskEditMode ? 0.6 : 1.0) : (isSelected ? 0.4 : 0.15);
-                const material = new THREE.MeshBasicMaterial({ color: isSelected ? 0xfacc15 : fillColor, transparent: true, opacity, side: THREE.DoubleSide, depthWrite: false });
+                const opacity = isMask ? (this.isMaskEditMode ? 0.6 : 1.0) : 0.15;
+                const material = new THREE.MeshBasicMaterial({ color: fillColor, transparent: true, opacity, side: THREE.DoubleSide, depthWrite: false });
                 const mesh = new THREE.Mesh(geometry, material);
                 mesh.name = 'fill';
                 group.add(mesh);
@@ -551,7 +541,7 @@ export class LayerSystem {
                 const borderPoints = poly.points.map(p => new THREE.Vector3(p.x, p.y, 0.1));
                 borderPoints.push(borderPoints[0]);
                 const borderGeometry = new THREE.BufferGeometry().setFromPoints(borderPoints);
-                const borderMaterial = new THREE.LineBasicMaterial({ color: isMask ? 0xf8fafc : (poly.color || 0x60a5fa), transparent: true, opacity: isSelected ? 1.0 : (isMask && !this.isMaskEditMode ? 0.0 : 1.0) });
+                const borderMaterial = new THREE.LineBasicMaterial({ color: isMask ? 0xf8fafc : (poly.color || 0x60a5fa), transparent: true, opacity: (isMask && !this.isMaskEditMode ? 0.0 : 1.0) });
                 const line = new THREE.Line(borderGeometry, borderMaterial);
                 line.name = 'border';
                 group.add(line);
@@ -661,6 +651,11 @@ export class LayerSystem {
 
                 group.userData.lastHash = pointsHash;
             }
+
+            // Persistence: Ensure selection visuals are applied even if group was just created/updated
+            if (selectedIds.has(poly.id)) {
+                this.applySelectionVisuals(group);
+            }
         });
 
         if (content.symbols) {
@@ -727,6 +722,10 @@ export class LayerSystem {
                     this.idToMesh.set(symbolData.id, group);
                 }
                 this.updateCoverageCircle(group, symbolData);
+
+                if (selectedIds.has(symbolData.id)) {
+                    this.applySelectionVisuals(group);
+                }
             });
         }
 
@@ -752,6 +751,10 @@ export class LayerSystem {
                     layer.container.add(group); this.meshCache.set(cacheKey, group); this.idToMesh.set(item.id, group);
                 } else {
                     group.position.set(item.x, item.y, 0.2); group.rotation.z = (item.rotation * Math.PI) / 180;
+                }
+
+                if (selectedIds.has(item.id)) {
+                    this.applySelectionVisuals(group);
                 }
             });
         }
@@ -897,7 +900,16 @@ export class LayerSystem {
         }
         const scale = symbolData.scale ?? 1;
         if (scale > 0) { rx /= scale; ry /= scale; ox /= scale; }
-        if (rx <= 0 || ry <= 0) { if (circle) circle.visible = false; return; }
+
+        const isCircleMode = this.lightingMode === 'circles';
+
+        if (rx <= 0 || ry <= 0 || !isCircleMode) {
+            if (circle) circle.visible = false;
+            const backing = group.getObjectByName(`${COVERAGE_NAME}-backing`);
+            if (backing) backing.visible = false;
+            return;
+        }
+
         if (!circle) {
             const curve = new THREE.EllipseCurve(ox, 0, rx, ry, 0, 2 * Math.PI, false, 0);
             const points = curve.getPoints(64); const geometry = new THREE.BufferGeometry().setFromPoints(points);
@@ -917,7 +929,9 @@ export class LayerSystem {
                 if (backing) { backing.geometry.dispose(); backing.geometry = newGeo.clone(); }
                 circle.userData = { radiusX: rx, radiusY: ry, offsetX: ox };
             }
-            circle.visible = true; const backing = group.getObjectByName(`${COVERAGE_NAME}-backing`); if (backing) backing.visible = true;
+            circle.visible = isCircleMode;
+            const backing = group.getObjectByName(`${COVERAGE_NAME}-backing`);
+            if (backing) backing.visible = isCircleMode;
         }
     }
 
