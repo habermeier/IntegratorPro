@@ -268,6 +268,7 @@ export class LayerSystem {
             });
 
             this.previouslySelectedIds = selectedIdsSet;
+            this.dirtyLayers.add('lighting');
         }
 
         // 3. Update Lighting Visuals (Heatmaps & Modes)
@@ -899,9 +900,12 @@ export class LayerSystem {
         const scale = symbolData.scale ?? 1;
         if (scale > 0) { rx /= scale; ry /= scale; ox /= scale; }
 
+                const selectedIds = new Set(this.scene.userData.editor?.selectionSystem.getSelectedIds() || []);
+        const isSelected = selectedIds.has(symbolData.id);
         const isCircleMode = this.lightingMode === 'circles';
+        const shouldShow = isCircleMode || isSelected;
 
-        if (rx <= 0 || ry <= 0 || !isCircleMode) {
+        if (rx <= 0 || ry <= 0 || !shouldShow) {
             if (circle) circle.visible = false;
             const backing = group.getObjectByName(`${COVERAGE_NAME}-backing`);
             if (backing) backing.visible = false;
@@ -927,9 +931,9 @@ export class LayerSystem {
                 if (backing) { backing.geometry.dispose(); backing.geometry = newGeo.clone(); }
                 circle.userData = { radiusX: rx, radiusY: ry, offsetX: ox };
             }
-            circle.visible = isCircleMode;
+            circle.visible = shouldShow;
             const backing = group.getObjectByName(`${COVERAGE_NAME}-backing`);
-            if (backing) backing.visible = isCircleMode;
+            if (backing) backing.visible = shouldShow;
         }
     }
 
