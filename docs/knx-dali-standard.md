@@ -240,6 +240,9 @@ The project standard for all recessed architectural downlighting is the **DMF X-
   - **Trim:** `X2TSDSWHFL` (Square Flangeless Trim with White Insert).
   - **Light Module:** `XMD` (DALI-2 LED Module, 1250lm, 3000K, Wide Flood).
 
+**Wet Location / Shower Note:**
+The DMF X-Series module is wet-location rated by default. For installations directly over showers or bathtubs, use the same component stack with the beveled flangeless trim. On the floor plan, these are identified with the **DMF-W** shorthand to distinguish them from standard dry-area fixtures (labeled **DMF**).
+
 ### 10.2 Ceiling Fans
 The project standard for ceiling fans is the **Big Ass Fans Haiku**. 
 

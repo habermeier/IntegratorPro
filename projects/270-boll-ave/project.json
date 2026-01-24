@@ -1,11 +1,11 @@
 {
   "version": "2.0",
-  "timestamp": "2026-01-22T03:05:54.585Z",
+  "timestamp": "2026-01-24T05:29:00.889Z",
   "metadata": {
     "name": "270 Boll Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2026-01-22T03:05:54.575Z"
+    "modified": "2026-01-24T05:29:00.882Z"
   },
   "floorPlan": {
     "scale": {
@@ -4017,7 +4017,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "isCombination": true,
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "lumens": 1250,
         "beamAngle": 50
       },
@@ -4046,7 +4046,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "2DS-L12",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L9",
@@ -4094,7 +4094,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -4142,7 +4142,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -4191,7 +4191,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -4239,7 +4239,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -4287,7 +4287,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -4335,7 +4335,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -4383,7 +4383,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -4431,7 +4431,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -4479,7 +4479,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -4527,7 +4527,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -4575,7 +4575,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -4623,7 +4623,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -4671,7 +4671,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -4719,7 +4719,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -4767,7 +4767,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -4815,7 +4815,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -4863,7 +4863,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -4911,7 +4911,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -4959,7 +4959,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -5007,7 +5007,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -5055,7 +5055,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -5103,7 +5103,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -5151,7 +5151,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -5199,7 +5199,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -5247,7 +5247,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -5295,7 +5295,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -5343,7 +5343,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -5391,7 +5391,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -5439,7 +5439,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -5487,7 +5487,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -5535,7 +5535,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -5583,7 +5583,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -5631,7 +5631,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -5679,7 +5679,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -5727,7 +5727,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -5775,7 +5775,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -5823,7 +5823,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -5871,7 +5871,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -5919,7 +5919,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -5967,7 +5967,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -6015,7 +6015,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -6063,7 +6063,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -6111,7 +6111,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -6159,7 +6159,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -6207,7 +6207,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -6255,7 +6255,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -6303,7 +6303,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -6351,7 +6351,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L9",
@@ -6399,7 +6399,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -6447,7 +6447,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -6495,7 +6495,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -6543,7 +6543,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -6591,7 +6591,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -6639,7 +6639,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -6687,7 +6687,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -6735,7 +6735,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -6783,7 +6783,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -6831,7 +6831,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -6879,7 +6879,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -6927,7 +6927,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -6975,7 +6975,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "generic-product",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -7023,7 +7023,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "2DS-L12",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L9",
@@ -7071,7 +7071,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "2DS-L12",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L9",
@@ -7119,7 +7119,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "2DS-L12",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L9",
@@ -7167,7 +7167,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "2DS-L12",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L9",
@@ -7215,7 +7215,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "2DS-L12",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -7263,7 +7263,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "2DS-L12",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L9",
@@ -7311,7 +7311,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "2DS-L12",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -7359,7 +7359,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "2DS-L12",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -7407,7 +7407,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "2DS-L12",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L9",
@@ -7455,7 +7455,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "2DS-L12",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L15",
@@ -7503,7 +7503,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "2DS-L12",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L9",
@@ -7551,7 +7551,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "2DS-L12",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L9",
@@ -7600,7 +7600,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "2DS-L12",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L9",
@@ -7649,7 +7649,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "2DS-L12",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L9",
@@ -7698,7 +7698,7 @@
       "busAssignment": "Bus 1",
       "metadata": {
         "productId": "2DS-L12",
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L15",
@@ -7783,7 +7783,7 @@
         "createdAt": "2026-01-11T23:49:23.988Z",
         "_migratedFrom": "generic-lighting",
         "_migrationTimestamp": 1768175963136,
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L15",
@@ -7866,7 +7866,7 @@
         "_migratedFrom": "generic-lighting",
         "_migrationTimestamp": 1768175963136,
         "isCombination": true,
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "lumens": 1250,
         "beamAngle": 50,
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD"
@@ -7934,7 +7934,7 @@
         "_migratedFrom": "generic-lighting",
         "_migrationTimestamp": 1768175963136,
         "isCombination": true,
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "lumens": 1250,
         "beamAngle": 50,
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD"
@@ -8001,7 +8001,7 @@
         "createdAt": "2026-01-11T23:51:34.571Z",
         "_migratedFrom": "generic-lighting",
         "_migrationTimestamp": 1768175963136,
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L15",
@@ -8083,7 +8083,7 @@
         "createdAt": "2026-01-11T23:52:48.092Z",
         "_migratedFrom": "generic-lighting",
         "_migrationTimestamp": 1768175963136,
-        "shorthand": "DMF-X",
+        "shorthand": "DMF",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -8323,8 +8323,8 @@
       "id": "lighting-1769051153072",
       "type": "DMF-X2-SQ-FL",
       "category": "lighting",
-      "x": -2334.6942228063544,
-      "y": 589.0890575554731,
+      "x": -2333.6942228063544,
+      "y": 604.0890575554731,
       "rotation": 0,
       "scale": 1,
       "room": "Primary WC Bathroom",
@@ -8368,7 +8368,7 @@
         },
         "metadata": {
           "isCombination": true,
-          "shorthand": "DMF-X"
+          "shorthand": "DMF"
         },
         "isBlueprint": true,
         "lumens": 800,
@@ -8377,6 +8377,936 @@
         "cableType": "Cat6"
       },
       "createdAt": "2026-01-22T03:05:53.072Z",
+      "deviceTypeId": "DMF-X2-SQ-FL"
+    },
+    {
+      "id": "lighting-1769229571478",
+      "type": "DMF-X2-SQ-FL",
+      "category": "lighting",
+      "x": -2746.109334746651,
+      "y": -491.25710299012405,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Bedroom 3 Bedroom",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL",
+        "name": "DMF X-Series Square Flangeless",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl",
+            "quantity": 1,
+            "description": "Square Trim"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF"
+        },
+        "isCombination": true,
+        "shorthand": "DMF",
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-24T04:39:31.478Z",
+      "deviceTypeId": "DMF-X2-SQ-FL"
+    },
+    {
+      "id": "lighting-1769229575241",
+      "type": "DMF-X2-SQ-FL",
+      "category": "lighting",
+      "x": -2477.0181943104335,
+      "y": -486.2273620473909,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Bedroom 3 Bedroom",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL",
+        "name": "DMF X-Series Square Flangeless",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl",
+            "quantity": 1,
+            "description": "Square Trim"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF"
+        },
+        "isCombination": true,
+        "shorthand": "DMF",
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-24T04:39:35.241Z",
+      "deviceTypeId": "DMF-X2-SQ-FL"
+    },
+    {
+      "id": "lighting-1769229578003",
+      "type": "DMF-X2-SQ-FL",
+      "category": "lighting",
+      "x": -2791.377003231248,
+      "y": -850.8835803955363,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Bedroom 3 Bedroom",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL",
+        "name": "DMF X-Series Square Flangeless",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl",
+            "quantity": 1,
+            "description": "Square Trim"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF"
+        },
+        "isCombination": true,
+        "shorthand": "DMF",
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-24T04:39:38.003Z",
+      "deviceTypeId": "DMF-X2-SQ-FL"
+    },
+    {
+      "id": "lighting-1769229579656",
+      "type": "DMF-X2-SQ-FL",
+      "category": "lighting",
+      "x": -2431.750525825836,
+      "y": -865.9728032237354,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Bedroom 3 Bedroom",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL",
+        "name": "DMF X-Series Square Flangeless",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl",
+            "quantity": 1,
+            "description": "Square Trim"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF"
+        },
+        "isCombination": true,
+        "shorthand": "DMF",
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-24T04:39:39.656Z",
+      "deviceTypeId": "DMF-X2-SQ-FL"
+    },
+    {
+      "id": "lighting-1769229581607",
+      "type": "DMF-X2-SQ-FL",
+      "category": "lighting",
+      "x": -2273.3136861297453,
+      "y": -725.1400568272102,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Bedroom 4 Bedroom",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL",
+        "name": "DMF X-Series Square Flangeless",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl",
+            "quantity": 1,
+            "description": "Square Trim"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF"
+        },
+        "isCombination": true,
+        "shorthand": "DMF",
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-24T04:39:41.607Z",
+      "deviceTypeId": "DMF-X2-SQ-FL"
+    },
+    {
+      "id": "lighting-1769229584105",
+      "type": "DMF-X2-SQ-FL",
+      "category": "lighting",
+      "x": -1969.3210429666317,
+      "y": -721.0805749417442,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Bedroom 4 Bedroom",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL",
+        "name": "DMF X-Series Square Flangeless",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl",
+            "quantity": 1,
+            "description": "Square Trim"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF"
+        },
+        "isCombination": true,
+        "shorthand": "DMF",
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-24T04:39:44.105Z",
+      "deviceTypeId": "DMF-X2-SQ-FL"
+    },
+    {
+      "id": "lighting-1769229586007",
+      "type": "DMF-X2-SQ-FL",
+      "category": "lighting",
+      "x": -1968.8359134379984,
+      "y": -1040.1921818757899,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Bedroom 4 Bedroom",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL",
+        "name": "DMF X-Series Square Flangeless",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl",
+            "quantity": 1,
+            "description": "Square Trim"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF"
+        },
+        "isCombination": true,
+        "shorthand": "DMF",
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-24T04:39:46.007Z",
+      "deviceTypeId": "DMF-X2-SQ-FL"
+    },
+    {
+      "id": "lighting-1769229587639",
+      "type": "DMF-X2-SQ-FL",
+      "category": "lighting",
+      "x": -2265.888038486578,
+      "y": -1037.7070523471564,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Bedroom 4 Bedroom",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL",
+        "name": "DMF X-Series Square Flangeless",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl",
+            "quantity": 1,
+            "description": "Square Trim"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF"
+        },
+        "isCombination": true,
+        "shorthand": "DMF",
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-24T04:39:47.639Z",
+      "deviceTypeId": "DMF-X2-SQ-FL"
+    },
+    {
+      "id": "lighting-1769232048344",
+      "type": "DMF-X2-SQ-FL-WET",
+      "category": "lighting",
+      "x": -2316.077497825598,
+      "y": 245.48872994543927,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Primary Bathroom",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL-WET",
+        "name": "DMF X-Series Square Flangeless (Wet/Shower)",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl-wet",
+            "quantity": 1,
+            "description": "Square Trim (Wet)"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF-W"
+        },
+        "isCombination": true,
+        "shorthand": "DMF-W",
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-24T05:20:48.344Z",
+      "deviceTypeId": "DMF-X2-SQ-FL-WET"
+    },
+    {
+      "id": "lighting-1769232087777",
+      "type": "DMF-X2-SQ-FL",
+      "category": "lighting",
+      "x": -2338.2499192894875,
+      "y": 452.5380567787775,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Primary Bathroom",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL",
+        "name": "DMF X-Series Square Flangeless",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl",
+            "quantity": 1,
+            "description": "Square Trim"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF"
+        },
+        "isCombination": true,
+        "shorthand": "DMF",
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-24T05:21:27.777Z",
+      "deviceTypeId": "DMF-X2-SQ-FL"
+    },
+    {
+      "id": "lighting-1769232103174",
+      "type": "DMF-X2-SQ-FL",
+      "category": "lighting",
+      "x": -2488.1777215691213,
+      "y": 629.8107019861901,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Primary Bathroom",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL",
+        "name": "DMF X-Series Square Flangeless",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl",
+            "quantity": 1,
+            "description": "Square Trim"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF"
+        },
+        "isCombination": true,
+        "shorthand": "DMF",
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-24T05:21:43.174Z",
+      "deviceTypeId": "DMF-X2-SQ-FL"
+    },
+    {
+      "id": "lighting-1769232107092",
+      "type": "DMF-X2-SQ-FL",
+      "category": "lighting",
+      "x": -2483.9544031950472,
+      "y": 451.8828997065565,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Primary Bathroom",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL",
+        "name": "DMF X-Series Square Flangeless",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl",
+            "quantity": 1,
+            "description": "Square Trim"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF"
+        },
+        "isCombination": true,
+        "shorthand": "DMF",
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-24T05:21:47.092Z",
+      "deviceTypeId": "DMF-X2-SQ-FL"
+    },
+    {
+      "id": "lighting-1769232471111",
+      "type": "DMF-X2-SQ-FL-WET",
+      "category": "lighting",
+      "x": -2011.2274558376212,
+      "y": 53.128000513974285,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Bathroom 2 Bathroom",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL-WET",
+        "name": "DMF X-Series Square Flangeless (Wet/Shower)",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl-wet",
+            "quantity": 1,
+            "description": "Square Trim (Wet)"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF-W"
+        },
+        "isCombination": true,
+        "shorthand": "DMF-W",
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-24T05:27:51.111Z",
+      "deviceTypeId": "DMF-X2-SQ-FL-WET"
+    },
+    {
+      "id": "lighting-1769232478676",
+      "type": "DMF-X2-SQ-FL",
+      "category": "lighting",
+      "x": -2030.266310539368,
+      "y": -293.2607873260091,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Bathroom 2 Bathroom",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL",
+        "name": "DMF X-Series Square Flangeless",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl",
+            "quantity": 1,
+            "description": "Square Trim"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF"
+        },
+        "isCombination": true,
+        "shorthand": "DMF",
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-24T05:27:58.676Z",
+      "deviceTypeId": "DMF-X2-SQ-FL"
+    },
+    {
+      "id": "lighting-1769232484674",
+      "type": "DMF-X2-SQ-FL",
+      "category": "lighting",
+      "x": -2026.2922939480375,
+      "y": -71.96258018259707,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Bathroom 2 Bathroom",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL",
+        "name": "DMF X-Series Square Flangeless",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl",
+            "quantity": 1,
+            "description": "Square Trim"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF"
+        },
+        "isCombination": true,
+        "shorthand": "DMF",
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-24T05:28:04.674Z",
       "deviceTypeId": "DMF-X2-SQ-FL"
     }
   ],

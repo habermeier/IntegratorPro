@@ -31,11 +31,7 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
     const strokeWidth = size / 16; // Proportional stroke width
     const fontSize = size * 0.3; // Shorthand text size (slightly smaller)
 
-    const isCombination = metadata?.isCombination === true;
     let displayShorthand = customShorthand || getSymbolShorthand(symbolType);
-    if (isCombination && displayShorthand && !displayShorthand.endsWith('*')) {
-        displayShorthand += '*';
-    }
 
     const renderLabels = (center: number, offset: number, displayShorthand: string) => {
         return (

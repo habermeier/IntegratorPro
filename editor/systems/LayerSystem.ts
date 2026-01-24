@@ -689,9 +689,7 @@ export class LayerSystem {
                 const metadata = symbolData.metadata || {};
                 const fallbackShorthand = getSymbolShorthand(symbolData.type);
                 let effectiveShorthand = (metadata as any).shorthand || fallbackShorthand;
-                if ((metadata as any).isCombination === true && effectiveShorthand && !effectiveShorthand.endsWith('*')) {
-                    effectiveShorthand += '*';
-                }
+
 
                 const labelsHash = `${!!symbolData.label}|${symbolData.label}|${effectiveShorthand}|${symbolData.category === 'lighting'}`;
                 if (group.userData.labelsHash !== labelsHash) {

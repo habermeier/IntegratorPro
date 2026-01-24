@@ -563,7 +563,7 @@
         "id": "fix-lumenpulse-lbx",
         "name": "Lumenpulse Lumenbeam Small (LBX-S)",
         "manufacturer": "Lumenpulse",
-        "description": "24V DC RGBW Uplight, Narrow Spot (10°), DMX/RDM",
+        "description": "24V DC RGBW Uplight, Narrow Spot (10\u00b0), DMX/RDM",
         "cost": 550,
         "url": "https://www.google.com/search?q=Lumenpulse+Lumenbeam+Small+LBX-S",
         "type": "load",
@@ -697,6 +697,17 @@
         "type": "load",
         "wattage": 15,
         "category": "accessory"
+      },
+      {
+        "id": "dmf-x2tsdswhfl-wet",
+        "name": "DMF X-Series Square Flangeless Trim (Wet Location)",
+        "manufacturer": "DMF Lighting",
+        "description": "White Flangeless Trim - Shower Rated",
+        "cost": 45,
+        "url": "https://www.prolighting.com/search/result/?q=X2TSDSWHFL",
+        "type": "load",
+        "wattage": 0,
+        "category": "lighting"
       }
     ]
   },
@@ -737,7 +748,7 @@
       },
       "metadata": {
         "isCombination": true,
-        "shorthand": "DMF-X"
+        "shorthand": "DMF"
       }
     },
     {
@@ -825,6 +836,45 @@
         "hvAmps": 0.25,
         "lvMa": 0,
         "totalAddresses": 0
+      }
+    },
+    {
+      "id": "DMF-X2-SQ-FL-WET",
+      "name": "DMF X-Series Square Flangeless (Wet/Shower)",
+      "manufacturer": "DMF Lighting",
+      "category": "lighting",
+      "symbolType": "recessed-light",
+      "components": [
+        {
+          "productId": "dmf-x2ncs",
+          "quantity": 1,
+          "description": "Housing"
+        },
+        {
+          "productId": "dmf-x2ksmud",
+          "quantity": 1,
+          "description": "Mud-in Plate"
+        },
+        {
+          "productId": "dmf-x2tsdswhfl-wet",
+          "quantity": 1,
+          "description": "Square Trim (Wet)"
+        },
+        {
+          "productId": "dmf-xmd12930wfd",
+          "quantity": 1,
+          "description": "DALI-2 LED Module"
+        }
+      ],
+      "calculatedStats": {
+        "totalCost": 290,
+        "hvAmps": 0.12,
+        "lvMa": 2,
+        "totalAddresses": 1
+      },
+      "metadata": {
+        "isCombination": true,
+        "shorthand": "DMF-W"
       }
     }
   ]
