@@ -1,11 +1,11 @@
 {
   "version": "2.0",
-  "timestamp": "2026-01-24T06:05:02.744Z",
+  "timestamp": "2026-01-27T16:59:08.898Z",
   "metadata": {
     "name": "270 Boll Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2026-01-24T06:05:02.733Z"
+    "modified": "2026-01-27T16:59:08.887Z"
   },
   "floorPlan": {
     "scale": {
@@ -8439,6 +8439,440 @@
         "cableType": "Cat6"
       },
       "createdAt": "2026-01-24T05:28:04.674Z",
+      "deviceTypeId": "DMF-X2-SQ-FL"
+    },
+    {
+      "id": "lighting-1769533107857",
+      "type": "DMF-X2-SQ-FL",
+      "category": "lighting",
+      "x": 1605.052345206198,
+      "y": 318.2886003619268,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Half Bathroom",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL",
+        "name": "DMF X-Series Square Flangeless",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl",
+            "quantity": 1,
+            "description": "Square Trim"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF"
+        },
+        "isCombination": true,
+        "shorthand": "DMF",
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-27T16:58:27.857Z",
+      "deviceTypeId": "DMF-X2-SQ-FL"
+    },
+    {
+      "id": "lighting-1769533110919",
+      "type": "DMF-X2-SQ-FL",
+      "category": "lighting",
+      "x": 1334.180685604906,
+      "y": 174.08354417131102,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Mud Other",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL",
+        "name": "DMF X-Series Square Flangeless",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl",
+            "quantity": 1,
+            "description": "Square Trim"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF"
+        },
+        "isCombination": true,
+        "shorthand": "DMF",
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-27T16:58:30.919Z",
+      "deviceTypeId": "DMF-X2-SQ-FL"
+    },
+    {
+      "id": "lighting-1769533121796",
+      "type": "DMF-X2-SQ-FL",
+      "category": "lighting",
+      "x": 188.33510398217572,
+      "y": 123.41690280704063,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Kitchen Open Area",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL",
+        "name": "DMF X-Series Square Flangeless",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl",
+            "quantity": 1,
+            "description": "Square Trim"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF"
+        },
+        "isCombination": true,
+        "shorthand": "DMF",
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-27T16:58:41.796Z",
+      "deviceTypeId": "DMF-X2-SQ-FL"
+    },
+    {
+      "id": "lighting-1769533128036",
+      "type": "DMF-X2-SQ-FL",
+      "category": "lighting",
+      "x": 217.56585861540873,
+      "y": -1151.043999201915,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Guest Bathroom",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL",
+        "name": "DMF X-Series Square Flangeless",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl",
+            "quantity": 1,
+            "description": "Square Trim"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF"
+        },
+        "isCombination": true,
+        "shorthand": "DMF",
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-27T16:58:48.036Z",
+      "deviceTypeId": "DMF-X2-SQ-FL"
+    },
+    {
+      "id": "lighting-1769533136016",
+      "type": "DMF-X2-SQ-FL-WET",
+      "category": "lighting",
+      "x": 223.41200954205533,
+      "y": -1394.6336211455227,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Guest Bathroom",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL-WET",
+        "name": "DMF X-Series Square Flangeless (Wet/Shower)",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl-wet",
+            "quantity": 1,
+            "description": "Square Trim (Wet)"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF-W"
+        },
+        "isCombination": true,
+        "shorthand": "DMF-W",
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-27T16:58:56.016Z",
+      "deviceTypeId": "DMF-X2-SQ-FL-WET"
+    },
+    {
+      "id": "lighting-1769533144428",
+      "type": "DMF-X2-SQ-FL-WET",
+      "category": "lighting",
+      "x": -1720.7904129417348,
+      "y": -1084.6009379313887,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Bath 3 Bathroom",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL-WET",
+        "name": "DMF X-Series Square Flangeless (Wet/Shower)",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl-wet",
+            "quantity": 1,
+            "description": "Square Trim (Wet)"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF-W"
+        },
+        "isCombination": true,
+        "shorthand": "DMF-W",
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-27T16:59:04.428Z",
+      "deviceTypeId": "DMF-X2-SQ-FL-WET"
+    },
+    {
+      "id": "lighting-1769533147378",
+      "type": "DMF-X2-SQ-FL",
+      "category": "lighting",
+      "x": -1728.3415299336873,
+      "y": -873.1696621567177,
+      "rotation": 0,
+      "scale": 1,
+      "room": "Bath 3 Bathroom",
+      "productId": "generic-product",
+      "installationHeight": 2.4,
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "productId": "generic-product",
+        "id": "DMF-X2-SQ-FL",
+        "name": "DMF X-Series Square Flangeless",
+        "manufacturer": "DMF Lighting",
+        "category": "lighting",
+        "symbolType": "recessed-light",
+        "components": [
+          {
+            "productId": "dmf-x2ncs",
+            "quantity": 1,
+            "description": "Housing"
+          },
+          {
+            "productId": "dmf-x2ksmud",
+            "quantity": 1,
+            "description": "Mud-in Plate"
+          },
+          {
+            "productId": "dmf-x2tsdswhfl",
+            "quantity": 1,
+            "description": "Square Trim"
+          },
+          {
+            "productId": "dmf-xmd12930wfd",
+            "quantity": 1,
+            "description": "DALI-2 LED Module"
+          }
+        ],
+        "calculatedStats": {
+          "totalCost": 290,
+          "hvAmps": 0.12,
+          "lvMa": 2,
+          "totalAddresses": 1
+        },
+        "metadata": {
+          "isCombination": true,
+          "shorthand": "DMF"
+        },
+        "isCombination": true,
+        "shorthand": "DMF",
+        "isBlueprint": true,
+        "lumens": 800,
+        "beamAngle": 60,
+        "range": 10,
+        "cableType": "Cat6"
+      },
+      "createdAt": "2026-01-27T16:59:07.378Z",
       "deviceTypeId": "DMF-X2-SQ-FL"
     }
   ],
