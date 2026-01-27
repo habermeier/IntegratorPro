@@ -613,7 +613,12 @@ function getCombinedLayout() {
 
 function getCatalog() {
     if (fs.existsSync(catalogPath)) {
-        return JSON.parse(fs.readFileSync(catalogPath, 'utf8'));
+        const data = JSON.parse(fs.readFileSync(catalogPath, 'utf8'));
+        if (data.registry) {
+            // Flatten all registry categories (logic, drivers, loads, etc.) into a single array
+            return Object.values(data.registry).flat();
+        }
+        return data; // Fallback for old array format
     }
     return [];
 }

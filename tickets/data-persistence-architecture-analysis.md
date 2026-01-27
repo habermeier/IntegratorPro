@@ -64,7 +64,7 @@ function createDataEndpoints(apiPath, baseFile, overrideFile, dataKey, displayNa
 3. **No versioning** - Can't rollback to "2 hours ago" state
 4. **Proliferation of endpoints** - Adding devices, cables, LCPs, etc. = 10+ more endpoints
 5. **Client complexity** - Must call multiple APIs, manage multiple save states
-6. **No project concept** - Data is global, not project-scoped (can't have "270 Boll Ave" vs "Client B")
+6. **No project concept** - Data is global, not project-scoped (can't have "270 Bolla Ave" vs "Client B")
 
 ### **Future Requirements (from design decisions):**
 
@@ -123,7 +123,7 @@ function createDataEndpoints(apiPath, baseFile, overrideFile, dataKey, displayNa
   "version": "1.0",
   "timestamp": "2025-12-20T15:30:00Z",
   "metadata": {
-    "name": "270 Boll Ave",
+    "name": "270 Bolla Ave",
     "status": "Draft",
     "created": "2025-12-15T10:00:00Z",
     "modified": "2025-12-20T15:30:00Z"
@@ -395,7 +395,7 @@ await dataService.updateFurniture(newFurniture);
    const project = {
      version: "1.0",
      timestamp: new Date().toISOString(),
-     metadata: { name: "270 Boll Ave", status: "Draft" },
+     metadata: { name: "270 Bolla Ave", status: "Draft" },
      floorPlan: {
        scale: require('./scale.json'),
        layout: require('./layout.json'),

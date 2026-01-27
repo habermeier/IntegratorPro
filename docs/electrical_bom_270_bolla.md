@@ -1,6 +1,6 @@
-# **Project Bill of Materials (BOM) - 270 Boll Ave**
+# **Project Bill of Materials (BOM) - 270 Bolla Ave**
 
-**Project Name:** 270 Boll Ave  
+**Project Name:** 270 Bolla Ave  
 **Document Type:** Integrated Systems Specification  
 **Integrator Draft:** v1.2 (Standardized Infrastructure)
 
@@ -16,7 +16,7 @@
 ---
 
 ## **1. Project Objectives & System Organization**
-The automation system at 270 Boll Ave is designed for maximum reliability, security hardening, and high-fidelity environmental control. The architecture is organized into three localized **Load Control Panels (LCPs)** to minimize home-run copper and isolate failure domains:
+The automation system at 270 Bolla Ave is designed for maximum reliability, security hardening, and high-fidelity environmental control. The architecture is organized into three localized **Load Control Panels (LCPs)** to minimize home-run copper and isolate failure domains:
 
 *   **LCP-1 (Garage)**: The "Power Hub" for central living areas, kitchen lighting, and high-inrush holiday circuits.
 *   **LCP-2 (Office 2)**: The "Environmental Hub" and Master Wing controller. Houses weather station logic, PM2.5 wildfire interlocks, and master bedroom lighting.
@@ -43,12 +43,12 @@ The automation system at 270 Boll Ave is designed for maximum reliability, secur
 
 | Part ID | Manufacturer | Description | Qty | MPN | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| SAG-24H2408 | Saginaw | 24x24x8 NEMA 4/12 Enclosure | 1 | SCE-24H2408LP | Hinged Cover |
-| MW-SDR-480 | Mean Well | 480W 24V DC PSU (UL 508) | 1 | SDR-480-24 | Main Logic Power |
-| ABB-KNX-PS | ABB | KNX Power Supply 640mA | 1 | SV/S 30.640.5.1 | Powers Line 1.1 |
+| [SAG-24H2408](https://cdn.automationdirect.com/static/drawings/SCE-24H2408LP.pdf) | Saginaw | 24x24x8 NEMA 4/12 Enclosure | 1 | SCE-24H2408LP | Hinged Cover |
+| [MW-SDR-480](https://www.meanwell.com/webapp/product/search.aspx?prod=SDR-480) | Mean Well | 480W 24V DC PSU (UL 508) | 1 | SDR-480-24 | Main Logic Power |
+| [ABB-KNX-PS](https://new.abb.com/products/2CDG110132R0011/sv-s30-640-5-1-knx-power-supply-640ma-md) | ABB | KNX Power Supply 640mA | 1 | SV/S 30.640.5.1 | Powers Line 1.1 |
 | ABB-LK-S | ABB | KNX Line Coupler | 1 | LK/S 4.2 | Connects 1.1 to Backbone |
 | PHX-CBM-E4 | Phoenix Contact | Electronic Circuit Protector | 1 | CBM E4 24DC | NEC Class 2 Compliance |
-| SIE-DALI-GW | Siemens | KNX/DALI Gateway Twin | 1 | N 141/03 | Universes 1 & 2 |
+| [SIE-DALI-GW](https://www.siemens.com/global/en/products/energy/low-voltage/components/knx/lighting-control.html) | Siemens | KNX/DALI Gateway Twin | 1 | N 141/03 | Universes 1 & 2 |
 | ELD-PWR-100 | eldoLED | 100W DALI-2 LED Driver | 6 | 1060/A | Garage/Kitchen/Living Tape |
 | LUN-DALI-010 | Lunatone | DALI 0-10V PWM Interface | 1 | 86458668 | Powder Room Fan Control |
 
@@ -76,7 +76,7 @@ The automation system at 270 Boll Ave is designed for maximum reliability, secur
 | Part ID | Manufacturer | Description | Qty | MPN | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | SAG-24H2408 | Saginaw | 24x24x8 NEMA Enclosure | 1 | SCE-24H2408LP | Hinged Cover (Security MDF) |
-| ALT-EFLOW104N| Altronix | 10A Power Supply/Charger | 1 | eFlow104N | **System Core**: Managed DC Rail |
+| [ALT-EFLOW104N](https://www.altronix.com/products/eFlow104N) | Altronix | 10A Power Supply/Charger | 1 | eFlow104N | **System Core**: Managed DC Rail |
 | BATT-12AH | Yuasa | 12V 12Ah SLA Battery | 2 | NP12-12 | 24V String (Powers NUC/Switch/Locks) |
 | MW-DDR-60G-19| Mean Well | 24V to 19V DC-DC Converter | 1 | DDR-60G-19 | DIN-Rail Power for NUC |
 | ASUS-NUC-13 | ASUS | NUC 13 Pro (i5, 16GB RAM) | 1 | NUC13ANKi5 | **Security Brain** (SDMC Server) |
@@ -194,7 +194,7 @@ The automation system at 270 Boll Ave is designed for maximum reliability, secur
 
 | Part ID | Manufacturer | Description | Qty | MPN | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| AKU-X915S | Akuvox | 8" 3D Face Recognition Intercom | 1 | X915S | **Front Door** (Flush Mount) |
+| [AKU-X915S](https://www.akuvox.com/ProductsDisp.aspx?pid=48) | Akuvox | 8" 3D Face Recognition Intercom | 1 | X915S | **Front Door** (Flush Mount) |
 | AKU-E16C | Akuvox | 5" 3D Face Recognition Intercom | 3 | E16C | Garage Man, Side Door, Laundry Door |
 | AKU-E16-HOOD | Akuvox | Sun Shield / Rain Hood | 1 | E16-A05H | For **Garage Man Door** (North Facing) |
 | AKU-S567G | Akuvox | 10" Android 12 Indoor Monitor | 1 | S567G | **Hallway Tablet** (Main Control) |
@@ -208,10 +208,10 @@ The automation system at 270 Boll Ave is designed for maximum reliability, secur
 
 | Part ID | Manufacturer | Description | Qty | MPN | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| MDT-JAL-0810 | MDT | 8-fold Shutter Actuator (24V DC) | 1 | JAL-0810.02 | **Skylights Only** |
-| INT-MOD-KNX | Intesis | HVAC Modbus to KNX Gateway | 1 | INKNXMBM100 | Bridge for AC/Heat Recirculation |
+| [MDT-JAL-0810](https://www.mdt.de/en/products/shutter-actuators-jal.html) | MDT | 8-fold Shutter Actuator (24V DC) | 1 | JAL-0810.02 | **Skylights Only** |
+| [INT-MOD-KNX](https://www.intesis.com/products/knx-gateways/modbus-knx-gateways/modbus-rtu-knx-client-inknxmbm1000000) | Intesis | HVAC Modbus to KNX Gateway | 1 | INKNXMBM100 | Bridge for AC/Heat Recirculation |
 | MW-MDR-100-24| Mean Well | 100W 24V DC DIN-Rail PSU | 1 | MDR-100-24 | Dedicated Power for Skylight Motors |
-| WAR-WETH-PRO | Warema | KNX Weather Station Pro | 1 | #2064965 | **Home-runs to LCP-2** |
+| [WAR-WETH-PRO](https://www.warema.com/en/controls/knx/weather-station-pro-reg.html) | Warema | KNX Weather Station Pro | 1 | #2064965 | **Home-runs to LCP-2** |
 | TEM-PM25 | Temco | Outdoor PM2.5 Sensor (Modbus) | 1 | OAL-PM2.5 | **Home-runs to LCP-2** |
 
 ---

@@ -90,7 +90,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose, currentView, onN
                     {/* Footer Info */}
                     <div className="p-4 border-t border-slate-800">
                         <div className="bg-slate-900 rounded p-3 text-xs text-slate-500">
-                            Project: <span className="text-slate-300">270 Boll Ave</span><br />
+                            Project: <span className="text-slate-300">270 Bolla Ave</span><br />
                             Status: <span className="text-amber-500">Draft</span>
                         </div>
                     </div>
