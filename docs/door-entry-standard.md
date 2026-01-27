@@ -1,8 +1,9 @@
 # Door Entry & Access Control Standard
 ## 3D Face Recognition, SIP Intercom, and Secure Strike Integration
 
-**Date:** January 23, 2026  
-**Version:** v1.4  
+**Project:** 270 Bolla Ave  
+**Date:** January 27, 2026  
+**Version:** v1.5  
 **Status:** Prescriptive Specification  
 
 ---
@@ -17,25 +18,25 @@ The project utilizes an IP-based video intercom and access control system center
 ### 2.1 Outdoor & Indoor Units
 | Location | Model | Features | Power |
 | :--- | :--- | :--- | :--- |
-| **Front Door** | **Akuvox X915S** | 8" Touch, 3D Face Rec, IK10 | PoE + 12V DC (Backup) |
-| **Service Doors**| **Akuvox E16C** | 5" Screen, 3D Face Rec, Dual Cam | PoE + 12V DC (Backup) |
-| **Hallway Tablet**| **Akuvox S567G** | 10" Android 12, Wi-Fi 6 | PoE |
+| **Front Door** | [**Akuvox X915S**](https://www.akuvox.com/ProductsDisp.aspx?pid=48) | 8" Touch, 3D Face Rec, IK10 | PoE + 12V DC (Backup) |
+| **Service Doors**| [**Akuvox E16C**](https://www.akuvox.com/ProductsDisp.aspx?pid=52) | 5" Screen, 3D Face Rec, Dual Cam | PoE + 12V DC (Backup) |
+| **Hallway Tablet**| [**Akuvox S567G**](https://www.akuvox.com/ProductsDisp.aspx?pid=64) | 10" Android 12, Wi-Fi 6 | PoE |
 
 *   **Tablet Placement:** The **S567G** monitor must be wall-mounted in the **Office Hallway area** at 58" AFF.
 
 ### 2.2 Local Management "Brain"
-*   **SDMC Server:** **ASUS NUC 13 Pro** (Intel i5, Windows 11 Pro).
+*   **SDMC Server:** [**ASUS NUC 13 Pro**](https://www.asus.com/displays-desktops/mini-pcs/nuc-mini-pcs/asus-nuc-13-pro/) (Intel i5, Windows 11 Pro).
 *   **Software:** **Akuvox SDMC** (SIP Device Management Center).
 *   **Robustness**: Industrial-grade hardware (MIL-STD-810H) designed for 24/7 localized biometric sync.
 
 ### 2.3 Secure Logic & Locking (Centralized DC Architecture)
 All following components live in **LCP-3** and are powered by a **Unified 24V DC Battery-Backed Rail**:
-*   **System Core:** **Altronix eFlow104N** (10A PSU/Charger).
-*   **Battery Backup:** Two (2) 12Ah SLA Batteries (24V String).
-*   **SDMC Power:** **Mean Well DDR-60G-19** (DC-DC Converter) provides 19V DC to the NUC.
-*   **Network Power:** **Industrial PoE Switch** (DC-Input) provides 48V PoE to terminals.
-*   **Secure Relays:** **Akuvox SR01** (One per door).
-*   **Electric Strike:** **HES 1006** (Fail-Secure). Configured for **24V DC**.
+*   **System Core:** [**Altronix eFlow104N**](https://www.altronix.com/products/eFlow104N) (10A PSU/Charger).
+*   **Battery Backup:** [Two (2) 12Ah SLA Batteries](https://www.yuasa.co.uk/np12-12.html) (24V String).
+*   **SDMC Power:** [**Mean Well DDR-60G-19**](https://www.meanwell.com/productPdf.aspx?i=934) (DC-DC Converter) provides 19V DC to the NUC.
+*   **Network Power:** [**Industrial PoE Switch**](https://www.tp-link.com/en/business-networking/industrial-switch/tl-is308p/) (DC-Input) provides 48V PoE to terminals.
+*   **Secure Relays:** [**Akuvox SR01**](https://www.akuvox.com/ProductsDisp.aspx?pid=42) (One per door).
+*   **Electric Strike:** [**HES 1006**](https://www.hesinnovations.com/en/products/electric-strikes/1000-series/1006) (Fail-Secure). Configured for **24V DC**.
 
 ---
 
