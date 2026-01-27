@@ -18,7 +18,7 @@ const getAiClient = () => {
 export const analyzeProject = async (modules: HardwareModule[], connections: Connection[]) => {
   const prompt = `
     You are a Senior Electrical Engineer and Certified KNX/DALI Integrator.
-    Perform a **Deep Review** of the "270 Boll Avenue" project BOM and Topology.
+    Perform a **Deep Review** of the "270 Bolla Avenue" project BOM and Topology.
     
     **Scope of Review:**
     1.  **Enclosure Fill & Fit**: 

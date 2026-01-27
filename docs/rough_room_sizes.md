@@ -1,4 +1,4 @@
-# Rough Room Sizes - 270 Boll Ave
+# Rough Room Sizes - 270 Bolla Ave
 **Date:** January 21, 2026  
 **Note:** These sizes are approximations based on internal room-by-room polygon traces. Total "Gross" square footage is reported at **4,200 sq ft**, while the "Net" internal area (excluding walls and external patio) calculates to approximately **3,400 sq ft**.
 

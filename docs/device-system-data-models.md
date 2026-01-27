@@ -733,7 +733,7 @@ All data stored in single monolithic JSON file:
   "version": "1.0",
   "timestamp": "2025-12-20T15:30:00Z",
   "metadata": {
-    "name": "270 Boll Ave",
+    "name": "270 Bolla Ave",
     "status": "Draft"
   },
   "floorPlan": { /* rooms, masks, scale */ },

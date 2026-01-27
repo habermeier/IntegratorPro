@@ -21,7 +21,7 @@ const rootDir = path.join(__dirname, '..');
 
 // Configuration
 const PROJECT_ID = '270-boll-ave';
-const PROJECT_NAME = '270 Boll Ave';
+const PROJECT_NAME = '270 Bolla Ave';
 
 // Source files (prefer .local.json if exists, otherwise use base)
 const sourceFiles = {

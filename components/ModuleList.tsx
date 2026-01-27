@@ -100,7 +100,7 @@ const ModuleList: React.FC<ModuleListProps> = ({ modules, setModules }) => {
 
       {/* Manual Toolbar */}
       <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold text-white">Bill of Materials (270 Boll Ave)</h2>
+          <h2 className="text-xl font-bold text-white">Bill of Materials (270 Bolla Ave)</h2>
           <button 
              onClick={() => setShowAddModal(true)}
              className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"

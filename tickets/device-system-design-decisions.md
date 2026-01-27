@@ -129,7 +129,7 @@ This document captures all design decisions made during requirements clarificati
 {
   "version": "1.0",
   "timestamp": "2025-12-20T15:30:00Z",
-  "metadata": { "name": "270 Boll Ave", "status": "Draft" },
+  "metadata": { "name": "270 Bolla Ave", "status": "Draft" },
   "floorPlan": { /* rooms, masks, polygons */ },
   "devices": [ /* all devices */ ],
   "cables": [ /* all cable routing */ ],
