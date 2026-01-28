@@ -373,4 +373,4 @@ All environmental data terminates in LCP-2 (Office) and is exposed to the KNX bu
   - **High Wind/Rain:** Trigger safety closing of skylights and adjust shading positions.
   - **Brightness/Global Radiation:** Orchestrate shading and ventilation for passive cooling and glare control.
   - **GPS Sun Position:** Real-time tracking for automated "Sun Following" blind logic.
-- **System Bridging:** Real-time objects are pushed from KNX to the Linux NUC for high-level AI logic and SmartThings bridging.
+- **System Bridging:** Real-time objects are pushed from KNX to the Linux NUC (ASUS NUC 13) for high-level logic and integration. This NUC acts as the primary automation processor (HomeWorks-equivalent) for complex scenes, AI orchestration, and SmartThings bridging.
