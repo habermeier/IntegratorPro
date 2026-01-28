@@ -16,11 +16,13 @@
 ## **1. Project Objectives & System Organization**
 The automation system at 270 Bolla Ave is designed for maximum reliability, security hardening, and high-fidelity environmental control. The architecture is organized into three localized **Load Control Panels (LCPs)** to minimize home-run copper and isolate failure domains:
 
-*   **LCP-1 (Garage)**: The "Power Hub" for central living areas, kitchen lighting, and high-inrush holiday circuits.
-*   **LCP-2 (Office 2)**: The "Environmental Hub" and Master Wing controller. Houses weather station logic, PM2.5 wildfire interlocks, and master bedroom lighting.
-*   **LCP-3 (Tech Room)**: The "Security Island." A 100% battery-backed, DC-powered enclosure that manages 3D face recognition and entry without cloud dependency.
+*   **LCP-1 (Garage)**: The "Power Hub" (12 Circuits). Central living areas, kitchen lighting, and high-inrush holiday circuits.
+*   **LCP-2 (Office 2)**: The "Environmental Hub" (11 Circuits). Master Wing, towel warmers, ventilation logic, and weather station.
+*   **LCP-3 (Tech Room)**: The "Security Island" (5 Circuits). 100% battery-backed, DC-powered enclosure for entry and 3D vision. 
 
-**Core Standards**: All lighting is **DALI-2** (addressable). All logic and switching is **KNX** (distributed). Infrastructure is "Future-Proofed" via stealth pre-wiring for window shades and seasonal exterior lighting.
+**Core Standards**: All lighting is **DALI-2** (addressable). All logic and switching is **KNX** (distributed). 
+| :--- | :--- | :--- | :--- |
+| **Power Feeds**: | **LCP-1**: 12x 15A | **LCP-2**: 11x 15A | **LCP-3**: 5x 15A (+ Rack 30A) |
 
 ---
 
@@ -30,9 +32,11 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 | External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | [1-03294-02](https://www.span.io/products/main-32) | SPAN | SPAN-GEN2 | Smart Panel Gen 2 (32-Circuit) | 2 | 1 | Main Service (Local API) |
-| [1-03294-02](https://www.span.io/products/main-32) | SPAN | SPAN-SUB | Smart Panel Gen 2 (32-Circuit) | 1 | 1 | Sub-Panel (Local API) |
-| [13103701](https://www.southwire.com/wire-cable/building-wire/ser-aluminum-service-entrance/p/13103701) | Southwire | SER-1-AL | #1 AWG Aluminum SER Cable | - | 1 | Sub-SPAN Feed |
-| [28828201](https://www.southwire.com/wire-cable/non-metallic-sheathed-cable/romex-brand-simpull-nm-b-cable/p/28828201) | Southwire | NM-B-12/2 | 12/2 Romex (High Current) | - | 1 | To Fridge, Range, etc |
+| [MAIN-16](https://span.io/products/panel/16) | SPAN | SPAN-SUB | Smart Panel 16 (16-Circuit) | 1 | 1 | Sub-Panel (Logic/Tech) |
+| - | Contractor Choice | SER-2/0-AL | #2/0 AWG Aluminum SER | - | 1 | Sub-SPAN Feed (100A) |
+| - | Contractor Choice | NM-B-12/2 | 12/2 Romex (20A Branch) | - | 1 | Fridge, Dishwasher, Outlets |
+| - | Contractor Choice | NM-B-6/3 | 6/3 Romex (50A Circuit) | - | 1 | Electric Range / Induction |
+| - | Contractor Choice | NM-B-14/2 | 14/2 Romex (Standard) | - | 1 | General Lighting / LCP Feeds |
 
 ---
 
@@ -42,10 +46,11 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 * **Dimensions (Outside)**: 24.00" x 24.00" x 8.00" (610 x 610 x 203 mm)
 * **Dimensions (Inside Usable)**: 24.00" x 24.00" x 7.75" (610 x 610 x 197 mm)
 * **Depth Note**: 8" (203mm) nominal depth easily accommodates the 128.5mm (5.1") Mean Well SDR-480.
+* **Internal Outlets**: Install 1x internal 15A duplex receptacle for plug-in logic (UniFi switch/spares).
 
 | External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [SCE-24H2408LP](https://saginawcontrol.com/product/sce-24h2408lp/) | Saginaw | SAG-24H2408 | 24x24x8 NEMA 4/12 Enclosure | 1 | 1 | Hinged Cover |
+| [SCE-24H2408LP](https://www.saginawcontrol.com/partnumber_info/?n=SCE-24H2408LP) | Saginaw | SAG-24H2408 | 24x24x8 NEMA 4/12 Enclosure | 1 | 1 | Hinged Cover |
 | [SDR-480-24](https://www.meanwell.com/productDetail.aspx?i=318) | Mean Well | MW-SDR-480 | 480W 24V DC PSU (UL 508) | 1 | 1 | Main Logic Power |
 | [SV/S 30.640.5.1](https://new.abb.com/products/2CDG110146R0011/sv-s30-640-5-1) | ABB | ABB-KNX-PS | KNX Power Supply 640mA | 1 | 1 | Powers Line 1.1 |
 | [SV/S 30.160.1.1](https://new.abb.com/products/2CDG110130R0011/sv-s30-160-1-1) | ABB | ABB-PS-160 | KNX Power Supply 160mA | 1 | 1 | Backbone Power |
@@ -53,10 +58,11 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 | [BE/S 16.20.3.2](https://new.abb.com/products/2CDG110278R0011/be-s16-20-3-2-binary-input-16-fold-md) | ABB | ABB-BIN-16 | 16-fold Binary Input | 1 | 1 | Local Contacts |
 | [CBM E4 24DC/0.5-10A-NO](https://www.phoenixcontact.com/en-pc/products/2905743) | Phoenix Contact | PHX-CBM-E4 | Electronic Circuit Protector | 1 | 1 | NEC Class 2 |
 | [5WG1141-1AB03](https://hit.sbt.siemens.com/RWD/app.aspx?module=Catalog&action=ShowProduct&key=5WG1141-1AB03) | Siemens | SIE-DALI-GW | KNX/DALI Gateway Twin N 141/03 | 1 | 1 | Universes 1 & 2 |
-| [USW-Pro-8-PoE](https://store.ui.com/us/en/pro/category/all-wifi/products/usw-pro-8-poe) | Ubiquiti | UI-SW-PRO-8 | UniFi Pro 8 PoE (10G SFP+) | 1 | 2 | Garage Hub Switch |
+| [USW-Pro-8-PoE](https://store.ui.com/us/en/pro/category/all-wifi/products/usw-pro-8-poe) | Ubiquiti | UI-SW-PRO-8 | UniFi Pro 8 PoE (10G SFP+) | 1 | 2 | (Bernie) Garage Hub Switch |
 | [MDT-SCN-MBGW.01](https://www.mdt.de/en/products/modbus-gateway.html) | MDT | MDT-SCN-MB | KNX/Modbus Gateway | 1 | 2 | Telemetry Bridge |
-| [1060/A](https://www.eldoled.com/products/detail/1990764/eldoled/solodrive-100w-indoor-linear-1060a) | eldoLED | ELD-PWR-100 | 100W DALI-2 LED Driver | 6 | 1 | Area Tape Lights |
+| [1060/A](https://www.eldoled.com/product/solodrive-100w-linear-dim-to-dark-1060a/) | eldoLED | ELD-PWR-100 | 100W DALI-2 LED Driver | 6 (TBD) | 1 | Area Tape Lights |
 | [86458668](https://www.lunatone.com/en/product/dali-rm8-0-10v-pwm/) | Lunatone | LUN-DALI-010 | DALI 0-10V PWM Interface | 2 | 1 | Guest / Half-Bath Vents |
+| [AKS-1216.03](https://www.mdt.de/en/products/product-detail/actuators/switch-actuators/switch-actuator-aks.html) | MDT | MDT-AKS-1216 | 12-fold High-Inrush Actuator | 1 | 1 | Seasonal & WHF Power |
 
 ---
 
@@ -67,13 +73,14 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
     *   Top (24x12): 23.8" x 11.8" x 3.87" (605 x 300 x 98 mm)
     *   Bottom (12x12): 11.8" x 11.8" x 3.87" (300 x 300 x 98 mm)
 * **Depth Note**: **MAX COMPONENT DEPTH 3.5" (89mm)**. No SDR-series PSUs allowed here; use MDR or SV/S series only. (NUC fits @ 37mm).
+* **Internal Outlets**: Install 1x internal 15A duplex receptacle for localized IT/logic gear.
 
 | External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [ASE24X12X4NK](https://www.nvent.com/en-us/hoffman/products/screw-cover-enclosure-type-1-no-knockouts-ase24x12x4nk) | nVent HOFFMAN | HOF-ASE24X12X4 | Automation Enclosure (24x12x4) | 1 | 1 | Top Box |
-| [ASE12X12X4](https://www.nvent.com/en-us/hoffman/products/screw-cover-enclosure-type-1-ase12x12x4) | nVent HOFFMAN | HOF-ASE12X12X4 | Network/Aux Enclosure (12x12x4) | 1 | 1 | Bottom Box |
-| [USW-Pro-8-PoE](https://store.ui.com/us/en/pro/category/all-wifi/products/usw-pro-8-poe) | Ubiquiti | UI-SW-PRO-8 | UniFi Pro 8 PoE (10G SFP+) | 1 | 1 | Hub for Office/WAPs/NUC |
-| [NUC13ANKi5](https://www.asus.com/displays-desktops/mini-pcs/nuc-mini-pcs/asus-nuc-13-pro/) | ASUS | ASUS-NUC-13 | NUC 13 Pro (i5, 16GB RAM) | 1 | 1 | Master Logic Controller |
+| [ASE24X12X4NK](https://www.nvent.com/en-us/hoffman/products/encASE24X12X4NK) | nVent HOFFMAN | HOF-ASE24X12X4 | Automation Enclosure (24x12x4) | 1 | 1 | Top Box |
+| [ASE12X12X4](https://www.nvent.com/en-us/hoffman/products/encASE12X12X4) | nVent HOFFMAN | HOF-ASE12X12X4 | Network/Aux Enclosure (12x12x4) | 1 | 1 | Bottom Box |
+| [USW-Pro-8-PoE](https://store.ui.com/us/en/pro/category/all-wifi/products/usw-pro-8-poe) | Ubiquiti | UI-SW-PRO-8 | UniFi Pro 8 PoE (10G SFP+) | 1 | 1 | (Bernie) Hub for Office/WAPs/NUC |
+| [NUC13ANKi5](https://www.asus.com/displays-desktops/mini-pcs/nuc-mini-pcs/asus-nuc-13-pro/) | ASUS | ASUS-NUC-13 | NUC 13 Pro (i5, 16GB RAM) | 1 | 1 | (Bernie) Master Logic Controller |
 | [SV/S 30.640.5.1](https://new.abb.com/products/2CDG110146R0011/sv-s30-640-5-1) | ABB | ABB-KNX-PS | KNX Power Supply 640mA | 1 | 1 | Powers Line 1.2 |
 | [LK/S 4.2](https://new.abb.com/products/2CDG110171R0011/lk-s-4-2) | ABB | ABB-LK-S | KNX Line Coupler | 1 | 1 | 1.2 to Backbone |
 | [IPS/S 3.1.1](https://new.abb.com/products/2CDG110177R0011/ips-s3-1-1) | ABB | ABB-IPS-S | KNX IP Interface Secure | 1 | 1 | Logic Link |
@@ -84,8 +91,9 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 | [INKNXMBM100](https://www.intesis.com/products/knx-gateways/modbus-knx-gateways/modbus-rtu-knx-client-inknxmbm1000000) | Intesis | INT-MOD-KNX | HVAC Modbus to KNX Gateway | 1 | 1 | AC/Heat Bridge |
 | [SCN-MBGW.01](https://www.mdt.de/en/products/modbus-gateway.html) | MDT | MDT-SCN-MB | KNX/Modbus Gateway | 1 | 1 | Gateway for Temco PM2.5 |
 | [MDR-100-24](https://www.meanwell.com/webapp/product/search.aspx?prod=MDR-100) | Mean Well | MW-MDR-100-24 | 100W 24V DC DIN-Rail PSU | 1 | 1 | Logic Power |
-| [1060/A](https://www.eldoled.com/products/detail/1990764/eldoled/solodrive-100w-indoor-linear-1060a) | eldoLED | ELD-PWR-100 | 100W DALI-2 LED Driver | 6 | 1 | Master Accent |
+| [1060/A](https://www.eldoled.com/product/solodrive-100w-linear-dim-to-dark-1060a/) | eldoLED | ELD-PWR-100 | 100W DALI-2 LED Driver | 6 (TBD) | 1 | Master Accent |
 | [86458668](https://www.lunatone.com/en/product/dali-rm8-0-10v-pwm/) | Lunatone | LUN-DALI-010 | DALI 0-10V PWM Interface | 4 | 1 | Master / Laundry / Kids Vents |
+| [AKS-1216.03](https://www.mdt.de/en/products/product-detail/actuators/switch-actuators/switch-actuator-aks.html) | MDT | MDT-AKS-1216 | 12-fold High-Inrush Actuator | 1 | 1 | Towel Warmers & Attic Fans |
 
 ---
 
@@ -102,14 +110,23 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 
 | External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [SCE-24H2408LP](https://saginawcontrol.com/product/sce-24h2408lp/) | Saginaw | SAG-24H2408 | 24x24x8 NEMA Enclosure | 1 | 1 | Hinged Cover |
+| [SCE-24H2408LP](https://www.saginawcontrol.com/partnumber_info/?n=SCE-24H2408LP) | Saginaw | SAG-24H2408 | 24x24x8 NEMA Enclosure | 1 | 1 | Hinged Cover |
 | [eFlow104N](https://www.altronix.com/products/eFlow104N) | Altronix | ALT-EFLOW104N | 10A Power Supply/Charger | 1 | 1 | Managed DC Rail |
 | [NP12-12](https://www.yuasa.co.uk/np12-12.html) | Yuasa | BATT-12AH | 12V 12Ah SLA Battery | 2 | 1 | 24V DC String |
 | [DDR-60G-15](https://www.meanwell.com/productDetail.aspx?i=845) | Mean Well | MW-DDR-60G-15 | 24V to 15V DC-DC Converter | 1 | 1 | Power for NUC |
-| [NUC13ANKi5](https://www.asus.com/displays-desktops/mini-pcs/nuc-mini-pcs/asus-nuc-13-pro/) | ASUS | ASUS-NUC-13 | NUC 13 Pro (i5, 16GB RAM) | 1 | 1 | Security Brain |
-| [IES210GPP](https://www.tp-link.com/en/business-networking/omada-sdn-switch/ies210gpp/) | TP-Link | TPL-IES210GPP | Industrial 10-Port PoE+ Switch | 1 | 1 | DC-Input PoE Source |
+| [NUC13ANKi5](https://www.asus.com/displays-desktops/mini-pcs/nuc-mini-pcs/asus-nuc-13-pro/) | ASUS | ASUS-NUC-13 | NUC 13 Pro (i5, 16GB RAM) | 1 | 1 | (Bernie) Security Brain |
+| [IES210GPP](https://www.tp-link.com/us/business-networking/omada-switch-industrial/ies210gpp/) | TP-Link | TPL-IES210GPP | Industrial 10-Port PoE+ Switch | 1 | 1 | (Bernie) DC-Input PoE Source |
 | [SR01](https://akuvox.com/productsDisp?pid=74) | Akuvox | AKU-SR01 | Secure Relay Module | 4 | 1 | Relay Board |
-| [BE/S 16.20.3.2](https://new.abb.com/products/2CDG110278R0011/be-s16-20-3-2-binary-input-16-fold-md) | ABB | ABB-BIN-16 | 16-fold Binary Input | 1 | 1 | Security Monitoring |
+### **3.2 Tech Room Power & Receptacle Spec**
+*Differentiating Enclosure Power from Room/Wall Power*
+
+| Load Category | Location | Receptacle | Circuit | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **Server UPS** | Wall (Direct) | NEMA L6-30R | 240V / 30A | Dedicated Twist-Lock |
+| **Workbench / Lab** | Wall (General) | 3x NEMA 5-20R | 120V / 20A | General Bench Outlets |
+| **LCP-3 Logic** | Inside Enclosure | Hardwired | 120V / 15A | **Differentiated Circuit** |
+| **LCP-3 Service** | Inside Enclosure | NEMA 5-15R | 120V / 15A | For Switch / Comm. |
+| **General Room** | Wall (Entry) | NEMA 5-15R | 120V / 15A | Standard Code Circuit |
 
 ---
 
@@ -137,15 +154,15 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 
 | External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [USW-Pro-Max-24-PoE](https://ui.com/switching/pro-max-24-poe) | Ubiquiti | UI-SW-PRO-24 | UniFi Pro Max 24 PoE | 1 | 1 | Core Network Switch |
-| [PDU15B10R](https://www.cyberpowersystems.com/product/pdus/basic/pdu15b10r/) | CyberPower | CYB-PDU-1U | 1U Rack PDU | 1 | 1 | Rack Power |
-| [SMT1500C](https://www.apc.com/us/en/product/SMT1500C/) | APC | APC-UPS-1500 | Smart-UPS 1500VA | 1 | 1 | Rack Backup |
+| [USW-Pro-Max-24-PoE](https://ui.com/switching/pro-max-24-poe) | Ubiquiti | UI-SW-PRO-24 | UniFi Pro Max 24 PoE | 1 | 1 | (Bernie) Core Network Switch |
+| [PDU15B10R](https://www.cyberpowersystems.com/product/pdus/basic/pdu15b10r/) | CyberPower | CYB-PDU-1U | 1U Rack PDU | 1 | 1 | (Bernie) Rack Power |
+| [SMT1500C](https://www.apc.com/us/en/product/SMT1500C/) | APC | APC-UPS-1500 | Smart-UPS 1500VA | 1 | 1 | (Bernie) Rack Backup |
 
 ### **5.1 Wireless Infrastructure (WiFi 7)**
 | External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [U7-Pro](https://store.ui.com/us/en/pro/category/all-wifi/products/u7-pro) | Ubiquiti | UI-WAP-U7 | UniFi7 Pro Access Point | 4 | 1 | High Reliability / WiFi 7 |
-| [U-ACC-Pro-AP-Mount](https://store.ui.com/us/en/pro/category/accessories-access-point/products/u-acc-pro-ap-mount) | Ubiquiti | UI-WAP-MOUNT | AP Pro Mounting Bracket | 4 | 1 | For ceiling tile/hard mount |
+| [U7-Pro](https://store.ui.com/us/en/pro/category/all-wifi/products/u7-pro) | Ubiquiti | UI-WAP-U7 | UniFi7 Pro Access Point | 4 | 1 | (Bernie) High Reliability / WiFi 7 |
+| [U-ACC-Pro-AP-Mount](https://store.ui.com/us/en/pro/category/accessories-access-point/products/u-acc-pro-ap-mount) | Ubiquiti | UI-WAP-MOUNT | AP Pro Mounting Bracket | 4 | 1 | (Bernie) For ceiling tile/hard mount |
 
 ---
 
@@ -156,14 +173,14 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 | External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | [Stealth Pro 7.0X](https://quietcoolsystems.com/whole-house-fan/stealth-pro-x-whole-house-fan/) | QuietCool | QC-STL-7.0X | Stealth Pro 7.0X (ECM Motor) | 2 | 1 | Inspection-Critical |
-| [SR-2701S-DT7](https://www.sunricher.com/dali-2-relay-module-sr-2701S-dt7.html) | Sunricher | SUN-2701S-DT7 | DALI-2 Relay Puck | 2 | 1 | Power Control |
+| [SR-2701S-DT7](https://www.sunricher.com/dali-2-relay-module-sr-2701s-dt7.html) | Sunricher | SUN-2701S-DT7 | DALI-2 Relay Puck | 2 | 1 | Power Control |
 | [SR-2303-0-10V-PWM](https://www.sunricher.com/dali-to-0-10v-pwm-sr-2303-0-10v-pwm.html) | Sunricher | SUN-2401-10V | DALI to 0-10V Signal Converter | 2 | 1 | Speed Control |
 
 ### **6.2 Attic Exhaust Fans**
 | External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | [AFG SMT PRO-3.0](https://quietcoolsystems.com/attic-fan/smart-gable-attic-fans/) | QuietCool | QC-AFG-3.0 | AFG SMT PRO-3.0 Gable Fan | 4 | 1 | Inspection-Critical |
-| [SR-2701S-DT7](https://www.sunricher.com/dali-2-relay-module-sr-2701S-dt7.html) | Sunricher | SUN-2701S-DT7 | DALI-2 Relay Puck | 4 | 1 | Power Control |
+| [SR-2701S-DT7](https://www.sunricher.com/dali-2-relay-module-sr-2701s-dt7.html) | Sunricher | SUN-2701S-DT7 | DALI-2 Relay Puck | 4 | 1 | Power Control |
 | [SR-2303-0-10V-PWM](https://www.sunricher.com/dali-to-0-10v-pwm-sr-2303-0-10v-pwm.html) | Sunricher | SUN-2401-10V | DALI to 0-10V Signal Converter | 4 | 1 | Speed Control |
 
 ### **6.3 Bathroom & Laundry Exhaust**
@@ -180,7 +197,7 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 | External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | [056353](https://www.steinel.de/en/group/sensors/smart-space-sensors/true-presence/multisensor-true-presence-knx-056353.html) | Steinel | STE-TP-KNX | True Presence Multisensor KNX | 5 | 1 | Primary (2), Guest, Bath 3, Laundry |
-| [2064965](https://www.warema.com/en/controls/knx/weather-station-pro-reg.html) | Warema | WAR-WETH-PRO | KNX Weather Station Pro | 1 | 1 | Environmental Hub |
+| [2064965](https://www.warema.com/en/control-systems/bus-systems/knx-technology/knx-secure-weather-station-pro-reg/) | Warema | WAR-WETH-PRO | KNX Weather Station Pro | 1 | 1 | Environmental Hub |
 | [OAL-PM2.5](https://temcocontrols.com/shop/outdoor-pm2-5-sensor/) | Temco | TEM-PM25 | Outdoor PM2.5 Sensor (Modbus) | 1 | 1 | Wildfire SMK Sensor |
 | [SCN-MBGW.01](https://www.mdt.de/en/products/modbus-gateway.html) | MDT | MDT-SCN-MB | KNX/Modbus Gateway | 1 | 1 | Protocol Bridge |
 
@@ -227,8 +244,8 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | [BOX-SQ-4IN](https://www.hubbell.com/raco/en/Products/Electrical-Electronic/Boxes/4-in-Square-Boxes-Covers/4-in-Square-Box-2-18-in-Deep-with-Conduit-KOs/p/1670609) | Hubbell | 4" Square Steel Box (2-1/8" D) | - | 1 | Rough-in Basic |
 | [BOX-FIRE-PAD](https://www.stifirestop.com/products/specseal-putty-pads) | STI | SpecSeal Putty Pad | 1 | 1 | Fire Barrier |
-| [CON-EMT-1IN](https://www.westerntube.com/products/emt/) | Western Tube | 1" EMT Conduit | 2 | 1 | Solar Roof |
-| [CON-EMT-2.5IN](https://www.westerntube.com/products/emt/) | Western Tube | 2.5" EMT Conduit | 2 | 1 | Energy Wall |
+| [CON-EMT-1IN](https://www.westerntube.com/products/emt-conduit/) | Western Tube | 1" EMT Conduit | 2 | 1 | Solar Roof |
+| [CON-EMT-2.5IN](https://www.westerntube.com/products/emt-conduit/) | Western Tube | 2.5" EMT Conduit | 2 | 1 | Energy Wall |
 
 ---
 
@@ -239,9 +256,9 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | [X915S](https://www.akuvox.com/productsDisp?pid=37) | Akuvox | AKU-X915S | 8" 3D Face Recognition Intercom | 1 | 1 | Main Entry |
 | [E16C](https://www.akuvox.com/productsDisp?pid=39) | Akuvox | AKU-E16C | 5" 3D Face Recognition Intercom | 3 | 1 | Secondary Entries |
-| [E16-A05H](https://lowvoltagedealer.com/akuvox-e16-a05h-sun-shield-rain-hood-for-e16-a05/) | Akuvox | AKU-E16-HOOD | Sun Shield / Rain Hood | 1 | 1 | For Garage Door |
+| [E16-A05H](https://www.akuvox.com/products/door-phone/e16c-smart-ip-intercom) | Akuvox | AKU-E16-HOOD | Sun Shield / Rain Hood | 1 | 1 | See 'Accessories' tab |
 | [S567G](https://www.akuvox.com/productsDisp?pid=82) | Akuvox | AKU-S567G | 10" Android 12 Indoor Monitor | 1 | 1 | Internal Hub |
-| [1006-CS](https://www.hesinnovations.com/en/products/electric-strikes/1006-series) | HES | HES-1006 | Heavy Duty Electric Strike | 4 | 1 | Lock Hardware |
+| [1006-CS](https://www.assaabloyesh.com/en/products/electric-strikes/1000-series/1006/) | HES | HES-1006 | Heavy Duty Electric Strike | 4 | 1 | Lock Hardware |
 | [SR01](https://akuvox.com/productsDisp?pid=74) | Akuvox | AKU-SR01 | Secure Relay Module | 4 | 1 | Security Logic |
 
 ---
@@ -251,7 +268,7 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 
 | External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [2064965](https://www.warema.com/en/controls/knx/weather-station-pro-reg.html) | Warema | WAR-WETH-PRO | KNX Weather Station Pro | 1 | 1 | North Wall |
+| [2064965](https://www.warema.com/en/control-systems/bus-systems/knx-technology/knx-secure-weather-station-pro-reg/) | Warema | WAR-WETH-PRO | KNX Weather Station Pro | 1 | 1 | North Wall |
 | [OAL-PM2.5](https://temcocontrols.com/shop/outdoor-pm2-5-sensor/) | Temco | TEM-PM25 | Outdoor PM2.5 Sensor (Modbus) | 1 | 1 | Smoke Interlock |
 
 ---
@@ -261,9 +278,9 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 
 | External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [NUC13ANKi7](https://www.asus.com/displays-desktops/mini-pcs/nuc-mini-pcs/asus-nuc-13-pro/tech-specs/) | ASUS | ASUS-NUC-AI | NUC 13 Pro (i7, 32GB RAM) | 1 | 2 | AI Development Node (Owner) |
-| [MZ-V9P4T0B-AM](https://www.samsung.com/us/computing/memory-storage/solid-state-drives/990-pro-pcie-4-0-nvme-ssd-4tb-mz-v9p4t0b-am/) | Samsung | SSD-990-4TB | 990 Pro 4TB NVMe SSD | 1 | 2 | AI Storage |
-| [UVC-G5-Pro](https://ui.com/camera-security/g5-pro) | Ubiquiti | UI-CAM-G5P | G5 Professional 4K Camera | 12 | 2 | **Phase 1: Pre-wire only** |
+| [NUC13ANKi7](https://www.asus.com/displays-desktops/mini-pcs/nuc-mini-pcs/asus-nuc-13-pro/tech-specs/) | ASUS | ASUS-NUC-AI | NUC 13 Pro (i7, 32GB RAM) | 1 | 2 | (Bernie) AI Development Node (Owner) |
+| [MZ-V9P4T0B-AM](https://www.samsung.com/us/computing/memory-storage/solid-state-drives/990-pro-pcie-4-0-nvme-ssd-4tb-mz-v9p4t0b-am/) | Samsung | SSD-990-4TB | 990 Pro 4TB NVMe SSD | 1 | 2 | (Bernie) AI Storage |
+| [UVC-G5-Pro](https://ui.com/camera-security/g5-pro) | Ubiquiti | UI-CAM-G5P | G5 Professional 4K Camera | 12 | 2 | (Bernie) **Phase 1: Pre-wire only** |
 
 ---
 
@@ -276,12 +293,13 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 
 ### **11.2 LCP Service Spares & Pre-Wire**
 *   **Window Shades (Pre-Wire)**: Pull **16/4 Shielded Cable** from LCP-1/2 to every window header. Terminate in "Router & Rescue" vaults per *window-shade-wiring-prep.md*. Coil 3ft of slack in LCP, label, and do not terminate.
-*   **LCP-1 (Garage)**: Pull **3x Spare Service Loops** (120V HV In + DUO Control Out) into the attic. 
-*   **LCP-2 (Office 2)**: Pull **3x Spare Service Loops** (120V HV In + DUO Control Out) into the attic. **Environmental Hub**: Weather station and PM2.5 sensors terminate here.
+*   **LCP-1 (Garage)**: Pull **3x Spare Service Loops** (120V HV In + DUO Control Out) into the attic. **Note**: Requires an internal 15A outlet.
+*   **LCP-2 (Office 2)**: Pull **3x Spare Service Loops** (120V HV In + DUO Control Out) into the attic. **Environmental Hub**: Weather station and PM2.5 sensors terminate here. **Note**: Requires an internal 15A outlet.
 
 ### **11.3 Box & Finish Standards**
 *   **Deep Boxes**: Standardize on 2-1/8" deep steel boxes to allow for DALI relay pucks and KNX pigtail service loops.
 *   **Floating Shields**: Drain wires on the KNX bus should be cut and taped at the device end; bond only at the LCP ground rail to prevent ground loops.
+*   **Internal Service Receptacles**: Every LCP (1, 2, and 3) must include an internal single or duplex 15A outlet mounted to the enclosure chassis for network switch adapters and service use.
 
 ### **11.4 Security Puck (SR01) Placement**
 *   **Anti-Tamper Protocol**: All **Akuvox SR01** security relays must be centralized in **LCP-3** (Tech Room). 
@@ -346,8 +364,8 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 
 | External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [HREH06](https://www.hudsonreed.com/products/towel-warmers) | Hudson Reed | REED-TW-LRG | 2-Towel Electric Warmer (Chrome) | 1 | 1 | Primary Bath (< 5A) |
-| [HREH02](https://www.hudsonreed.com/products/towel-warmers) | Hudson Reed | REED-TW-SML | 1-Towel Electric Warmer (Chrome) | 5 | 1 | Other Baths (< 5A) |
+| [HREH06](https://www.hudsonreed.com/products/electric-towel-warmers) | Hudson Reed | REED-TW-LRG | 2-Towel Electric Warmer (Chrome) | 1 | 1 | Large Chrome Collection |
+| [HREH02](https://www.hudsonreed.com/products/electric-towel-warmers) | Hudson Reed | REED-TW-SML | 1-Towel Electric Warmer (Chrome) | 5 | 1 | Small Chrome Collection |
 
 ### **15.1 Towel Warmer Notes**
 *   **Control**: Home-run to **LCP-1/2 High-Inrush Relays**. No wall switches.
@@ -370,14 +388,16 @@ The following products have generic or reseller links and require further direct
 
 | Subsystem | Wire/Cable Type | Manufacturer | External MPN | Phase | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Power (Core)** | #1 AWG SER Aluminum | Southwire | 13103701 | 1 | SPAN Panel Feeds |
-| **Power (Core)** | 12/2 Romex SIMpull | Southwire | 28828201 | 1 | High-Current Circuits |
-| **Lighting/Fans** | Romex PCS Duo (14/2 + 16/2) | Southwire | PCS-DUO | 1 | Power + Control |
-| **KNX Bus** | 18/2 Shielded Twisted Pair | Belden | 8760 | 1 | US Equivalent for KNX Bus |
-| **DALI/Signal** | 18/2 Shielded Control | Southwire | 18-2-SHLD | 1 | Baseline Control Wire |
-| **Network (SHLD)** | Cat6 Shielded (F/UTP) | Cable Matters | 160012 | 1 | Core Network Standard |
-| **Network (Bulk)** | Cat6 UTP (Bulk) | Cable Matters | 160010 | 1 | General Wall Jacks |
-| **Backbone (Fiber)** | 4-Core OS2 Singlemode | FS.com | 151525 | 1 | Inter-Zone Trunk (LC) |
+| **Power (Core)** | #2/0 AWG SER Aluminum | Contractor Choice | - | 1 | SPAN Panel Feeds (100A) |
+| **Power (Core)** | 12/2 Romex SIMpull | Contractor Choice | - | 1 | Fridge, DW, 20A Branch |
+| **Power (Core)** | 6/3 Romex SIMpull | Contractor Choice | - | 1 | Electric Range / Induction |
+| **Power (Core)** | 14/2 Romex SIMpull | Contractor Choice | - | 1 | Standard 15A Lighting/LCP |
+| **Lighting/Fans** | Romex PCS Duo (14/2 + 16/2) | Southwire | [PCS-DUO](https://www.homedepot.com/p/Southwire-1000-ft-14-2-White-Solid-Romex-SIMpull-NM-B-PCS-Duo-Cable-67807102/313360647) | 1 | Power + Control |
+| **KNX Bus** | 18/2 Shielded Twisted Pair | Belden | [8760](https://www.belden.com/products/cable/electronic-wire-cable/multi-pair-cable/8760) | 1 | US Equivalent for KNX Bus |
+| **DALI/Signal** | 18/2 Shielded Control | Southwire | [18-2-SHLD](https://www.homedepot.com/p/Southwire-100-ft-18-2-Shielded-Communication-Cable-55307221/300642277) | 1 | 0-10V or DALI Bus |
+| **Network (SHLD)** | Cat6 Shielded (F/UTP) | Cable Matters | [160012](https://www.cablematters.com/pc-892-160-cat-6a-snagless-shielded-sstpsftp-ethernet-patch-cable.aspx) | 1 | Core Network Standard |
+| **Network (Bulk)** | Cat6 UTP (Bulk) | Cable Matters | [160010](https://www.cablematters.com/pc-892-160-cat-6a-snagless-shielded-sstpsftp-ethernet-patch-cable.aspx) | 1 | General Wall Jacks |
+| **Backbone (Fiber)** | 4-Core OS2 Singlemode | FS.com | [151525](https://www.fs.com/products/151525.html) | 1 | 48-Fiber LC Patch Panel (OM4) |
 | **Consumables** | KNX Push-Wire Connectors | Wago | 243-211 | 1 | Red/Black (Box 50) |
 
 ---
@@ -409,6 +429,53 @@ The following products have generic or reseller links and require further direct
     *   **Drop 4**: Local Ethernet Web Gateway.
     *   **Drop 5-6**: External SPAN Panel Ethernet ports.
 *   **Labeling**: Both ends must be clearly labeled "ENERGY-COMM-1" through "ENERGY-COMM-6".
+
+---
+
+---
+
+## **Section 17: Load Control Panel Circuit Schedule**
+*Defines the 120V Feeder lines from the SPAN panels to the automation enclosures.*
+
+### **17.1 LCP-1 Feed Breakdown (Garage / Main)**
+| ID | Load Description | Rating | Notes |
+| :--- | :--- | :--- | :--- |
+| **L1-01** | **Automation Logic** | 15A | ABB/Siemens/MeanWell PSUs |
+| **L1-02** | **Kitchen/Pantry Lighting** | 15A | DALI-2 Driver Hub |
+| **L1-03** | **Family/Living/Entry Lighting** | 15A | DALI-2 Driver Hub |
+| **L1-04** | **Exterior/Landscape Lighting** | 15A | Perimeter Sconces / Pre-wire |
+| **L1-05** | **Interior Accent Lighting** | 15A | eldoLED Tape Drivers (6) |
+| **L1-06** | **Whole House Fan 1 (HV)** | 15A | 8.6A High-Inrush (EC Motor) |
+| **L1-07** | **Whole House Fan 2 (HV)** | 15A | 8.6A High-Inrush (EC Motor) |
+| **L1-08** | **Attic Fans / Ventilation** | 15A | 4x Gable Fans (4.0A Total) |
+| **L1-09** | **Seasonal Outlets** | 15A | KNX Relay (Eaves/Ground) |
+| **L1-10** | **Reserved (Spare 1)** | 15A | - |
+| **L1-11** | **Reserved (Spare 2)** | 15A | - |
+| **L1-12** | **Reserved (Spare 3)** | 15A | - |
+
+### **17.2 LCP-2 Feed Breakdown (Office / Master)**
+| ID | Load Description | Rating | Notes |
+| :--- | :--- | :--- | :--- |
+| **L2-01** | **Automation Logic / NUC** | 15A | Logic controller & Hub |
+| **L2-02** | **Primary Suite Lighting** | 15A | DALI-2 Zone |
+| **L2-03** | **Bedrooms 2/3/4 & Hall Lighting** | 15A | DALI-2 Zone |
+| **L2-04** | **Primary/Master Accent Light** | 15A | eldoLED Tape Drivers (6) |
+| **L2-05** | **Primary Bath Towel Warmer** | 15A | Dedicated KNX Relay |
+| **L2-06** | **Guest/Kids Towel Warmer Group** | 15A | ~8A Continuous Load (5 rails) |
+| **L2-07** | **Mechanical/Bath Vents** | 15A | All Bedroom Wing Fans |
+| **L2-08** | **Environmental (Skylight/Weath)** | 15A | Logic + 24V Drive |
+| **L2-09** | **Reserved (Spare 1)** | 15A | - |
+| **L2-10** | **Reserved (Spare 2)** | 15A | - |
+| **L2-11** | **Reserved (Spare 3)** | 15A | - |
+
+### **17.3 LCP-3 Feed Breakdown (Tech Room / Security)**
+| ID | Load Description | Rating | Notes |
+| :--- | :--- | :--- | :--- |
+| **L3-01** | **LCP-3 Logic (Managed)** | 15A | Altronix EFlow 104N |
+| **L3-02** | **Internal IT Receptacle** | 15A | Switch / Aux / Service |
+| **L3-03** | **Reserved (Spare 1)** | 15A | - |
+| **L3-04** | **Reserved (Spare 2)** | 15A | - |
+| **L3-05** | **Reserved (Spare 3)** | 15A | - |
 
 ---
 
