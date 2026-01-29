@@ -2,15 +2,14 @@
 
 **Project Name:** 270 Bolla Ave  
 **Document Type:** Integrated Systems Specification  
-**Integrator Draft:** v1.1 (Baseline Control & HVAC Integration)
+**Integrator Draft:** v1.0 (Baseline for Release)
 
 ---
 
 ## **Revision History**
 | Version | Date | Description | Status |
 | :--- | :--- | :--- | :--- |
-| v1.0 | 2026-01-27 | Baseline Release: Phased Infrastructure & Subsystem Segregation | Archived |
-| v1.1 | 2026-01-27 | **HVAC & UI Expansion**: Integrated complete HVAC logic (Intesis Carrier/Fujitsu & Modbus bridges), added Basalte Deseo OLED thermostats, specified MDT Shutter Actuators for skylight control, and expanded KNX backbone (IP Secure & Line Couplers). | **Current** |
+| v1.0 | 2026-01-27 | Baseline Release: Phased Infrastructure & Subsystem Segregation | **Current** |
 
 ---
 
@@ -30,14 +29,14 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 ## **Section 1: High-Voltage (HV) Infrastructure**
 *Main Service & Smart Panel Telemetry*
 
-| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [1-03294-02](https://www.span.io/products/main-32) | SPAN | SPAN-GEN2 | Smart Panel Gen 2 (32-Circuit) | 2 | 1 | Main Service (Local API) |
-| [MAIN-16](https://span.io/products/panel/16) | SPAN | SPAN-SUB | Smart Panel 16 (16-Circuit) | 1 | 1 | Sub-Panel (Logic/Tech) |
-| - | Contractor Choice | SER-2/0-AL | #2/0 AWG Aluminum SER | - | 1 | Sub-SPAN Feed (100A) |
-| - | Contractor Choice | NM-B-12/2 | 12/2 Romex (20A Branch) | - | 1 | Fridge, Dishwasher, Outlets |
-| - | Contractor Choice | NM-B-6/3 | 6/3 Romex (50A Circuit) | - | 1 | Electric Range / Induction |
-| - | Contractor Choice | NM-B-14/2 | 14/2 Romex (Standard) | - | 1 | General Lighting / LCP Feeds |
+| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Listing / Status | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| [1-03294-02](https://www.span.io/products/main-32) | SPAN | SPAN-GEN2 | Smart Panel Gen 2 (32-Circuit) | 2 | 1 | **UL Listed** | Main Service |
+| [MAIN-16](https://span.io/products/panel/16) | SPAN | SPAN-SUB | Smart Panel 16 (16-Circuit) | 1 | 1 | **UL Listed** | Sub-Panel (Logic) |
+| [2/0-AL-SER](https://nassaunationalcable.com/products/2-0-2-0-2-0-1-ser) | [Nassau National](https://nassaunationalcable.com/) | SER-2/0-AL | #2/0 AWG Aluminum SER | - | 1 | **UL Listed** | Sub-SPAN Feed |
+| [12/2-NM-B](https://nassaunationalcable.com/products/12-2-w-grnd-nm-b-600v-solid-yellow) | [Nassau National](https://nassaunationalcable.com/) | NM-B-12/2 | 12/2 Romex (20A Branch) | - | 1 | **UL Listed** | Kitchen Outlets |
+| [6/3-NM-B](https://nassaunationalcable.com/products/6-3-w-grnd-nm-b-600v-stranded-black) | [Nassau National](https://nassaunationalcable.com/) | NM-B-6/3 | 6/3 Romex (50A Circuit) | - | 1 | **UL Listed** | Range / Induction |
+| [14/2-NM-B](https://nassaunationalcable.com/products/14-2-w-grnd-nm-b-600v-solid-white) | [Nassau National](https://nassaunationalcable.com/) | NM-B-14/2 | 14/2 Romex (Standard) | - | 1 | **UL Listed** | Lighting/LCP |
 
 ---
 
@@ -49,21 +48,16 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 * **Depth Note**: 8" (203mm) nominal depth easily accommodates the 128.5mm (5.1") Mean Well SDR-480.
 * **Internal Outlets**: Install 1x internal 15A duplex receptacle for plug-in logic (UniFi switch/spares).
 
-| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [SCE-24H2408LP](https://www.saginawcontrol.com/partnumber_info/?n=SCE-24H2408LP) | Saginaw | SAG-24H2408 | 24x24x8 NEMA 4/12 Enclosure | 1 | 1 | Hinged Cover |
-| [SDR-480-24](https://www.meanwell.com/productDetail.aspx?i=318) | Mean Well | MW-SDR-480 | 480W 24V DC PSU (UL 508) | 1 | 1 | Main Logic Power |
-| [SV/S 30.640.5.1](https://new.abb.com/products/2CDG110146R0011/sv-s30-640-5-1) | ABB | ABB-KNX-PS | KNX Power Supply 640mA | 1 | 1 | Powers Line 1.1 |
-| [SV/S 30.160.1.1](https://new.abb.com/products/2CDG110130R0011/sv-s30-160-1-1) | ABB | ABB-PS-160 | KNX Power Supply 160mA | 1 | 1 | Backbone Power |
-| [LK/S 4.2](https://new.abb.com/products/2CDG110171R0011/lk-s-4-2) | ABB | ABB-LK-S | KNX Line Coupler | 1 | 1 | 1.1 to Backbone |
-| [BE/S 16.20.3.2](https://new.abb.com/products/2CDG110278R0011/be-s16-20-3-2-binary-input-16-fold-md) | ABB | ABB-BIN-16 | 16-fold Binary Input | 1 | 1 | Local Contacts |
-| [CBM E4 24DC/0.5-10A-NO](https://www.phoenixcontact.com/en-pc/products/2905743) | Phoenix Contact | PHX-CBM-E4 | Electronic Circuit Protector | 1 | 1 | NEC Class 2 |
-| [5WG1141-1AB03](https://hit.sbt.siemens.com/RWD/app.aspx?module=Catalog&action=ShowProduct&key=5WG1141-1AB03) | Siemens | SIE-DALI-GW | KNX/DALI Gateway Twin N 141/03 | 1 | 1 | Universes 1 & 2 |
-| [USW-Pro-8-PoE](https://store.ui.com/us/en/pro/category/all-wifi/products/usw-pro-8-poe) | Ubiquiti | UI-SW-PRO-8 | UniFi Pro 8 PoE (10G SFP+) | 1 | 2 | (Bernie) Garage Hub Switch |
-| [MDT-SCN-MBGW.01](https://www.mdt.de/en/products/modbus-gateway.html) | MDT | MDT-SCN-MB | KNX/Modbus Gateway | 1 | 2 | Telemetry Bridge |
-| [1060/A](https://www.eldoled.com/product/solodrive-100w-linear-dim-to-dark-1060a/) | eldoLED | ELD-PWR-100 | 100W DALI-2 LED Driver | 6 (TBD) | 1 | Area Tape Lights |
-| [86458668](https://www.lunatone.com/en/product/dali-rm8-0-10v-pwm/) | Lunatone | LUN-DALI-010 | DALI 0-10V PWM Interface | 2 | 1 | Guest / Half-Bath Vents |
-| [AKS-1216.03](https://www.mdt.de/en/products/product-detail/actuators/switch-actuators/switch-actuator-aks.html) | MDT | MDT-AKS-1216 | 12-fold High-Inrush Actuator | 1 | 1 | Seasonal & WHF Power |
+| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Listing / Status | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| [SCE-24H2408LP](https://www.saginawcontrol.com/partnumber_info/?n=SCE-24H2408LP) | Saginaw | SAG-24H2408 | 24x24x8 NEMA 4/12 Enclosure | 1 | 1 | **UL Listed** | Outer Box [E69392] |
+| [SCE-ELFM24H/W](https://www.saginawcontrol.com/partnumber_info/?n=SCE-ELFM24W) | Saginaw | SAG-FLUSH-KIT | Flush Mount Frame (24x24) | 1 | - | **UL Listed** | **REQUIRED FOR RECESSED** |
+| [SDR-480-24](https://www.meanwell.com/productDetail.aspx?i=318) | Mean Well | MW-SDR-480 | 480W 24V DC PSU (UL 508) | 1 | 1 | **UL Recog.** | Main Logic Power |
+| [SV/S 30.640.5.1](https://new.abb.com/products/2CDG110146R0011/sv-s30-640-5-1) | ABB | ABB-KNX-PS | KNX Power Supply 640mA | 1 | 1 | **UL Recog.** | Powers Line 1.1 |
+| [5WG1512-1CB01](https://hit.sbt.siemens.com/RWD/app.aspx?module=Catalog&action=ShowProduct&key=5WG1512-1CB01) | Siemens | SIE-AKS-512 | 8-fold Load Switch (20A High-C) | 1 | 1 | **UL Listed** | Seasonal & WHF Power |
+| [5WG1141-1AB03](https://hit.sbt.siemens.com/RWD/app.aspx?module=Catalog&action=ShowProduct&key=5WG1141-1AB03) | Siemens | SIE-DALI-GW | KNX/DALI Gateway Twin N 141/03 | 1 | 1 | **UL Listed** | Universes 1 & 2 |
+| [1060/A](https://www.eldoled.com/product/solodrive-100w-linear-dim-to-dark-1060a/) | eldoLED | ELD-PWR-100 | 100W DALI-2 LED Driver | 6 (TBD) | 1 | **UL Recog.** | Area Tape Lights |
+| [MDT-SCN-MBGW.01](https://www.mdt.de/en/products/modbus-gateway.html) | MDT | MDT-SCN-MB | KNX/Modbus Gateway | 1 | 2 | **Non-UL (SELV)** | Telemetry Bridge |
 
 ---
 
@@ -76,28 +70,16 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 * **Depth Note**: **MAX COMPONENT DEPTH 3.5" (89mm)**. No SDR-series PSUs allowed here; use MDR or SV/S series only. (NUC fits @ 37mm).
 * **Internal Outlets**: Install 1x internal 15A duplex receptacle for localized IT/logic gear.
 
-| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [ASE24X12X4NK](https://www.nvent.com/en-us/hoffman/products/encASE24X12X4NK) | nVent HOFFMAN | HOF-ASE24X12X4 | Automation Enclosure (24x12x4) | 1 | 1 | Top Box |
-| [ASE12X12X4](https://www.nvent.com/en-us/hoffman/products/encASE12X12X4) | nVent HOFFMAN | HOF-ASE12X12X4 | Network/Aux Enclosure (12x12x4) | 1 | 1 | Bottom Box |
-| [USW-Pro-8-PoE](https://store.ui.com/us/en/pro/category/all-wifi/products/usw-pro-8-poe) | Ubiquiti | UI-SW-PRO-8 | UniFi Pro 8 PoE (10G SFP+) | 1 | 1 | (Bernie) Hub for Office/WAPs/NUC |
-| [NUC13ANKi5](https://www.asus.com/displays-desktops/mini-pcs/nuc-mini-pcs/asus-nuc-13-pro/) | ASUS | ASUS-NUC-13 | NUC 13 Pro (i5, 16GB RAM) | 1 | 1 | (Bernie) Master Logic Controller |
-| [SV/S 30.640.5.1](https://new.abb.com/products/2CDG110146R0011/sv-s30-640-5-1) | ABB | ABB-KNX-PS | KNX Power Supply 640mA | 1 | 1 | Powers Line 1.2 |
-| [LK/S 4.2](https://new.abb.com/products/2CDG110171R0011/lk-s-4-2) | ABB | ABB-LK-S | KNX Line Coupler | 1 | 1 | <span style="color:red">**[NEW v1.1]**</span> 1.2 to Backbone |
-| [IPS/S 3.1.1](https://new.abb.com/products/2CDG110177R0011/ips-s3-1-1) | ABB | ABB-IPS-S | KNX IP Interface Secure | 1 | 1 | <span style="color:red">**[NEW v1.1]**</span> Logic Link |
-| [USB/S 1.2](https://new.abb.com/products/2CDG110243R0011/usb-s-1-2) | ABB | ABB-USB-S | KNX USB Interface | 1 | 1 | Local Backup |
-| [BE/S 16.20.3.2](https://new.abb.com/products/2CDG110278R0011/be-s16-20-3-2-binary-input-16-fold-md) | ABB | ABB-BIN-16 | 16-fold Binary Input | 1 | 1 | Contacts |
-| [5WG1141-1AB03](https://hit.sbt.siemens.com/RWD/app.aspx?module=Catalog&action=ShowProduct&key=5WG1141-1AB03) | Siemens | SIE-DALI-GW | KNX/DALI Gateway Twin | 1 | 1 | Universes 3 & 4 |
-| [INKNXCAR001I000](https://www.intesis.com/products/ac-gateways/carrier-gateways/carrier-vrf-systems-knx-interface-vrf-in-knx-v1) | Intesis | INT-HVAC-CAR | Carrier/Day&Night to KNX Gateway | 2 | 1 | <span style="color:red">**[NEW v1.1]**</span> Main Heat Pumps |
-| [INKNXFGL001R000](https://www.hms-networks.com/products/intesis/fujitsu-rac-and-vrf-to-knx-interface-with-binary-inputs-to-cn-connector) | Intesis | INT-HVAC-FUJ | Fujitsu to KNX Interface | 1 | 1 | <span style="color:red">**[NEW v1.1]**</span> Tech Room Mini-Split |
-| [JAL-0810.02](https://www.mdt.de/en/products/product-detail/actuators/shutter-actuators/shutter-actuators-jal.html) | MDT | MDT-JAL-0810 | 8-fold Shutter Actuator (24V DC) | 1 | 1 | <span style="color:red">**[NEW v1.1]**</span> Motorized Skylights |
-| [5WG1512-1CB01](https://hit.sbt.siemens.com/RWD/app.aspx?module=Catalog&action=ShowProduct&key=5WG1512-1CB01) | Siemens | SIE-AKS-512 | 8-fold Load Switch (20A High-C) | 1 | 1 | Towel Warmers / Vents |
-| [INKNXMBM100](https://www.intesis.com/products/knx-gateways/modbus-knx-gateways/modbus-rtu-knx-client-inknxmbm1000000) | Intesis | INT-MOD-KNX | HVAC Modbus to KNX Gateway | 1 | 1 | <span style="color:red">**[NEW v1.1]**</span> AC/Heat Bridge |
-| [SCN-MBGW.01](https://www.mdt.de/en/products/modbus-gateway.html) | MDT | MDT-SCN-MB | KNX/Modbus Gateway | 1 | 1 | Gateway for Temco PM2.5 |
-| [MDR-100-24](https://www.meanwell.com/webapp/product/search.aspx?prod=MDR-100) | Mean Well | MW-MDR-100-24 | 100W 24V DC DIN-Rail PSU | 1 | 1 | Logic Power |
-| [1060/A](https://www.eldoled.com/product/solodrive-100w-linear-dim-to-dark-1060a/) | eldoLED | ELD-PWR-100 | 100W DALI-2 LED Driver | 6 (TBD) | 1 | Master Accent |
-| [86458668](https://www.lunatone.com/en/product/dali-rm8-0-10v-pwm/) | Lunatone | LUN-DALI-010 | DALI 0-10V PWM Interface | 4 | 1 | Master / Laundry / Kids Vents |
-| [AKS-1216.03](https://www.mdt.de/en/products/product-detail/actuators/switch-actuators/switch-actuator-aks.html) | MDT | MDT-AKS-1216 | 12-fold High-Inrush Actuator | 1 | 1 | Towel Warmers & Attic Fans |
+| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Listing / Rating | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| [ASE24X12X4NK](https://www.nvent.com/en-us/hoffman/products/encASE24X12X4NK) | nVent HOFFMAN | HOF-ASE24X12X4 | Automation Enclosure (24x12x4) | 1 | 1 | **UL Listed** | Type 1 [E27525] |
+| [USW-Pro-8-PoE](https://store.ui.com/us/en/pro/category/all-wifi/products/usw-pro-8-poe) | Ubiquiti | UI-SW-PRO-8 | UniFi Pro 8 PoE (10G SFP+) | 1 | 1 | **UL Listed** | (Bernie) Hub |
+| [NUC13ANKi5](https://www.asus.com/displays-desktops/mini-pcs/nuc-mini-pcs/asus-nuc-13-pro/) | ASUS | ASUS-NUC-13 | NUC 13 Pro (i5, 16GB RAM) | 1 | 1 | **Non-UL** | (Bernie) Logic |
+| [SV/S 30.640.5.1](https://new.abb.com/products/2CDG110146R0011/sv-s30-640-5-1) | ABB | ABB-KNX-PS | KNX Power Supply 640mA | 1 | 1 | **UL Recog.** | Powers Line 1.2 |
+| [5WG1141-1AB03](https://hit.sbt.siemens.com/RWD/app.aspx?module=Catalog&action=ShowProduct&key=5WG1141-1AB03) | Siemens | SIE-DALI-GW | KNX/DALI Gateway Twin | 1 | 1 | **UL Listed** | Universes 3 & 4 |
+| [5WG1512-1CB01](https://hit.sbt.siemens.com/RWD/app.aspx?module=Catalog&action=ShowProduct&key=5WG1512-1CB01) | Siemens | SIE-AKS-512 | 8-fold Load Switch (20A High-C) | 1 | 1 | **UL Listed** | Towel Warmers / Vents |
+| [MDR-100-24](https://www.meanwell.com/webapp/product/search.aspx?prod=MDR-100) | Mean Well | MW-MDR-100-24 | 100W 24V DC DIN-Rail PSU | 1 | 1 | **UL Recog.** | Logic Power |
+| [1060/A](https://www.eldoled.com/product/solodrive-100w-linear-dim-to-dark-1060a/) | eldoLED | ELD-PWR-100 | 100W DALI-2 LED Driver | 6 (TBD) | 1 | **UL Recog.** | Master Accent |
 
 ---
 
@@ -112,20 +94,20 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
     *   **Bottleneck 2**: Yuasa 12Ah Batteries @ 98mm (3.86") depth.
     *   **Wall Context**: A 2x6 wall (5.5" stud) + drywall (~6" total) makes Option B (6") nearly flush. 
 
-| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [SCE-24H2408LP](https://www.saginawcontrol.com/partnumber_info/?n=SCE-24H2408LP) | Saginaw | SAG-24H2408 | 24x24x8 NEMA Enclosure | 1 | 1 | Hinged Cover |
-| [eFlow104N](https://www.altronix.com/products/eFlow104N) | Altronix | ALT-EFLOW104N | 10A Power Supply/Charger | 1 | 1 | Managed DC Rail |
-| [NP12-12](https://www.yuasa.co.uk/np12-12.html) | Yuasa | BATT-12AH | 12V 12Ah SLA Battery | 2 | 1 | 24V DC String |
-| [DDR-60G-15](https://www.meanwell.com/productDetail.aspx?i=845) | Mean Well | MW-DDR-60G-15 | 24V to 15V DC-DC Converter | 1 | 1 | Power for NUC |
-| [NUC13ANKi5](https://www.asus.com/displays-desktops/mini-pcs/nuc-mini-pcs/asus-nuc-13-pro/) | ASUS | ASUS-NUC-13 | NUC 13 Pro (i5, 16GB RAM) | 1 | 1 | (Bernie) Security Brain |
-| [IES210GPP](https://www.tp-link.com/us/business-networking/omada-switch-industrial/ies210gpp/) | TP-Link | TPL-IES210GPP | Industrial 10-Port PoE+ Switch | 1 | 1 | (Bernie) DC-Input PoE Source |
-| [SR01](https://akuvox.com/productsDisp?pid=74) | Akuvox | AKU-SR01 | Secure Relay Module | 4 | 1 | Relay Board |
+| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Listing / Rating | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| [SCE-24H2408LP](https://www.saginawcontrol.com/partnumber_info/?n=SCE-24H2408LP) | Saginaw | SAG-24H2408 | 24x24x8 NEMA Enclosure | 1 | 1 | **UL Listed** | Hinged Cover |
+| [eFlow104N](https://www.altronix.com/products/eFlow104N) | Altronix | ALT-EFLOW104N | 10A Power Supply/Charger | 1 | 1 | **UL Listed** | Managed DC Rail |
+| [NP12-12](https://www.yuasa.co.uk/np12-12.html) | Yuasa | BATT-12AH | 12V 12Ah SLA Battery | 2 | 1 | **UL Recog.** | 24V DC String |
+| [DDR-60G-15](https://www.meanwell.com/productDetail.aspx?i=845) | Mean Well | MW-DDR-60G-15 | 24V to 15V DC-DC Converter | 1 | 1 | **UL Recog.** | Power for NUC |
+| [NUC13ANKi5](https://www.asus.com/displays-desktops/mini-pcs/nuc-mini-pcs/asus-nuc-13-pro/) | ASUS | ASUS-NUC-13 | NUC 13 Pro (i5, 16GB RAM) | 1 | 1 | **Non-UL** | (Bernie) Security Brain |
+| [IES210GPP](https://www.tp-link.com/us/business-networking/omada-switch-industrial/ies210gpp/) | TP-Link | TPL-IES210GPP | Industrial 10-Port PoE+ Switch | 1 | 1 | **Non-UL** | (Bernie) DC-Input PoE Source |
+| [SR01](https://akuvox.com/productsDisp?pid=74) | Akuvox | AKU-SR01 | Secure Relay Module | 4 | 1 | **Non-UL (SELV)** | Relay Board |
 ### **3.2 Tech Room Power & Receptacle Spec**
 *Differentiating Enclosure Power from Room/Wall Power*
 
 | Load Category | Location | Receptacle | Circuit | Notes |
-| :--- | :--- | :--- | :--- | :--- |
+| :--- | :--- | :--- | :--- |
 | **Server UPS** | Wall (Direct) | NEMA L6-30R | 240V / 30A | Dedicated Twist-Lock |
 | **Workbench / Lab** | Wall (General) | 3x NEMA 5-20R | 120V / 20A | General Bench Outlets |
 | **LCP-3 Logic** | Inside Enclosure | Hardwired | 120V / 15A | **Differentiated Circuit** |
@@ -138,14 +120,14 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 *Sensors and User Interfaces (Not in Enclosures)*
 
 ### **4.1 Sensors (Environmental & Presence)**
-| [056353](https://www.steinel.de/en/group/sensors/smart-space-sensors/true-presence/multisensor-true-presence-knx-056353.html) | Steinel | STE-TP-KNX | True Presence Multisensor KNX | 5 | 1 | Primary Bath + WC Cluster |
+| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Listing / Rating | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| [056353](https://www.steinel.de/en/group/sensors/smart-space-sensors/true-presence/multisensor-true-presence-knx-056353.html) | Steinel | STE-TP-KNX | True Presence Multisensor KNX | 5 | 1 | **KNX Certified** | Bath + WC Cluster |
 
 ### **4.2 User Interfaces**
-| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [Sentido 4-way](https://www.basalte.be/en/product/sentido) | Basalte | BAS-SENT-4 | Sentido (4-Button) Switch | 12 | 1 | Native KNX |
-| [Deseo KNX](https://www.basalte.be/en/products/deseo) | Basalte | BAS-DESEO | Basalte Deseo (OLED Thermostat) | 1 | 1 | <span style="color:red">**[NEW v1.1]**</span> Hallway Central UI |
-| [9011-02](https://www.basalte.be/en/product/sentido) | Basalte | BAS-BUS-COU | KNX Bus Coupler for UI Units | 13 | 1 | <span style="color:red">**[NEW v1.1]**</span> For Sentido & Deseo |
+| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Listing / Rating | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| [Sentido 4-way](https://www.basalte.be/en/product/sentido) | Basalte | Basalte | Sentido (4-Button) Switch | 12 | 1 | **KNX Certified** | Native KNX |
 
 ### **4.3 UI Integration Notes**
 *   **Protocol**: Native KNX Multicast. All features (Buttons, RGB LED, Temp Sensor) are standard ETS Group Objects.
@@ -158,17 +140,17 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 ## **Section 5: Network Infrastructure (Core)**
 *Standardized backbone for data connectivity.*
 
-| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [USW-Pro-Max-24-PoE](https://ui.com/switching/pro-max-24-poe) | Ubiquiti | UI-SW-PRO-24 | UniFi Pro Max 24 PoE | 1 | 1 | (Bernie) Core Network Switch |
-| [PDU15B10R](https://www.cyberpowersystems.com/product/pdus/basic/pdu15b10r/) | CyberPower | CYB-PDU-1U | 1U Rack PDU | 1 | 1 | (Bernie) Rack Power |
-| [SMT1500C](https://www.apc.com/us/en/product/SMT1500C/) | APC | APC-UPS-1500 | Smart-UPS 1500VA | 1 | 1 | (Bernie) Rack Backup |
+| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Listing / Rating | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| [USW-Pro-Max-24-PoE](https://ui.com/switching/pro-max-24-poe) | Ubiquiti | UI-SW-PRO-24 | UniFi Pro Max 24 PoE | 1 | 1 | **UL Listed** | (Bernie) Core |
+| [PDU15B10R](https://www.cyberpowersystems.com/product/pdus/basic/pdu15b10r/) | CyberPower | CYB-PDU-1U | 1U Rack PDU | 1 | 1 | **UL Listed** | (Bernie) Rack Power |
+| [SMT1500C](https://www.apc.com/us/en/product/SMT1500C/) | APC | APC-UPS-1500 | Smart-UPS 1500VA | 1 | 1 | **UL Listed** | (Bernie) Rack Backup |
 
 ### **5.1 Wireless Infrastructure (WiFi 7)**
-| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [U7-Pro](https://store.ui.com/us/en/pro/category/all-wifi/products/u7-pro) | Ubiquiti | UI-WAP-U7 | UniFi7 Pro Access Point | 4 | 1 | (Bernie) High Reliability / WiFi 7 |
-| [U-ACC-Pro-AP-Mount](https://store.ui.com/us/en/pro/category/accessories-access-point/products/u-acc-pro-ap-mount) | Ubiquiti | UI-WAP-MOUNT | AP Pro Mounting Bracket | 4 | 1 | (Bernie) For ceiling tile/hard mount |
+| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Listing / Rating | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| [U7-Pro](https://store.ui.com/us/en/pro/category/all-wifi/products/u7-pro) | Ubiquiti | UI-WAP-U7 | UniFi7 Pro Access Point | 4 | 1 | **UL Listed** | (Bernie) WiFi 7 |
+| [U-ACC-Pro-AP-Mount](https://store.ui.com/us/en/pro/category/accessories-access-point/products/u-acc-pro-ap-mount) | Ubiquiti | UI-WAP-MOUNT | AP Pro Mounting Bracket | 4 | 1 | **UL Listed** | (Bernie) Mount |
 
 ---
 
@@ -176,23 +158,20 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 *Whole-House, Attic, and Bathroom Exhaust (EC Motors + DALI-2 Control)*
 
 ### **6.1 Whole-House Fans (WHF)**
-| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [Stealth Pro 7.0X](https://quietcoolsystems.com/whole-house-fan/stealth-pro-x-whole-house-fan/) | QuietCool | QC-STL-7.0X | Stealth Pro 7.0X (ECM Motor) | 2 | 1 | Inspection-Critical |
-| [SR-2701S-DT7](https://www.sunricher.com/dali-2-relay-module-sr-2701s-dt7.html) | Sunricher | SUN-2701S-DT7 | DALI-2 Relay Puck | 2 | 1 | Power Control |
-| [SR-2401-10V](https://www.sunricher.com/dali-to-0-10v-pwm-sr-2303-0-10v-pwm.html) | Sunricher | SUN-2401-10V | DALI to 0-10V Signal Converter | 2 | 1 | Speed Control |
+| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Listing / Rating | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| [Stealth Pro 7.0X](https://quietcoolsystems.com/whole-house-fan/stealth-pro-x-whole-house-fan/) | QuietCool | QC-STL-7.0X | Stealth Pro 7.0X (ECM Motor) | 2 | 1 | **UL Listed** | Core Fan |
+| [SR-2701S-DT7](https://www.sunricher.com/dali-2-relay-module-sr-2701s-dt7.html) | Sunricher | SUN-2701S-DT7 | DALI-2 Relay Puck | 2 | 1 | **UL Recog.** | Power Control |
+| [SR-2303-0-10V-PWM](https://www.sunricher.com/dali-to-0-10v-pwm-sr-2303-0-10v-pwm.html) | Sunricher | SUN-2401-10V | DALI to 0-10V Signal Converter | 2 | 1 | **UL Recog.** | Speed Control |
 
 ### **6.2 Attic Exhaust Fans**
-| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [AFG SMT PRO-3.0](https://quietcoolsystems.com/attic-fan/smart-gable-attic-fans/) | QuietCool | QC-AFG-3.0 | AFG SMT PRO-3.0 Gable Fan | 4 | 1 | Inspection-Critical |
-| [SR-2701S-DT7](https://www.sunricher.com/dali-2-relay-module-sr-2701s-dt7.html) | Sunricher | SUN-2701S-DT7 | DALI-2 Relay Puck | 4 | 1 | Power Control |
-| [SR-2401-10V](https://www.sunricher.com/dali-to-0-10v-pwm-sr-2303-0-10v-pwm.html) | Sunricher | SUN-2401-10V | DALI to 0-10V Signal Converter | 4 | 1 | Speed Control |
+| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Listing / Rating | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| [AFG SMT PRO-3.0](https://quietcoolsystems.com/attic-fan/smart-gable-attic-fans/) | QuietCool | QC-AFG-3.0 | AFG SMT PRO-3.0 Gable Fan | 4 | 1 | **UL Listed** | Inspection-Critical |
+| [SR-2701S-DT7](https://www.sunricher.com/dali-2-relay-module-sr-2701s-dt7.html) | Sunricher | SUN-2701S-DT7 | DALI-2 Relay Puck | 4 | 1 | **UL Recog.** | Power Control |
+| [SR-2303-0-10V-PWM](https://www.sunricher.com/dali-to-0-10v-pwm-sr-2303-0-10v-pwm.html) | Sunricher | SUN-2401-10V | DALI to 0-10V Signal Converter | 4 | 1 | **UL Recog.** | Speed Control |
 
 ### **6.3 Bathroom & Laundry Exhaust**
-| Location | Fan Motor | Silencer | Backdraft Damper | Diffuser (InviAir) |
-| :--- | :--- | :--- | :--- | :--- |
-| **Primary Bath** | [Fantech FG 6M EC](https://www.fantech.net/en-us/products/fans-and-accessories/inline-duct-fans/fg/?sku=49900) | Fantech LD 6 | RSK 6 | L100 (60") + S100 (6") |
 | **Bath 2 (Kids)** | [Fantech FG 6M EC](https://www.fantech.net/en-us/products/fans-and-accessories/inline-duct-fans/fg/?sku=49900) | Fantech LD 6 | RSK 6 | L100 (48") |
 | **Bath 3 (Ens)** | [Fantech FG 6M EC](https://www.fantech.net/en-us/products/fans-and-accessories/inline-duct-fans/fg/?sku=49900) | Fantech LD 6 | RSK 6 | L100 (48") |
 | **Guest Bath** | [Fantech FG 6M EC](https://www.fantech.net/en-us/products/fans-and-accessories/inline-duct-fans/fg/?sku=49900) | Fantech LD 6 | RSK 6 | L100 (60") |
@@ -200,32 +179,32 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 | **Half Bath** | [Fantech FG 6M EC](https://www.fantech.net/en-us/products/fans-and-accessories/inline-duct-fans/fg/?sku=49900) | Fantech LD 6 | RSK 6 | S100 (6") |
 
 ### **6.4 Environmental AI Inputs**
-| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [056353](https://www.steinel.de/en/group/sensors/smart-space-sensors/true-presence/multisensor-true-presence-knx-056353.html) | Steinel | STE-TP-KNX | True Presence Multisensor KNX | 5 | 1 | Primary (2), Guest, Bath 3, Laundry |
-| [2064965](https://www.warema.com/en/control-systems/bus-systems/knx-technology/knx-secure-weather-station-pro-reg/) | Warema | WAR-WETH-PRO | KNX Weather Station Pro | 1 | 1 | Environmental Hub |
-| [OAL-PM2.5](https://temcocontrols.com/shop/outdoor-pm2-5-sensor/) | Temco | TEM-PM25 | Outdoor PM2.5 Sensor (Modbus) | 1 | 1 | Wildfire SMK Sensor |
-| [SCN-MBGW.01](https://www.mdt.de/en/products/modbus-gateway.html) | MDT | MDT-SCN-MB | KNX/Modbus Gateway | 1 | 1 | Protocol Bridge |
+| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Listing / Rating | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| [056353](https://www.steinel.de/en/group/sensors/smart-space-sensors/true-presence/multisensor-true-presence-knx-056353.html) | Steinel | STE-TP-KNX | True Presence Multisensor KNX | 5 | 1 | **KNX Certified** | Envoy Sensors |
+| [2064965](https://www.warema.com/en/control-systems/bus-systems/knx-technology/knx-secure-weather-station-pro-reg/) | Warema | WAR-WETH-PRO | KNX Weather Station Pro | 1 | 1 | **KNX Certified** | Master Weather |
+| [OAL-PM2.5](https://temcocontrols.com/shop/outdoor-pm2-5-sensor/) | Temco | TEM-PM25 | Outdoor PM2.5 Sensor (Modbus) | 1 | 1 | **Non-UL (SELV)** | Wildfire SMK |
+| [SCN-MBGW.01](https://www.mdt.de/en/products/modbus-gateway.html) | MDT | MDT-SCN-MB | KNX/Modbus Gateway | 1 | 1 | **Non-UL (SELV)** | Bridge |
 
 ---
 
 ## **Section 7: Field Devices - Lighting (DALI-2)**
 *Based on current floor plan placements.*
 
-| External MPN | Manufacturer | Internal ID | Description | Qty | Type | Phase | Notes |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [X-Series](https://www.dmflighting.com/product/x-series/) | DMF Lighting | DMF-X2-SQ-FL | X-Series Square Flangeless | 80 | Recessed | 1 | Inspection-Critical |
-| [X-Series Wet](https://www.dmflighting.com/product/x-series/) | DMF Lighting | DMF-X2-WET | X-Series Sq Flangeless (Wet) | 4 | Recessed | 1 | Showers |
-| [Haiku 52"](https://store.bigassfans.com/en_us/haiku) | Big Ass Fans | BAF-HAIKU-52 | Haiku 52" Aluminum | 3 | Fan+Light | 1 | Essential Airflow |
-| [PCS-DUO](https://www.southwire.com/wire-cable/non-metallic-sheathed-cable/romex-brand-simpull-pcs-duo-cable/p/PCS-DUO) | Southwire | CAB-NM-PCS | Romex PCS Duo (14/2 + 16/2) | 3 | Spools | 1 | Cabling Pulls |
+| External MPN | Manufacturer | Internal ID | Description | Qty | Type | Phase | Listing / Rating | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| [X-Series](https://www.dmflighting.com/product/x-series/) | DMF Lighting | DMF-X2-SQ-FL | X-Series Square Flangeless | 80 | Recessed | 1 | **UL Listed** | Core Downlight |
+| [X-Series Wet](https://www.dmflighting.com/product/x-series/) | DMF Lighting | DMF-X2-WET | X-Series Sq Flangeless (Wet) | 4 | Recessed | 1 | **UL Listed** | Showers |
+| [Haiku 52"](https://store.bigassfans.com/en_us/haiku) | Big Ass Fans | BAF-HAIKU-52 | Haiku 52" Aluminum | 3 | Fan+Light | 1 | **UL Listed** | Airflow |
+| [PCS-DUO](https://www.southwire.com/wire-cable/non-metallic-sheathed-cable/romex-brand-simpull-pcs-duo-cable/p/PCS-DUO) | Southwire | CAB-NM-PCS | Romex PCS Duo (14/2 + 16/2) | 3 | Spools | 1 | **UL Listed** | Combined Cable |
 
 ### **7.1 Decorative & Architectural Lighting (Phase-Ready TBD)**
 *These loads are Phase 1 for rough-in/automation but fixtures are TBD. Pucks to be located in J-boxes.*
 
-| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [86458619](https://www.lunatone.com/en/product/dali-2-pd-300w-phase-dimmer/) | Lunatone | LUN-DALI-PD | DALI-2 Phase Dimmer (300W) | 14 | 1 | **FIXTURE TBD**: Decision Req. |
-| [TBD-DECO](https://integratorpro.app/placeholders) | Owner | DECO-MARKER | Fancy Floor-Plan Marker | 14 | 1 | For Planner Placement |
+| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Listing / Rating | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| [86458619](https://www.lunatone.com/en/product/dali-2-pd-300w-phase-dimmer/) | Lunatone | LUN-DALI-PD | DALI-2 Phase Dimmer (300W) | 14 | 1 | **UL Recog.** | Phase Puck |
+| [TBD-DECO](https://integratorpro.app/placeholders) | Owner | DECO-MARKER | Fancy Floor-Plan Marker | 14 | 1 | **TBD** | Placeholder |
 
 *   **Locations**: Front Entry (1), Foyer (1), Dining (1), Primary Bath (4), Other Baths (4), Bed 3, Bed 4, Guest Bed.
 *   **Note**: Primary WC is excluded from ornamental plan (Canned Lights only).
@@ -234,9 +213,9 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 ### **7.2 Outdoor Architectural Sconces (Phase 1 Ready)**
 *High-performance perimeter lighting home-run to DALI-2 backbone.*
 
-| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [TBD-OUT-DALI](https://integratorpro.app/placeholders) | TBD (e.g. BEGA) | OUT-SCONCE | DALI-2 Native Outdoor Sconce | 8 | 1 | **FIXTURE TBD**: DALI-2 Native |
+| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Listing / Rating | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| [TBD-OUT-DALI](https://integratorpro.app/placeholders) | TBD (e.g. BEGA) | OUT-SCONCE | DALI-2 Native Outdoor Sconce | 8 | 1 | **UL Listed Req.** | Native DALI |
 
 *   **Logic**: Must be specified as **DALI-2 Native** (with internal DALI driver).
 *   **Rationale**: Avoiding external DALI pucks in outdoor J-boxes minimizes moisture-failure points and simplifies IP65 sealing. 
@@ -246,26 +225,26 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 
 ## **Section 8: Physical Pathways (Conduit & Enclosures)**
 
-| Item | Manufacturer | Description | Qty | Phase | Notes |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| [BOX-SQ-4IN](https://www.hubbell.com/raco/en/Products/Electrical-Electronic/Boxes/4-in-Square-Boxes-Covers/4-in-Square-Box-2-18-in-Deep-with-Conduit-KOs/p/1670609) | Hubbell | 4" Square Steel Box (2-1/8" D) | - | 1 | Rough-in Basic |
-| [BOX-FIRE-PAD](https://www.stifirestop.com/products/specseal-putty-pads) | STI | SpecSeal Putty Pad | 1 | 1 | Fire Barrier |
-| [CON-EMT-1IN](https://www.westerntube.com/products/emt-conduit/) | Western Tube | 1" EMT Conduit | 2 | 1 | Solar Roof |
-| [CON-EMT-2.5IN](https://www.westerntube.com/products/emt-conduit/) | Western Tube | 2.5" EMT Conduit | 2 | 1 | Energy Wall |
+| Item | Manufacturer | Description | Qty | Phase | Listing / Rating | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| [BOX-SQ-4IN](https://www.hubbell.com/raco/en/Products/Electrical-Electronic/Boxes/4-in-Square-Boxes-Covers/4-in-Square-Box-2-18-in-Deep-with-Conduit-KOs/p/1670609) | Hubbell | 4" Square Steel Box (2-1/8" D) | - | 1 | **UL Listed** | Basic Box |
+| [BOX-FIRE-PAD](https://www.stifirestop.com/products/specseal-putty-pads) | STI | SpecSeal Putty Pad | 1 | 1 | **UL Listed** | Fire Pad |
+| [CON-EMT-1IN](https://www.westerntube.com/products/emt-conduit/) | Western Tube | 1" EMT Conduit | 2 | 1 | **UL Listed** | Solar EMT |
+| [CON-EMT-2.5IN](https://www.westerntube.com/products/emt-conduit/) | Western Tube | 2.5" EMT Conduit | 2 | 1 | **UL Listed** | Hub EMT |
 
 ---
 
 ## **Section 9: Door Entry & Access Control (Akuvox)**
 *3D Face Recognition & SIP Intercom System*
 
-| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Notes |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [X915S](https://www.akuvox.com/productsDisp?pid=37) | Akuvox | AKU-X915S | 8" 3D Face Recognition Intercom | 1 | 1 | Main Entry |
-| [E16C](https://www.akuvox.com/productsDisp?pid=39) | Akuvox | AKU-E16C | 5" 3D Face Recognition Intercom | 3 | 1 | Secondary Entries |
-| [E16-A05H](https://www.akuvox.com/products/door-phone/e16c-smart-ip-intercom) | Akuvox | AKU-E16-HOOD | Sun Shield / Rain Hood | 1 | 1 | See 'Accessories' tab |
-| [S567G](https://www.akuvox.com/productsDisp?pid=82) | Akuvox | AKU-S567G | 10" Android 12 Indoor Monitor | 1 | 1 | Internal Hub |
-| [1006-CS](https://www.assaabloyesh.com/en/products/electric-strikes/1000-series/1006/) | HES | HES-1006 | Heavy Duty Electric Strike | 4 | 1 | Lock Hardware |
-| [SR01](https://akuvox.com/productsDisp?pid=74) | Akuvox | AKU-SR01 | Secure Relay Module | 4 | 1 | Security Logic |
+| External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Listing / Rating | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| [X915S](https://www.akuvox.com/productsDisp?pid=37) | Akuvox | AKU-X915S | 8" 3D Face Recognition Intercom | 1 | 1 | **Non-UL (CE/IP65)** | Entry 1 |
+| [E16C](https://www.akuvox.com/productsDisp?pid=39) | Akuvox | AKU-E16C | 5" 3D Face Recognition Intercom | 3 | 1 | **Non-UL (CE/IP65)** | Service Entry |
+| [E16-A05H](https://www.akuvox.com/products/door-phone/e16c-smart-ip-intercom) | Akuvox | AKU-E16-HOOD | Sun Shield / Rain Hood | 1 | 1 | **N/A** | Add-on |
+| [S567G](https://www.akuvox.com/productsDisp?pid=82) | Akuvox | AKU-S567G | 10" Android 12 Indoor Monitor | 1 | 1 | **Non-UL (CE)** | Tablet |
+| [1006-CS](https://www.assaabloyesh.com/en/products/electric-strikes/1000-series/1006/) | HES | HES-1006 | Heavy Duty Electric Strike | 4 | 1 | **UL Listed** | Lock |
+| [SR01](https://akuvox.com/productsDisp?pid=74) | Akuvox | AKU-SR01 | Secure Relay Module | 4 | 1 | **Non-UL (SELV)** | Relay |
 
 ---
 
@@ -389,17 +368,18 @@ The following products have generic or reseller links and require further direct
 
 ---
 
-## **Section 16: Infrastructure - Unified Cabling Schedule**
+## **Section 16: System-Wide Cabling Schedule**
 *Standardized wire types for all subsystems.*
 
-| Subsystem | Wire/Cable Type | Manufacturer | External MPN | Phase | Notes |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Power (Core)** | #2/0 AWG SER Aluminum | Contractor Choice | - | 1 | SPAN Panel Feeds (100A) |
-| **Power (Core)** | 12/2 Romex SIMpull | Contractor Choice | - | 1 | Fridge, DW, 20A Branch |
-| **Power (Core)** | 6/3 Romex SIMpull | Contractor Choice | - | 1 | Electric Range / Induction |
-| **Power (Core)** | 14/2 Romex SIMpull | Contractor Choice | - | 1 | Standard 15A Lighting/LCP |
-| **Lighting/Fans** | Romex PCS Duo (14/2 + 16/2) | Southwire | [PCS-DUO](https://www.homedepot.com/p/Southwire-1000-ft-14-2-White-Solid-Romex-SIMpull-NM-B-PCS-Duo-Cable-67807102/313360647) | 1 | Power + Control |
-| **KNX Bus** | 18/2 Shielded Twisted Pair | Belden | [8760](https://www.belden.com/products/cable/electronic-wire-cable/multi-pair-cable/8760) | 1 | US Equivalent for KNX Bus |
+| Subsystem | Wire/Cable Type | Manufacturer | External MPN | Listing / Status | Phase | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Power (Core)** | #2/0 AWG SER Aluminum | [Nassau National](https://nassaunationalcable.com/products/2-0-2-0-2-0-1-ser) | SER-2/0-AL | **UL Listed** | 1 | SPAN Panel Feeds |
+| **Power (Core)** | 12/2 Romex SIMpull | [Nassau National](https://nassaunationalcable.com/products/12-2-w-grnd-nm-b-600v-solid-yellow) | NM-B-12/2 | **UL Listed** | 1 | Fridge, DW, 20A Branch |
+| **Power (Core)** | 6/3 Romex SIMpull | [Nassau National](https://nassaunationalcable.com/products/6-3-w-grnd-nm-b-600v-stranded-black) | NM-B-6/3 | **UL Listed** | 1 | Range / Induction |
+| **Power (Core)** | 14/2 Romex SIMpull | [Nassau National](https://nassaunationalcable.com/products/14-2-w-grnd-nm-b-600v-solid-white) | NM-B-14/2 | **UL Listed** | 1 | 15A Lighting / LCP |
+| **Lighting/Fans** | Romex PCS Duo (14/2 + 16/2) | [Nassau National](https://nassaunationalcable.com/products/14-awg-2c-nm-b-pcs-duo-control-signal-copper-conductors-600v-white) | PCS-DUO | **UL Listed** | 1 | Power + Control |
+| **KNX Bus** | 18/2 Shielded Twisted Pair | [Nassau National](https://nassaunationalcable.com/products/18-awg-2-conductor-shielded-multi-conductor-cable) | 8760-EQ | **UL Listed** | 1 | KNX Bus Pair |
+| **Shade Power** | 16/4 Shielded Cable | [Nassau National](https://nassaunationalcable.com/products/16-awg-4-conductor-shielded-multi-conductor-cable) | 16/4-SHLD | **UL Listed** | 1 | Window Shade Prep |
 | **DALI/Signal** | 18/2 Shielded Control | Southwire | [18-2-SHLD](https://www.homedepot.com/p/Southwire-100-ft-18-2-Shielded-Communication-Cable-55307221/300642277) | 1 | 0-10V or DALI Bus |
 | **Network (SHLD)** | Cat6 Shielded (F/UTP) | Cable Matters | [160012](https://www.cablematters.com/pc-892-160-cat-6a-snagless-shielded-sstpsftp-ethernet-patch-cable.aspx) | 1 | Core Network Standard |
 | **Network (Bulk)** | Cat6 UTP (Bulk) | Cable Matters | [160010](https://www.cablematters.com/pc-892-160-cat-6a-snagless-shielded-sstpsftp-ethernet-patch-cable.aspx) | 1 | General Wall Jacks |
