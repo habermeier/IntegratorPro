@@ -80,11 +80,11 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 | [LK/S 4.2](https://new.abb.com/products/2CDG110171R0011/lk-s-4-2) | ABB | ABB-LK-S | KNX Line Coupler | 1 | 1 | **UL Listed** | <span style="color:red">**[NEW v1.1]**</span> Trunk Link (Connects Line 1.2 to 1.0 Backbone) |
 | [IPS/S 3.1.1](https://new.abb.com/products/2CDG110177R0011/ips-s3-1-1) | ABB | ABB-IPS-S | KNX IP Interface Secure | 1 | 1 | **UL Listed** | <span style="color:red">**[NEW v1.1]**</span> Secure Server Bridge (NUC to KNX Bus Link) |
 | [5WG1141-1AB03](https://hit.sbt.siemens.com/RWD/app.aspx?module=Catalog&action=ShowProduct&key=5WG1141-1AB03) | Siemens | SIE-DALI-GW | KNX/DALI Gateway Twin | 1 | 1 | **UL Listed** | Master Lighting Universes 3 & 4 |
-| [INKNXCAR001I000](https://www.intesis.com/products/ac-gateways/carrier-gateways/carrier-vrf-systems-knx-interface-vrf-in-knx-v1) | Intesis | INT-HVAC-CAR | Carrier/Day&Night to KNX Gateway | 2 | 1 | **Non-UL (SELV)** | <span style="color:red">**[NEW v1.1]**</span> Main Heat Pump & HVAC Integration |
-| [INKNXFGL001R000](https://www.hms-networks.com/products/intesis/fujitsu-rac-and-vrf-to-knx-interface-with-binary-inputs-to-cn-connector) | Intesis | INT-HVAC-FUJ | Fujitsu to KNX Interface | 1 | 1 | **Non-UL (SELV)** | <span style="color:red">**[NEW v1.1]**</span> Tech Room Mini-Split HVAC Logic |
+| [INKNXCAR001I000](https://www.hms-networks.com/p/inknxcar001i000-carrier-vrf-systems-to-knx-interface-with-binary-inputs) | Intesis | INT-HVAC-CAR | Carrier/Day&Night to KNX Gateway | 2 | 1 | **Non-UL (SELV)** | <span style="color:red">**[NEW v1.1]**</span> Main Heat Pump & HVAC Integration |
+| [INKNXFGL001R000](https://www.hms-networks.com/p/inknxfgl001r000-fujitsu-rac-and-vrf-systems-to-knx-interface-with-binary-inputs-to-remote-controller-) | Intesis | INT-HVAC-FUJ | Fujitsu to KNX Interface | 1 | 1 | **Non-UL (SELV)** | <span style="color:red">**[NEW v1.1]**</span> Tech Room Mini-Split HVAC Logic |
 | [JAL-0810.02](https://www.mdt.de/en/products/product-detail/actuators/shutter-actuators/shutter-actuators-jal.html) | MDT | MDT-JAL-0810 | 8-fold Shutter Actuator (24V DC) | 1 | 1 | **Non-UL (SELV)** | <span style="color:red">**[NEW v1.1]**</span> Control for Motorized Skylights (24V polarity swap) |
 | [5WG1512-1CB01](https://hit.sbt.siemens.com/RWD/app.aspx?module=Catalog&action=ShowProduct&key=5WG1512-1CB01) | Siemens | SIE-AKS-512 | 8-fold Load Switch (20A High-C) | 1 | 1 | **UL Listed** | High-Current Switching (Towel Warmers & Master Vents) |
-| [INKNXMBM100](https://www.intesis.com/products/knx-gateways/modbus-knx-gateways/modbus-rtu-knx-client-inknxmbm1000000) | Intesis | INT-MOD-KNX | HVAC Modbus to KNX Gateway | 1 | 1 | **Non-UL (SELV)** | <span style="color:red">**[NEW v1.1]**</span> HVAC Modbus RTU Coordination |
+| [INKNXMBM1000100](https://www.hms-networks.com/p/inknxmbm1000100-modbus-rtu-client-to-knx) | Intesis | INT-MOD-KNX | HVAC Modbus to KNX Gateway | 1 | 1 | **Non-UL (SELV)** | <span style="color:red">**[NEW v1.1]**</span> HVAC Modbus RTU Coordination |
 | [MDR-100-24](https://www.meanwell.com/webapp/product/search.aspx?prod=MDR-100) | Mean Well | MW-MDR-100-24 | 100W 24V DC DIN-Rail PSU | 1 | 1 | **UL Recog.** | LCP-2 Internal Logic & Controller Power |
 | [1060/A](https://www.eldoled.com/product/solodrive-100w-linear-dim-to-dark-1060a/) | eldoLED | ELD-PWR-100 | 100W DALI-2 LED Driver | 6 (TBD) | 1 | **UL Recog.** | High-Fidelity Master Wing Architectural Lighting |
 
@@ -135,8 +135,8 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 | External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Listing / Rating | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | [Sentido 4-way](https://www.basalte.be/en/product/sentido) | Basalte | BAS-SENT-4 | Sentido (4-Button) Switch | 12 | 1 | **KNX Certified** | High-Aesthetic Room Control (Lights/Scenes) |
-| [Deseo KNX](https://www.basalte.be/en/products/deseo) | Basalte | BAS-DESEO | Basalte Deseo (OLED Thermostat) | 1 | 1 | **KNX Certified** | <span style="color:red">**[NEW v1.1]**</span> Central Hallway UI & Climate Setpoint Control |
-| [9011-02](https://www.basalte.be/en/product/sentido) | Basalte | BAS-BUS-COU | KNX Bus Coupler for UI Units | 13 | 1 | **KNX Certified** | <span style="color:red">**[NEW v1.1]**</span> Hardware Backbone for all Basalte User Interfaces |
+| [Deseo KNX](https://www.basalte.be/en/product/deseo) | Basalte | BAS-DESEO | Basalte Deseo (OLED Thermostat) | 1 | 1 | **KNX Certified** | <span style="color:red">**[NEW v1.1]**</span> Central Hallway UI & Climate Setpoint Control |
+| [9011-02](https://www.basalte.be/en/products/controls) | Basalte | BAS-BUS-COU | KNX Bus Coupler for UI Units | 13 | 1 | **KNX Certified** | <span style="color:red">**[NEW v1.1]**</span> Hardware Backbone for all Basalte User Interfaces |
 
 ### **4.3 UI Integration Notes**
 *   **Protocol**: Native KNX Multicast. All features (Buttons, RGB LED, Temp Sensor) are standard ETS Group Objects.
