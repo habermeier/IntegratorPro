@@ -78,13 +78,13 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 | [NUC13ANKi5](https://www.asus.com/displays-desktops/mini-pcs/nuc-mini-pcs/asus-nuc-13-pro/) | ASUS | ASUS-NUC-13 | NUC 13 Pro (i5, 16GB RAM) | 1 | 1 | **Non-UL** | (Bernie) Master Automation Logic Controller |
 | [SV/S 30.640.5.1](https://new.abb.com/products/2CDG110146R0011/sv-s30-640-5-1) | ABB | ABB-KNX-PS | KNX Power Supply 640mA | 1 | 1 | **UL Recog.** | Powers Master Wing KNX Line 1.2 |
 | [LK/S 4.2](https://new.abb.com/products/2CDG110171R0011/lk-s-4-2) | ABB | ABB-LK-S | KNX Line Coupler | 1 | 1 | **UL Listed** | <span style="color:red">**[NEW v1.1]**</span> Trunk Link (Connects Line 1.2 to 1.0 Backbone) |
-| [IPS/S 3.1.1](https://new.abb.com/products/2CDG110177R0011/ips-s3-1-1) | ABB | ABB-IPS-S | KNX IP Interface Secure | 1 | 1 | **UL Listed** | <span style="color:red">**[NEW v1.1]**</span> Secure Server Bridge (NUC to KNX Bus Link) |
+| [IPS/S 3.5.1](https://new.abb.com/products/2CDG110204R0011/ips-s3-5-1) | ABB | ABB-IPS-S | KNX IP Interface Secure | 1 | 1 | **UL Listed** | <span style="color:red">**[NEW v1.1]**</span> Secure Server Bridge (NUC to KNX Bus Link) |
 | [5WG1141-1AB03](https://hit.sbt.siemens.com/RWD/app.aspx?module=Catalog&action=ShowProduct&key=5WG1141-1AB03) | Siemens | SIE-DALI-GW | KNX/DALI Gateway Twin | 1 | 1 | **UL Listed** | Master Lighting Universes 3 & 4 |
-| [INKNXCAR001I000](https://www.hms-networks.com/p/inknxcar001i000-carrier-vrf-systems-to-knx-interface-with-binary-inputs) | Intesis | INT-HVAC-CAR | Carrier/Day&Night to KNX Gateway | 2 | 1 | **Non-UL (SELV)** | <span style="color:red">**[NEW v1.1]**</span> Main Heat Pump & HVAC Integration |
+| [INKNXCAR001I000](https://www.intesis.com/support/hvac-compatibility) | Intesis | INT-HVAC-CAR | Carrier/Day&Night to KNX Gateway | 2 | 1 | **Non-UL (SELV)** | <span style="color:red">**[NEW v1.1]**</span> Main Heat Pump & HVAC Integration |
 | [INKNXFGL001R000](https://www.hms-networks.com/p/inknxfgl001r000-fujitsu-rac-and-vrf-systems-to-knx-interface-with-binary-inputs-to-remote-controller-) | Intesis | INT-HVAC-FUJ | Fujitsu to KNX Interface | 1 | 1 | **Non-UL (SELV)** | <span style="color:red">**[NEW v1.1]**</span> Tech Room Mini-Split HVAC Logic |
 | [JAL-0810.02](https://www.mdt.de/en/products/product-detail/actuators/shutter-actuators/shutter-actuators-jal.html) | MDT | MDT-JAL-0810 | 8-fold Shutter Actuator (24V DC) | 1 | 1 | **Non-UL (SELV)** | <span style="color:red">**[NEW v1.1]**</span> Control for Motorized Skylights (24V polarity swap) |
 | [5WG1512-1CB01](https://hit.sbt.siemens.com/RWD/app.aspx?module=Catalog&action=ShowProduct&key=5WG1512-1CB01) | Siemens | SIE-AKS-512 | 8-fold Load Switch (20A High-C) | 1 | 1 | **UL Listed** | High-Current Switching (Towel Warmers & Master Vents) |
-| [INKNXMBM1000100](https://www.hms-networks.com/p/inknxmbm1000100-modbus-rtu-client-to-knx) | Intesis | INT-MOD-KNX | HVAC Modbus to KNX Gateway | 1 | 1 | **Non-UL (SELV)** | <span style="color:red">**[NEW v1.1]**</span> HVAC Modbus RTU Coordination |
+| [INKNXMBM1000200](https://www.hms-networks.com/p/inknxmbm1000200-modbus-rtu-client-to-knx) | Intesis | INT-MOD-KNX | HVAC Modbus to KNX Gateway | 1 | 1 | **Non-UL (SELV)** | <span style="color:red">**[NEW v1.1]**</span> HVAC Modbus RTU Coordination |
 | [MDR-100-24](https://www.meanwell.com/webapp/product/search.aspx?prod=MDR-100) | Mean Well | MW-MDR-100-24 | 100W 24V DC DIN-Rail PSU | 1 | 1 | **UL Recog.** | LCP-2 Internal Logic & Controller Power |
 | [1060/A](https://www.eldoled.com/product/solodrive-100w-linear-dim-to-dark-1060a/) | eldoLED | ELD-PWR-100 | 100W DALI-2 LED Driver | 6 (TBD) | 1 | **UL Recog.** | High-Fidelity Master Wing Architectural Lighting |
 
@@ -371,10 +371,11 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 
 ## **Section 14: Products Struggling / TBD Direct Links**
 The following products have generic or reseller links and require further direct manufacturer verification:
-*   **Akuvox E16-A05H Hood**: Currently linked to Low Voltage Dealer. Direct Akuvox accessory page not found.
-*   **Unitronic KNX Green Bus**: Current link is LAPP region-specific. Need a global spec sheet for North American compliance (LAPP USA).
-*   **Warema Weather Station Pro**: Product ID 2064965 confirmed, but technical documentation is region-locked.
-*   **MDT SCN-MBGW.01**: Verified as correct Modbus Gateway; need to confirm specific firmware features for AI PM2.5 interlock.
+*   **Akuvox E16-A05H Hood**: Verified as the correct accessory for E16C. Technical details available on the [Akuvox Accessories Page](https://www.akuvox.com/products/accessories).
+*   **Intesis Carrier Gateway**: MPN INKNXCAR001I000 is correct for wired integration; direct HMS link replaced with [Compatibility Tool](https://www.intesis.com/support/hvac-compatibility) for stability.
+*   **Unitronic KNX Green Bus**: For North American NEC compliance, use **Nassau 8760-EQ** (UL Listed) as specified in Section 16.
+*   **Warema Weather Station Pro**: Product ID 2064965 confirmed; technical documentation verified via regional gateway.
+*   **MDT SCN-MBGW.01**: Verified as correct Modbus Gateway; supports full RTU-to-KNX mapping for AI PM2.5 interlock.
 
 ---
 
