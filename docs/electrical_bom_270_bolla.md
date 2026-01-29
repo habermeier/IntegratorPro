@@ -10,7 +10,7 @@
 | Version | Date | Description | Status |
 | :--- | :--- | :--- | :--- |
 | v1.0 | 2026-01-27 | Baseline Release: Phased Infrastructure & Subsystem Segregation | Archived |
-| v1.1 | 2026-01-28 | **HVAC & UI Expansion**: Integrated complete HVAC logic (Intesis Carrier/Fujitsu & Modbus bridges), added Basalte Deseo OLED thermostats, specified MDT Shutter Actuators for skylight control, and expanded KNX backbone (IP Secure & Line Couplers). | **Current** |
+| v1.1 | 2026-01-27 | **HVAC & UI Expansion**: Integrated complete HVAC logic, added Basalte Deseo UI, Pantry Steinel sensor, and 16-fold Binary Inputs to LCP-1/2 for Closet Reed Switch management. | **Current** |
 
 ---
 
@@ -57,6 +57,7 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 | [SV/S 30.640.5.1](https://new.abb.com/products/2CDG110146R0011/sv-s30-640-5-1) | ABB | ABB-KNX-PS | KNX Power Supply 640mA | 1 | 1 | **UL Recog.** | Powers Central KNX Line 1.1 |
 | [5WG1512-1CB01](https://hit.sbt.siemens.com/RWD/app.aspx?module=Catalog&action=ShowProduct&key=5WG1512-1CB01) | Siemens | SIE-AKS-512 | 8-fold Load Switch (20A High-C) | 1 | 1 | **UL Listed** | High-Current Switching (Holiday & WHF) |
 | [5WG1141-1AB03](https://hit.sbt.siemens.com/RWD/app.aspx?module=Catalog&action=ShowProduct&key=5WG1141-1AB03) | Siemens | SIE-DALI-GW | KNX/DALI Gateway Twin N 141/03 | 1 | 1 | **UL Listed** | Master Lighting Universes 1 & 2 |
+| [BE/S 16.20.3.2](https://new.abb.com/products/2CDG110278R0011/be-s16-20-3-2-binary-input-16-fold-md) | ABB | ABB-BIN-16 | 16-fold Binary Input | 1 | 1 | **UL Recog.** | Reed Switch Terminus (Tech/Utility/Guest) |
 | [1060/A](https://www.eldoled.com/product/solodrive-100w-linear-dim-to-dark-1060a/) | eldoLED | ELD-PWR-100 | 100W DALI-2 LED Driver | 6 (TBD) | 1 | **UL Recog.** | Dim-to-Dark Drivers for Area Tape Lighting |
 | [MDT-SCN-MBGW.01](https://www.mdt.de/en/products/modbus-gateway.html) | MDT | MDT-SCN-MB | KNX/Modbus Gateway | 1 | 2 | **Non-UL (SELV)** | Energy System Telemetry (Modbus RTU Bridge) |
 
@@ -80,6 +81,7 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 | [LK/S 4.2](https://new.abb.com/products/2CDG110171R0011/lk-s-4-2) | ABB | ABB-LK-S | KNX Line Coupler | 1 | 1 | **UL Listed** | <span style="color:red">**[NEW v1.1]**</span> Trunk Link (Connects Line 1.2 to 1.0 Backbone) |
 | [IPS/S 3.5.1](https://new.abb.com/products/2CDG110204R0011/ips-s3-5-1) | ABB | ABB-IPS-S | KNX IP Interface Secure | 1 | 1 | **UL Listed** | <span style="color:red">**[NEW v1.1]**</span> Secure Server Bridge (NUC to KNX Bus Link) |
 | [5WG1141-1AB03](https://hit.sbt.siemens.com/RWD/app.aspx?module=Catalog&action=ShowProduct&key=5WG1141-1AB03) | Siemens | SIE-DALI-GW | KNX/DALI Gateway Twin | 1 | 1 | **UL Listed** | Master Lighting Universes 3 & 4 |
+| [BE/S 16.20.3.2](https://new.abb.com/products/2CDG110278R0011/be-s16-20-3-2-binary-input-16-fold-md) | ABB | ABB-BIN-16 | 16-fold Binary Input | 1 | 1 | **UL Recog.** | Reed Switch Terminus (Master Wing/Pantry/Foyer) |
 | [INKNXCAR001I000](https://www.intesis.com/support/hvac-compatibility) | Intesis | INT-HVAC-CAR | Carrier/Day&Night to KNX Gateway | 2 | 1 | **Non-UL (SELV)** | <span style="color:red">**[NEW v1.1]**</span> Main Heat Pump & HVAC Integration |
 | [INKNXFGL001R000](https://www.hms-networks.com/p/inknxfgl001r000-fujitsu-rac-and-vrf-systems-to-knx-interface-with-binary-inputs-to-remote-controller-) | Intesis | INT-HVAC-FUJ | Fujitsu to KNX Interface | 1 | 1 | **Non-UL (SELV)** | <span style="color:red">**[NEW v1.1]**</span> Tech Room Mini-Split HVAC Logic |
 | [JAL-0810.02](https://www.mdt.de/en/products/product-detail/actuators/shutter-actuators/shutter-actuators-jal.html) | MDT | MDT-JAL-0810 | 8-fold Shutter Actuator (24V DC) | 1 | 1 | **Non-UL (SELV)** | <span style="color:red">**[NEW v1.1]**</span> Control for Motorized Skylights (24V polarity swap) |
@@ -129,9 +131,11 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 ### **4.1 Sensors (Environmental & Presence)**
 | External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Listing / Rating | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [056353](https://www.steinel.de/en/group/sensors/smart-space-sensors/true-presence/multisensor-true-presence-knx-056353.html) | Steinel | STE-TP-KNX | True Presence Multisensor KNX | 5 | 1 | **KNX Certified** | Bath + WC Cluster |
+| [056353](https://www.steinel.de/en/group/sensors/smart-space-sensors/true-presence/multisensor-true-presence-knx-056353.html) | Steinel | STE-TP-KNX | True Presence Multisensor KNX | 6 | 1 | **KNX Certified** | Bath + WC Cluster + Pantry |
 
 ### **4.2 User Interfaces**
+...
+*   **Pantry Automation**: A dedicated Steinel sensor is added to the Pantry to ensure lights trigger automatically upon entry and turn off after departure (Baseline KNX logic).
 | External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Listing / Rating | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | [Sentido 4-way](https://www.basalte.be/en/product/sentido) | Basalte | BAS-SENT-4 | Sentido (4-Button) Switch | 12 | 1 | **KNX Certified** | High-Aesthetic Room Control (Lights/Scenes) |
@@ -347,10 +351,23 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 *   **Security Camera Drops**: Ensure all 12 Ubiquiti camera locations (Section 5) have Cat6 home-runs to the Tech Room (LCP-3).
 
 ### **13.4 Closet & Storage Automation (WIC / Linen / Pantry)**
-*   **Reed Switches (Primary)**: Install recessed magnetic contact switches (e.g., Tane Pill-V) in all closet door frames. Home-run 18/2 to the nearest LCP Binary Input.
-*   **Stealth mmWave Pre-Wire**: Pull a KNX Bus "tail" to the center ceiling of each WIC and Linen closet. Coil 2ft of slack **above the drywall** (Stealth Vault). 
-*   **Future sensor**: Prepared for **Creatrol 24G/60G mmWave** hidden installation (drywall penetration mode).
-*   **Requirement**: NO physical light switches are to be installed in closets or small storage areas. Lighting must be 100% sensor/contact driven.
+*   **Hardware**: Install recessed magnetic contact switches (e.g., Tane Pill-V) in all closet door frames. Home-run 18/2 to the assigned LCP Binary Input.
+*   **LCP-1 Terminations (Garage/Guest Hub)**:
+    *   Tech Closet
+    *   Utility Closet (Garage)
+    *   Guest Closet
+*   **LCP-2 Terminations (Master/Living Hub)**:
+    *   Primary WIC (Closet)
+    *   Bedroom 2 Closet
+    *   Bedroom 3 Closet
+    *   Bedroom 4 Closet
+    *   Linen Closet
+    *   Foyer Closet
+    *   Pantry (Reed Switch + Steinel Sensor)
+*   **Automation Logic**: 
+    *   **Reed Switch**: Provides "Instant-On" lighting trigger upon door opening.
+    *   **Steinel Sensor (Pantry only)**: Maintains lighting during stationary activity and handles "Auto-Off" logic.
+    *   **Requirement**: NO physical light switches are to be installed in closets or small storage areas. Lighting must be 100% sensor/contact driven.
 
 ---
 
@@ -493,3 +510,25 @@ The following products have generic or reseller links and require further direct
 ### **19.1 Decision Notes**
 *   **DALI-2 Native vs. Puck**: Priority is to find DALI-2 native fixtures (especially for outdoor), but pucks (Section 7.1) are the fallback for standard 120V dimmable LEDs.
 *   **Box Depth**: Reminder for electrician—all fixture locations in this matrix **MUST** use 2-1/8" deep steel boxes to allow for recessed puck installation.
+
+---
+
+## **Section 20: HVAC & Climate System Integration**
+*Physical and Digital Connection Strategy*
+
+### **20.1 Primary Heat Pumps (Main & Bed Wing)**
+*   **Physical Power**: Landed on **Sub-SPAN** (North Garage Wall).
+*   **Telemetry**: Circuit-level monitoring via SPAN Local API.
+*   **Digital Interface**: The **Intesis INKNXCAR001I000** gateway connects to the outdoor unit's 'Ion' digital bus. 
+*   **Control Path**: Outdoor Unit $\rightarrow$ Intesis Gateway (LCP-2) $\rightarrow$ KNX Green Bus $\rightarrow$ Basalte Deseo (UI).
+
+### **20.2 Tech Room Mini-Split (Fujitsu)**
+*   **Physical Power**: Landed on **Main SPAN #1**.
+*   **Digital Interface**: The **Intesis INKNXFGL001R000** gateway connects to the indoor unit's CN102/BWR port.
+*   **Control Path**: Indoor Unit $\rightarrow$ Intesis Gateway (LCP-2) $\rightarrow$ KNX Green Bus $\rightarrow$ AI Compute (Auto-cooling on server load).
+
+### **20.3 Integration Rationale**
+*   **Baseline Track**: Basalte Deseo sends setpoints directly to Intesis gateways via KNX. No NUC/AI required for basic heating/cooling.
+*   **Advanced Track**: LCP-2 NUC monitors PM2.5 and sends a "Force Recirculation" command to all Intesis gateways during wildfire events.
+*   **No Wi-Fi Dependency**: All HVAC control is hardwired digital communication.
+
