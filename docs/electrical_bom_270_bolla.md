@@ -2,7 +2,7 @@
 
 **Project Name:** 270 Bolla Ave  
 **Document Type:** Integrated Systems Specification  
-**Integrator Draft:** v1.8 (Baseline Control & HVAC Integration)
+**Integrator Draft:** v1.1 (Baseline Control & HVAC Integration)
 
 ---
 
@@ -10,7 +10,7 @@
 | Version | Date | Description | Status |
 | :--- | :--- | :--- | :--- |
 | v1.0 | 2026-01-27 | Baseline Release: Phased Infrastructure & Subsystem Segregation | Archived |
-| v1.8 | 2026-01-27 | Added Baseline HVAC Logic, Basalte Deseo UI, and verified URLs | **Current** |
+| v1.1 | 2026-01-27 | Added Baseline HVAC Logic, Basalte Deseo UI, and verified URLs | **Current** |
 
 ---
 
