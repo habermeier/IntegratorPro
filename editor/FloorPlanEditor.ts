@@ -103,14 +103,16 @@ export class FloorPlanEditor {
         this.emit('scale-changed', val);
     }
 
+    private resizeObserver: ResizeObserver | null = null;
+
     constructor(container: HTMLElement) {
         const editorId = Math.random().toString(36).substring(7);
         remoteDebug(`Initializing new instance: ${editorId} `, 'FloorPlanEditor');
         this.container = container;
 
         // Initialize Three.js
-        const width = container.clientWidth;
-        const height = container.clientHeight;
+        const width = container.clientWidth || 800;
+        const height = container.clientHeight || 600;
 
         this.scene = new THREE.Scene();
         // this.scene.background = new THREE.Color(0x0f172a); // REMOVED: Replaced by Mesh for Zoom Transparency
@@ -163,6 +165,17 @@ export class FloorPlanEditor {
         this.toolSystem.registerTool(new MeasureTool(this));
         this.toolSystem.registerTool(new DrawCableTool(this));
         this.toolSystem.setActiveTool('select');
+
+        // Setup ResizeObserver for robust layout handling (AUTO-ULTIMATE-UX-P26)
+        // This catches container changes (like sidebars) that don't fire window 'resize'.
+        this.resizeObserver = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                if (entry.target === container) {
+                    this.handleResize();
+                }
+            }
+        });
+        this.resizeObserver.observe(container);
 
         this.setupEventListeners();
         this.startRenderLoop();
@@ -1449,20 +1462,48 @@ export class FloorPlanEditor {
     }
 
     public dispose(): void {
-        this.container.removeEventListener('mousedown', this.handleMouseDown);
-        window.removeEventListener('mousemove', this.handleMouseMove);
-        window.removeEventListener('mouseup', this.handleMouseUp);
+        remoteDebug('Disposing FloorPlanEditor instance', 'FloorPlanEditor');
+
+        // 1. Stop render loop
+        if (this.animationFrameId !== null) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+
+        // 2. Remove Event Listeners
         window.removeEventListener('keydown', this.handleKeyDown, { capture: true });
         window.removeEventListener('keyup', this.handleKeyUp, { capture: true });
+        window.removeEventListener('resize', this.handleResize);
+        window.removeEventListener('mousemove', this.handleMouseMove);
+        window.removeEventListener('mouseup', this.handleMouseUp);
 
-        if (this.animationFrameId) {
-            cancelAnimationFrame(this.animationFrameId);
+        if (this.container) {
+            this.container.removeEventListener('mousedown', this.handleMouseDown);
+            this.container.removeEventListener('contextmenu', (e) => e.preventDefault());
         }
 
-        this.renderer.dispose();
-        // remove dom element
-        if (this.container && this.renderer.domElement.parentElement === this.container) {
-            this.container.removeChild(this.renderer.domElement);
+        if (this.renderer) {
+            const el = this.renderer.domElement;
+            el.removeEventListener('dblclick', this.handleDoubleClick);
+            el.removeEventListener('wheel', this.handleWheel);
+
+            // Remove from DOM
+            if (el.parentElement) {
+                el.parentElement.removeChild(el);
+            }
+
+            this.renderer.dispose();
+            this.renderer = null;
         }
+
+        // 3. Disconnect Observers
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect();
+            this.resizeObserver = null;
+        }
+
+        // 4. Cleanup systems if they have cleanup logic
+        if ((this.layerSystem as any).dispose) (this.layerSystem as any).dispose();
+        if ((this.cameraSystem as any).dispose) (this.cameraSystem as any).dispose();
     }
 }
