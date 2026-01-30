@@ -92,7 +92,7 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 
 ---
 
-## **Section 3.1: Load Control Panel 3 (LCP-3) (Tech Room) - Door Entry MDF**
+## **Section 3.1: Load Control Panel 3 (LCP-3) (Tech Room) - Door Entry (Main Distribution Frame)**
 *The centralized "Security Island" - 100% DC-backed for maximum uptime.*
 * **Enclosure Option A (Standard)**: Saginaw SCE-24H2408LP (8" / 203mm Depth)
 * **Enclosure Option B (Flush-Clean)**: Saginaw SCE-24H2406LP (6" / 152mm Depth)
