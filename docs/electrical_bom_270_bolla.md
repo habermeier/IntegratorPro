@@ -10,7 +10,7 @@
 | Version | Date | Description | Status |
 | :--- | :--- | :--- | :--- |
 | v1.0 | 2026-01-27 | Baseline Release: Phased Infrastructure & Subsystem Segregation | Archived |
-| v1.1 | 2026-01-27 | **HVAC & UI Expansion**: Integrated complete HVAC logic, added Basalte Deseo UI, Pantry Steinel sensor, and 16-fold Binary Inputs to LCP-1/2 for Closet Reed Switch management. | **Current** |
+| v1.1 | 2026-01-27 | **HVAC & UI Expansion**: Integrated complete HVAC logic, added Basalte Deseo UI, Pantry Steinel sensor, MDT High-Inrush switching, and 16-fold Binary Inputs to LCP-1/2 for Closet/Reed management. | **Current** |
 
 ---
 
@@ -55,9 +55,9 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 | [SCE-ELFM24H/W](https://www.saginawcontrol.com/partnumber_info/?n=SCE-ELFM24W) | Saginaw | SAG-FLUSH-KIT | Flush Mount Frame (24x24) | 1 | - | **UL Listed** | **REQUIRED**: Recessed Mounting conversion kit |
 | [SDR-480-24](https://www.meanwell.com/productDetail.aspx?i=318) | Mean Well | MW-SDR-480 | 480W 24V DC PSU (UL 508) | 1 | 1 | **UL Recog.** | Main Logic Power Bus (LCP-1 Internal) |
 | [SV/S 30.640.5.1](https://new.abb.com/products/2CDG110146R0011/sv-s30-640-5-1) | ABB | ABB-KNX-PS | KNX Power Supply 640mA | 1 | 1 | **UL Recog.** | Powers Central KNX Line 1.1 |
-| [5WG1512-1CB01](https://hit.sbt.siemens.com/RWD/app.aspx?module=Catalog&action=ShowProduct&key=5WG1512-1CB01) | Siemens | SIE-AKS-512 | 8-fold Load Switch (20A High-C) | 1 | 1 | **UL Listed** | High-Current Switching (Holiday & WHF) |
+| [AKS-1216.03](https://www.mdt.de/en/products/product-detail/actuators/switch-actuators/switch-actuators-aks.html) | MDT | MDT-AKS-12 | 12-fold Switch Actuator (High-Inrush) | 1 | 1 | **Non-UL (SELV)** | <span style="color:red">**[NEW v1.1]**</span> High-Current Switching (Holiday & WHF) |
 | [5WG1141-1AB03](https://hit.sbt.siemens.com/RWD/app.aspx?module=Catalog&action=ShowProduct&key=5WG1141-1AB03) | Siemens | SIE-DALI-GW | KNX/DALI Gateway Twin N 141/03 | 1 | 1 | **UL Listed** | Master Lighting Universes 1 & 2 |
-| [BE/S 16.20.3.2](https://new.abb.com/products/2CDG110278R0011/be-s16-20-3-2-binary-input-16-fold-md) | ABB | ABB-BIN-16 | 16-fold Binary Input | 1 | 1 | **UL Recog.** | Reed Switch Terminus (Tech/Utility/Guest) |
+| [BE/S 16.20.3.2](https://new.abb.com/products/2CDG110278R0011/be-s16-20-3-2-binary-input-16-fold-md) | ABB | ABB-BIN-16 | 16-fold Binary Input | 1 | 1 | **UL Recog.** | <span style="color:red">**[NEW v1.1]**</span> Reed Switch Terminus (Tech/Utility/Guest) |
 | [1060/A](https://www.eldoled.com/product/solodrive-100w-linear-dim-to-dark-1060a/) | eldoLED | ELD-PWR-100 | 100W DALI-2 LED Driver | 6 (TBD) | 1 | **UL Recog.** | Dim-to-Dark Drivers for Area Tape Lighting |
 | [MDT-SCN-MBGW.01](https://www.mdt.de/en/products/modbus-gateway.html) | MDT | MDT-SCN-MB | KNX/Modbus Gateway | 1 | 2 | **Non-UL (SELV)** | Energy System Telemetry (Modbus RTU Bridge) |
 
@@ -81,11 +81,11 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 | [LK/S 4.2](https://new.abb.com/products/2CDG110171R0011/lk-s-4-2) | ABB | ABB-LK-S | KNX Line Coupler | 1 | 1 | **UL Listed** | <span style="color:red">**[NEW v1.1]**</span> Trunk Link (Connects Line 1.2 to 1.0 Backbone) |
 | [IPS/S 3.5.1](https://new.abb.com/products/2CDG110204R0011/ips-s3-5-1) | ABB | ABB-IPS-S | KNX IP Interface Secure | 1 | 1 | **UL Listed** | <span style="color:red">**[NEW v1.1]**</span> Secure Server Bridge (NUC to KNX Bus Link) |
 | [5WG1141-1AB03](https://hit.sbt.siemens.com/RWD/app.aspx?module=Catalog&action=ShowProduct&key=5WG1141-1AB03) | Siemens | SIE-DALI-GW | KNX/DALI Gateway Twin | 1 | 1 | **UL Listed** | Master Lighting Universes 3 & 4 |
-| [BE/S 16.20.3.2](https://new.abb.com/products/2CDG110278R0011/be-s16-20-3-2-binary-input-16-fold-md) | ABB | ABB-BIN-16 | 16-fold Binary Input | 1 | 1 | **UL Recog.** | Reed Switch Terminus (Master Wing/Pantry/Foyer) |
+| [BE/S 16.20.3.2](https://new.abb.com/products/2CDG110278R0011/be-s16-20-3-2-binary-input-16-fold-md) | ABB | ABB-BIN-16 | 16-fold Binary Input | 1 | 1 | **UL Recog.** | <span style="color:red">**[NEW v1.1]**</span> Reed Switch Terminus (Master Wing/Pantry/Foyer) |
 | [INKNXCAR001I000](https://www.intesis.com/support/hvac-compatibility) | Intesis | INT-HVAC-CAR | Carrier/Day&Night to KNX Gateway | 2 | 1 | **Non-UL (SELV)** | <span style="color:red">**[NEW v1.1]**</span> Main Heat Pump & HVAC Integration |
 | [INKNXFGL001R000](https://www.hms-networks.com/p/inknxfgl001r000-fujitsu-rac-and-vrf-systems-to-knx-interface-with-binary-inputs-to-remote-controller-) | Intesis | INT-HVAC-FUJ | Fujitsu to KNX Interface | 1 | 1 | **Non-UL (SELV)** | <span style="color:red">**[NEW v1.1]**</span> Tech Room Mini-Split HVAC Logic |
 | [JAL-0810.02](https://www.mdt.de/en/products/product-detail/actuators/shutter-actuators/shutter-actuators-jal.html) | MDT | MDT-JAL-0810 | 8-fold Shutter Actuator (24V DC) | 1 | 1 | **Non-UL (SELV)** | <span style="color:red">**[NEW v1.1]**</span> Control for Motorized Skylights (24V polarity swap) |
-| [5WG1512-1CB01](https://hit.sbt.siemens.com/RWD/app.aspx?module=Catalog&action=ShowProduct&key=5WG1512-1CB01) | Siemens | SIE-AKS-512 | 8-fold Load Switch (20A High-C) | 1 | 1 | **UL Listed** | High-Current Switching (Towel Warmers & Master Vents) |
+| [AKS-1216.03](https://www.mdt.de/en/products/product-detail/actuators/switch-actuators/switch-actuators-aks.html) | MDT | MDT-AKS-12 | 12-fold Switch Actuator (High-Inrush) | 1 | 1 | **Non-UL (SELV)** | <span style="color:red">**[NEW v1.1]**</span> High-Current Switching (Towel Warmers & Master Vents) |
 | [INKNXMBM1000200](https://www.hms-networks.com/p/inknxmbm1000200-modbus-rtu-client-to-knx) | Intesis | INT-MOD-KNX | HVAC Modbus to KNX Gateway | 1 | 1 | **Non-UL (SELV)** | <span style="color:red">**[NEW v1.1]**</span> HVAC Modbus RTU Coordination |
 | [MDR-100-24](https://www.meanwell.com/webapp/product/search.aspx?prod=MDR-100) | Mean Well | MW-MDR-100-24 | 100W 24V DC DIN-Rail PSU | 1 | 1 | **UL Recog.** | LCP-2 Internal Logic & Controller Power |
 | [1060/A](https://www.eldoled.com/product/solodrive-100w-linear-dim-to-dark-1060a/) | eldoLED | ELD-PWR-100 | 100W DALI-2 LED Driver | 6 (TBD) | 1 | **UL Recog.** | High-Fidelity Master Wing Architectural Lighting |
@@ -109,6 +109,7 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 | [eFlow104N](https://www.altronix.com/products/eFlow104N) | Altronix | ALT-EFLOW104N | 10A Power Supply/Charger | 1 | 1 | **UL Listed** | Managed DC Power Facility (Battery Backup & Distribution) |
 | [NP12-12](https://www.yuasa.co.uk/np12-12.html) | Yuasa | BATT-12AH | 12V 12Ah SLA Battery | 2 | 1 | **UL Recog.** | Dual-Battery Series String (24V DC Security Backup) |
 | [DDR-60G-15](https://www.meanwell.com/productDetail.aspx?i=845) | Mean Well | MW-DDR-60G-15 | 24V to 15V DC-DC Converter | 1 | 1 | **UL Recog.** | Regulated DC Power for Security NUC |
+| [CBM E4 24DC/0.5-10A](https://www.phoenixcontact.com/en-us/products/electronic-circuit-breaker-cbm-e4-24dc-05-10a-no-r-2905743) | Phoenix Contact | PHX-CBM-E4 | 4-channel Electronic Breaker | 1 | 1 | **UL Listed** | <span style="color:red">**[NEW v1.1]**</span> High-Fidelity DC Protection for Security Island |
 | [NUC13ANKi5](https://www.asus.com/displays-desktops/mini-pcs/nuc-mini-pcs/asus-nuc-13-pro/) | ASUS | ASUS-NUC-13 | NUC 13 Pro (i5, 16GB RAM) | 1 | 1 | **Non-UL** | (Bernie) Security & Vision Brain (100% DC Powered) |
 | [IES210GPP](https://www.tp-link.com/us/business-networking/omada-switch-industrial/ies210gpp/) | TP-Link | TPL-IES210GPP | Industrial 10-Port PoE+ Switch | 1 | 1 | **Non-UL** | (Bernie) Industrial PoE Source for Outdoor Security Terminals |
 | [SR01](https://akuvox.com/productsDisp?pid=74) | Akuvox | AKU-SR01 | Secure Relay Module | 4 | 1 | **Non-UL (SELV)** | Anti-Tamper Door Strike Logic Board (Centralized in LCP-3) |
@@ -131,7 +132,7 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 ### **4.1 Sensors (Environmental & Presence)**
 | External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Listing / Rating | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [056353](https://www.steinel.de/en/group/sensors/smart-space-sensors/true-presence/multisensor-true-presence-knx-056353.html) | Steinel | STE-TP-KNX | True Presence Multisensor KNX | 6 | 1 | **KNX Certified** | Bath + WC Cluster + Pantry |
+| [056353](https://www.steinel.de/en/group/sensors/smart-space-sensors/true-presence/multisensor-true-presence-knx-056353.html) | Steinel | STE-TP-KNX | True Presence Multisensor KNX | 6 | 1 | **KNX Certified** | <span style="color:red">**[NEW v1.1]**</span> Bath + WC Cluster + Pantry |
 
 ### **4.2 User Interfaces**
 ...
@@ -191,13 +192,14 @@ The automation system at 270 Bolla Ave is designed for maximum reliability, secu
 | **Laundry Room** | [Fantech FG 6M EC](https://www.fantech.net/en-us/products/fans-and-accessories/inline-duct-fans/fg/?sku=49900) | Fantech LD 6 | RSK 6 | S100 (8") |
 | **Half Bath** | [Fantech FG 6M EC](https://www.fantech.net/en-us/products/fans-and-accessories/inline-duct-fans/fg/?sku=49900) | Fantech LD 6 | RSK 6 | S100 (6") |
 
-### **6.4 Environmental AI Inputs**
+### **6.4 Environmental AI Inputs (Logical Reference Only)**
+*Hardware quantities are accounted for in Sections 4.1, 10, and 15.*
 | External MPN | Manufacturer | Internal ID | Description | Qty | Phase | Listing / Rating | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| [056353](https://www.steinel.de/en/group/sensors/smart-space-sensors/true-presence/multisensor-true-presence-knx-056353.html) | Steinel | STE-TP-KNX | True Presence Multisensor KNX | 5 | 1 | **KNX Certified** | Envoy Sensors |
-| [2064965](https://www.warema.com/en/control-systems/bus-systems/knx-technology/knx-secure-weather-station-pro-reg/) | Warema | WAR-WETH-PRO | KNX Weather Station Pro | 1 | 1 | **KNX Certified** | Master Weather |
-| [OAL-PM2.5](https://temcocontrols.com/shop/outdoor-pm2-5-sensor/) | Temco | TEM-PM25 | Outdoor PM2.5 Sensor (Modbus) | 1 | 1 | **Non-UL (SELV)** | Wildfire SMK |
-| [SCN-MBGW.01](https://www.mdt.de/en/products/modbus-gateway.html) | MDT | MDT-SCN-MB | KNX/Modbus Gateway | 1 | 1 | **Non-UL (SELV)** | Bridge |
+| [056353](https://www.steinel.de/en/group/sensors/smart-space-sensors/true-presence/multisensor-true-presence-knx-056353.html) | Steinel | STE-TP-KNX | True Presence Multisensor KNX | - | 1 | **KNX Certified** | Reference only |
+| [2064965](https://www.warema.com/en/control-systems/bus-systems/knx-technology/knx-secure-weather-station-pro-reg/) | Warema | WAR-WETH-PRO | KNX Weather Station Pro | - | 1 | **KNX Certified** | Reference only |
+| [OAL-PM2.5](https://temcocontrols.com/shop/outdoor-pm2-5-sensor/) | Temco | TEM-PM25 | Outdoor PM2.5 Sensor (Modbus) | - | 1 | **Non-UL (SELV)** | Reference only |
+| [SCN-MBGW.01](https://www.mdt.de/en/products/modbus-gateway.html) | MDT | MDT-SCN-MB | KNX/Modbus Gateway | - | 1 | **Non-UL (SELV)** | Reference only |
 
 ---
 
