@@ -11,6 +11,7 @@ import { calculateRoomArea, getOrientedBoundingBox } from '../../utils/spatialUt
 import { calculateRoomLightingStats } from '../../src/utils/lightModeling';
 import { getRecommendedLux } from '../../src/constants/lightingTargets';
 import catalog from '../../catalog.json';
+import { remoteDebug } from '../../src/utils/logger';
 
 // Modular Sub-components
 import { useDevicePanelState } from './device-panel/useDevicePanelState';
@@ -100,16 +101,33 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
 
     const [hoverRoom, setHoverRoom] = React.useState<Room | null>(null);
 
-    // Track lighting mode changes
+    // Track lighting mode changes and active layer SYNC (AUTO-SWAP-UX-P28)
     React.useEffect(() => {
         if (!editor) return;
         const syncMode = () => setLightingMode(editor.layerSystem.getLightingMode());
         const handleModeChange = (mode: any) => setLightingMode(mode);
         const handleHoverRoom = (room: Room | null) => setHoverRoom(room);
 
+        // Auto-Swap logic: Sync library category with active layer when changed (AUTO-SWAP-UX-P28)
+        const handleActiveLayerChanged = (data: { isEditMode: boolean, activeLayerId: string | null }) => {
+            if (data.activeLayerId) {
+                const targetCategory = data.activeLayerId;
+                const validCategory = SYMBOL_CATEGORIES.find(c => c.id === targetCategory);
+                if (validCategory) {
+                    setSelectedCategory(targetCategory);
+                    localStorage.setItem('integrator-pro-last-category', targetCategory);
+                    // Only auto-switch tab if we are NOT currently editing something specific
+                    if (!editingDevice && !selectedRoom) {
+                        setActiveTab('library');
+                    }
+                }
+            }
+        };
+
         syncMode();
         editor.on('lighting-mode-changed', handleModeChange);
         editor.on('hover-room-changed', handleHoverRoom);
+        editor.on('edit-mode-changed', handleActiveLayerChanged);
 
         // Sync Rooms for list view
         const syncRooms = () => {
@@ -125,6 +143,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
             editor.off('lighting-mode-changed', handleModeChange);
             editor.off('hover-room-changed', handleHoverRoom);
             editor.off('layers-changed', syncRooms);
+            editor.off('edit-mode-changed', handleActiveLayerChanged);
         };
     }, [editor]);
 
@@ -161,9 +180,21 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
         } else if (activeTool !== 'place-symbol') {
             setHoverRoom(null); // Clear context if tool changes
         }
-    }, [activeTool, selectedSymbolType, editor, draftMetadata, editingDevice]);
+    }, [activeTool, selectedSymbolType, editor, draftMetadata, editingDevice, selectedRoom]);
 
-    // 4. Workflow Handlers
+    // 4. Workflow Handlers & Migrations
+    // REPAIR: migration from 'lcps' -> 'infrastructure' (Consolidation)
+    React.useEffect(() => {
+        if (!editor) return;
+        const orphaned = devices.filter(d => d.layerId === 'lcps' || (SYMBOL_LIBRARY[d.deviceTypeId] as any)?.category === 'infrastructure' && d.layerId !== 'infrastructure');
+        if (orphaned.length > 0) {
+            remoteDebug(`[Consolidation] Migrating ${orphaned.length} devices to infrastructure layer`, 'DevicePanel');
+            orphaned.forEach(d => {
+                updateDevice(d.id, { layerId: 'infrastructure' });
+            });
+            editor.emit('layers-changed', editor.layerSystem.getAllLayers());
+        }
+    }, [editor, devices, updateDevice]);
     const handleSelectSymbol = (type: string) => {
         if (isSwapMode && editingDevice) {
             setSwapData({ targetTypeId: type, targetDeviceName: SYMBOL_LIBRARY[type]?.name || type });
@@ -585,6 +616,8 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                             y: d.position.y,
                             rotation: d.rotation,
                             scale: 1,
+                            label: d.label || d.name || '',
+                            name: d.name || d.label || '',
                             room: d.roomId || undefined,
                             productId: d.productId,
                             installationHeight: d.installationHeight,

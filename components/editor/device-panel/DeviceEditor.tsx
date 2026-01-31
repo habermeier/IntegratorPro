@@ -189,10 +189,13 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
                     <label className="text-[8px] text-sky-300 uppercase font-black shrink-0">Label / UID</label>
                     <input
                         type="text"
-                        value={formData.name || ''}
-                        onChange={(e) => onFieldChange('name', e.target.value)}
+                        value={formData.label || formData.name || ''}
+                        onChange={(e) => {
+                            onFieldChange('label', e.target.value);
+                            onFieldChange('name', e.target.value);
+                        }}
                         className="bg-transparent text-[11px] text-white font-black font-mono w-full text-right focus:outline-none placeholder:text-slate-600"
-                        placeholder="Instance ID..."
+                        placeholder="Instance ID (e.g. LCP-1)..."
                     />
                 </div>
             </div>
@@ -260,6 +263,52 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
                     )}
                 </div>
             </CollapsibleSection>
+
+            {/* SECTION: INFRASTRUCTURE METADATA (AUTO-LABELS-P28) */}
+            {SYMBOL_LIBRARY[editingDevice.deviceTypeId]?.category === 'infrastructure' && (
+                <CollapsibleSection
+                    title="Electrical Info"
+                    isExpanded={true}
+                    toggle={() => { }}
+                    icon={<Zap className="w-3.5 h-3.5 text-amber-500" />}
+                >
+                    <div className="p-2.5 space-y-2">
+                        <div className="flex items-center gap-2 bg-slate-950/60 px-2 py-1.5 rounded border border-slate-800">
+                            <label className="text-[8px] text-amber-500 uppercase font-black shrink-0">Phase</label>
+                            <input
+                                type="text"
+                                value={draftMetadata.phase || ''}
+                                onChange={(e) => onFieldChange('metadata.phase', e.target.value)}
+                                onBlur={() => onFieldChange('metadata.phase', draftMetadata.phase)}
+                                className="bg-transparent text-[10px] text-white font-black font-mono w-full text-right focus:outline-none"
+                                placeholder="e.g. Phase 1"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2 bg-slate-950/60 px-2 py-1.5 rounded border border-slate-800">
+                            <label className="text-[8px] text-amber-500 uppercase font-black shrink-0">Panel Name</label>
+                            <input
+                                type="text"
+                                value={draftMetadata.panelName || ''}
+                                onChange={(e) => onFieldChange('metadata.panelName', e.target.value)}
+                                onBlur={() => onFieldChange('metadata.panelName', draftMetadata.panelName)}
+                                className="bg-transparent text-[10px] text-white font-black font-mono w-full text-right focus:outline-none"
+                                placeholder="e.g. Main Service"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2 bg-slate-950/60 px-2 py-1.5 rounded border border-slate-800">
+                            <label className="text-[8px] text-blue-400 uppercase font-black shrink-0">Part #</label>
+                            <input
+                                type="text"
+                                value={draftMetadata.partNumber || ''}
+                                onChange={(e) => onFieldChange('metadata.partNumber', e.target.value)}
+                                onBlur={() => onFieldChange('metadata.partNumber', draftMetadata.partNumber)}
+                                className="bg-transparent text-[10px] text-white font-black font-mono w-full text-right focus:outline-none"
+                                placeholder="Manufacturer Part #"
+                            />
+                        </div>
+                    </div>
+                </CollapsibleSection>
+            )}
 
             {/* SECTION 3: SPECIFICATION */}
             <CollapsibleSection

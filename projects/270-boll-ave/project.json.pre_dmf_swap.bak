@@ -1,11 +1,11 @@
 {
   "version": "2.0",
-  "timestamp": "2026-01-31T22:07:17.090Z",
+  "timestamp": "2026-01-31T15:11:38.408Z",
   "metadata": {
     "name": "270 Bolla Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2026-01-31T22:07:17.079Z"
+    "modified": "2026-01-31T15:11:38.400Z"
   },
   "floorPlan": {
     "scale": {
@@ -4000,6 +4000,35 @@
   ],
   "devices": [
     {
+      "id": "lighting-dmf-test-001",
+      "deviceTypeId": "recessed-light",
+      "productId": "DMF-X2-SQ-FL",
+      "name": "DMF Test Light",
+      "position": {
+        "x": 500,
+        "y": 500
+      },
+      "rotation": 0,
+      "roomId": "Family Room",
+      "layerId": "lighting",
+      "installationHeight": 2.74,
+      "networkConnections": [],
+      "lcpAssignment": "LCP-1",
+      "busAssignment": "Bus 1",
+      "metadata": {
+        "shorthand": "DMF",
+        "lumens": 1250,
+        "beamAngle": 50,
+        "isCombination": true
+      },
+      "createdAt": 1768153942455,
+      "x": 500,
+      "y": 500,
+      "type": "recessed-light",
+      "category": "lighting",
+      "symbolType": "recessed-light"
+    },
+    {
       "id": "lighting-1768153942455",
       "deviceTypeId": "recessed-light",
       "productId": "DMF-X2-SQ-FL",
@@ -4020,7 +4049,7 @@
         "lumens": 1250,
         "beamAngle": 50,
         "isCombination": true,
-        "productId": "DMF-X2-SQ-FL",
+        "productId": "2DS-L12",
         "range": 10,
         "cableType": "Cat6",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
@@ -6905,8 +6934,7 @@
         "specDistribution": "W",
         "specTrimType": "R",
         "specTrimOptions": "NONE",
-        "specBracket": "F1",
-        "orderingCode": ""
+        "specBracket": "F1"
       },
       "createdAt": 1768163112944,
       "x": -1897.6144085131587,
@@ -6936,7 +6964,7 @@
         "lumens": 1250,
         "beamAngle": 50,
         "isCombination": true,
-        "productId": "DMF-X2-SQ-FL",
+        "productId": "2DS-L12",
         "range": 10,
         "cableType": "Cat6",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
@@ -6983,7 +7011,7 @@
         "lumens": 1250,
         "beamAngle": 50,
         "isCombination": true,
-        "productId": "DMF-X2-SQ-FL",
+        "productId": "2DS-L12",
         "range": 10,
         "cableType": "Cat6",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
@@ -7030,7 +7058,7 @@
         "lumens": 1250,
         "beamAngle": 50,
         "isCombination": true,
-        "productId": "DMF-X2-SQ-FL",
+        "productId": "2DS-L12",
         "range": 10,
         "cableType": "Cat6",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
@@ -7077,7 +7105,7 @@
         "lumens": 1250,
         "beamAngle": 50,
         "isCombination": true,
-        "productId": "DMF-X2-SQ-FL",
+        "productId": "2DS-L12",
         "range": 10,
         "cableType": "Cat6",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
@@ -7124,7 +7152,7 @@
         "lumens": 1250,
         "beamAngle": 50,
         "isCombination": true,
-        "productId": "DMF-X2-SQ-FL",
+        "productId": "2DS-L12",
         "range": 10,
         "cableType": "Cat6",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
@@ -7171,7 +7199,7 @@
         "lumens": 1250,
         "beamAngle": 50,
         "isCombination": true,
-        "productId": "DMF-X2-SQ-FL",
+        "productId": "2DS-L12",
         "range": 10,
         "cableType": "Cat6",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
@@ -7218,7 +7246,7 @@
         "lumens": 1250,
         "beamAngle": 50,
         "isCombination": true,
-        "productId": "DMF-X2-SQ-FL",
+        "productId": "2DS-L12",
         "range": 10,
         "cableType": "Cat6",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
@@ -7265,7 +7293,7 @@
         "lumens": 1250,
         "beamAngle": 50,
         "isCombination": true,
-        "productId": "DMF-X2-SQ-FL",
+        "productId": "2DS-L12",
         "range": 10,
         "cableType": "Cat6",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
@@ -7312,7 +7340,7 @@
         "lumens": 1250,
         "beamAngle": 50,
         "isCombination": true,
-        "productId": "DMF-X2-SQ-FL",
+        "productId": "2DS-L12",
         "range": 10,
         "cableType": "Cat6",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
@@ -7359,7 +7387,7 @@
         "lumens": 1250,
         "beamAngle": 50,
         "isCombination": true,
-        "productId": "DMF-X2-SQ-FL",
+        "productId": "2DS-L12",
         "range": 10,
         "cableType": "Cat6",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
@@ -7406,7 +7434,7 @@
         "lumens": 1250,
         "beamAngle": 50,
         "isCombination": true,
-        "productId": "DMF-X2-SQ-FL",
+        "productId": "2DS-L12",
         "range": 10,
         "cableType": "Cat6",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
@@ -7453,7 +7481,7 @@
         "lumens": 1250,
         "beamAngle": 50,
         "isCombination": true,
-        "productId": "DMF-X2-SQ-FL",
+        "productId": "2DS-L12",
         "range": 10,
         "cableType": "Cat6",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
@@ -7501,7 +7529,7 @@
         "lumens": 1250,
         "beamAngle": 50,
         "isCombination": true,
-        "productId": "DMF-X2-SQ-FL",
+        "productId": "2DS-L12",
         "range": 10,
         "cableType": "Cat6",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
@@ -7549,7 +7577,7 @@
         "lumens": 1250,
         "beamAngle": 50,
         "isCombination": true,
-        "productId": "DMF-X2-SQ-FL",
+        "productId": "2DS-L12",
         "range": 10,
         "cableType": "Cat6",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
@@ -7597,7 +7625,7 @@
         "lumens": 1250,
         "beamAngle": 50,
         "isCombination": true,
-        "productId": "DMF-X2-SQ-FL",
+        "productId": "2DS-L12",
         "range": 10,
         "cableType": "Cat6",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
@@ -7640,11 +7668,11 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "shorthand": "DMF",
+        "shorthand": "2DS-L12",
         "lumens": 1250,
         "beamAngle": 50,
         "isCombination": true,
-        "productId": "DMF-X2-SQ-FL",
+        "productId": "2DS-L12",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L15",
@@ -7685,11 +7713,11 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "shorthand": "DMF",
+        "shorthand": "2DS-L12",
         "lumens": 1250,
         "beamAngle": 50,
         "isCombination": true,
-        "productId": "DMF-X2-SQ-FL",
+        "productId": "2DS-L12",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD"
       },
       "createdAt": "2026-01-11T23:50:40.243Z",
@@ -7716,11 +7744,11 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "shorthand": "DMF",
+        "shorthand": "2DS-L12",
         "lumens": 1250,
         "beamAngle": 50,
         "isCombination": true,
-        "productId": "DMF-X2-SQ-FL",
+        "productId": "2DS-L12",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L15",
@@ -7761,11 +7789,11 @@
       "lcpAssignment": null,
       "busAssignment": "Bus 1",
       "metadata": {
-        "shorthand": "DMF",
+        "shorthand": "2DS-L12",
         "lumens": 1250,
         "beamAngle": 50,
         "isCombination": true,
-        "productId": "DMF-X2-SQ-FL",
+        "productId": "2DS-L12",
         "pdfUrl": "https://www.prolighting.com/search/result/?q=XMD12930WFD",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -7899,7 +7927,7 @@
         "metadata": {
           "productId": "BAF-HAIKU",
           "orderingCode": "HK-60-I-AL-WH-STD-L",
-          "shorthand": "DMF",
+          "shorthand": "2DS-L12",
           "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
           "shoppingLink": "",
           "fanSeries": "HK",
@@ -9060,808 +9088,6 @@
       },
       "createdAt": "2026-01-31T15:11:36.862Z",
       "deviceTypeId": "DMF-X2-SQ-FL"
-    },
-    {
-      "id": "lighting-1769874058083",
-      "type": "bp-decorative-pendant",
-      "category": "lighting",
-      "x": -2604.9998347624933,
-      "y": -680.4354314655656,
-      "rotation": 0,
-      "scale": 1,
-      "room": "Bedroom 3 Bedroom",
-      "productId": "generic-product",
-      "installationHeight": 2.4,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "id": "bp-decorative-pendant",
-        "name": "Decorative Pendant",
-        "category": "lighting",
-        "symbolType": "decorative-pendant",
-        "components": {
-          "loadId": "fix-pendant-dumb",
-          "logicIds": []
-        },
-        "calculatedStats": {
-          "totalCost": 150,
-          "hvAmps": 0.5,
-          "lvMa": 0,
-          "totalAddresses": 0
-        },
-        "metadata": {
-          "shorthand": "dec-ped"
-        },
-        "shorthand": "dec-ped",
-        "isBlueprint": true,
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": "2026-01-31T15:40:58.083Z",
-      "deviceTypeId": "bp-decorative-pendant"
-    },
-    {
-      "id": "lighting-1769874076865",
-      "type": "bp-decorative-pendant",
-      "category": "lighting",
-      "x": -2114.875351487839,
-      "y": -897.934067419554,
-      "rotation": 0,
-      "scale": 1,
-      "room": "Bedroom 4 Bedroom",
-      "productId": "generic-product",
-      "installationHeight": 2.4,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "id": "bp-decorative-pendant",
-        "name": "Decorative Pendant",
-        "category": "lighting",
-        "symbolType": "decorative-pendant",
-        "components": {
-          "loadId": "fix-pendant-dumb",
-          "logicIds": []
-        },
-        "calculatedStats": {
-          "totalCost": 150,
-          "hvAmps": 0.5,
-          "lvMa": 0,
-          "totalAddresses": 0
-        },
-        "metadata": {
-          "shorthand": "dec-ped"
-        },
-        "shorthand": "dec-ped",
-        "isBlueprint": true,
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": "2026-01-31T15:41:16.865Z",
-      "deviceTypeId": "bp-decorative-pendant"
-    },
-    {
-      "id": "lighting-1769874089619",
-      "type": "bp-decorative-pendant",
-      "category": "lighting",
-      "x": -1371.274009572512,
-      "y": -1037.4619130328056,
-      "rotation": 0,
-      "scale": 1,
-      "room": "Office 1 Other",
-      "productId": "generic-product",
-      "installationHeight": 2.4,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "id": "bp-decorative-pendant",
-        "name": "Decorative Pendant",
-        "category": "lighting",
-        "symbolType": "decorative-pendant",
-        "components": {
-          "loadId": "fix-pendant-dumb",
-          "logicIds": []
-        },
-        "calculatedStats": {
-          "totalCost": 150,
-          "hvAmps": 0.5,
-          "lvMa": 0,
-          "totalAddresses": 0
-        },
-        "metadata": {
-          "shorthand": "dec-ped"
-        },
-        "shorthand": "dec-ped",
-        "isBlueprint": true,
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": "2026-01-31T15:41:29.619Z",
-      "deviceTypeId": "bp-decorative-pendant"
-    },
-    {
-      "id": "lighting-1769874120884",
-      "type": "bp-decorative-pendant",
-      "category": "lighting",
-      "x": -289.03596036769886,
-      "y": -1072.3237286343287,
-      "rotation": 0,
-      "scale": 1,
-      "room": "Living Room Open Area",
-      "productId": "generic-product",
-      "installationHeight": 2.4,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "id": "bp-decorative-pendant",
-        "name": "Decorative Pendant",
-        "category": "lighting",
-        "symbolType": "decorative-pendant",
-        "components": {
-          "loadId": "fix-pendant-dumb",
-          "logicIds": []
-        },
-        "calculatedStats": {
-          "totalCost": 150,
-          "hvAmps": 0.5,
-          "lvMa": 0,
-          "totalAddresses": 0
-        },
-        "metadata": {
-          "shorthand": "dec-ped"
-        },
-        "shorthand": "dec-ped",
-        "isBlueprint": true,
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": "2026-01-31T15:42:00.884Z",
-      "deviceTypeId": "bp-decorative-pendant"
-    },
-    {
-      "id": "lighting-1769874130736",
-      "type": "bp-decorative-pendant",
-      "category": "lighting",
-      "x": -462.0675981742245,
-      "y": -329.751605848403,
-      "rotation": 0,
-      "scale": 1,
-      "room": "Dining Room Open Area",
-      "productId": "generic-product",
-      "installationHeight": 2.4,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "id": "bp-decorative-pendant",
-        "name": "Decorative Pendant",
-        "category": "lighting",
-        "symbolType": "decorative-pendant",
-        "components": {
-          "loadId": "fix-pendant-dumb",
-          "logicIds": []
-        },
-        "calculatedStats": {
-          "totalCost": 150,
-          "hvAmps": 0.5,
-          "lvMa": 0,
-          "totalAddresses": 0
-        },
-        "metadata": {
-          "shorthand": "dec-ped"
-        },
-        "shorthand": "dec-ped",
-        "isBlueprint": true,
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": "2026-01-31T15:42:10.736Z",
-      "deviceTypeId": "bp-decorative-pendant"
-    },
-    {
-      "id": "lighting-1769874135584",
-      "type": "bp-decorative-pendant",
-      "category": "lighting",
-      "x": -875.3608982784145,
-      "y": -1442.2795008963103,
-      "rotation": 0,
-      "scale": 1,
-      "room": "external",
-      "productId": "generic-product",
-      "installationHeight": 2.4,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "id": "bp-decorative-pendant",
-        "name": "Decorative Pendant",
-        "category": "lighting",
-        "symbolType": "decorative-pendant",
-        "components": {
-          "loadId": "fix-pendant-dumb",
-          "logicIds": []
-        },
-        "calculatedStats": {
-          "totalCost": 150,
-          "hvAmps": 0.5,
-          "lvMa": 0,
-          "totalAddresses": 0
-        },
-        "metadata": {
-          "shorthand": "dec-ped"
-        },
-        "shorthand": "dec-ped",
-        "isBlueprint": true,
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": "2026-01-31T15:42:15.584Z",
-      "deviceTypeId": "bp-decorative-pendant"
-    },
-    {
-      "id": "lighting-1769874143097",
-      "type": "bp-decorative-pendant",
-      "category": "lighting",
-      "x": -827.3035378011825,
-      "y": -1036.1948048637041,
-      "rotation": 0,
-      "scale": 1,
-      "room": "Foyer Open Area",
-      "productId": "generic-product",
-      "installationHeight": 2.4,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "id": "bp-decorative-pendant",
-        "name": "Decorative Pendant",
-        "category": "lighting",
-        "symbolType": "decorative-pendant",
-        "components": {
-          "loadId": "fix-pendant-dumb",
-          "logicIds": []
-        },
-        "calculatedStats": {
-          "totalCost": 150,
-          "hvAmps": 0.5,
-          "lvMa": 0,
-          "totalAddresses": 0
-        },
-        "metadata": {
-          "shorthand": "dec-ped"
-        },
-        "shorthand": "dec-ped",
-        "isBlueprint": true,
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": "2026-01-31T15:42:23.097Z",
-      "deviceTypeId": "bp-decorative-pendant"
-    },
-    {
-      "id": "lighting-1769874153485",
-      "type": "bp-decorative-pendant",
-      "category": "lighting",
-      "x": 657.6689009452679,
-      "y": -1045.8062769591502,
-      "rotation": 0,
-      "scale": 1,
-      "room": "Guest Bedroom",
-      "productId": "generic-product",
-      "installationHeight": 2.4,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "id": "bp-decorative-pendant",
-        "name": "Decorative Pendant",
-        "category": "lighting",
-        "symbolType": "decorative-pendant",
-        "components": {
-          "loadId": "fix-pendant-dumb",
-          "logicIds": []
-        },
-        "calculatedStats": {
-          "totalCost": 150,
-          "hvAmps": 0.5,
-          "lvMa": 0,
-          "totalAddresses": 0
-        },
-        "metadata": {
-          "shorthand": "dec-ped"
-        },
-        "shorthand": "dec-ped",
-        "isBlueprint": true,
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": "2026-01-31T15:42:33.485Z",
-      "deviceTypeId": "bp-decorative-pendant"
-    },
-    {
-      "id": "lighting-1769874161897",
-      "type": "bp-wall-sconce",
-      "category": "lighting",
-      "x": 87.1397106236559,
-      "y": -1031.9442154841295,
-      "rotation": 0,
-      "scale": 1,
-      "room": "Guest Bathroom",
-      "productId": "generic-product",
-      "installationHeight": 2.4,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "id": "bp-wall-sconce",
-        "name": "Wall Sconce",
-        "category": "lighting",
-        "symbolType": "wall-sconce",
-        "components": {
-          "loadId": "fix-sconce-dumb",
-          "logicIds": []
-        },
-        "calculatedStats": {
-          "totalCost": 125,
-          "hvAmps": 0.33,
-          "lvMa": 0,
-          "totalAddresses": 0
-        },
-        "metadata": {
-          "shorthand": "dec-scn"
-        },
-        "shorthand": "dec-scn",
-        "isBlueprint": true,
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": "2026-01-31T15:42:41.897Z",
-      "deviceTypeId": "bp-wall-sconce"
-    },
-    {
-      "id": "lighting-1769874163584",
-      "type": "bp-wall-sconce",
-      "category": "lighting",
-      "x": 85.00427848888921,
-      "y": -1202.7787862654689,
-      "rotation": 0,
-      "scale": 1,
-      "room": "Guest Bathroom",
-      "productId": "generic-product",
-      "installationHeight": 2.4,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "id": "bp-wall-sconce",
-        "name": "Wall Sconce",
-        "category": "lighting",
-        "symbolType": "wall-sconce",
-        "components": {
-          "loadId": "fix-sconce-dumb",
-          "logicIds": []
-        },
-        "calculatedStats": {
-          "totalCost": 125,
-          "hvAmps": 0.33,
-          "lvMa": 0,
-          "totalAddresses": 0
-        },
-        "metadata": {
-          "shorthand": "dec-scn"
-        },
-        "shorthand": "dec-scn",
-        "isBlueprint": true,
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": "2026-01-31T15:42:43.584Z",
-      "deviceTypeId": "bp-wall-sconce"
-    },
-    {
-      "id": "lighting-1769874188447",
-      "type": "DMF-X2-SQ-FL",
-      "category": "lighting",
-      "x": 232.34909578779423,
-      "y": -1147.2575507615336,
-      "rotation": 0,
-      "scale": 1,
-      "room": "Guest Bathroom",
-      "productId": "generic-product",
-      "installationHeight": 2.4,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "id": "DMF-X2-SQ-FL",
-        "name": "DMF X-Series Square Flangeless",
-        "manufacturer": "DMF Lighting",
-        "category": "lighting",
-        "symbolType": "recessed-light",
-        "components": [
-          {
-            "productId": "dmf-x2ncs",
-            "quantity": 1,
-            "description": "Housing"
-          },
-          {
-            "productId": "dmf-x2ksmud",
-            "quantity": 1,
-            "description": "Mud-in Plate"
-          },
-          {
-            "productId": "dmf-x2tsdswhfl",
-            "quantity": 1,
-            "description": "Square Trim"
-          },
-          {
-            "productId": "dmf-xmd12930wfd",
-            "quantity": 1,
-            "description": "DALI-2 LED Module"
-          }
-        ],
-        "calculatedStats": {
-          "totalCost": 290,
-          "hvAmps": 0.12,
-          "lvMa": 2,
-          "totalAddresses": 1
-        },
-        "metadata": {
-          "isCombination": true,
-          "shorthand": "DMF"
-        },
-        "isCombination": true,
-        "shorthand": "DMF",
-        "isBlueprint": true,
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": "2026-01-31T15:43:08.447Z",
-      "deviceTypeId": "DMF-X2-SQ-FL"
-    },
-    {
-      "id": "lighting-1769874194901",
-      "type": "DMF-X2-SQ-FL-WET",
-      "category": "lighting",
-      "x": 234.48452792256091,
-      "y": -1392.8322462597089,
-      "rotation": 0,
-      "scale": 1,
-      "room": "Guest Bathroom",
-      "productId": "generic-product",
-      "installationHeight": 2.4,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "id": "DMF-X2-SQ-FL-WET",
-        "name": "DMF X-Series Square Flangeless (Wet/Shower)",
-        "manufacturer": "DMF Lighting",
-        "category": "lighting",
-        "symbolType": "recessed-light",
-        "components": [
-          {
-            "productId": "dmf-x2ncs",
-            "quantity": 1,
-            "description": "Housing"
-          },
-          {
-            "productId": "dmf-x2ksmud",
-            "quantity": 1,
-            "description": "Mud-in Plate"
-          },
-          {
-            "productId": "dmf-x2tsdswhfl-wet",
-            "quantity": 1,
-            "description": "Square Trim (Wet)"
-          },
-          {
-            "productId": "dmf-xmd12930wfd",
-            "quantity": 1,
-            "description": "DALI-2 LED Module"
-          }
-        ],
-        "calculatedStats": {
-          "totalCost": 290,
-          "hvAmps": 0.12,
-          "lvMa": 2,
-          "totalAddresses": 1
-        },
-        "metadata": {
-          "isCombination": true,
-          "shorthand": "DMF-W"
-        },
-        "isCombination": true,
-        "shorthand": "DMF-W",
-        "isBlueprint": true,
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": "2026-01-31T15:43:14.901Z",
-      "deviceTypeId": "DMF-X2-SQ-FL-WET"
-    },
-    {
-      "id": "lighting-1769874212418",
-      "type": "DMF-X2-SQ-FL",
-      "category": "lighting",
-      "x": 917.8228110479181,
-      "y": -267.45951123763655,
-      "rotation": 0,
-      "scale": 1,
-      "room": "Utility Closet",
-      "productId": "generic-product",
-      "installationHeight": 2.4,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "id": "DMF-X2-SQ-FL",
-        "name": "DMF X-Series Square Flangeless",
-        "manufacturer": "DMF Lighting",
-        "category": "lighting",
-        "symbolType": "recessed-light",
-        "components": [
-          {
-            "productId": "dmf-x2ncs",
-            "quantity": 1,
-            "description": "Housing"
-          },
-          {
-            "productId": "dmf-x2ksmud",
-            "quantity": 1,
-            "description": "Mud-in Plate"
-          },
-          {
-            "productId": "dmf-x2tsdswhfl",
-            "quantity": 1,
-            "description": "Square Trim"
-          },
-          {
-            "productId": "dmf-xmd12930wfd",
-            "quantity": 1,
-            "description": "DALI-2 LED Module"
-          }
-        ],
-        "calculatedStats": {
-          "totalCost": 290,
-          "hvAmps": 0.12,
-          "lvMa": 2,
-          "totalAddresses": 1
-        },
-        "metadata": {
-          "isCombination": true,
-          "shorthand": "DMF"
-        },
-        "isCombination": true,
-        "shorthand": "DMF",
-        "isBlueprint": true,
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": "2026-01-31T15:43:32.418Z",
-      "deviceTypeId": "DMF-X2-SQ-FL"
-    },
-    {
-      "id": "lighting-1769874224150",
-      "type": "DMF-X2-SQ-FL",
-      "category": "lighting",
-      "x": 1594.7547977689746,
-      "y": 311.2425972841501,
-      "rotation": 0,
-      "scale": 1,
-      "room": "Half Bathroom",
-      "productId": "generic-product",
-      "installationHeight": 2.4,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "id": "DMF-X2-SQ-FL",
-        "name": "DMF X-Series Square Flangeless",
-        "manufacturer": "DMF Lighting",
-        "category": "lighting",
-        "symbolType": "recessed-light",
-        "components": [
-          {
-            "productId": "dmf-x2ncs",
-            "quantity": 1,
-            "description": "Housing"
-          },
-          {
-            "productId": "dmf-x2ksmud",
-            "quantity": 1,
-            "description": "Mud-in Plate"
-          },
-          {
-            "productId": "dmf-x2tsdswhfl",
-            "quantity": 1,
-            "description": "Square Trim"
-          },
-          {
-            "productId": "dmf-xmd12930wfd",
-            "quantity": 1,
-            "description": "DALI-2 LED Module"
-          }
-        ],
-        "calculatedStats": {
-          "totalCost": 290,
-          "hvAmps": 0.12,
-          "lvMa": 2,
-          "totalAddresses": 1
-        },
-        "metadata": {
-          "isCombination": true,
-          "shorthand": "DMF"
-        },
-        "isCombination": true,
-        "shorthand": "DMF",
-        "isBlueprint": true,
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": "2026-01-31T15:43:44.150Z",
-      "deviceTypeId": "DMF-X2-SQ-FL"
-    },
-    {
-      "id": "lighting-1769874230517",
-      "type": "bp-wall-sconce",
-      "category": "lighting",
-      "x": 1757.047640011247,
-      "y": 227.96074402824723,
-      "rotation": 0,
-      "scale": 1,
-      "room": "Half Bathroom",
-      "productId": "generic-product",
-      "installationHeight": 2.4,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "id": "bp-wall-sconce",
-        "name": "Wall Sconce",
-        "category": "lighting",
-        "symbolType": "wall-sconce",
-        "components": {
-          "loadId": "fix-sconce-dumb",
-          "logicIds": []
-        },
-        "calculatedStats": {
-          "totalCost": 125,
-          "hvAmps": 0.33,
-          "lvMa": 0,
-          "totalAddresses": 0
-        },
-        "metadata": {
-          "shorthand": "dec-scn"
-        },
-        "shorthand": "dec-scn",
-        "isBlueprint": true,
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": "2026-01-31T15:43:50.517Z",
-      "deviceTypeId": "bp-wall-sconce"
-    },
-    {
-      "id": "lighting-1769874231817",
-      "type": "bp-wall-sconce",
-      "category": "lighting",
-      "x": 1697.2555402377784,
-      "y": 193.79382987197937,
-      "rotation": 0,
-      "scale": 1,
-      "room": "Half Bathroom",
-      "productId": "generic-product",
-      "installationHeight": 2.4,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "id": "bp-wall-sconce",
-        "name": "Wall Sconce",
-        "category": "lighting",
-        "symbolType": "wall-sconce",
-        "components": {
-          "loadId": "fix-sconce-dumb",
-          "logicIds": []
-        },
-        "calculatedStats": {
-          "totalCost": 125,
-          "hvAmps": 0.33,
-          "lvMa": 0,
-          "totalAddresses": 0
-        },
-        "metadata": {
-          "shorthand": "dec-scn"
-        },
-        "shorthand": "dec-scn",
-        "isBlueprint": true,
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": "2026-01-31T15:43:51.817Z",
-      "deviceTypeId": "bp-wall-sconce"
-    },
-    {
-      "id": "lighting-1769874262568",
-      "type": "DMF-X2-SQ-FL",
-      "category": "lighting",
-      "x": -1906.4732882514177,
-      "y": 442.7208022603054,
-      "rotation": 0,
-      "scale": 1,
-      "room": "Primary Closet",
-      "productId": "generic-product",
-      "installationHeight": 2.4,
-      "busAssignment": "Bus 1",
-      "metadata": {
-        "productId": "generic-product",
-        "id": "DMF-X2-SQ-FL",
-        "name": "DMF X-Series Square Flangeless",
-        "manufacturer": "DMF Lighting",
-        "category": "lighting",
-        "symbolType": "recessed-light",
-        "components": [
-          {
-            "productId": "dmf-x2ncs",
-            "quantity": 1,
-            "description": "Housing"
-          },
-          {
-            "productId": "dmf-x2ksmud",
-            "quantity": 1,
-            "description": "Mud-in Plate"
-          },
-          {
-            "productId": "dmf-x2tsdswhfl",
-            "quantity": 1,
-            "description": "Square Trim"
-          },
-          {
-            "productId": "dmf-xmd12930wfd",
-            "quantity": 1,
-            "description": "DALI-2 LED Module"
-          }
-        ],
-        "calculatedStats": {
-          "totalCost": 290,
-          "hvAmps": 0.12,
-          "lvMa": 2,
-          "totalAddresses": 1
-        },
-        "metadata": {
-          "isCombination": true,
-          "shorthand": "DMF"
-        },
-        "isCombination": true,
-        "shorthand": "DMF",
-        "isBlueprint": true,
-        "lumens": 800,
-        "beamAngle": 60,
-        "range": 10,
-        "cableType": "Cat6"
-      },
-      "createdAt": "2026-01-31T15:44:22.568Z",
-      "deviceTypeId": "DMF-X2-SQ-FL"
     }
   ],
   "cables": [],
@@ -9874,19 +9100,19 @@
   "force": false,
   "customSymbols": [
     {
-      "id": "custom-dmf-x2-sq-fl",
-      "name": "DMF X-Series",
+      "id": "custom-2ds-l12",
+      "name": "2DS-L12",
       "category": "lighting",
-      "description": "Recessed Light Preset - Shorthand: DMF. Product: DMF-X2-SQ-FL, Bus: Bus 1, Cable: Cat6",
+      "description": "Recessed Light Preset - Shorthand: 2DS-L12. Product: 2DS-L12, Bus: Bus 1, Cable: Cat6",
       "color": 0,
       "size": {
         "width": 16,
         "height": 16
       },
       "metadata": {
-        "shorthand": "DMF",
-        "productId": "DMF-X2-SQ-FL",
-        "orderingCode": "DMF - X L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "shorthand": "2DS-L12",
+        "productId": "2DS-L12",
+        "orderingCode": "2DS - L9/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
         "specLumens": "L9",
@@ -9903,22 +9129,22 @@
         "specTrimOptions": "NONE",
         "specBracket": "F1"
       },
-      "productId": "DMF-X2-SQ-FL",
+      "productId": "2DS-L12",
       "meshType": "universal"
     },
     {
       "id": "custom-2ds-l12-1768153974533",
-      "name": "DMF X-Series",
+      "name": "2DS-L12",
       "category": "lighting",
-      "description": "Recessed Light Preset - Shorthand: DMF. Product: DMF-X2-SQ-FL, Bus: Bus 1, Cable: Cat6",
+      "description": "Recessed Light Preset - Shorthand: 2DS-L12. Product: 2DS-L12, Bus: Bus 1, Cable: Cat6",
       "color": 0,
       "size": {
         "width": 16,
         "height": 16
       },
       "metadata": {
-        "orderingCode": "DMF - X L12/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
-        "shorthand": "DMF",
+        "orderingCode": "2DS - L12/9TW - N - LD2 - UNV - W - R - ZF - WH - F1",
+        "shorthand": "2DS-L12",
         "pdfUrl": "https://hew.com/specifications/2ds_tunable-white.pdf",
         "shoppingLink": "",
         "specLumens": "L12",
@@ -9934,9 +9160,9 @@
         "specTrimType": "R",
         "specTrimOptions": "NONE",
         "specBracket": "F1",
-        "productId": "DMF-X2-SQ-FL"
+        "productId": "2DS-L12"
       },
-      "productId": "DMF-X2-SQ-FL",
+      "productId": "2DS-L12",
       "meshType": "universal"
     },
     {

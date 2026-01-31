@@ -202,6 +202,38 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
             );
         }
 
+        // Specialized Icon: Equipment (Rectangle with Power/Panel pattern)
+        if (meshType === 'equipment') {
+            const iconCenterW = 24, iconCenterH = 24;
+            const w = 24, h = 32;
+
+            return (
+                <svg width={size} height={size} viewBox="0 0 48 48" style={{ overflow: 'visible' }}>
+                    {/* White Halo */}
+                    <rect x={iconCenterW - w / 2 - 1.5} y={iconCenterH - h / 2 - 1.5} width={w + 3} height={h + 3} fill="#FFF" />
+
+                    {/* Main Box */}
+                    <rect x={iconCenterW - w / 2} y={iconCenterH - h / 2} width={w} height={h} fill="#000" />
+
+                    {/* Power Bolt (Simplified SVG Polyline) */}
+                    <polyline
+                        points={`${iconCenterW - 3},${iconCenterH - 6} ${iconCenterW + 3},${iconCenterH} ${iconCenterW - 3},${iconCenterH} ${iconCenterW + 3},${iconCenterH + 6}`}
+                        fill="none"
+                        stroke="#FFF"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    />
+
+                    {/* Panel Lines */}
+                    <line x1={iconCenterW - w / 2 + 4} y1={iconCenterH - h / 4} x2={iconCenterW + w / 2 - 4} y2={iconCenterH - h / 4} stroke="#FFF" strokeWidth="1" />
+                    <line x1={iconCenterW - w / 2 + 4} y1={iconCenterH + h / 4} x2={iconCenterW + w / 2 - 4} y2={iconCenterH + h / 4} stroke="#FFF" strokeWidth="1" />
+
+                    {renderLabels(iconCenterW, w / 2, displayShorthand)}
+                </svg>
+            );
+        }
+
         const center = 16;
         const squareSize = 16;
         const squareHalf = squareSize / 2;

@@ -79,6 +79,10 @@ export interface PlacedSymbol {
         beamAngle?: number;
         range?: number;
         cableType?: string;
+        phase?: string;
+        panelName?: string;
+        shorthand?: string;
+        partNumber?: string;
     };
     createdAt: string;
 }

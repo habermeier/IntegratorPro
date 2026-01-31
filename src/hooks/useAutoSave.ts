@@ -121,8 +121,8 @@ export function useAutoSave(
       // -- Electrical Overload Check (AUTO-SAFETY-P28) --
       if (allDevices.length > 0) {
         const { circuits, buses } = AmpereEngine.calculateLoads(allDevices as any, catalog as any);
-        const overloadedCircuit = circuits.find(c => c.isOverloaded);
-        const overloadedBus = buses.find(b => b.isOverloaded);
+        const overloadedCircuit = circuits.find(c => c.isOverloaded && c.id !== 'Unassigned');
+        const overloadedBus = buses.find(b => b.isOverloaded && b.id !== 'Unassigned');
 
         if (overloadedCircuit || overloadedBus) {
           const type = overloadedCircuit ? 'HV Circuit' : 'LV Bus';
