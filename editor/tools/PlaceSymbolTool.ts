@@ -347,8 +347,12 @@ export class PlaceSymbolTool implements Tool {
             // Rotation
             if (lowerKey === 'r') {
                 remoteDebug('[PlaceSymbolTool] Rotating Selection', 'PlaceSymbolTool', { count: selectedIds.length });
-                const rotationAmount = event.shiftKey ? -1 : 45;
-                this.transformSelection(selectedIds, { rotate: rotationAmount });
+                if (event.altKey) {
+                    this.transformSelection(selectedIds, { snap: 90 });
+                } else {
+                    const rotationAmount = event.shiftKey ? -1 : 45;
+                    this.transformSelection(selectedIds, { rotate: rotationAmount });
+                }
                 return;
             }
 
@@ -375,11 +379,15 @@ export class PlaceSymbolTool implements Tool {
 
         if (lowerKey === 'r') {
             remoteDebug('Rotating Symbol Preview', 'PlaceSymbolTool', { step, current: this.currentRotation });
-            if (event.shiftKey) {
-                this.currentRotation -= step;
+            if (event.altKey) {
+                // Snap to 90 degree increments (AUTO-SNAP-P28)
+                this.currentRotation = (Math.round((this.currentRotation + 90) / 90) * 90) % 360;
+            } else if (event.shiftKey) {
+                this.currentRotation -= 1;
             } else {
-                this.currentRotation += step;
+                this.currentRotation += 45;
             }
+            this.currentRotation = (this.currentRotation + 360) % 360;
             this.updatePreviewTransform();
         }
 
@@ -395,7 +403,7 @@ export class PlaceSymbolTool implements Tool {
         }
     }
 
-    private transformSelection(selectedIds: string[], transform: { rotate?: number, translate?: { x: number, y: number } }): void {
+    private transformSelection(selectedIds: string[], transform: { rotate?: number, translate?: { x: number, y: number }, snap?: number }): void {
         const layers = this.editor.layerSystem.getAllLayers();
         let changed = false;
 
@@ -412,6 +420,9 @@ export class PlaceSymbolTool implements Tool {
 
                     if (transform.rotate !== undefined) {
                         newState.rotation = (oldState.rotation + transform.rotate) % 360;
+                    }
+                    if (transform.snap !== undefined) {
+                        newState.rotation = (Math.round((oldState.rotation + transform.snap) / transform.snap) * transform.snap) % 360;
                     }
                     if (transform.translate) {
                         newState.x += transform.translate.x;

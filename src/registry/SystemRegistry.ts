@@ -61,10 +61,10 @@ export const SYSTEM_REGISTRY: SystemConfig[] = [
     },
     {
         id: 'lcps',
-        title: 'Load Control Panels',
-        description: 'Centralized enclosures for control and power distribution.',
-        technicalDetails: 'Industrial control panels housing gateways, drivers, and circuit protection.',
-        zIndex: 65,
+        title: 'Control & Logic',
+        description: 'Internal electrical gear, gateways, PSU hubs, and control modules.',
+        technicalDetails: 'DIN-rail mounted components, KNX/DALI gateways, and low-voltage power supplies housed within LCPs.',
+        zIndex: 66,
         layerCategory: 'technical',
         defaultVisible: false,
         iconName: 'Cpu'
@@ -92,13 +92,13 @@ export const SYSTEM_REGISTRY: SystemConfig[] = [
     },
     {
         id: 'infrastructure',
-        title: 'Cabling & Paths',
-        description: 'Conduits, cable trays, and main trunk lines.',
-        technicalDetails: 'Physical routing paths and high-capacity architectural enclosures.',
-        zIndex: 50,
+        title: 'Panels & Gear',
+        description: 'Main service panels, LCPs, inverters, battery banks, and critical pathways.',
+        technicalDetails: 'Smart panels (SPAN), hybrid inverters, LCP enclosures, and high-capacity architectural pathways.',
+        zIndex: 65,
         layerCategory: 'technical',
-        defaultVisible: false,
-        iconName: 'GitBranch'
+        defaultVisible: true,
+        iconName: 'Cpu'
     },
     {
         id: 'furniture',

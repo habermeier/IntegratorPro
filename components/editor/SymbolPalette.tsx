@@ -41,24 +41,31 @@ export const SymbolPalette: React.FC<SymbolPaletteProps> = ({ activeCategory, on
     const allSymbols = React.useMemo(() => {
         const placedBlueprintIds = new Set(devices.map(d => d.deviceTypeId));
 
-        // 1. Base Symbols (Reduced)
+        // 1. Base Symbols (Reduced) - AUTO-VISIBILITY-P28
         const baseSymbols = Object.values(SYMBOL_LIBRARY).filter(s =>
             s.category === activeCategory &&
             !s.id.startsWith('custom-') &&
             !s.id.includes('generic') &&
-            placedBlueprintIds.has(s.id) // Only show if used
+            // Discovery rule: Always show Infrastructure gear + LCP Controls, others only if placed
+            (placedBlueprintIds.has(s.id) || activeCategory === 'infrastructure' || activeCategory === 'lcps')
         );
 
         // 2. Custom Symbols (Legacy/User Created)
-        // Keep custom ones as they are user-defined
         const relevantCustom = customSymbols.filter(s => s.category === activeCategory);
 
         // 3. Blueprints (The new standard)
         const relevantBlueprints = blueprints
             .filter(bp => {
                 if (bp.category !== activeCategory) return false;
-                // DMF-X2-SQ-FL is our new default - show even if not placed yet (AUTO-DEFAULT-P28)
-                if (bp.id === 'DMF-X2-SQ-FL' || bp.id === 'DMF-X2-SQ-FL-WET') return true;
+
+                // Whitelist for discovery (show even if NOT placed yet)
+                if (activeCategory === 'lighting') {
+                    if (bp.id === 'DMF-X2-SQ-FL' || bp.id === 'DMF-X2-SQ-FL-WET' ||
+                        bp.id === 'bp-decorative-pendant' || bp.id === 'bp-wall-sconce') return true;
+                }
+
+                if (activeCategory === 'infrastructure' || activeCategory === 'lcps') return true;
+
                 return placedBlueprintIds.has(bp.id);
             })
             .map(bp => {
@@ -74,7 +81,7 @@ export const SymbolPalette: React.FC<SymbolPaletteProps> = ({ activeCategory, on
                     metadata: { ...bp, ...(bp.metadata || {}), isBlueprint: true }
                 };
 
-                // Inject into global library (AUTO-BRIDGE-P28)
+                // Inject into global library (AUTO-BRIDGE-P28) - CRITICAL FOR PLACEMENT
                 SYMBOL_LIBRARY[bp.id] = def;
 
                 return def;
@@ -85,9 +92,12 @@ export const SymbolPalette: React.FC<SymbolPaletteProps> = ({ activeCategory, on
     }, [activeCategory, customSymbols, blueprints, devices]);
 
     if (allSymbols.length === 0) {
+        const cat = SYMBOL_CATEGORIES.find(c => c.id === activeCategory);
+        const catName = cat?.name || (activeCategory === 'infrastructure' || activeCategory === 'lcps' ? 'Panels & Gear' : activeCategory);
+
         return (
             <div className="p-6 text-center bg-slate-950 rounded-lg border border-slate-800 border-dashed mt-2">
-                <p className="text-[10px] text-slate-300 italic mb-2">No {activeCategory} devices placed</p>
+                <p className="text-[10px] text-slate-300 italic mb-2">No {catName} devices placed</p>
                 <p className="text-[8px] text-slate-400">Search library below to add new types</p>
             </div>
         );

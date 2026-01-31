@@ -4,6 +4,7 @@ const fs = require('fs');
 const projectData = JSON.parse(fs.readFileSync('/Users/berniehabermeier/IntegratorPro/projects/270-boll-ave/project.json', 'utf8'));
 
 const pxPerMeter = projectData.floorPlan.layout.find(l => l.id === 'map-calibration')?.pxPerMeter || 51.3048;
+const calibrationIsMetric = false; // The 51.3 factor is actually PxPerFoot for this project
 
 function calculatePolygonArea(points) {
     let area = 0;
@@ -27,8 +28,15 @@ const results = [];
 
 rooms.forEach(room => {
     const areaPx = calculatePolygonArea(room.points);
-    const areaM2 = areaPx / (pxPerMeter * pxPerMeter);
-    const areaSqFt = areaM2 * 10.7639;
+    let areaSqFt;
+
+    if (calibrationIsMetric) {
+        const areaM2 = areaPx / (pxPerMeter * pxPerMeter);
+        areaSqFt = areaM2 * 10.7639;
+    } else {
+        // Calibration factor is actually PxPerFoot
+        areaSqFt = areaPx / (pxPerMeter * pxPerMeter);
+    }
 
     let category = 'Uncategorized';
     if (categories['Heated/Living Area'].includes(room.roomType?.toLowerCase())) category = 'Heated/Living Area';

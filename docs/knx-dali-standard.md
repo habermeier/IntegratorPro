@@ -362,15 +362,18 @@ Real-time PM2.5 monitoring for smoke detection to protect indoor air quality dur
   - **Placement Logic:** Protected from direct rain/sun but with adequate airflow; away from vents or exhaust outlets.
 - **Approx. Pricing:** Sensor (~$250) + MDT Gateway (~$280).
 
-### 10.9 Data Flow & Automation Logic (Environmental)
-All environmental data terminates in LCP-2 (Office) and is exposed to the KNX bus and Home Assistant (via IP Router).
+- **System Bridging**: Real-time objects are pushed from KNX to the Linux NUC (ASUS NUC 13) for high-level logic and integration. This NUC acts as the primary automation processor (HomeWorks-equivalent) for complex scenes, AI orchestration, and SmartThings bridging.
 
-- **PM2.5 Thresholds:** When PM2.5 exceeds **50–100 µg/m³**:
-  - Automatically close all motorized skylights.
-  - Stop all whole-house and attic exhaust fans.
-  - Signal HVAC system to switch to 100% recirculation mode (via Modbus/Intesis gateway).
-- **Weather Logic:**
-  - **High Wind/Rain:** Trigger safety closing of skylights and adjust shading positions.
-  - **Brightness/Global Radiation:** Orchestrate shading and ventilation for passive cooling and glare control.
-  - **GPS Sun Position:** Real-time tracking for automated "Sun Following" blind logic.
-- **System Bridging:** Real-time objects are pushed from KNX to the Linux NUC for high-level AI logic and SmartThings bridging.
+### 10.10 Decorative & Ornamental Lighting (Phase Dimming)
+Standardized approach for fixtures with replaceable LED bulbs (Chandeliers, Pendants, Sconces).
+- **Control Interface**: DALI-2 Phase Dimmer Puck (Benchmark: Lunatone 86458619 / Sunricher SR-2303SAC-HP).
+- **Installation**: Mounted inside the ceiling/wall junction box. **Requirement**: Box must be 2-1/8" deep steel.
+- **Dimming Technique**: Leading or Trailing edge (software selectable).
+- **Grouping**: Typically one puck per architectural fixture or logical group.
+
+### 10.11 Electric Towel Warmers
+Standardized relay control for bathroom towel rails.
+- **Control Interface**: KNX High-Inrush Relay Actuator (Benchmark: MDT AKS-1216.03).
+- **Physical Integration**: Home-run from towel warmer J-box to the nearest LCP (LCP-1 or LCP-2).
+- **Rating Requirement**: ACTUATOR MUST BE HIGH-INRUSH RATED (165A/20ms peak) to handle the magnetic/resistive startup profile.
+- **Safety Logic**: Programmed via ETS with a "Time-Limit" interlock (e.g., auto-off after 2 hours) and humidity-based boost logic.

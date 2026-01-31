@@ -185,6 +185,9 @@ export interface Device {
   /** User-assigned name (optional, defaults to product name + number) */
   name: string;
 
+  /** User-assigned logical label (e.g. LCP-1) */
+  label?: string;
+
   /** Position in world space (meters) */
   position: Vector2;
 

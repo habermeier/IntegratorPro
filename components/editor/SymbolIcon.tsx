@@ -104,8 +104,8 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
         if (meshType === 'fan' || symbolType === 'ceiling-fan' || symbolType === 'haiku-fan' || symbolType.toLowerCase().includes('fan') || symbolType.toLowerCase().includes('haiku')) {
             const hubRadius = 4;
             const bladeWidth = 4;
-            const bladeLength = 20; 
-            const iconCenter = 24; 
+            const bladeLength = 20;
+            const iconCenter = 24;
 
             const hasLight = metadata?.fanLightKit !== 'NL' && metadata?.lumens !== 0;
 
@@ -133,10 +133,111 @@ export const SymbolIcon: React.FC<SymbolIconProps> = ({
             );
         }
 
+        // Specialized Icon: Pendant (Circular Bullseye with Radial Marks)
+        if (meshType === 'pendant' || symbolType === 'pendant-light' || symbolType === 'decorative-pendant') {
+            const iconCenter = 24;
+            const radius = 18;
+
+            return (
+                <svg width={size} height={size} viewBox="0 0 48 48" style={{ overflow: 'visible' }}>
+                    {/* Outer Ring Halo */}
+                    <circle cx={iconCenter} cy={iconCenter} r={radius + 1.5} fill="#FFF" />
+
+                    {/* Radial Marks Halo (45 degree offset from standard crosshairs) */}
+                    {[45, 135, 225, 315].map(angle => (
+                        <g key={`prong-h-${angle}`} transform={`rotate(${angle}, ${iconCenter}, ${iconCenter})`}>
+                            <rect x={iconCenter - 1} y={iconCenter - radius - 4 - 1} width={4} height={10} fill="#FFF" />
+                        </g>
+                    ))}
+
+                    {/* Ring Body */}
+                    <circle cx={iconCenter} cy={iconCenter} r={radius} fill="#000" />
+                    <circle cx={iconCenter} cy={iconCenter} r={radius * 0.7} fill="#FFF" />
+
+                    {/* Central Target Dot */}
+                    <circle cx={iconCenter} cy={iconCenter} r={radius * 0.3} fill="#000" />
+
+                    {/* Radial Marks */}
+                    {[45, 135, 225, 315].map(angle => (
+                        <g key={`prong-${angle}`} transform={`rotate(${angle}, ${iconCenter}, ${iconCenter})`}>
+                            <rect x={iconCenter - 0.5} y={iconCenter - radius - 4} width={1.5} height={8} fill="#000" />
+                        </g>
+                    ))}
+
+                    {renderLabels(iconCenter, radius * 0.5, displayShorthand)}
+                </svg>
+            );
+        }
+
+        // Specialized Icon: Sconce (Directional Wedge/Triangle)
+        if (meshType === 'sconce' || symbolType === 'wall-sconce' || symbolType === 'exterior-light') {
+            const iconCenter = 24;
+            const width = 24;
+            const height = 24;
+
+            return (
+                <svg width={size} height={size} viewBox="0 0 48 48" style={{ overflow: 'visible' }}>
+                    {/* White Halo for Triangle + Base */}
+                    <path
+                        d={`M ${iconCenter - width / 2 - 2} ${iconCenter + height / 2 + 2} 
+                           L ${iconCenter + width / 2 + 2} ${iconCenter + height / 2 + 2} 
+                           L ${iconCenter} ${iconCenter - height / 2 - 4} Z`}
+                        fill="#FFF"
+                    />
+                    <rect x={iconCenter - width / 2 - 2} y={iconCenter + height / 2} width={width + 4} height={4} fill="#FFF" />
+
+                    {/* Black Triangle (The Wash) */}
+                    <path
+                        d={`M ${iconCenter - width / 2} ${iconCenter + height / 2} 
+                           L ${iconCenter + width / 2} ${iconCenter + height / 2} 
+                           L ${iconCenter} ${iconCenter - height / 2} Z`}
+                        fill="#000"
+                    />
+
+                    {/* Base Plate (Wall attachment) */}
+                    <rect x={iconCenter - width / 8} y={iconCenter + height / 2 - 1} width={width / 4} height={3} fill="#000" />
+
+                    {renderLabels(iconCenter, 6, displayShorthand)}
+                </svg>
+            );
+        }
+
+        // Specialized Icon: Equipment (Rectangle with Power/Panel pattern)
+        if (meshType === 'equipment') {
+            const iconCenterW = 24, iconCenterH = 24;
+            const w = 24, h = 32;
+
+            return (
+                <svg width={size} height={size} viewBox="0 0 48 48" style={{ overflow: 'visible' }}>
+                    {/* White Halo */}
+                    <rect x={iconCenterW - w / 2 - 1.5} y={iconCenterH - h / 2 - 1.5} width={w + 3} height={h + 3} fill="#FFF" />
+
+                    {/* Main Box */}
+                    <rect x={iconCenterW - w / 2} y={iconCenterH - h / 2} width={w} height={h} fill="#000" />
+
+                    {/* Power Bolt (Simplified SVG Polyline) */}
+                    <polyline
+                        points={`${iconCenterW - 3},${iconCenterH - 6} ${iconCenterW + 3},${iconCenterH} ${iconCenterW - 3},${iconCenterH} ${iconCenterW + 3},${iconCenterH + 6}`}
+                        fill="none"
+                        stroke="#FFF"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    />
+
+                    {/* Panel Lines */}
+                    <line x1={iconCenterW - w / 2 + 4} y1={iconCenterH - h / 4} x2={iconCenterW + w / 2 - 4} y2={iconCenterH - h / 4} stroke="#FFF" strokeWidth="1" />
+                    <line x1={iconCenterW - w / 2 + 4} y1={iconCenterH + h / 4} x2={iconCenterW + w / 2 - 4} y2={iconCenterH + h / 4} stroke="#FFF" strokeWidth="1" />
+
+                    {renderLabels(iconCenterW, w / 2, displayShorthand)}
+                </svg>
+            );
+        }
+
         const center = 16;
         const squareSize = 16;
         const squareHalf = squareSize / 2;
-        const crosshairExt = squareHalf; 
+        const crosshairExt = squareHalf;
 
         return (
             <svg width={size} height={size} viewBox="0 0 32 32" style={{ overflow: 'visible' }}>

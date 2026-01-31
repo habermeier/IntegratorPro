@@ -323,10 +323,10 @@ export class LayerSystem {
     private resetObjectVisuals(group: THREE.Group): void {
         const itemType = group.userData.type;
         const isSymbol = itemType === 'symbol' || itemType === 'furniture';
-        
+
         let fill = group.userData.fillMesh as THREE.Mesh;
         if (!fill) fill = group.getObjectByName('fill') as THREE.Mesh;
-        
+
         if (fill && fill.material instanceof THREE.MeshBasicMaterial) {
             if (isSymbol) {
                 fill.material.color.setHex(0x000000);
@@ -415,7 +415,7 @@ export class LayerSystem {
                 }
             }
         });
-        
+
         this.pendingLightingVisualsUpdate = false;
     }
 
@@ -430,7 +430,7 @@ export class LayerSystem {
             this.heatmapCanvases.set(cacheKey, canvas);
         }
 
-        const res = 128; 
+        const res = 128;
         if (canvas.width !== res) canvas.width = res;
         if (canvas.height !== res) canvas.height = res;
 
@@ -455,10 +455,10 @@ export class LayerSystem {
                     const normalized = Math.min(1.0, intensity / 500);
 
                     let r, g, b;
-                    if (normalized < 0.25) { r = 0; g = Math.round((normalized/0.25) * 255); b = 255; }
-                    else if (normalized < 0.5) { r = 0; g = 255; b = Math.round((1 - (normalized-0.25)/0.25) * 255); }
-                    else if (normalized < 0.75) { r = Math.round(((normalized-0.5)/0.25) * 255); g = 255; b = 0; }
-                    else { r = 255; g = Math.round((1 - (normalized-0.75)/0.25) * 255); b = 0; }
+                    if (normalized < 0.25) { r = 0; g = Math.round((normalized / 0.25) * 255); b = 255; }
+                    else if (normalized < 0.5) { r = 0; g = 255; b = Math.round((1 - (normalized - 0.25) / 0.25) * 255); }
+                    else if (normalized < 0.75) { r = Math.round(((normalized - 0.5) / 0.25) * 255); g = 255; b = 0; }
+                    else { r = 255; g = Math.round((1 - (normalized - 0.75) / 0.25) * 255); b = 0; }
 
                     const alpha = Math.max(0.4, Math.min(0.9, Math.sqrt(normalized)));
                     if (alpha > 0.05) {
@@ -470,7 +470,7 @@ export class LayerSystem {
         }
 
         let texture = this.heatmapTextures.get(cacheKey);
-        if (texture) { texture.needsUpdate = true; } 
+        if (texture) { texture.needsUpdate = true; }
         else { texture = new THREE.CanvasTexture(canvas); this.heatmapTextures.set(cacheKey, texture); }
 
         texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
@@ -515,7 +515,7 @@ export class LayerSystem {
                     glowShape.closePath();
                     const glowGeo = new THREE.ShapeGeometry(glowShape);
                     const glowMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.1, side: THREE.DoubleSide });
-                    const glowOffsets = [{x:4,y:0},{x:-4,y:0},{x:0,y:4},{x:0,y:-4},{x:2.8,y:2.8},{x:-2.8,y:-2.8},{x:2.8,y:-2.8},{x:-2.8,y:2.8},{x:0,y:0}];
+                    const glowOffsets = [{ x: 4, y: 0 }, { x: -4, y: 0 }, { x: 0, y: 4 }, { x: 0, y: -4 }, { x: 2.8, y: 2.8 }, { x: -2.8, y: -2.8 }, { x: 2.8, y: -2.8 }, { x: -2.8, y: 2.8 }, { x: 0, y: 0 }];
                     glowOffsets.forEach((off, idx) => {
                         const glowMesh = new THREE.Mesh(glowGeo, glowMat);
                         glowMesh.name = `glow-${idx}`;
@@ -572,7 +572,7 @@ export class LayerSystem {
                     const labelSprite = this.createLabel(roomName, this.formatRoomType(roomType), areaLabel, labelColor);
                     labelSprite.name = 'label';
                     let cx = 0, cy = 0; poly.points.forEach(p => { cx += p.x; cy += p.y; });
-                    labelSprite.position.set(cx/poly.points.length, cy/poly.points.length, 0.5);
+                    labelSprite.position.set(cx / poly.points.length, cy / poly.points.length, 0.5);
                     group.add(labelSprite);
 
                     const heatmapGeo = new THREE.ShapeGeometry(shape);
@@ -647,7 +647,7 @@ export class LayerSystem {
 
                 if (label) {
                     let cx = 0, cy = 0; poly.points.forEach(p => { cx += p.x; cy += p.y; });
-                    label.position.set(cx/poly.points.length, cy/poly.points.length, 0.5);
+                    label.position.set(cx / poly.points.length, cy / poly.points.length, 0.5);
                 }
 
                 group.userData.lastHash = pointsHash;
@@ -671,7 +671,7 @@ export class LayerSystem {
                     const metadata = symbolData.metadata || {};
                     const fallbackShorthand = getSymbolShorthand(symbolData.type);
                     const effectiveShorthand = (metadata as any).shorthand || fallbackShorthand;
-                    if (group.userData.symbolType !== symbolData.type || group.userData.meshType !== (def?.meshType || 'universal') || group.userData.shorthand !== effectiveShorthand) {
+                    if (group.userData.symbolType !== symbolData.type || group.userData.meshType !== (def?.meshType || 'universal') || group.userData.shorthand !== effectiveShorthand || group.userData.label !== symbolData.label) {
                         layer.container.remove(group);
                         this.meshCache.delete(cacheKey);
                         this.idToMesh.delete(symbolData.id);
@@ -692,18 +692,47 @@ export class LayerSystem {
                 let effectiveShorthand = (metadata as any).shorthand || fallbackShorthand;
 
 
-                const labelsHash = `${!!symbolData.label}|${symbolData.label}|${effectiveShorthand}|${symbolData.category === 'lighting'}`;
+                const labelsHash = `${!!symbolData.label}|${symbolData.label}|${effectiveShorthand}|${symbolData.category === 'lighting'}|${metadata.phase || ''}`;
                 if (group.userData.labelsHash !== labelsHash) {
                     const oldLabel = group.getObjectByName('label'); if (oldLabel) group.remove(oldLabel);
                     const oldShorthand = group.getObjectByName('shorthand-label'); if (oldShorthand) group.remove(oldShorthand);
                     const sw = def?.size.width || 16, sh = def?.size.height || 16;
                     const ox = (sw / 2) + 12, oy = -((sh / 2) + 12);
+
                     if (symbolData.label) {
-                        const labelSprite = this.createLabel(symbolData.label, "", symbolData.category === 'lighting' ? 'rgba(254, 249, 195, 1)' : 'rgba(255, 255, 255, 1)');
+                        let labelColor = 'rgba(255, 255, 255, 1)';
+                        if (symbolData.category === 'lighting') {
+                            labelColor = 'rgba(254, 249, 195, 1)'; // Yellowish
+                        } else if (symbolData.category === 'infrastructure') {
+                            labelColor = 'rgba(219, 234, 254, 1)'; // Sky Blue
+                        }
+
+                        // Determine secondary detail line (Phase, Panel, or Part Number)
+                        let detailItems: string[] = [];
+                        if (metadata.phase) {
+                            detailItems.push(`${metadata.phase}${metadata.panelName ? `: ${metadata.panelName}` : ''}`);
+                        }
+                        if (metadata.partNumber) {
+                            detailItems.push(`PN: ${metadata.partNumber}`);
+                        } else if (symbolData.productId && symbolData.productId !== 'generic-light' && !metadata.phase) {
+                            detailItems.push(symbolData.productId);
+                        }
+                        const detail = detailItems.join('\n');
+
+                        const labelSprite = this.createLabel(symbolData.label, detail, "", labelColor);
                         labelSprite.name = 'label'; labelSprite.position.set(ox + 5, oy - 5, 0.5); group.add(labelSprite);
                     }
-                    if (effectiveShorthand) {
-                        const shorthandLabel = this.createShorthandLabel(effectiveShorthand, symbolData.category === 'lighting' ? 'rgba(254, 249, 195, 1)' : 'rgba(255, 255, 255, 1)');
+                    // REDUCE REDUNDANCY: Hide generic shorthand if we have a specific logical label for infrastructure
+                    const skipShorthand = symbolData.category === 'infrastructure' && symbolData.label;
+
+                    if (effectiveShorthand && !skipShorthand) {
+                        let shorthandColor = 'rgba(255, 255, 255, 1)';
+                        if (symbolData.category === 'lighting') {
+                            shorthandColor = 'rgba(254, 249, 195, 1)';
+                        } else if (symbolData.category === 'infrastructure') {
+                            shorthandColor = 'rgba(219, 234, 254, 1)';
+                        }
+                        const shorthandLabel = this.createShorthandLabel(effectiveShorthand, shorthandColor);
                         shorthandLabel.name = 'shorthand-label'; shorthandLabel.position.set(ox, oy, 0.6); group.add(shorthandLabel);
                     }
                     group.userData.labelsHash = labelsHash;
@@ -794,35 +823,56 @@ export class LayerSystem {
         });
     }
 
-    private createLabel(name: string, type: string, area?: string, bgColor: string = 'rgba(255, 255, 255, 0.85)'): THREE.Sprite {
+    private createLabel(name: string, type: string, detail?: string, bgColor: string = 'rgba(255, 255, 255, 0.85)'): THREE.Sprite {
         const canvas = document.createElement('canvas');
         const fontSize = 32;
         const ctx = canvas.getContext('2d');
         if (!ctx) return new THREE.Sprite();
+
+        // Line detection for dynamic height (AUTO-LABEL-GROW-P5)
+        const lines = [name];
+        if (type) lines.push(type);
+        if (detail) {
+            // If detail contains newlines, split them
+            detail.split('\n').forEach(l => {
+                if (l.trim()) lines.push(l);
+            });
+        }
+
         ctx.font = `900 ${fontSize}px Inter, sans-serif`;
-        const nameMetrics = ctx.measureText(name);
-        ctx.font = `700 ${fontSize * 0.75}px Inter, sans-serif`;
-        const typeMetrics = ctx.measureText(type);
-        const areaMetrics = area ? ctx.measureText(area) : { width: 0 };
-        const textWidth = Math.max(nameMetrics.width, typeMetrics.width, areaMetrics.width);
+        let maxWidth = 0;
+        lines.forEach((line, idx) => {
+            ctx.font = idx === 0 ? `900 ${fontSize}px Inter, sans-serif` : `700 ${fontSize * 0.75}px Inter, sans-serif`;
+            const metrics = ctx.measureText(line);
+            maxWidth = Math.max(maxWidth, metrics.width);
+        });
+
         const lineHeight = fontSize * 1.15;
-        const totalLines = area ? 3 : (type ? 2 : 1);
+        const totalLines = lines.length;
         const textHeight = lineHeight * totalLines;
         const px = 20, py = 12;
-        const rectWidth = textWidth + px * 2, rectHeight = textHeight + py * 2;
+        const rectWidth = maxWidth + px * 2, rectHeight = textHeight + py * 2;
+
         canvas.width = rectWidth + 40; canvas.height = rectHeight + 40;
         const centerX = canvas.width / 2, centerY = canvas.height / 2;
+
         ctx.shadowColor = 'rgba(0,0,0,0.15)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 10;
         ctx.fillStyle = bgColor; ctx.beginPath();
         if (ctx.roundRect) ctx.roundRect(centerX - rectWidth / 2, centerY - rectHeight / 2, rectWidth, rectHeight, 16);
         else ctx.rect(centerX - rectWidth / 2, centerY - rectHeight / 2, rectWidth, rectHeight);
-        ctx.fill(); ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)'; ctx.lineWidth = 1.0; ctx.stroke();
+        ctx.fill();
+
+        ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)'; ctx.lineWidth = 1.0; ctx.stroke();
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.font = `900 ${fontSize}px Inter, sans-serif`; ctx.fillStyle = '#000000';
-        ctx.fillText(name, centerX, centerY - lineHeight * (totalLines - 1) * 0.5);
-        ctx.font = `700 ${fontSize * 0.75}px Inter, sans-serif`;
-        if (type) ctx.fillText(type, centerX, centerY - lineHeight * (totalLines - 1) * 0.5 + lineHeight);
-        if (area) ctx.fillText(area, centerX, centerY - lineHeight * (totalLines - 1) * 0.5 + lineHeight * 2);
+
+        lines.forEach((line, idx) => {
+            const isHeader = idx === 0;
+            ctx.font = isHeader ? `900 ${fontSize}px Inter, sans-serif` : `700 ${fontSize * 0.75}px Inter, sans-serif`;
+            ctx.fillStyle = '#000000';
+            const yOffset = (idx - (totalLines - 1) / 2) * lineHeight;
+            ctx.fillText(line, centerX, centerY + yOffset);
+        });
+
         const texture = new THREE.CanvasTexture(canvas);
         const material = new THREE.SpriteMaterial({ map: texture, depthTest: false });
         const sprite = new THREE.Sprite(material);
@@ -863,14 +913,42 @@ export class LayerSystem {
     }
 
     public updateLabelScales(zoom: number): void {
-        const scaler = Math.pow(1 / Math.max(0.1, zoom), 0.7);
+        const ppm = (this.scene.userData.editor as any)?.pixelsMeter || 39.3701;
+        const MIN_EQUIPMENT_PIXELS = 45; // Keep infrastructure items visible at high zoom out
+        const labelScaler = Math.pow(1 / Math.max(0.1, zoom), 0.7);
+
         this.layers.forEach(layer => {
             if (layer.type !== 'vector') return;
             layer.container.children.forEach(group => {
+                let groupScale = 1;
+
+                // 1. Handle Infrastructure Minimum Size Clamp (AUTO-SIZE-CLAMP-P28)
+                if (group.userData.meshType === 'equipment') {
+                    const symbolType = group.userData.symbolType;
+                    const def = SYMBOL_LIBRARY[symbolType];
+                    if (def) {
+                        const worldWidth = def.size.width;
+                        const screenWidth = worldWidth * (ppm / 39.3701) * zoom;
+                        if (screenWidth < MIN_EQUIPMENT_PIXELS && screenWidth > 0) {
+                            groupScale = MIN_EQUIPMENT_PIXELS / screenWidth;
+                        }
+                    }
+                }
+
+                // Apply group scale (relative to the individual symbol scale which is usually 1)
+                group.scale.set(groupScale, groupScale, 1);
+
+                // 2. Handle Text Label Scaling (Inverse of zoom + adjusted for group scale)
                 const label = group.getObjectByName('label') as THREE.Sprite;
-                if (label && label.userData.baseScale) { const base = label.userData.baseScale; label.scale.set(base.x * scaler, base.y * scaler, 1); }
+                if (label && label.userData.baseScale) {
+                    const base = label.userData.baseScale;
+                    label.scale.set(base.x * labelScaler / groupScale, base.y * labelScaler / groupScale, 1);
+                }
                 const shorthand = group.getObjectByName('shorthand-label') as THREE.Sprite;
-                if (shorthand && shorthand.userData.baseScale) { const base = shorthand.userData.baseScale; shorthand.scale.set(base.x * scaler, base.y * scaler, 1); }
+                if (shorthand && shorthand.userData.baseScale) {
+                    const base = shorthand.userData.baseScale;
+                    shorthand.scale.set(base.x * labelScaler / groupScale, base.y * labelScaler / groupScale, 1);
+                }
             });
         });
     }
@@ -900,7 +978,7 @@ export class LayerSystem {
         const scale = symbolData.scale ?? 1;
         if (scale > 0) { rx /= scale; ry /= scale; ox /= scale; }
 
-                const selectedIds = new Set(this.scene.userData.editor?.selectionSystem.getSelectedIds() || []);
+        const selectedIds = new Set(this.scene.userData.editor?.selectionSystem.getSelectedIds() || []);
         const isSelected = selectedIds.has(symbolData.id);
         const isCircleMode = this.lightingMode === 'circles';
         const shouldShow = isCircleMode || isSelected;
