@@ -708,6 +708,26 @@
         "type": "load",
         "wattage": 0,
         "category": "lighting"
+      },
+      {
+        "id": "fix-pendant-dumb",
+        "name": "Decorative Pendant",
+        "manufacturer": "Decorative",
+        "description": "Ceiling-hung non-DALI fixture",
+        "cost": 150,
+        "type": "load",
+        "wattage": 60,
+        "category": "lighting"
+      },
+      {
+        "id": "fix-sconce-dumb",
+        "name": "Wall Sconce",
+        "manufacturer": "Decorative",
+        "description": "Wall-mounted non-DALI fixture",
+        "cost": 125,
+        "type": "load",
+        "wattage": 40,
+        "category": "lighting"
       }
     ]
   },
@@ -875,6 +895,44 @@
       "metadata": {
         "isCombination": true,
         "shorthand": "DMF-W"
+      }
+    },
+    {
+      "id": "bp-decorative-pendant",
+      "name": "Decorative Pendant",
+      "category": "lighting",
+      "symbolType": "decorative-pendant",
+      "components": {
+        "loadId": "fix-pendant-dumb",
+        "logicIds": []
+      },
+      "calculatedStats": {
+        "totalCost": 150,
+        "hvAmps": 0.5,
+        "lvMa": 0,
+        "totalAddresses": 0
+      },
+      "metadata": {
+        "shorthand": "dec-ped"
+      }
+    },
+    {
+      "id": "bp-wall-sconce",
+      "name": "Wall Sconce",
+      "category": "lighting",
+      "symbolType": "wall-sconce",
+      "components": {
+        "loadId": "fix-sconce-dumb",
+        "logicIds": []
+      },
+      "calculatedStats": {
+        "totalCost": 125,
+        "hvAmps": 0.33,
+        "lvMa": 0,
+        "totalAddresses": 0
+      },
+      "metadata": {
+        "shorthand": "dec-scn"
       }
     }
   ]

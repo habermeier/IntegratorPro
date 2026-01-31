@@ -8,7 +8,7 @@ export interface SymbolDefinition {
     color: number;
     size: { width: number, height: number };
     createMesh: (width: number, height: number, metadata?: any) => THREE.Group;
-    meshType?: 'universal' | 'fan';
+    meshType?: 'universal' | 'fan' | 'pendant' | 'sconce';
     productId?: string;
     metadata?: any;
 }
@@ -139,8 +139,127 @@ export const createCeilingFanMesh = (width?: number, height?: number, metadata?:
     return group;
 };
 
+/**
+ * Pendant Mesh Creator: Circular ring with a central focal point.
+ * Distinguishes hanging fixtures from recessed squares.
+ */
+export const createPendantMesh = (width?: number, height?: number, metadata?: any): THREE.Group => {
+    const w = width || 18;
+    const h = height || 18;
+    const radius = Math.max(w, h) / 2;
+    const group = new THREE.Group();
+    const blackMat = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide });
+    const whiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+
+    // 1. Outer Ring Halo
+    const outerHaloGeo = new THREE.CircleGeometry(radius + 1.2, 32);
+    const outerHalo = new THREE.Mesh(outerHaloGeo, whiteMat);
+    outerHalo.position.z = 0.01;
+    group.add(outerHalo);
+
+    // 2. Radial "Fingers" Halo (45-degree offset prongs)
+    for (let i = 0; i < 4; i++) {
+        const angle = (i * Math.PI / 2) + (Math.PI / 4);
+        const prongGroup = new THREE.Group();
+        const pWHaloGeo = new THREE.PlaneGeometry(3.5, 8);
+        const pWHalo = new THREE.Mesh(pWHaloGeo, whiteMat);
+        pWHalo.position.y = radius + 2;
+        pWHalo.position.z = 0.02;
+        prongGroup.add(pWHalo);
+        prongGroup.rotation.z = angle;
+        group.add(prongGroup);
+    }
+
+    // 3. Ring Body
+    const outerBlackGeo = new THREE.CircleGeometry(radius, 32);
+    const outerBlack = new THREE.Mesh(outerBlackGeo, blackMat);
+    outerBlack.position.z = 0.05;
+    group.add(outerBlack);
+
+    const innerWhiteGeo = new THREE.CircleGeometry(radius * 0.7, 32);
+    const innerWhite = new THREE.Mesh(innerWhiteGeo, whiteMat);
+    innerWhite.position.z = 0.06;
+    group.add(innerWhite);
+
+    // 4. Central Dot
+    const centerBlackGeo = new THREE.CircleGeometry(radius * 0.3, 32);
+    const centerBlack = new THREE.Mesh(centerBlackGeo, blackMat);
+    centerBlack.name = 'fill';
+    centerBlack.position.z = 0.1;
+    group.add(centerBlack);
+
+    // 5. Black Radial Fingers
+    for (let i = 0; i < 4; i++) {
+        const angle = (i * Math.PI / 2) + (Math.PI / 4);
+        const prongGroup = new THREE.Group();
+        const pBGeo = new THREE.PlaneGeometry(1.5, 6);
+        const pB = new THREE.Mesh(pBGeo, blackMat);
+        pB.position.y = radius + 2;
+        pB.position.z = 0.08;
+        prongGroup.add(pB);
+        prongGroup.rotation.z = angle;
+        group.add(prongGroup);
+    }
+
+    return group;
+};
+
+/**
+ * Wall Sconce Mesh Creator: Directional triangle indicating wall mounting.
+ */
+export const createSconceMesh = (width?: number, height?: number, metadata?: any): THREE.Group => {
+    const w = width || 16;
+    const h = height || 16;
+    const group = new THREE.Group();
+    const blackMat = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide });
+    const whiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+
+    // 1. White Halo for Triangle + Base
+    const haloPadding = 1.6;
+    const haloTriPts = [
+        new THREE.Vector2(0, h / 2 + haloPadding * 2),
+        new THREE.Vector2(-w / 2 - haloPadding, -h / 2 - haloPadding),
+        new THREE.Vector2(w / 2 + haloPadding, -h / 2 - haloPadding)
+    ];
+    const haloShape = new THREE.Shape(haloTriPts);
+    const haloGeo = new THREE.ShapeGeometry(haloShape);
+    const halo = new THREE.Mesh(haloGeo, whiteMat);
+    halo.position.z = 0.01;
+    group.add(halo);
+
+    const baseHaloGeo = new THREE.PlaneGeometry(w + 3.2, 4);
+    const baseHalo = new THREE.Mesh(baseHaloGeo, whiteMat);
+    baseHalo.position.y = -h / 2 - 1;
+    baseHalo.position.z = 0.01;
+    group.add(baseHalo);
+
+    // 2. Black Main Triangle (The Wash)
+    const triPts = [
+        new THREE.Vector2(0, h / 2),
+        new THREE.Vector2(-w / 2, -h / 2),
+        new THREE.Vector2(w / 2, -h / 2)
+    ];
+    const shape = new THREE.Shape(triPts);
+    const geo = new THREE.ShapeGeometry(shape);
+    const triangle = new THREE.Mesh(geo, blackMat);
+    triangle.name = 'fill';
+    triangle.position.z = 0.05;
+    group.add(triangle);
+
+    // 3. Wall Base Plate
+    const basePlateGeo = new THREE.PlaneGeometry(w / 3, 2);
+    const basePlate = new THREE.Mesh(basePlateGeo, blackMat);
+    basePlate.position.y = -h / 2 - 0.5;
+    basePlate.position.z = 0.06;
+    group.add(basePlate);
+
+    return group;
+};
+
 export const getMeshCreator = (meshType?: string, symbolId?: string): (width: number, height: number, metadata?: any) => THREE.Group => {
     if (meshType === 'fan') return createCeilingFanMesh;
+    if (meshType === 'pendant') return createPendantMesh;
+    if (meshType === 'sconce') return createSconceMesh;
     if (meshType === 'universal') return createUniversalMesh;
 
     // Legacy/Migration Fallback: Keyword matching (AUTO-MIGRATE-P28)
@@ -148,6 +267,12 @@ export const getMeshCreator = (meshType?: string, symbolId?: string): (width: nu
         const idLower = symbolId.toLowerCase();
         if (idLower.includes('fan') || idLower.includes('haiku')) {
             return createCeilingFanMesh;
+        }
+        if (idLower.includes('pendant')) {
+            return createPendantMesh;
+        }
+        if (idLower.includes('sconce')) {
+            return createSconceMesh;
         }
     }
 
@@ -189,6 +314,28 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         createMesh: createUniversalMesh,
         meshType: 'universal',
         productId: 'generic-light'
+    },
+    'decorative-pendant': {
+        id: 'decorative-pendant',
+        name: 'Decorative Pendant',
+        category: 'lighting',
+        description: 'Ceiling hanging fixture (Dumb)',
+        color: 0x000000,
+        size: { width: 18, height: 18 },
+        createMesh: createPendantMesh,
+        meshType: 'pendant',
+        productId: 'fix-pendant-dumb'
+    },
+    'wall-sconce': {
+        id: 'wall-sconce',
+        name: 'Wall Sconce',
+        category: 'lighting',
+        description: 'Wall-mounted decorative light (Dumb)',
+        color: 0x000000,
+        size: { width: 16, height: 16 },
+        createMesh: createSconceMesh,
+        meshType: 'sconce',
+        productId: 'fix-sconce-dumb'
     },
     'ceiling-fan': {
         id: 'ceiling-fan',
@@ -339,15 +486,17 @@ export const SHORTHAND_MAP: Record<string, string> = {
     'recessed-light': '',
     'focus-light': 'ADJ',
     'adjustable-light': 'ADJ',
-    'pendant-light': 'CHN',
+    'pendant-light': 'dec-ped',
+    'decorative-pendant': 'dec-ped',
+    'wall-sconce': 'dec-scn',
     'motion-sensor': 'MOT',
     'wifi-ap': 'AP',
     'security-camera': 'CAM',
     'ceiling-fan': 'FAN',
     'HAIKU-52-ALU': 'HAIKU-52-ALU',
     'haiku-fan': 'HAIKU-52-ALU',
-    '2DS-L12': '2DS-L12',
-    '2DS-L9': '2DS-L9',
+    '2DS-L12': 'DMF',
+    '2DS-L9': 'DMF',
     'DMF-X2-SQ-FL': 'DMF',
     'DMF-X2-SQ-FL-WET': 'DMF-W',
     'GENERIC-LIGHT': 'LIGHT',

@@ -1,5 +1,70 @@
 {
-  "totalCost": 0,
-  "totalPower": 0,
-  "items": []
+  "totalCost": 8487.5,
+  "totalPower": 276.8,
+  "items": [
+    {
+      "name": "DMF Test Light",
+      "quantity": 83,
+      "cost": 0,
+      "total": 0,
+      "description": "Unidentified Component",
+      "manufacturer": "Generic"
+    },
+    {
+      "name": "HAIKU-52-ALU - Big Ass Fans Haiku",
+      "quantity": 3,
+      "cost": 1200,
+      "total": 3600,
+      "description": "Smart Ceiling Fan - Configurable Series, Size, and Finish",
+      "manufacturer": "Big Ass Fans"
+    },
+    {
+      "name": "DALI-2 0-10V Interface",
+      "quantity": 3,
+      "cost": 82.5,
+      "total": 247.5,
+      "description": "Precision PWM to 0-10V control",
+      "manufacturer": "Lunatone"
+    },
+    {
+      "name": "DMF X-Series Square Housing",
+      "quantity": 16,
+      "cost": 65,
+      "total": 1040,
+      "description": "Housing",
+      "manufacturer": "DMF Lighting"
+    },
+    {
+      "name": "DMF X-Series Square Mud-Plate",
+      "quantity": 16,
+      "cost": 35,
+      "total": 560,
+      "description": "Mud-in Plate",
+      "manufacturer": "DMF Lighting"
+    },
+    {
+      "name": "DMF X-Series Square Flangeless Trim",
+      "quantity": 14,
+      "cost": 45,
+      "total": 630,
+      "description": "Square Trim",
+      "manufacturer": "DMF Lighting"
+    },
+    {
+      "name": "DMF X-Series LED Module",
+      "quantity": 16,
+      "cost": 145,
+      "total": 2320,
+      "description": "DALI-2 LED Module",
+      "manufacturer": "DMF Lighting"
+    },
+    {
+      "name": "DMF X-Series Square Flangeless Trim (Wet Location)",
+      "quantity": 2,
+      "cost": 45,
+      "total": 90,
+      "description": "Square Trim (Wet)",
+      "manufacturer": "DMF Lighting"
+    }
+  ]
 }
