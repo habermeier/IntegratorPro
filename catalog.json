@@ -12,7 +12,8 @@
         "type": "logic",
         "busDrawMa": 3.1,
         "addresses": 1,
-        "protocol": "DALI"
+        "protocol": "DALI",
+        "category": "lcps"
       },
       {
         "id": "lunt-dali-rm8",
@@ -23,7 +24,8 @@
         "type": "logic",
         "busDrawMa": 2.7,
         "addresses": 1,
-        "protocol": "DALI"
+        "protocol": "DALI",
+        "category": "lcps"
       }
     ],
     "drivers": [
@@ -84,7 +86,11 @@
         "url": "https://www.google.com/search?q=site:saginawcontrol.com+Saginaw+SCE-24H2408LP",
         "type": "load",
         "wattage": 15,
-        "category": "enclosure"
+        "category": "infrastructure",
+        "size": {
+          "width": 24,
+          "height": 8
+        }
       },
       {
         "id": "lcp2-enc",
@@ -95,7 +101,11 @@
         "url": "https://www.google.com/search?q=site:amazon.com+Leviton+47605-21E",
         "type": "load",
         "wattage": 15,
-        "category": "enclosure"
+        "category": "infrastructure",
+        "size": {
+          "width": 21,
+          "height": 4
+        }
       },
       {
         "id": "siemens-dali-gw",
@@ -106,7 +116,7 @@
         "url": "https://www.google.com/search?q=site:eibabo.com+Siemens+5WG1+141-1AB03+N+141/03",
         "type": "load",
         "wattage": 2,
-        "category": "lighting"
+        "category": "lcps"
       },
       {
         "id": "abb-ip-router",
@@ -563,7 +573,7 @@
         "id": "fix-lumenpulse-lbx",
         "name": "Lumenpulse Lumenbeam Small (LBX-S)",
         "manufacturer": "Lumenpulse",
-        "description": "24V DC RGBW Uplight, Narrow Spot (10\u00b0), DMX/RDM",
+        "description": "24V DC RGBW Uplight, Narrow Spot (10°), DMX/RDM",
         "cost": 550,
         "url": "https://www.google.com/search?q=Lumenpulse+Lumenbeam+Small+LBX-S",
         "type": "load",
@@ -646,7 +656,7 @@
         "type": "load",
         "wattage": 14.3,
         "hvAmps": 0.12,
-        "category": "lighting",
+        "category": "lcps",
         "metadata": {
           "beamAngle": 50,
           "initialLumens": 1250,
@@ -728,6 +738,62 @@
         "type": "load",
         "wattage": 40,
         "category": "lighting"
+      },
+      {
+        "id": "span-panel",
+        "name": "SPAN Gen 2 Smart Panel",
+        "manufacturer": "SPAN",
+        "description": "Smart electrical panel with circuit-level telemetry",
+        "cost": 3500,
+        "type": "load",
+        "wattage": 0,
+        "category": "infrastructure",
+        "size": {
+          "width": 14.3,
+          "height": 6
+        }
+      },
+      {
+        "id": "sol-ark-15k",
+        "name": "Sol-Ark 15K Hybrid Inverter",
+        "manufacturer": "Sol-Ark",
+        "description": "All-in-one Hybrid Inverter (200A passthrough)",
+        "cost": 7500,
+        "type": "load",
+        "wattage": 0,
+        "category": "infrastructure",
+        "size": {
+          "width": 19.4,
+          "height": 12
+        }
+      },
+      {
+        "id": "eg4-18kpv",
+        "name": "EG4 18kPV Hybrid Inverter",
+        "manufacturer": "EG4",
+        "description": "All-in-one Hybrid Inverter (200A passthrough, EMP hardened)",
+        "cost": 4900,
+        "type": "load",
+        "wattage": 0,
+        "category": "infrastructure",
+        "size": {
+          "width": 20.5,
+          "height": 11.2
+        }
+      },
+      {
+        "id": "battery-bank",
+        "name": "Battery Bank (EG4 WallMount)",
+        "manufacturer": "EG4",
+        "description": "Lithium Iron Phosphate storage cabinet",
+        "cost": 4500,
+        "type": "load",
+        "wattage": 0,
+        "category": "infrastructure",
+        "size": {
+          "width": 32,
+          "height": 14
+        }
       }
     ]
   },

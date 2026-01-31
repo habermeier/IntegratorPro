@@ -1,8 +1,10 @@
 # **Electrical Master Plan**
 
 **Project Location:** 270 Bolla Ave  
-**Version:** 1.2  
-**Status:** Finalized Directive for Rough-In
+**Version:** 1.3  
+**Status:** Finalized Directive for Rough-In (Dual-Inverter Expansion)
+
+**Revision Note (v1.3):** Updated to reflect the mandatory requirement for dual parallel hybrid inverters to support the 320A (400A class) service for full-house "Grid-Zero" backup. Expanded the "Energy Wall" hub zone to 72" to accommodate dual units and safety clearances.
 
 **Note on Scope:** This document defines the High-Voltage (HV) infrastructure, hardware benchmarks, and structural rough-in requirements. It is not an exhaustive list of KNX or DALI-2 programming logic or specific device-level automation scenes.
 
@@ -38,8 +40,10 @@ This layout ensures a clean, "server-room" look with zero rework required when P
 
 ### **Physical Placement (Left-to-Right)**
 *   **Cluster 1 (Main Panels):** Recess the two Main SPAN Panels side-by-side.
-*   **Center Space (The Hub):** Leave a 48" wide clear zone to the right of the SPAN panels for the Hybrid Inverter and auxiliary safety boxes (Rapid Shutdown/Disconnect).
-*   **Lower Zone (Battery Bank):** Keep the floor-to-waist area clear below the inverter zone for future Battery Racks (e.g., EG4 PowerPro or server-rack stacks).
+*   **Center Space (The Hub):** **Minimum 72" wide clear zone** required to the right of the SPAN panels. This space must accommodate:
+    *   Two (2) Hybrid Inverters (Sol-Ark 15K or EG4 18kPV) mounted in parallel with 12" min clearance between units.
+    *   Auxiliary safety boxes (Rapid Shutdown/Disconnects) and an AC Combiner Gutter.
+*   **Lower Zone (Battery Bank):** Keep the floor-to-waist area clear below the inverter zone for future Battery Racks (e.g., EG4 PowerPro or server-rack stacks). Minimum 2-3 high-voltage storage cabinets required to match dual-inverter peak output.
 
 ## **4. Conduit & Infrastructure Schedule (Phase 1 Prep)**
 

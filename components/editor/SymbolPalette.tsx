@@ -46,6 +46,7 @@ export const SymbolPalette: React.FC<SymbolPaletteProps> = ({ activeCategory, on
             s.category === activeCategory &&
             !s.id.startsWith('custom-') &&
             !s.id.includes('generic') &&
+            !(s as any).metadata?.isBlueprint && // CRITICAL-FIX: Don't show blueprints in base list
             // Discovery rule: Always show Infrastructure gear + LCP Controls, others only if placed
             (placedBlueprintIds.has(s.id) || activeCategory === 'infrastructure' || activeCategory === 'lcps')
         );
@@ -56,7 +57,7 @@ export const SymbolPalette: React.FC<SymbolPaletteProps> = ({ activeCategory, on
         // 3. Blueprints (The new standard)
         const relevantBlueprints = blueprints
             .filter(bp => {
-                if (bp.category !== activeCategory) return false;
+                if (!bp.category || bp.category !== activeCategory) return false;
 
                 // Whitelist for discovery (show even if NOT placed yet)
                 if (activeCategory === 'lighting') {
