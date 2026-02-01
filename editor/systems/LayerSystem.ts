@@ -271,6 +271,35 @@ export class LayerSystem {
             this.dirtyLayers.add('lighting');
         }
 
+        // 4. Animate Selection Pulse
+        if (selectedIds.length > 0) {
+            const pulseOpacity = 0.3 + (pulse * 0.4); // 0.3 to 0.7
+            const pulseScale = 1.0 + (pulse * 0.05); // 1.0 to 1.05
+
+            selectedIds.forEach(id => {
+                const group = this.idToMesh.get(id) as THREE.Group;
+                if (!group) return;
+
+                // Animate Glow/Shadow
+                const shadow = group.userData.shadowMesh || group.getObjectByName('selection-glow') as THREE.Mesh;
+                if (shadow) {
+                    (shadow.material as THREE.MeshBasicMaterial).opacity = pulseOpacity;
+                    shadow.scale.set(pulseScale, pulseScale, 1);
+                }
+
+                // Animate Symbol Fill slightly
+                const fill = group.userData.fillMesh || group.getObjectByName('fill') as THREE.Mesh;
+                if (fill && (group.userData.type === 'symbol' || group.userData.type === 'furniture')) {
+                    // Pulse blue intensity
+                    const blueVal = 0.6 + (pulse * 0.4); // 0.6 to 1.0
+                    (fill.material as THREE.MeshBasicMaterial).color.setRGB(0.2, blueVal * 0.8, 1.0);
+                }
+            });
+
+            // Force re-render if we have active selection animation
+            this.scene.userData.editor?.setDirty();
+        }
+
         // 3. Update Lighting Visuals (Heatmaps & Modes)
         if (this.pendingLightingVisualsUpdate) {
             if (now - this.lastHeatmapUpdateTime > this.HEATMAP_UPDATE_INTERVAL) {
@@ -303,16 +332,18 @@ export class LayerSystem {
         }
 
         if (isSymbol) {
-            let shadow = group.userData.shadowMesh || group.getObjectByName('selection-shadow') as THREE.Mesh;
+            let shadow = group.userData.shadowMesh || group.getObjectByName('selection-glow') as THREE.Mesh;
             if (!shadow && fill) {
                 const fillGeo = (fill.geometry as THREE.PlaneGeometry);
                 const w = (fillGeo && fillGeo.parameters) ? fillGeo.parameters.width : 16;
                 const h = (fillGeo && fillGeo.parameters) ? fillGeo.parameters.height : 16;
-                const shadowGeo = new THREE.PlaneGeometry(w, h);
+                // Make glow slightly larger
+                const shadowGeo = new THREE.PlaneGeometry(w * 1.2, h * 1.2);
                 const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.5, side: THREE.DoubleSide });
                 shadow = new THREE.Mesh(shadowGeo, shadowMat);
-                shadow.name = 'selection-shadow';
-                shadow.position.set(4, -4, -0.1);
+                shadow.name = 'selection-glow';
+                // Centered glow, behind symbol
+                shadow.position.set(0, 0, -0.1);
                 group.add(shadow);
                 group.userData.shadowMesh = shadow;
             }
@@ -349,7 +380,7 @@ export class LayerSystem {
         }
 
         let shadow = group.userData.shadowMesh as THREE.Mesh;
-        if (!shadow) shadow = group.getObjectByName('selection-shadow') as THREE.Mesh;
+        if (!shadow) shadow = group.getObjectByName('selection-glow') as THREE.Mesh;
         if (shadow) shadow.visible = false;
     }
 

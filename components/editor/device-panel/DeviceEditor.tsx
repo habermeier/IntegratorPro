@@ -107,7 +107,7 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
                             showShorthand={false}
                             meshType={SYMBOL_LIBRARY[editingDevice.deviceTypeId]?.meshType}
                             metadata={editingDevice.metadata}
-                            rotation={formData.rotation || 0}
+                            rotation={0}
                         />
                     </div>
                     <div className="flex-1 min-w-0">
