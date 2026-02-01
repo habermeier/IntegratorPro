@@ -631,9 +631,9 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         id: 'service-entrance-320',
         name: '320A Service Entrance',
         category: 'infrastructure',
-        description: 'Large service entrance rated breaker box with meter',
+        description: 'Siemens MK0603S1400SCS 400A Solar Meter',
         color: 0x000000,
-        size: { width: 32, height: 12 },
+        size: { width: 42, height: 9 },
         createMesh: createEquipmentMesh,
         meshType: 'equipment'
     },
@@ -686,7 +686,7 @@ export const SHORTHAND_MAP: Record<string, string> = {
     'hybrid-inverter': 'INV',
     'battery-bank': 'BATT',
     'utility-meter': 'MET',
-    'service-entrance-320': 'MAIN',
+    'service-entrance-320': 'METER',
     'breaker-box-dual-200': 'LOAD',
     'breaker-box-200': 'LOAD',
     'entry-intercom': 'COM'
