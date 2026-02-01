@@ -649,13 +649,19 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
     },
     'service-entrance-320': {
         id: 'service-entrance-320',
-        name: 'Siemens 400A Meter',
+        name: 'Siemens 320A Meter',
         category: 'infrastructure',
-        description: 'Siemens MK0603S1400SCS 400A Solar Meter',
+        description: 'Siemens MK0603S1400SCS (320A Cont / 400A Max, Solar Ready)',
         color: 0x000000,
         size: { width: 42, height: 9 },
         createMesh: createEquipmentMesh,
-        meshType: 'equipment'
+        meshType: 'equipment',
+        productId: 'MK0603S1400SCS',
+        metadata: {
+            rating: '320A Continuous',
+            voltage: '120/240V 1Ph',
+            notes: 'Solar Ready, EUSERC Compliant'
+        }
     },
     'breaker-box-dual-200': {
         id: 'breaker-box-dual-200',
