@@ -16,6 +16,7 @@ export class LayerSystem {
     private textureLoader: THREE.TextureLoader = new THREE.TextureLoader();
     private vertexMaterial: THREE.SpriteMaterial | null = null;
     private lightingMode: 'circles' | 'intensity' | 'fixture' = 'fixture';
+    private selectionGlowTexture: THREE.Texture | null = null;
 
     // Cache to prevent recreating everything from scratch
     private meshCache: Map<string, THREE.Object3D> = new Map();
@@ -211,6 +212,28 @@ export class LayerSystem {
         }
     }
 
+    private createGlowTexture(): THREE.Texture {
+        const canvas = document.createElement('canvas');
+        canvas.width = 128;
+        canvas.height = 128;
+        const ctx = canvas.getContext('2d')!;
+
+        // Create radial gradient: Opaque dark center -> Transparent edge
+        const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+        gradient.addColorStop(0, 'rgba(0, 0, 0, 0.9)');    // Dark center
+        gradient.addColorStop(0.4, 'rgba(0, 0, 0, 0.4)');  // Mid falloff
+        gradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.1)'); // Soft edge
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');     // Transparent final
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 128, 128);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.magFilter = THREE.LinearFilter;
+        texture.minFilter = THREE.LinearFilter;
+        return texture;
+    }
+
     private debugTick = 0;
 
     public update(): void {
@@ -222,7 +245,7 @@ export class LayerSystem {
         }
 
         const time = this.clock.getElapsedTime();
-        const pulse = (Math.sin(time * 6) + 1) / 2; // 0 to 1
+        const pulse = (Math.sin(time * 3) + 1) / 2; // 0 to 1 (Slower pulse, approx 1Hz)
 
         // Capture dirty state and clear immediately to allow new dirty flags to accumulate during update
         const dirtyIds = new Set(this.dirtyLayers);
@@ -287,12 +310,14 @@ export class LayerSystem {
                     shadow.scale.set(pulseScale, pulseScale, 1);
                 }
 
-                // Animate Symbol Fill slightly
+                // Animate Symbol Fill slightly (Dark Blue to Mid Blue)
                 const fill = group.userData.fillMesh || group.getObjectByName('fill') as THREE.Mesh;
                 if (fill && (group.userData.type === 'symbol' || group.userData.type === 'furniture')) {
-                    // Pulse blue intensity
-                    const blueVal = 0.6 + (pulse * 0.4); // 0.6 to 1.0
-                    (fill.material as THREE.MeshBasicMaterial).color.setRGB(0.2, blueVal * 0.8, 1.0);
+                    // Pulse between Dark Blue (0x0f172a / rgb(0, 0.2, 0.4)) and Mid Blue (0x1e40af / rgb(0, 0.4, 0.8))
+                    // Base: 0.2 red (keep slightly warm/neutral), Blue dominant
+                    const blueIntensity = 0.4 + (pulse * 0.4); // 0.4 to 0.8
+                    const greenIntensity = 0.1 + (pulse * 0.1); // 0.1 to 0.2
+                    (fill.material as THREE.MeshBasicMaterial).color.setRGB(0.05, greenIntensity, blueIntensity);
                 }
             });
 
@@ -317,7 +342,7 @@ export class LayerSystem {
         let fill = group.userData.fillMesh || group.getObjectByName('fill') as THREE.Mesh;
         if (fill && fill.material instanceof THREE.MeshBasicMaterial) {
             if (isSymbol) {
-                fill.material.color.setRGB(0.2, 0.6, 1.0); // Bright blue
+                fill.material.color.setHex(0x1e40af); // Start with mid-blue base
                 fill.material.opacity = 0.8;
             } else {
                 fill.material.color.setHex(0xfacc15); // Yellow highlight for rooms/masks
@@ -331,24 +356,38 @@ export class LayerSystem {
             border.material.opacity = 1.0;
         }
 
-        if (isSymbol) {
-            let shadow = group.userData.shadowMesh || group.getObjectByName('selection-glow') as THREE.Mesh;
-            if (!shadow && fill) {
-                const fillGeo = (fill.geometry as THREE.PlaneGeometry);
-                const w = (fillGeo && fillGeo.parameters) ? fillGeo.parameters.width : 16;
-                const h = (fillGeo && fillGeo.parameters) ? fillGeo.parameters.height : 16;
-                // Make glow slightly larger
-                const shadowGeo = new THREE.PlaneGeometry(w * 1.2, h * 1.2);
-                const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.5, side: THREE.DoubleSide });
-                shadow = new THREE.Mesh(shadowGeo, shadowMat);
-                shadow.name = 'selection-glow';
-                // Centered glow, behind symbol
-                shadow.position.set(0, 0, -0.1);
-                group.add(shadow);
-                group.userData.shadowMesh = shadow;
+        let shadow = group.userData.shadowMesh || group.getObjectByName('selection-glow') as THREE.Mesh;
+        if (!shadow && fill) {
+            const fillGeo = (fill.geometry as THREE.PlaneGeometry);
+            const w = (fillGeo && fillGeo.parameters) ? fillGeo.parameters.width : 16;
+            const h = (fillGeo && fillGeo.parameters) ? fillGeo.parameters.height : 16;
+
+            // Ensure glow texture exists
+            if (!this.selectionGlowTexture) {
+                this.selectionGlowTexture = this.createGlowTexture();
             }
-            if (shadow) shadow.visible = true;
+
+            // Make glow significantly larger (2.5x) for soft falloff
+            const maxDim = Math.max(w, h); // Use max dimension for a circular-ish radial gradient or stretch
+            const shadowGeo = new THREE.PlaneGeometry(maxDim * 2.5, maxDim * 2.5);
+
+            const shadowMat = new THREE.MeshBasicMaterial({
+                map: this.selectionGlowTexture,
+                transparent: true,
+                opacity: 0.8,
+                depthWrite: false,
+                side: THREE.DoubleSide,
+                blending: THREE.NormalBlending // Normal blending ensures dark glow works on light background
+            });
+
+            shadow = new THREE.Mesh(shadowGeo, shadowMat);
+            shadow.name = 'selection-glow';
+            // Align glow to the visual center (fill mesh position), not just group anchor
+            shadow.position.set(fill.position.x, fill.position.y, -0.2);
+            group.add(shadow);
+            group.userData.shadowMesh = shadow;
         }
+        if (shadow) shadow.visible = true;
     }
 
     private resetObjectVisuals(group: THREE.Group): void {
