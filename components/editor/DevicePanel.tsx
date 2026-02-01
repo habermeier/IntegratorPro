@@ -420,14 +420,25 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
             // 2. Perform registry update (fast)
             updateDevice(editingDevice.id, updateObj);
 
-            // 3. Conditional Scene Update
-            // For high-frequency things like rotation, we can update the internal Three.js object 
-            // directly to avoid the massive overhead of layers-changed re-render.
+            // 3. Conditional Scene Update & Layer Sync
             if (field === 'rotation') {
                 const group = editor.layerSystem.getSceneObject(editingDevice.id);
                 if (group) {
                     group.rotation.z = (value * Math.PI) / 180;
                     editor.setDirty();
+                } else {
+                    console.warn(`[DevicePanel] Scene object not found for ${editingDevice.id}`);
+                }
+
+                // CRITICAL FIX: Also update the underlying layer model so re-renders don't revert
+                const layerId = editingDevice.layerId || 'lighting';
+                const layer = editor.layerSystem.getLayer(layerId);
+                if (layer && layer.type === 'vector' && layer.content) {
+                    const symbol = (layer.content as any).symbols?.find((s: any) => s.id === editingDevice.id);
+                    if (symbol) {
+                        symbol.rotation = value;
+                        // Don't mark dirty immediately to avoid stutter, rely on group update above
+                    }
                 }
             } else if (field === 'installationHeight') {
                 // For height, we might need a full re-render if it affects coverage circles, 
