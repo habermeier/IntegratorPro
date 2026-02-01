@@ -983,6 +983,15 @@ export class LayerSystem {
         const isCircleMode = this.lightingMode === 'circles';
         const shouldShow = isCircleMode || isSelected;
 
+        // FIXED: Infrastructure items (Panels, Meters) should NEVER show a coverage circle
+        // even if stray metadata is present. This prevents "phantom door swings" on rotation.
+        if (symbolData.category === 'infrastructure') {
+            if (circle) circle.visible = false;
+            const backing = group.getObjectByName(`${COVERAGE_NAME}-backing`);
+            if (backing) backing.visible = false;
+            return;
+        }
+
         if (rx <= 0 || ry <= 0 || !shouldShow) {
             if (circle) circle.visible = false;
             const backing = group.getObjectByName(`${COVERAGE_NAME}-backing`);
