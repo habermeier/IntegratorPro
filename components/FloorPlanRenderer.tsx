@@ -232,18 +232,34 @@ export const FloorPlanRenderer: React.FC = () => {
             }
 
             if (e.key === 'Escape') {
-                if (isPresentationMode) {
-                    setIsPresentationMode(false);
+                // 1. Priority: Clear Selection
+                if (selectedIds.length > 0) {
+                    editor?.selectionSystem.clearSelection();
+                    // Also ensure we return to select tool if we were doing something else with a selection
+                    if (activeTool !== 'select') {
+                        editor?.toolSystem.setActiveTool('select');
+                    }
                     e.stopImmediatePropagation();
                     return;
                 }
 
-                // Smart Esc: Only enter Zen mode if nothing is selected
-                // This allows the first Esc to clear selection, and the second to enter Zen
-                if (selectedIds.length === 0 && activeTool === 'select') {
-                    setIsPresentationMode(true);
+                // 2. Priority: Cancel Active Tool (if not select)
+                if (activeTool !== 'select') {
+                    // Let the tool handle its own cancel via standard event, or force it?
+                    // Usually tools handle Escape themselves. But if we are capturing at window level...
+                    // Let's force switch to select for consistency with "Esc backs out"
+                    editor?.toolSystem.setActiveTool('select');
                     e.stopImmediatePropagation();
+                    return;
                 }
+
+                // 3. Priority: Toggle UI (Presentation Mode)
+                if (isPresentationMode) {
+                    setIsPresentationMode(false);
+                } else {
+                    setIsPresentationMode(true);
+                }
+                e.stopImmediatePropagation();
                 return;
             }
 
@@ -274,7 +290,7 @@ export const FloorPlanRenderer: React.FC = () => {
         return () => {
             window.removeEventListener('keydown', handleKeyDown, true);
         };
-    }, []); // Functional updates in setPanels keep this dependency-free
+    }, [editor, isPresentationMode, selectedIds, activeTool]); // Dependencies updated to fix stale closure
 
     // Mouse edge detection for auto-show sidebars (AUTO-ULTIMATE-UX-P26: Throttled)
     useEffect(() => {
