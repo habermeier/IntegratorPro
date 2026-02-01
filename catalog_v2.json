@@ -703,6 +703,12 @@
         "size": {
           "width": 14.3,
           "height": 6
+        },
+        "dimensions": {
+          "width": 14.3,
+          "height": 39.3,
+          "depth": 6.0,
+          "unit": "in"
         }
       },
       {
@@ -717,6 +723,12 @@
         "size": {
           "width": 19.4,
           "height": 12
+        },
+        "dimensions": {
+          "width": 19.4,
+          "height": 31.8,
+          "depth": 12.0,
+          "unit": "in"
         }
       },
       {
@@ -731,6 +743,12 @@
         "size": {
           "width": 20.5,
           "height": 11.2
+        },
+        "dimensions": {
+          "width": 20.5,
+          "height": 34.3,
+          "depth": 11.2,
+          "unit": "in"
         }
       },
       {
@@ -743,8 +761,95 @@
         "wattage": 0,
         "category": "infrastructure",
         "size": {
-          "width": 32,
-          "height": 14
+          "width": 19,
+          "height": 6.5
+        },
+        "dimensions": {
+          "width": 19,
+          "height": 35,
+          "depth": 6.5,
+          "unit": "in"
+        }
+      },
+      {
+        "id": "server-rack-battery",
+        "name": "Server Rack Battery Cabinet",
+        "manufacturer": "EG4 / Generic",
+        "description": "6-Slot Battery Enclosure (Approx 30kWh)",
+        "cost": 1500,
+        "type": "load",
+        "wattage": 0,
+        "category": "infrastructure",
+        "size": {
+          "width": 24,
+          "height": 26
+        },
+        "dimensions": {
+          "width": 24,
+          "height": 42,
+          "depth": 26,
+          "unit": "in"
+        }
+      },
+      {
+        "id": "siemens-meter-400a",
+        "name": "Siemens 400A Solar Meter",
+        "manufacturer": "Siemens",
+        "description": "MK0603S1400SCS 400A Ring-Type Solar Load Center",
+        "cost": 1200,
+        "type": "load",
+        "wattage": 0,
+        "category": "infrastructure",
+        "size": {
+          "width": 41.7,
+          "height": 8.7
+        },
+        "dimensions": {
+          "width": 41.7,
+          "height": 43.7,
+          "depth": 8.7,
+          "unit": "in"
+        },
+        "url": "docs/SnJ/SIE_WD_MeterC_MK0603S1400SCS.pdf"
+      },
+      {
+        "id": "ext-disconnect-200a",
+        "name": "Emergency Service Disconnect",
+        "manufacturer": "Siemens/Generic",
+        "description": "200A/320A Outdoor Lever Switch",
+        "cost": 350,
+        "type": "load",
+        "wattage": 0,
+        "category": "infrastructure",
+        "size": {
+          "width": 10,
+          "height": 6
+        },
+        "dimensions": {
+          "width": 10,
+          "height": 20,
+          "depth": 6,
+          "unit": "in"
+        }
+      },
+      {
+        "id": "pv-rsd-switch",
+        "name": "PV Rapid Shutdown Switch",
+        "manufacturer": "Generic",
+        "description": "Red Mushroom Button (Outdoor)",
+        "cost": 85,
+        "type": "load",
+        "wattage": 0,
+        "category": "ui",
+        "size": {
+          "width": 6,
+          "height": 4
+        },
+        "dimensions": {
+          "width": 6,
+          "height": 6,
+          "depth": 4,
+          "unit": "in"
         }
       }
     ]
