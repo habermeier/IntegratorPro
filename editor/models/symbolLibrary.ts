@@ -629,7 +629,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
     },
     'service-entrance-320': {
         id: 'service-entrance-320',
-        name: '320A Service Entrance',
+        name: 'Siemens 400A Meter',
         category: 'infrastructure',
         description: 'Siemens MK0603S1400SCS 400A Solar Meter',
         color: 0x000000,
@@ -686,7 +686,7 @@ export const SHORTHAND_MAP: Record<string, string> = {
     'hybrid-inverter': 'INV',
     'battery-bank': 'BATT',
     'utility-meter': 'MET',
-    'service-entrance-320': 'METER',
+    'service-entrance-320': 'PG&E MAIN',
     'breaker-box-dual-200': 'LOAD',
     'breaker-box-200': 'LOAD',
     'entry-intercom': 'COM'
