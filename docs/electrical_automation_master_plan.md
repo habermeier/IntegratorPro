@@ -30,20 +30,38 @@ The system is designed to be "Solar Agnostic," meaning it can support either Str
 *   **DC Coupling (Strings):** Raw DC power from the roof can land directly on the Inverter’s MPPT inputs for maximum efficiency.
 *   **Safety Requirements:** Space must be reserved next to the Inverter for a Rapid Shutdown Controller and a Physical PV Disconnect (exterior or near entrance) per local fire code.
 
-## **3. The "Energy Wall" Master Plan (Garage North Wall)**
+## **3. The "Energy Wall" Master Plan (West Wall)**
+**Logical Flow:** `Outside Grid` $\rightarrow$ `Meter` $\rightarrow$ `Main Panels` $\rightarrow$ `Solar/Battery Hub` (Left-to-Right)
 
 This layout ensures a clean, "server-room" look with zero rework required when Phase 2 equipment arrives.
 
-### **Wall Prep & Finishing**
-*   **Mounting Surface:** Insulate, install 3/4" CDX plywood directly to studs, and skin with Fire-Rated Drywall.
-*   **Finish:** Paint with high-durability white semi-gloss for a professional, "clean-room" aesthetic.
+### **3.1 Zone A: Exterior (Outside Utility POC)**
+*   **Smart Meter / Service Socket**: **Siemens MK0603S1400SCS** (400A Solar Load Center).
+    *   **Dims:** 41.7" W x 43.7" H x 8.7" D (NEMA 3R).
+*   **Emergency Disconnect**: 1x External lever (e.g., Siemens 200/320A) marked "EMERGENCY DISCONNECT, SERVICE DISCONNECT".
+*   **PV Rapid Shutdown**: 1x Red Mushroom Button marked "RAPID SHUTDOWN SWITCH FOR SOLAR PV SYSTEM".
+*   *Note:* Must be readily accessible (no locked gates).
 
-### **Physical Placement (Left-to-Right)**
-*   **Cluster 1 (Main Panels):** Recess the two Main SPAN Panels side-by-side.
-*   **Center Space (The Hub):** **Minimum 72" wide clear zone** required to the right of the SPAN panels. This space must accommodate:
-    *   Two (2) Hybrid Inverters (Sol-Ark 15K or EG4 18kPV) mounted in parallel with 12" min clearance between units.
-    *   Auxiliary safety boxes (Rapid Shutdown/Disconnects) and an AC Combiner Gutter.
-*   **Lower Zone (Battery Bank):** Keep the floor-to-waist area clear below the inverter zone for future Battery Racks (e.g., EG4 PowerPro or server-rack stacks). Minimum 2-3 high-voltage storage cabinets required to match dual-inverter peak output.
+### **3.2 Zone B: Main Distribution (Inside - Left)**
+*   **Equipment:** 2x **SPAN Smart Panel (Gen 2)**.
+*   **Mounting:** Recessed/Semi-Flush with Drywall.
+*   **Dimensions (Each):** 14.3" W x 39.3" H x 6.0" D.
+*   **Spacing:** **4" to 6" lateral gap** between panels (Exceeds 3" min).
+*   **Total Width:** ~36" total zone width.
+
+### **3.3 Zone C: The "Inverter Hub" (Inside - Center)**
+*   **Equipment:** 2x **All-In-One Hybrid Inverters** (Paralleled).
+*   **Benchmark:** EG4 18kPV or Sol-Ark 15K.
+*   **Dimensions (Each):** 20.5" W x 34.3" H x 11.2" D.
+*   **Spacing:** **12" minimum clear space** between units for thermal airflow.
+*   **Layout:** Inverter 1 $\rightarrow$ 12" Gap $\rightarrow$ Inverter 2.
+*   **Total Width:** ~53" minimum.
+
+### **3.4 Zone D: Battery Bank (Inside - Bottom)**
+*   **Location:** Directly BELOW Zone C (Floor to Waist).
+*   **Capacity:** Reserved for Server Rack Batteries or Wall-Mount PowerPros.
+*   **Keep-Out Zone:** **60" Wide x 24" Deep** (Extended off wall).
+*   *Caution:* Verify 24" encroachment does not block garage vehicle doors.
 
 ## **4. Conduit & Infrastructure Schedule (Phase 1 Prep)**
 
