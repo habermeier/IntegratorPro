@@ -732,7 +732,9 @@ export class LayerSystem {
                         } else if (symbolData.category === 'infrastructure') {
                             shorthandColor = 'rgba(219, 234, 254, 1)';
                         }
-                        const shorthandLabel = this.createShorthandLabel(effectiveShorthand, shorthandColor);
+                        // Pass Phase info as secondary text
+                        const phaseText = metadata.phase ? String(metadata.phase).toUpperCase() : undefined;
+                        const shorthandLabel = this.createShorthandLabel(effectiveShorthand, phaseText, shorthandColor);
                         shorthandLabel.name = 'shorthand-label'; shorthandLabel.position.set(ox, oy, 0.6); group.add(shorthandLabel);
                     }
                     group.userData.labelsHash = labelsHash;
@@ -881,24 +883,62 @@ export class LayerSystem {
         return sprite;
     }
 
-    private createShorthandLabel(shorthandText: string, bgColor: string = 'rgba(255, 255, 255, 0.75)'): THREE.Sprite {
+    private createShorthandLabel(shorthandText: string, secondaryText?: string, bgColor: string = 'rgba(255, 255, 255, 0.75)'): THREE.Sprite {
         const canvas = document.createElement('canvas');
         const fontSize = 28;
+        const secondaryFontSize = 20;
         const ctx = canvas.getContext('2d');
         if (!ctx) return new THREE.Sprite();
+
+        // 1. Measure Widths
         ctx.font = `900 ${fontSize}px Inter, sans-serif`;
-        const textWidth = ctx.measureText(shorthandText).width;
+        const mainWidth = ctx.measureText(shorthandText).width;
+        let secondaryWidth = 0;
+        if (secondaryText) {
+            ctx.font = `700 ${secondaryFontSize}px Inter, sans-serif`;
+            secondaryWidth = ctx.measureText(secondaryText).width;
+        }
+
+        // 2. Calculate Dimensions
+        const textWidth = Math.max(mainWidth, secondaryWidth);
         const px = 16, py = 8;
-        const rectWidth = textWidth + px * 2, rectHeight = fontSize + py * 2;
+        // If secondary text exists, add height + padding
+        const totalTextHeight = secondaryText ? (fontSize + secondaryFontSize + 6) : fontSize;
+        const rectWidth = textWidth + px * 2, rectHeight = totalTextHeight + py * 2;
+
         canvas.width = rectWidth + 24; canvas.height = rectHeight + 24;
         const centerX = canvas.width / 2, centerY = canvas.height / 2;
+
+        // 3. Draw Background
         ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 12; ctx.shadowOffsetY = 6;
         ctx.fillStyle = bgColor; ctx.beginPath();
         if (ctx.roundRect) ctx.roundRect(centerX - rectWidth / 2, centerY - rectHeight / 2, rectWidth, rectHeight, 8);
         else ctx.rect(centerX - rectWidth / 2, centerY - rectHeight / 2, rectWidth, rectHeight);
         ctx.fill(); ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 1.0; ctx.stroke();
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = `900 ${fontSize}px Inter, sans-serif`; ctx.fillStyle = '#000000';
-        ctx.fillText(shorthandText, centerX, centerY);
+
+        // 4. Draw Text
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000000';
+
+        if (secondaryText) {
+            // Stacked
+            const totalH = fontSize + secondaryFontSize + 6;
+            const startY = centerY - (totalH / 2);
+
+            // Main Text (Top)
+            ctx.font = `900 ${fontSize}px Inter, sans-serif`;
+            ctx.fillText(shorthandText, centerX, startY + (fontSize / 2));
+
+            // Secondary Text (Bottom)
+            ctx.font = `700 ${secondaryFontSize}px Inter, sans-serif`;
+            // Subtle color for phase
+            ctx.fillStyle = '#333333';
+            ctx.fillText(secondaryText, centerX, startY + fontSize + 6 + (secondaryFontSize / 2));
+        } else {
+            // Centered Single Line
+            ctx.font = `900 ${fontSize}px Inter, sans-serif`;
+            ctx.fillText(shorthandText, centerX, centerY);
+        }
+
         const texture = new THREE.CanvasTexture(canvas);
         const material = new THREE.SpriteMaterial({ map: texture, depthTest: false });
         const sprite = new THREE.Sprite(material);

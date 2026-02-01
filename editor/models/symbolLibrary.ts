@@ -617,6 +617,26 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         createMesh: createEquipmentMesh,
         meshType: 'equipment'
     },
+    'ext-disconnect-200a': {
+        id: 'ext-disconnect-200a',
+        name: 'Safety Disconnect',
+        category: 'infrastructure',
+        description: 'Outdoor Emergency Service Disconnect (200A Lever)',
+        color: 0x000000,
+        size: { width: 10, height: 20 },
+        createMesh: createEquipmentMesh,
+        meshType: 'equipment'
+    },
+    'pv-rsd-switch': {
+        id: 'pv-rsd-switch',
+        name: 'PV Rapid Shutdown',
+        category: 'infrastructure',
+        description: 'Red Mushroom Button (Outdoor)',
+        color: 0xff0000,
+        size: { width: 6, height: 6 },
+        createMesh: createEquipmentMesh,
+        meshType: 'equipment'
+    },
     'utility-meter': {
         id: 'utility-meter',
         name: 'Utility Meter',
@@ -687,6 +707,8 @@ export const SHORTHAND_MAP: Record<string, string> = {
     'battery-bank': 'BATT',
     'utility-meter': 'MET',
     'service-entrance-320': 'PG&E MAIN',
+    'ext-disconnect-200a': 'DISC',
+    'pv-rsd-switch': 'RSD',
     'breaker-box-dual-200': 'LOAD',
     'breaker-box-200': 'LOAD',
     'entry-intercom': 'COM'
