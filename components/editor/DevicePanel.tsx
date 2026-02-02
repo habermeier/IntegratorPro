@@ -368,6 +368,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                         await dataService.addCustomSymbol(newType);
                         setIsAddingNew(false);
                         setSelectedCategory(baseSymbol.category);
+
                         handleSelectSymbol(newType.id);
                         setNewNameData(null);
                     } catch (e) {
@@ -445,9 +446,30 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                 // but let's try to keep it relatively fast.
                 editor.emit('layers-changed', editor.layerSystem.getAllLayers());
             } else {
-                // For everything else (name, product change), full re-render is fine
+                // AUTO-LIVE-UPDATE: Use the dedicated LayerSystem API
+                // This handles ALL layer scanning, symbol lookup, and texture regeneration internally.
+                // It is the single source of truth for "Live Editing".
+                if (field.startsWith('metadata.')) {
+                    const metaKey = field.split('.')[1];
+                    editor.layerSystem.updateSymbolMetadata(editingDevice.id, { [metaKey]: value });
+                } else {
+                    // Treat non-metadata fields as potential metadata updates if appropriate, 
+                    // or rely on the generic 'layers-changed' for now if they are structural.
+                    // But for labeled Product IDs etc, we might want to extend updateSymbolMetadata later.
+                }
+
                 editor.emit('layers-changed', editor.layerSystem.getAllLayers());
+                editor.setDirty();
             }
+        }
+
+        // AUTO-FIX: Sync metadata fields to draftMetadata state so controlled inputs (like Phase) update immediately
+        if (field.startsWith('metadata.')) {
+            const metaKey = field.split('.')[1];
+            setDraftMetadata((prev: any) => ({
+                ...prev,
+                [metaKey]: value
+            }));
         } else if (librarySelectedSymbol) {
             if (field === 'productId') {
                 const catalogV2 = catalog as any;
@@ -623,8 +645,8 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
                             id: d.id,
                             type: d.deviceTypeId,
                             category: d.layerId,
-                            x: d.position.x,
-                            y: d.position.y,
+                            x: d.position?.x || 0,
+                            y: d.position?.y || 0,
                             rotation: d.rotation,
                             scale: 1,
                             label: d.label || d.name || '',

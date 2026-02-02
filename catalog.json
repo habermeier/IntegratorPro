@@ -782,6 +782,19 @@
         }
       },
       {
+        "id": "MK0603S1400SCS",
+        "name": "Siemens 400A Solar Meter",
+        "manufacturer": "Siemens",
+        "description": "MK0603S1400SCS 400A Ring-Type Solar Load Center",
+        "cost": 1200,
+        "type": "load",
+        "category": "infrastructure",
+        "size": {
+          "width": 14,
+          "height": 6
+        }
+      },
+      {
         "id": "battery-bank",
         "name": "Battery Bank (EG4 WallMount)",
         "manufacturer": "EG4",

@@ -3,6 +3,14 @@
   "totalPower": 1439.8,
   "items": [
     {
+      "name": "service-entrance-320",
+      "quantity": 1,
+      "cost": 0,
+      "total": 0,
+      "description": "Unidentified Component",
+      "manufacturer": "Generic"
+    },
+    {
       "name": "DMF 1",
       "quantity": 81,
       "cost": 0,

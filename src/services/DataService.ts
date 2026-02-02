@@ -12,7 +12,7 @@ import { SymbolDefinition, SYMBOL_LIBRARY, createUniversalMesh, getMeshCreator }
 import { remoteDebug } from '../utils/logger';
 
 // ============================================================================
-// TypeScript Interfaces
+// DataService Class (Updated 2026-02-01)
 // ============================================================================
 
 // Interfaces removed (now in editor/models/types.ts)
@@ -55,6 +55,24 @@ class DataService {
         }
       });
     }
+
+    // AUTO-SAVE: Bridge DeviceRegistry changes to persistent storage
+    // This ensures updates from DevicePanel (which only touch Registry) are saved.
+    let saveTimeout: any;
+    const deviceRegistry = DeviceRegistry.getInstance();
+    deviceRegistry.on('change', (event: any) => {
+      // Skip 'set' events to avoid loops during initial load
+      if (event.type === 'set') return;
+
+      if (saveTimeout) clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        if (this.cache) {
+          // Determine if this is a minor update or needs full save
+          // For now, simple debounce save is sufficient
+          this.saveProject(this.cache).catch(err => console.error('Auto-save failed:', err));
+        }
+      }, 1000); // 1s debounce
+    });
   }
 
   private onStorageChange = (e: StorageEvent): void => {

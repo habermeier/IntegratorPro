@@ -11,6 +11,7 @@ export interface SymbolDefinition {
     meshType?: 'universal' | 'fan' | 'pendant' | 'sconce' | 'equipment';
     productId?: string;
     metadata?: any;
+    physicalSize?: { width: number, depth: number }; // Dimensions in INCHES
 }
 
 export const SYMBOL_CATEGORIES = [
@@ -552,7 +553,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         category: 'infrastructure',
         description: 'Load Control Panel Enclosure (e.g. Saginaw 24x24 or 24x42)',
         color: 0x000000,
-        size: { width: 36, height: 10 },
+        size: { width: 24, height: 24 },
         createMesh: createEquipmentMesh,
         meshType: 'equipment'
     },
@@ -562,10 +563,11 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         category: 'infrastructure',
         description: 'Next-generation smart electrical panel with telemetry',
         color: 0x000000,
-        size: { width: 24, height: 7 },
+        size: { width: 24, height: 24 }, // Standardized square icon
         createMesh: createEquipmentMesh,
         meshType: 'equipment',
-        productId: 'SPAN-GEN2'
+        productId: 'SPAN-GEN2',
+        physicalSize: { width: 14.3, depth: 6.0 }
     },
     'hybrid-inverter': {
         id: 'hybrid-inverter',
@@ -573,9 +575,10 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         category: 'infrastructure',
         description: 'Multi-mode inverter for solar and storage',
         color: 0x000000,
-        size: { width: 20, height: 8 },
+        size: { width: 24, height: 24 }, // Standardized square icon
         createMesh: createEquipmentMesh,
-        meshType: 'equipment'
+        meshType: 'equipment',
+        physicalSize: { width: 20.5, depth: 11.2 } // EG4 18kPV
     },
     'battery-bank': {
         id: 'battery-bank',
@@ -583,9 +586,10 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         category: 'infrastructure',
         description: 'Lithium iron phosphate storage enclosure',
         color: 0x000000,
-        size: { width: 32, height: 12 },
+        size: { width: 24, height: 24 }, // Standardized square icon
         createMesh: createEquipmentMesh,
-        meshType: 'equipment'
+        meshType: 'equipment',
+        physicalSize: { width: 19.0, depth: 6.5 } // EG4 WallMount
     },
     'entry-intercom': {
         id: 'entry-intercom',
@@ -653,10 +657,11 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         category: 'infrastructure',
         description: 'Siemens MK0603S1400SCS (320A Cont / 400A Max, Solar Ready)',
         color: 0x000000,
-        size: { width: 42, height: 9 },
+        size: { width: 24, height: 24 }, // Standardized square icon
         createMesh: createEquipmentMesh,
         meshType: 'equipment',
         productId: 'MK0603S1400SCS',
+        physicalSize: { width: 41.7, depth: 8.7 },
         metadata: {
             rating: '320A Continuous',
             voltage: '120/240V 1Ph',

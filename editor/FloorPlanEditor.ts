@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import Stats from 'stats.js';
 import { LayerSystem } from './systems/LayerSystem';
 import { CameraSystem } from './systems/CameraSystem';
 import {
@@ -34,9 +35,10 @@ export class FloorPlanEditor {
     /**
      * Static helper to check if user is typing in an input field
      */
-    public static isTyping(): boolean {
-        const activeProp = document.activeElement?.tagName.toLowerCase();
-        return activeProp === 'input' || activeProp === 'textarea' || activeProp === 'select' || (document.activeElement as HTMLElement)?.isContentEditable === true;
+    public static isTyping(e?: KeyboardEvent): boolean {
+        const target = (e?.target as HTMLElement) || document.activeElement as HTMLElement;
+        const activeProp = target?.tagName?.toLowerCase();
+        return activeProp === 'input' || activeProp === 'textarea' || activeProp === 'select' || target?.isContentEditable === true;
     }
 
     public static isUserTyping(e: KeyboardEvent): boolean {
@@ -80,6 +82,9 @@ export class FloorPlanEditor {
     private preMaskVisibility: Map<string, boolean> = new Map();
     private preShimmyOpacity: Map<string, number> = new Map();
 
+    private stats: Stats | null = null;
+    private isFpsEnabled: boolean = false;
+
     // Focus Tracking
     public isMouseOverCanvas: boolean = false;
 
@@ -100,6 +105,7 @@ export class FloorPlanEditor {
 
     public set pixelsMeter(val: number) {
         this.pixelsPerMeter = val;
+        this.layerSystem.setPixelsPerMeter(val); // Propagate to rendering system
         this.emit('scale-changed', val);
     }
 
@@ -109,6 +115,9 @@ export class FloorPlanEditor {
         const editorId = Math.random().toString(36).substring(7);
         remoteDebug(`Initializing new instance: ${editorId} `, 'FloorPlanEditor');
         this.container = container;
+
+        // Initialize FPS Stats
+        this.initStats();
 
         // Initialize Three.js
         const width = container.clientWidth || 800;
@@ -154,6 +163,11 @@ export class FloorPlanEditor {
         });
         this.selectionSystem = new SelectionSystem(this.cameraSystem, this.layerSystem);
         this.labelSpringSystem = new LabelSpringSystem();
+
+        // AUTO-SCALE: Ensure LayerSystem has calibration data if available immediately
+        if ((window as any).projectData?.pixelsPerMeter) {
+            this.layerSystem.setPixelsPerMeter((window as any).projectData.pixelsPerMeter);
+        }
 
         // Register Tools
         this.toolSystem.registerTool(new ScaleCalibrateTool(this));
@@ -352,6 +366,7 @@ export class FloorPlanEditor {
         // FPS Counter Toggle (Ctrl+F)
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
             e.preventDefault();
+            this.toggleFPS();
             this.emit('fps-toggled', true);
             return;
         }
@@ -557,10 +572,11 @@ export class FloorPlanEditor {
 
         el.addEventListener('mouseenter', () => {
             this.isMouseOverCanvas = true;
-            // Aggressively claim focus when entering canvas
-            // This satisfies the user's request to "reset focus" when moving the mouse
-            // even if they were previously typing in an input.
-            el.focus();
+            // Only claim focus if we aren't already typing in a sidebar
+            // This prevents "drift" from stealing focus while user works in panels
+            if (!FloorPlanEditor.isTyping()) {
+                el.focus();
+            }
         });
 
         el.addEventListener('mouseleave', () => {
@@ -1242,7 +1258,7 @@ export class FloorPlanEditor {
             this.setActiveLayer('mask', true);
         } else if (type === 'draw-room') {
             this.setActiveLayer('room', true);
-        } else if (type === 'scale-calibrate' || type === 'measure') {
+        } else if (type === 'scale-calibrate') {
             this.setActiveLayer('base', true);
         }
 
@@ -1257,7 +1273,7 @@ export class FloorPlanEditor {
     private updateFocusMode(): void {
         const activeTool = this.toolSystem.getActiveToolType();
         // Focus Mode (Isolation) is active if we are using specific vector-critical tools
-        const isIsolationRequired = activeTool === 'draw-mask' || activeTool === 'draw-room' || activeTool === 'scale-calibrate' || activeTool === 'measure';
+        const isIsolationRequired = activeTool === 'draw-mask' || activeTool === 'draw-room' || activeTool === 'scale-calibrate';
 
         // Alignment Mode is explicitly toggled
         const isFocusActive = isIsolationRequired || this.isOverlayAlignmentMode;
@@ -1345,6 +1361,8 @@ export class FloorPlanEditor {
 
     private startRenderLoop(): void {
         const animate = () => {
+            if (this.isFpsEnabled && this.stats) this.stats.begin();
+
             this.animationFrameId = requestAnimationFrame(animate);
 
             // Continuous Pulse for selections
@@ -1363,8 +1381,33 @@ export class FloorPlanEditor {
                 // Update context room automatically based on view
                 this.updateContextRoom();
             }
+
+            if (this.isFpsEnabled && this.stats) this.stats.end();
         };
         animate();
+    }
+
+    private initStats(): void {
+        try {
+            this.stats = new Stats();
+            this.stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+            this.stats.dom.style.position = 'absolute';
+            this.stats.dom.style.top = '0px';
+            this.stats.dom.style.left = '0px';
+            this.stats.dom.style.zIndex = '1000'; // Above everything
+            this.stats.dom.style.display = 'none'; // Hidden by default
+            this.container.appendChild(this.stats.dom);
+        } catch (e) {
+            console.error('Failed to initialize stats.js', e);
+        }
+    }
+
+    public toggleFPS(): void {
+        this.isFpsEnabled = !this.isFpsEnabled;
+        if (this.stats) {
+            this.stats.dom.style.display = this.isFpsEnabled ? 'block' : 'none';
+        }
+        remoteDebug(`FPS Display: ${this.isFpsEnabled ? 'ON' : 'OFF'}`, 'FloorPlanEditor');
     }
 
     public updateContextRoom(): void {

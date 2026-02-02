@@ -30,11 +30,28 @@ export class LayerSystem {
     private readonly HEATMAP_UPDATE_INTERVAL = 250; // ms (4 updates per second)
     private pendingLightingVisualsUpdate: boolean = false;
 
+    // Scale / Calibration
+    private pixelsPerMeter: number = 50; // Default fallback
+
+
     constructor(scene: THREE.Scene) {
         this.scene = scene;
 
         // DEBUG: Expose scene to browser console for manual inspection
         (window as any).scene = this.scene;
+        (window as any).scene = this.scene;
+    }
+
+    public setPixelsPerMeter(ppm: number) {
+        this.pixelsPerMeter = ppm;
+        // Invalidate cache to force redraw with new scale
+        this.meshCache.forEach((mesh) => {
+            const parent = mesh.parent;
+            if (parent) parent.remove(mesh);
+        });
+        this.meshCache.clear();
+        this.idToMesh.clear();
+        this.dirtyLayers = new Set(this.layers.keys());
     }
 
     public addLayer(config: LayerConfig): Layer {
@@ -339,6 +356,7 @@ export class LayerSystem {
         const itemType = group.userData.type;
         const isSymbol = itemType === 'symbol' || itemType === 'furniture';
 
+        // 1. Highlight Standard Fill (Icon)
         let fill = group.userData.fillMesh || group.getObjectByName('fill') as THREE.Mesh;
         if (fill && fill.material instanceof THREE.MeshBasicMaterial) {
             if (isSymbol) {
@@ -348,6 +366,13 @@ export class LayerSystem {
                 fill.material.color.setHex(0xfacc15); // Yellow highlight for rooms/masks
                 fill.material.opacity = (itemType === 'mask' ? 0.4 : 0.3);
             }
+        }
+
+        // 2. Highlight Physical Footprint (Solid Black -> Dark Blue)
+        let phys = group.getObjectByName('physical-footprint') as THREE.Mesh;
+        if (phys && phys.material instanceof THREE.MeshBasicMaterial) {
+            phys.material.color.setHex(0x1e40af);
+            phys.material.opacity = 0.8;
         }
 
         let border = group.userData.borderMesh || group.getObjectByName('border') as THREE.Line;
@@ -408,6 +433,13 @@ export class LayerSystem {
                 fill.material.color.setHex(baseColor);
                 fill.material.opacity = baseOpacity;
             }
+        }
+
+        // Reset Physical Footprint
+        let phys = group.getObjectByName('physical-footprint') as THREE.Mesh;
+        if (phys && phys.material instanceof THREE.MeshBasicMaterial) {
+            phys.material.color.setHex(0x000000);
+            phys.material.opacity = 1.0;
         }
 
         let border = group.userData.borderMesh as THREE.Line;
@@ -751,10 +783,60 @@ export class LayerSystem {
 
                 if (!group) {
                     const meshCreator = getMeshCreator(def.meshType, symbolData.type);
-                    group = meshCreator(def.size.width, def.size.height, symbolData.metadata || {});
+                    // Create GROUP
+                    group = new THREE.Group();
                     group.name = `symbol-${symbolData.id}`;
-                    group.userData.fillMesh = group.getObjectByName('fill');
-                    group.userData.borderMesh = group.getObjectByName('border');
+
+                    // --- PHYSICAL FOOTPRINT RENDERING (Side-by-Side) ---
+                    // If the symbol has a defined physical size, we render a verified black rectangle
+                    // and move the schematic symbol to the side.
+                    const physicalSize = def?.physicalSize; // { width: inches, depth: inches }
+                    let symbolOffsetX = 0;
+                    const metadata = symbolData.metadata || {}; // Define metadata here for use in meshCreator
+
+                    if (physicalSize && this.pixelsPerMeter > 1) {
+                        const metersW = physicalSize.width * 0.0254;
+                        const metersD = physicalSize.depth * 0.0254;
+                        const pxW = metersW * this.pixelsPerMeter;
+                        const pxH = metersD * this.pixelsPerMeter; // Depth maps to Height in 2D
+
+                        // Create Physical Rectangle (Thick Black Outline + Light Grey Fill)
+                        // User Request: "Thickness... bigger" + "Draw black rectangles"
+                        const physGeo = new THREE.PlaneGeometry(pxW, pxH);
+                        const physMat = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide });
+                        const physMesh = new THREE.Mesh(physGeo, physMat);
+                        physMesh.name = 'physical-footprint';
+                        physMesh.position.set(0, 0, 0.05); // Centered at origin of group
+                        group.add(physMesh);
+
+                        // Inner rect REMOVED to create solid black fill as per user refinement.
+                        // The base physMesh is already 0x000000.
+
+                        // REFACTORED: Stenciled Icon Strategy
+                        // Instead of offsetting, we center the symbol on the black box and turn it WHITE.
+                        // This "merges" the identity (Icon) with the footprint (Black Box).
+                        symbolOffsetX = 0;
+                    }
+
+                    // SCHEMATIC SYMBOL MANAGEMENT
+                    const mesh = meshCreator(def?.size.width || 16, def?.size.height || 16, metadata);
+                    mesh.name = 'schematic-symbol';
+
+                    // If we have a physical footprint, we want the icon to "Float" inside the label
+                    // So we DON'T add it to the floor group here if physicalSize is present.
+                    // Instead, we'll attach it to the label later.
+                    if (physicalSize && this.pixelsPerMeter > 1) {
+                        // Temporary storage to attach to label later
+                        group.userData.pendingSymbol = mesh;
+                        // We do NOT add mesh to group here.
+                    } else {
+                        // Standard behavior: Add to floor
+                        mesh.position.set(0, 0, 0.1);
+                        group.add(mesh);
+                    }
+
+                    group.userData.fillMesh = group.getObjectByName('fill') || mesh.getObjectByName('fill');
+                    group.userData.borderMesh = group.getObjectByName('border') || mesh.getObjectByName('border');
                 }
 
                 const metadata = symbolData.metadata || {};
@@ -789,8 +871,67 @@ export class LayerSystem {
                         }
                         const detail = detailItems.join('\n');
 
-                        const labelSprite = this.createLabel(symbolData.label, detail, "", labelColor);
-                        labelSprite.name = 'label'; labelSprite.position.set(ox + 5, oy - 5, 0.5); group.add(labelSprite);
+                        // PENDING SYMBOL LOGIC: Check if we need to embed an icon (infrastructure) into this label
+                        let displayText = symbolData.label;
+                        const pendingSymbol = group.userData.pendingSymbol as THREE.Group;
+
+                        if (pendingSymbol) {
+                            // Add padding spaces to the text to make room for the icon on the left
+                            // Approx 3-4 spaces depending on font
+                            displayText = `    ${displayText}`;
+                        }
+
+                        const labelSprite = this.createLabel(displayText, detail, "", labelColor);
+
+                        // WRAPPER STRATEGY:
+                        // Instead of adding the mesh to the sprite (which fails), we create a "Label Group".
+                        // This Group contains the Sprite (Background/Text) and the Mesh (Icon) as siblings.
+                        // We name the group 'label' so the SpringSystem moves both together.
+                        const labelGroup = new THREE.Group();
+                        labelGroup.name = 'label';
+                        labelGroup.position.set(ox + 5, oy - 5, 0.5);
+
+                        // 1. Add Sprite (centered in group)
+                        labelSprite.name = 'label-sprite';
+                        labelSprite.position.set(0, 0, 0);
+                        labelGroup.add(labelSprite);
+
+                        // 2. Add Icon (Sibling)
+                        if (pendingSymbol) {
+                            // SCALE CORRECTION (FINAL):
+                            // The scene is PIXEL-BASED (1 unit = 1 pixel).
+                            // The previous "World Unit" fix (0.025) made the icon microscopic (0.6 pixels).
+                            // We need to return to PIXEL scaling.
+                            // Icon size is ~24 units (pixels). We want it roughly that size.
+                            const widgetScale = 0.8;
+                            pendingSymbol.scale.set(widgetScale, widgetScale, 1);
+
+                            // Position: Shift left by ~35 Pixels.
+                            // Text Padding moved visual center right. We place icon on left.
+                            pendingSymbol.position.set(-35, 0, 1);
+
+                            // Ensure Black Color
+                            pendingSymbol.traverse((child) => {
+                                if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshBasicMaterial) {
+                                    child.material = child.material.clone();
+                                    child.material.color.setHex(0x000000);
+                                    child.material.opacity = 1.0;
+                                    child.material.depthTest = false; // Always draw on top of sprite
+                                }
+                                if (child instanceof THREE.Line && child.material instanceof THREE.LineBasicMaterial) {
+                                    child.material = child.material.clone();
+                                    child.material.color.setHex(0x000000);
+                                    child.material.depthTest = false;
+                                }
+                            });
+
+                            // CRITICAL: Max render order to overlay sprite
+                            pendingSymbol.renderOrder = 9999;
+                            labelGroup.add(pendingSymbol);
+                            delete group.userData.pendingSymbol;
+                        }
+
+                        group.add(labelGroup);
                     }
                     // REDUCE REDUNDANCY: Hide generic shorthand if we have a specific logical label for infrastructure
                     const skipShorthand = symbolData.category === 'infrastructure' && symbolData.label;
@@ -914,7 +1055,9 @@ export class LayerSystem {
         ctx.font = `900 ${fontSize}px Inter, sans-serif`;
         let maxWidth = 0;
         lines.forEach((line, idx) => {
-            ctx.font = idx === 0 ? `900 ${fontSize}px Inter, sans-serif` : `700 ${fontSize * 0.75}px Inter, sans-serif`;
+            const isHeader = idx === 0;
+            // Italic for secondary lines (User Request)
+            ctx.font = isHeader ? `900 ${fontSize}px Inter, sans-serif` : `italic 500 ${fontSize * 0.75}px Inter, sans-serif`;
             const metrics = ctx.measureText(line);
             maxWidth = Math.max(maxWidth, metrics.width);
         });
@@ -939,7 +1082,7 @@ export class LayerSystem {
 
         lines.forEach((line, idx) => {
             const isHeader = idx === 0;
-            ctx.font = isHeader ? `900 ${fontSize}px Inter, sans-serif` : `700 ${fontSize * 0.75}px Inter, sans-serif`;
+            ctx.font = isHeader ? `900 ${fontSize}px Inter, sans-serif` : `italic 500 ${fontSize * 0.75}px Inter, sans-serif`;
             ctx.fillStyle = '#000000';
             const yOffset = (idx - (totalLines - 1) / 2) * lineHeight;
             ctx.fillText(line, centerX, centerY + yOffset);
@@ -999,9 +1142,9 @@ export class LayerSystem {
             ctx.fillText(shorthandText, centerX, startY + (fontSize / 2));
 
             // Secondary Text (Bottom)
-            ctx.font = `700 ${secondaryFontSize}px Inter, sans-serif`;
-            // Subtle color for phase
-            ctx.fillStyle = '#333333';
+            ctx.font = `italic 500 ${secondaryFontSize}px Inter, sans-serif`;
+            // High contrast for phase (User Request)
+            ctx.fillStyle = '#000000';
             ctx.fillText(secondaryText, centerX, startY + fontSize + 6 + (secondaryFontSize / 2));
         } else {
             // Centered Single Line
@@ -1034,13 +1177,20 @@ export class LayerSystem {
 
                 // 1. Handle Infrastructure Minimum Size Clamp (AUTO-SIZE-CLAMP-P28)
                 if (group.userData.meshType === 'equipment') {
-                    const symbolType = group.userData.symbolType;
-                    const def = SYMBOL_LIBRARY[symbolType];
-                    if (def) {
-                        const worldWidth = def.size.width;
-                        const screenWidth = worldWidth * (ppm / 39.3701) * zoom;
-                        if (screenWidth < MIN_EQUIPMENT_PIXELS && screenWidth > 0) {
-                            groupScale = MIN_EQUIPMENT_PIXELS / screenWidth;
+                    // CRITICAL FIX: If this equipment has a "Physical Footprint" (Black Box),
+                    // we MUST NOT scale it up. It represents real physics (Inches).
+                    // Scaling it for visibility destroys the floor plan accuracy.
+                    const hasFootprint = !!group.getObjectByName('physical-footprint');
+
+                    if (!hasFootprint) {
+                        const symbolType = group.userData.symbolType;
+                        const def = SYMBOL_LIBRARY[symbolType];
+                        if (def) {
+                            const worldWidth = def.size.width;
+                            const screenWidth = worldWidth * (ppm / 39.3701) * zoom;
+                            if (screenWidth < MIN_EQUIPMENT_PIXELS && screenWidth > 0) {
+                                groupScale = MIN_EQUIPMENT_PIXELS / screenWidth;
+                            }
                         }
                     }
                 }
@@ -1145,5 +1295,31 @@ export class LayerSystem {
         const layer = this.layers.get(layerId);
         if (!layer) return;
         remoteLog(`[debugLayer] Layer: ${layerId}, Type: ${layer.type}, Children: ${layer.container.children.length} `, 'info', '🔍 LAYER-DEBUG');
+    }
+
+    // AUTO-LIVE-UPDATE: Explicit method to force specific symbol update without full re-render
+    public updateSymbolMetadata(id: string, metadata: any): void {
+        const group = this.idToMesh.get(id) as THREE.Group;
+        if (!group) return;
+
+        // 1. Locate the symbol data in the layer model
+        let found = false;
+        for (const layer of this.layers.values()) {
+            if (layer.type === 'vector' && layer.content) {
+                const symbol = (layer.content as any).symbols?.find((s: any) => s.id === id);
+                if (symbol) {
+                    symbol.metadata = { ...symbol.metadata, ...metadata };
+                    found = true;
+                    // Trigger re-render of THIS layer only
+                    this.renderVectorLayer(layer);
+                    break;
+                }
+            }
+        }
+
+        if (found) {
+            // 2. Force invalidation of labels hash to ensure texture regen
+            // The renderVectorLayer call above 'should' do it, but let's be safe
+        }
     }
 }

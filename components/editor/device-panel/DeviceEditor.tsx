@@ -198,6 +198,17 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
                         placeholder="Instance ID (e.g. LCP-1)..."
                     />
                 </div>
+
+                <div className="flex items-center gap-2 bg-slate-900 px-2 py-1.5 rounded border border-slate-800 group focus-within:border-blue-500/50">
+                    <label className="text-[8px] text-sky-300 uppercase font-black shrink-0">Phase</label>
+                    <input
+                        type="text"
+                        value={formData['metadata.implementationPhase'] || editingDevice.metadata?.implementationPhase || ''}
+                        onChange={(e) => onFieldChange('metadata.implementationPhase', e.target.value)}
+                        className="bg-transparent text-[11px] text-white font-black font-mono w-full text-right focus:outline-none placeholder:text-slate-600"
+                        placeholder="Phase 1, 2, 3..."
+                    />
+                </div>
             </div>
 
 
