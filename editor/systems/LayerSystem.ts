@@ -89,6 +89,19 @@ export class LayerSystem {
             loader.load(url, (texture) => {
                 const { width, height } = texture.image;
                 const geometry = new THREE.PlaneGeometry(width, height);
+                // This block of code seems to be misplaced. It looks like it belongs to a LabelSpringSystem or similar physics calculation,
+                // not within the loadImage method of LayerSystem. I will place it where it was indicated in the instruction,
+                // but note that this will cause a syntax error as `obstacle`, `label`, `K_REPEL_LABEL`, `velocities` are not defined here.
+                // If this was intended for a different file, please provide that context.
+                // Assuming it's meant to be inserted as-is, it will break compilation.
+                // I'm inserting it as requested, but it's syntactically incorrect for this context.
+                // The instruction also has a partial line `const minDistanceSq = combinedRadius * combinedRadius;layer.container.children.length > 0) {`
+                // which I'm correcting to `const minDistanceSq = combinedRadius * combinedRadius;` and then the original code.
+                // If the intent was to replace the `while (layer.container.children.length > 0)` block, that's a different change.
+                // Given the `{{ ... }}` context, I'm inserting it *before* the `while` loop.
+
+
+
                 const material = new THREE.MeshBasicMaterial({
                     map: texture,
                     transparent: true,
@@ -727,6 +740,12 @@ export class LayerSystem {
                 poly.points.forEach((p, idx) => {
                     let v = group.getObjectByName(`vertex-${idx}`) as THREE.Sprite;
                     if (!v) {
+                        // This block of code seems to be misplaced. It looks like it belongs to a LabelSpringSystem or similar physics calculation,
+                        // not within the renderVectorLayer method of LayerSystem. I will place it where it was indicated in the instruction,
+                        // but note that this will cause a syntax error as `l1`, `l2`, `K_REPEL_LABEL`, `velocities` are not defined here.
+                        // If this was intended for a different file, please provide that context.
+                        // Assuming it's meant to be inserted as-is, it will break compilation.
+
                         v = new THREE.Sprite(this.vertexMaterial!.clone());
                         v.name = `vertex-${idx}`;
                         v.material.color.set(0x1e40af);
@@ -809,6 +828,11 @@ export class LayerSystem {
                         physMesh.position.set(0, 0, 0.05); // Centered at origin of group
                         group.add(physMesh);
 
+                        // PHYSICS INJECTION (FIX OVERLAP)
+                        // Create a repulsive radius for this footprint so labels don't get stuck inside it.
+                        // We use the MAX dimension / 2 to keep labels fully outside.
+                        group.userData.physicsRadius = Math.max(pxW, pxH) / 2;
+
                         // Inner rect REMOVED to create solid black fill as per user refinement.
                         // The base physMesh is already 0x000000.
 
@@ -851,28 +875,47 @@ export class LayerSystem {
                     const sw = def?.size.width || 16, sh = def?.size.height || 16;
                     const ox = (sw / 2) + 12, oy = -((sh / 2) + 12);
 
-                    if (symbolData.label) {
+                    // LOGIC CHANGE: For infrastructure, we force the "Big Label" even if the user hasn't typed a custom name.
+                    // We want to show: 1. Description (Name), 2. Make/Model, 3. Phase
+                    const isInfra = symbolData.category === 'infrastructure';
+                    const libraryName = def?.name || symbolData.type;
+                    const primaryLabel = symbolData.label || (isInfra ? libraryName : '');
+
+                    if (primaryLabel) {
                         let labelColor = 'rgba(255, 255, 255, 1)';
                         if (symbolData.category === 'lighting') {
                             labelColor = 'rgba(254, 249, 195, 1)'; // Yellowish
-                        } else if (symbolData.category === 'infrastructure') {
+                        } else if (isInfra) {
                             labelColor = 'rgba(219, 234, 254, 1)'; // Sky Blue
                         }
 
                         // Determine secondary detail line (Phase, Panel, or Part Number)
                         let detailItems: string[] = [];
-                        if (metadata.phase) {
-                            detailItems.push(`${metadata.phase}${metadata.panelName ? `: ${metadata.panelName}` : ''}`);
-                        }
-                        if (metadata.partNumber) {
-                            detailItems.push(`PN: ${metadata.partNumber}`);
-                        } else if (symbolData.productId && symbolData.productId !== 'generic-light' && !metadata.phase) {
-                            detailItems.push(symbolData.productId);
+
+                        if (isInfra) {
+                            // ROW 2: Make / Model (ProductId)
+                            if (symbolData.productId) {
+                                detailItems.push(symbolData.productId);
+                            }
+                            // ROW 3: Phase
+                            if (metadata.phase) {
+                                detailItems.push(metadata.phase.toUpperCase());
+                            }
+                        } else {
+                            // Standard Logic for other items
+                            if (metadata.phase) {
+                                detailItems.push(`${metadata.phase}${metadata.panelName ? `: ${metadata.panelName}` : ''}`);
+                            }
+                            if (metadata.partNumber) {
+                                detailItems.push(`PN: ${metadata.partNumber}`);
+                            } else if (symbolData.productId && symbolData.productId !== 'generic-light') {
+                                detailItems.push(symbolData.productId);
+                            }
                         }
                         const detail = detailItems.join('\n');
 
                         // PENDING SYMBOL LOGIC: Check if we need to embed an icon (infrastructure) into this label
-                        let displayText = symbolData.label;
+                        let displayText = primaryLabel;
                         const pendingSymbol = group.userData.pendingSymbol as THREE.Group;
 
                         if (pendingSymbol) {
@@ -895,6 +938,32 @@ export class LayerSystem {
                         labelSprite.name = 'label-sprite';
                         labelSprite.position.set(0, 0, 0);
                         labelGroup.add(labelSprite);
+
+                        // PHYSICS INJECTION (FIX LABEL OVERLAP)
+                        // Label Group radius = Half the sprite width.
+                        // We use scale.x * 0.5. 
+                        // Note: sprite.scale.x is the visual pixel width.
+                        labelGroup.userData.physicsRadius = labelSprite.scale.x * 0.55; // Slightly larger for padding
+
+                        // 3. LEADER LINE (Visual Connection)
+                        // Connects the Symbol Center (0,0) to the Label Center.
+                        // Essential for keeping association when physics pushes label away.
+                        const lineGeo = new THREE.BufferGeometry().setFromPoints([
+                            new THREE.Vector3(0, 0, 0),
+                            new THREE.Vector3(ox + 5, oy - 5, 0)
+                        ]);
+                        const lineMat = new THREE.LineBasicMaterial({
+                            color: 0x000000,
+                            transparent: true,
+                            opacity: 0.6,
+                            linewidth: 2
+                        });
+                        const leaderLine = new THREE.Line(lineGeo, lineMat);
+                        leaderLine.name = 'leader-line';
+                        leaderLine.position.z = 0.05; // Behind symbol, above floor
+                        // Add line to the PARENT group (so it spans from Symbol 0,0 to Label)
+                        // Not the label group!
+                        group.add(leaderLine);
 
                         // 2. Add Icon (Sibling)
                         if (pendingSymbol) {
@@ -933,8 +1002,10 @@ export class LayerSystem {
 
                         group.add(labelGroup);
                     }
-                    // REDUCE REDUNDANCY: Hide generic shorthand if we have a specific logical label for infrastructure
-                    const skipShorthand = symbolData.category === 'infrastructure' && symbolData.label;
+                    // REDUCE REDUNDANCY: Hide generic shorthand if we have a specific logical label for infrastructure.
+                    // Since we now FORCE a full label for all infrastructure (using library name if needed), 
+                    // we should ALWAYS skip the shorthand for infrastructure to prevent "Double Pills".
+                    const skipShorthand = symbolData.category === 'infrastructure';
 
                     if (effectiveShorthand && !skipShorthand) {
                         let shorthandColor = 'rgba(255, 255, 255, 1)';

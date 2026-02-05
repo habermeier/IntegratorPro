@@ -7,7 +7,7 @@ import { VectorLayerContent } from '../models/types';
  * Hyper-stabilized version: Extreme damping, velocity caps, and timeout-based settling.
  */
 export class LabelSpringSystem {
-    private labels: THREE.Sprite[] = [];
+    private labels: THREE.Object3D[] = [];
     private obstacles: THREE.Object3D[] = [];
 
     private anchors: Map<string, THREE.Vector3> = new Map();
@@ -86,34 +86,59 @@ export class LabelSpringSystem {
                 force.add(toAnchor.multiplyScalar(this.K_ATTRACT));
             }
 
+            // OBSTACLE AVOIDANCE
             for (const obstacle of this.obstacles) {
                 obstacle.updateMatrixWorld(true);
                 obstacle.getWorldPosition(this._otherWorldPos);
                 const diff = this._tempVecB.copy(this._worldPos).sub(this._otherWorldPos);
                 diff.z = 0;
-                const distSq = diff.lengthSq();
+                let distSq = diff.lengthSq();
 
-                const obsBound = obstacle.scale.x * 12;
-                const labelBound = label.scale.x * 0.5;
-                const combinedRadius = (obsBound + labelBound) * 1.1; // Add 10% padding
+                // Nudge perfect overlaps
+                if (distSq < 0.0001) {
+                    diff.set(Math.random() - 0.5, Math.random() - 0.5, 0).normalize().multiplyScalar(0.01);
+                    distSq = diff.lengthSq();
+                }
+
+                // ROBUST RADIUS LOGIC
+                let obsRadius = obstacle.userData.physicsRadius;
+                if (obsRadius === undefined) {
+                    obsRadius = obstacle.scale.x * 12; // Fallback
+                }
+
+                let labelRadius = label.userData.physicsRadius;
+                if (labelRadius === undefined) {
+                    labelRadius = label.scale.x * 0.5; // Fallback for Sprites
+                }
+
+                const combinedRadius = (obsRadius + labelRadius) * 1.1;
                 const minDistanceSq = combinedRadius * combinedRadius;
 
-                if (distSq < minDistanceSq && distSq > 0.1) {
+                if (distSq < minDistanceSq) {
                     const repulsion = (minDistanceSq - distSq) / minDistanceSq;
                     force.add(diff.normalize().multiplyScalar(repulsion * this.K_REPEL_OBSTACLE));
                 }
             }
 
+            // LABEL-LABEL AVOIDANCE
             for (const other of this.labels) {
                 if (label === other) continue;
                 other.getWorldPosition(this._otherWorldPos);
                 const diff = this._tempVecB.copy(this._worldPos).sub(this._otherWorldPos);
                 diff.z = 0;
-                const distSq = diff.lengthSq();
-                const combinedRadius = (label.scale.x + other.scale.x) * 0.45;
+                let distSq = diff.lengthSq();
+
+                if (distSq < 0.0001) {
+                    diff.set(Math.random() - 0.5, Math.random() - 0.5, 0).normalize().multiplyScalar(0.01);
+                    distSq = diff.lengthSq();
+                }
+
+                const r1 = label.userData.physicsRadius || (label.scale.x * 0.5);
+                const r2 = other.userData.physicsRadius || (other.scale.x * 0.5);
+                const combinedRadius = (r1 + r2) * 1.05; // 5% Padding
                 const minDistanceSq = combinedRadius * combinedRadius;
 
-                if (distSq < minDistanceSq && distSq > 0.1) {
+                if (distSq < minDistanceSq) {
                     const repulsion = (minDistanceSq - distSq) / minDistanceSq;
                     force.add(diff.normalize().multiplyScalar(repulsion * this.K_REPEL_LABEL));
                 }
@@ -146,7 +171,24 @@ export class LabelSpringSystem {
             } else {
                 label.getWorldPosition(this._worldPos);
                 this._worldPos.add(velocity);
-                label.position.copy(label.parent.worldToLocal(this._worldPos));
+                this._worldPos.add(velocity);
+                const localPos = label.parent.worldToLocal(this._worldPos.clone()); // Need clone to preserve _worldPos? worldToLocal modifies in place usually.
+                label.position.copy(localPos);
+
+                // LEADER LINE UPDATE
+                // Update the visual line connecting Symbol Center (0,0,0) to Label Center (localPos)
+                const leaderLine = label.parent.getObjectByName('leader-line') as THREE.Line;
+                if (leaderLine) {
+                    const positions = leaderLine.geometry.attributes.position;
+                    // Point 0 is always 0,0,0 (Symbol Center)
+                    // Point 1 tracks the label
+                    positions.setXYZ(1, localPos.x, localPos.y, 0);
+                    positions.needsUpdate = true;
+
+                    // Dynamic Opacity: Fade out when close to anchor (optional, or just keep visible)
+                    // User wanted "thin line".
+                }
+
                 totalMotion += velocity.length();
             }
             this.velocities.set(id, velocity);
@@ -175,22 +217,24 @@ export class LabelSpringSystem {
     }
 
     private syncElements(layerSystem: LayerSystem): void {
-        const currentLabels: THREE.Sprite[] = [];
+        const currentLabels: THREE.Object3D[] = [];
         const currentObstacles: THREE.Object3D[] = [];
 
-        // Layers that contain labels or obstacles
-        const targetLayerIds = ['lighting', 'room', 'furniture', 'technical'];
-        
+        // Updated Layers: Added 'infrastructure' for new components (Disconnect, RSD, Inverter)
+        const targetLayerIds = ['lighting', 'room', 'furniture', 'technical', 'infrastructure'];
+
         targetLayerIds.forEach(id => {
             const layer = layerSystem.getLayer(id);
             if (!layer || !layer.visible) return;
 
             layer.container.traverse(object => {
-                // We still use traverse but only within relevant layers, which is much faster than full scene
                 if (!object.visible) return;
 
-                if (object instanceof THREE.Sprite &&
-                    (object.name === 'label' || object.name === 'shorthand-label')) {
+                // LOGIC UPDATE: Handle both Sprites (old labels) and Groups (new infrastructure labels with icons)
+                const isSpriteLabel = object instanceof THREE.Sprite && (object.name === 'label' || object.name === 'shorthand-label');
+                const isGroupLabel = object instanceof THREE.Group && object.name === 'label';
+
+                if (isSpriteLabel || isGroupLabel) {
                     currentLabels.push(object);
                     if (!this.anchors.has(object.uuid)) {
                         const anchor = object.userData.anchor?.clone() || object.position.clone();

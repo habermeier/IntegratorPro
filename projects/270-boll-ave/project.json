@@ -1,11 +1,11 @@
 {
   "version": "2.0",
-  "timestamp": "2026-02-02T05:03:11.864Z",
+  "timestamp": "2026-02-02T09:10:35.146Z",
   "metadata": {
     "name": "270 Bolla Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2026-02-02T05:03:11.820Z"
+    "modified": "2026-02-02T09:10:35.118Z"
   },
   "floorPlan": {
     "scale": {
@@ -4033,8 +4033,8 @@
       "id": "infrastructure-1769923883565",
       "type": "service-entrance-320",
       "category": "infrastructure",
-      "x": 2250.8291565670156,
-      "y": -410.4721164605265,
+      "x": 2224.111005017082,
+      "y": -377.8165978994964,
       "rotation": 123,
       "scale": 1,
       "room": "external",
@@ -4055,6 +4055,135 @@
       },
       "createdAt": "2026-02-01T05:31:23.565Z",
       "deviceTypeId": "service-entrance-320"
+    },
+    {
+      "id": "infra-disconnect-01",
+      "type": "ext-disconnect-200a",
+      "category": "infrastructure",
+      "deviceTypeId": "ext-disconnect-200a",
+      "x": 2198,
+      "y": -338,
+      "rotation": 123,
+      "scale": 1,
+      "room": "external",
+      "productId": "generic-disconnect",
+      "installationHeight": 1.5,
+      "metadata": {
+        "shorthand": "DISC",
+        "phase": "Phase 1",
+        "notes": "Emergency Disconnect",
+        "orderingCode": "",
+        "pdfUrl": "",
+        "shoppingLink": ""
+      },
+      "createdAt": 1770008500000
+    },
+    {
+      "id": "infra-rsd-01",
+      "type": "pv-rsd-switch",
+      "category": "infrastructure",
+      "deviceTypeId": "pv-rsd-switch",
+      "x": 2196.110810091862,
+      "y": -341.38943988606337,
+      "rotation": 123,
+      "scale": 1,
+      "room": "external",
+      "productId": "generic-rsd",
+      "installationHeight": 1.5,
+      "metadata": {
+        "shorthand": "DISC",
+        "phase": "Phase 1",
+        "notes": "Firefighter Rapid Shutdown (Near Meter)",
+        "orderingCode": "",
+        "pdfUrl": "",
+        "shoppingLink": ""
+      },
+      "createdAt": 1770008500001
+    },
+    {
+      "id": "infra-battery-01",
+      "type": "battery-bank",
+      "category": "infrastructure",
+      "deviceTypeId": "battery-bank",
+      "x": 1931.999999999993,
+      "y": -14.999999999995339,
+      "rotation": 123,
+      "scale": 1,
+      "room": "Main",
+      "productId": "EG4-WALLMOUNT-280",
+      "installationHeight": 0.5,
+      "metadata": {
+        "shorthand": "DISC",
+        "phase": "Phase 2",
+        "notes": "Battery Bank (Protected Zone)",
+        "orderingCode": "",
+        "pdfUrl": "",
+        "shoppingLink": ""
+      },
+      "createdAt": 1770008500003
+    },
+    {
+      "id": "infra-inverter-01",
+      "type": "hybrid-inverter",
+      "category": "infrastructure",
+      "deviceTypeId": "hybrid-inverter",
+      "x": 2089.999999999997,
+      "y": -238.00000000000225,
+      "rotation": 123,
+      "scale": 1,
+      "room": "Main",
+      "productId": "EG4-18kPV",
+      "installationHeight": 1.5,
+      "metadata": {
+        "shorthand": "INV",
+        "phase": "Phase 2",
+        "notes": "Hybrid Inverter (Protected Zone)"
+      },
+      "createdAt": 1770008500002
+    },
+    {
+      "id": "infra-span-01",
+      "type": "span-panel",
+      "category": "infrastructure",
+      "deviceTypeId": "span-panel",
+      "x": 2125.999999999997,
+      "y": -341.0000000000059,
+      "rotation": 124,
+      "scale": 1,
+      "room": "Main",
+      "productId": "SPAN-GEN2",
+      "installationHeight": 1.5,
+      "metadata": {
+        "shorthand": "SPAN-1",
+        "phase": "Phase 1",
+        "notes": "Main Smart Panel (Deep Garage)",
+        "orderingCode": "",
+        "pdfUrl": "",
+        "shoppingLink": ""
+      },
+      "createdAt": 1770008500004
+    },
+    {
+      "id": "infra-span-02",
+      "type": "span-panel",
+      "category": "infrastructure",
+      "deviceTypeId": "span-panel",
+      "x": 2262.0199989558487,
+      "y": -491.01999895586016,
+      "rotation": 123,
+      "scale": 1,
+      "room": "Main",
+      "productId": "SPAN-GEN2",
+      "installationHeight": 1.5,
+      "metadata": {
+        "shorthand": "SPAN-1",
+        "phase": "Phase 1",
+        "notes": "Second Smart Panel (Deep Garage)",
+        "orderingCode": "",
+        "pdfUrl": "",
+        "shoppingLink": ""
+      },
+      "createdAt": 1770008500005
     },
     {
       "id": "lighting-1768153942455",

@@ -15,6 +15,43 @@ export class SelectionSystem {
         this.raycaster.params.Line.threshold = 5; // Easier to hit thin lines
     }
 
+    public getTopHitId(screenX: number, screenY: number): string | null {
+        const renderer = (this.layerSystem.scene.userData.editor as any).renderer as THREE.WebGLRenderer;
+        if (!renderer) return null;
+
+        const rect = renderer.domElement.getBoundingClientRect();
+        const ndcX = ((screenX) / rect.width) * 2 - 1;
+        const ndcY = -((screenY) / rect.height) * 2 + 1;
+
+        const cam = this.cameraSystem.mainCamera;
+        this.raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), cam);
+
+        const layers = this.layerSystem.getAllLayers();
+        const hits: { id: string, zIndex: number }[] = [];
+
+        for (const layer of layers) {
+            if (!layer.visible) continue;
+            if (layer.id === 'mask' && !this.layerSystem.getMaskEditMode()) continue;
+
+            const intersects = this.raycaster.intersectObject(layer.container, true);
+            for (const intersect of intersects) {
+                let obj = intersect.object;
+                while (obj && !obj.userData.id && obj.parent && obj.parent !== layer.container) {
+                    obj = obj.parent as any;
+                }
+                if (obj && obj.userData.id) {
+                    hits.push({ id: obj.userData.id, zIndex: layer.zIndex });
+                    break;
+                }
+            }
+        }
+
+        if (hits.length > 0) {
+            return hits.sort((a, b) => b.zIndex - a.zIndex)[0].id;
+        }
+        return null;
+    }
+
     public selectAt(screenX: number, screenY: number, multiSelect: boolean = false): string[] {
         const renderer = (this.layerSystem.scene.userData.editor as any).renderer as THREE.WebGLRenderer;
         if (!renderer) return Array.from(this.selectedIds);

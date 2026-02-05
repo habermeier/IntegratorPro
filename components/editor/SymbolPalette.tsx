@@ -108,13 +108,19 @@ export const SymbolPalette: React.FC<SymbolPaletteProps> = ({ activeCategory, on
         <div className="max-h-[320px] overflow-y-auto bg-slate-950 rounded-lg border border-slate-800 mt-2 custom-scrollbar">
             <div className="flex flex-col gap-1 p-1">
                 {allSymbols.map(symbol => {
-                    const hexColor = `#${symbol.color.toString(16).padStart(6, '0')}`;
+                    const colorVal = symbol.color || 0x000000;
+                    const hexColor = `#${colorVal.toString(16).padStart(6, '0')}`;
                     const isCustom = symbol.id.startsWith('custom-');
 
                     return (
                         <button
                             key={symbol.id}
                             onClick={() => onSelectSymbol(symbol.id)}
+                            draggable={true}
+                            onDragStart={(e) => {
+                                e.dataTransfer.setData('symbol-type', symbol.id);
+                                e.dataTransfer.effectAllowed = 'copy';
+                            }}
                             className={`flex items-center gap-3 w-full text-left p-2 rounded transition-all border ${selectedSymbolType === symbol.id
                                 ? 'bg-blue-600/20 border-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.3)]'
                                 : 'bg-slate-900 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'

@@ -15,6 +15,11 @@ export class SelectTool implements Tool {
     private handleMetadata: any[] = [];
     private draggingHandle: { polygonId: string, layerId: string, index: number, originalPoints: Vector2[] } | null = null;
 
+    // DRAG AND DROP STATE
+    private isDraggingSelection: boolean = false;
+    private dragStart: { x: number, y: number } | null = null;
+    private initialSelectionState: Map<string, { x: number, y: number }> = new Map();
+
     constructor(editor: FloorPlanEditor) {
         this.editor = editor;
         this.handlesGroup = new THREE.Group();
@@ -44,14 +49,55 @@ export class SelectTool implements Tool {
 
         const worldPos = this.editor.cameraSystem.screenToWorld(x, y);
 
-        // 2. Otherwise do normal selection
+        // 2. Check if we hit an ALREADY selected item (for dragging)
+        const hitId = this.editor.selectionSystem.getTopHitId(x, y);
+        const currentSelection = this.editor.selectionSystem.getSelectedIds();
+
+        // If we clicked on something already selected, prioritize DRAG over re-selection
+        // unless modifier keys are held (which implies multi-select logic)
         const isMulti = event.shiftKey || event.ctrlKey || event.metaKey;
+
+        if (hitId && currentSelection.includes(hitId) && !isMulti) {
+            // Check valid drag target
+            this.startDrag(x, y, currentSelection);
+            return;
+        }
+
+        // 3. Otherwise do new selection
         const selectedIds = this.editor.selectionSystem.selectAt(x, y, isMulti);
 
         remoteDebug('Selected IDs', 'SelectTool', { selectedIds });
         this.editor.emit('selection-changed', selectedIds);
         this.updateHandles();
         this.editor.setDirty();
+
+        // 4. Initiate Drag if we resolved a selection
+        if (selectedIds.length > 0) {
+            this.startDrag(x, y, selectedIds);
+        }
+    }
+
+    private startDrag(screenX: number, screenY: number, selectedIds: string[]) {
+        remoteDebug('Start Drag Initiated', 'SelectTool', { screenX, screenY, selectedCount: selectedIds.length });
+        const worldPos = this.editor.cameraSystem.screenToWorld(screenX, screenY);
+        this.isDraggingSelection = true;
+        this.dragStart = { x: worldPos.x, y: worldPos.y };
+        this.initialSelectionState.clear();
+
+        const layers = this.editor.layerSystem.getAllLayers();
+        selectedIds.forEach(id => {
+            let found = false;
+            for (const layer of layers) {
+                if (layer.type !== 'vector') continue;
+                const content = layer.content as VectorLayerContent;
+                const item = (content.symbols || []).find(s => s.id === id) || (content.furniture || []).find(f => f.id === id);
+                if (item) {
+                    this.initialSelectionState.set(id, { x: item.x, y: item.y });
+                    found = true;
+                }
+            }
+            remoteDebug('Drag Item Lookup', 'SelectTool', { id, found });
+        });
     }
 
     public onMouseMove(x: number, y: number, event: MouseEvent): void {
@@ -76,14 +122,41 @@ export class SelectTool implements Tool {
                     this.editor.setDirty();
                 }
             }
+        } else if (this.isDraggingSelection && this.dragStart) {
+            el.style.cursor = 'move';
+            const worldPos = this.editor.cameraSystem.screenToWorld(x, y);
+            const dx = worldPos.x - this.dragStart.x;
+            const dy = worldPos.y - this.dragStart.y;
+
+            // remoteDebug('Dragging Selection', 'SelectTool', { dx, dy });
+
+            const layers = this.editor.layerSystem.getAllLayers();
+            this.initialSelectionState.forEach((initialPos, id) => {
+                const newX = initialPos.x + dx;
+                const newY = initialPos.y + dy;
+
+                // Update Render Mesh directly for 60fps smoothness
+                const mesh = this.editor.layerSystem.getSceneObject(id);
+                if (mesh) {
+                    mesh.position.set(newX, newY, mesh.position.z);
+                }
+
+                // Update Data Model
+                for (const layer of layers) {
+                    if (layer.type !== 'vector') continue;
+                    const content = layer.content as VectorLayerContent;
+                    const item = (content.symbols || []).find(s => s.id === id) || (content.furniture || []).find(f => f.id === id);
+                    if (item) {
+                        item.x = newX;
+                        item.y = newY;
+                    }
+                }
+            });
+            this.editor.setDirty();
         } else if (hoverHit) {
             el.style.cursor = 'pointer';
         } else {
-            // Restore default (which might be 'none' if custom cursor acts)
-            // Or 'default'. FloorPlanEditor sets none.
-            // If we set 'default', we show OS cursor.
-            // Be consistent: if hovering handle, show OS pointer. Else hide OS cursor.
-            el.style.cursor = 'none';
+            el.style.cursor = 'default';
         }
     }
 
@@ -105,6 +178,55 @@ export class SelectTool implements Tool {
                 }
             }
             this.draggingHandle = null;
+        }
+
+        if (this.isDraggingSelection) {
+            // Commit drag to history
+            // We need to batch commands or create a CompoundCommand if multiple items moved
+            // For now, we utilize the CommandManager's batching or just emit updates.
+            // Since we modified objects in place, we should technically issue a Command
+            // that represents "Move from Initial to Final".
+
+            const layers = this.editor.layerSystem.getAllLayers();
+
+            this.initialSelectionState.forEach((initialPos, id) => {
+                // Find current pos
+                let currentPos = { x: initialPos.x, y: initialPos.y };
+                // Find layer
+                let targetLayerId = '';
+                let currentRotation = 0;
+
+                for (const layer of layers) {
+                    if (layer.type !== 'vector') continue;
+                    const content = layer.content as VectorLayerContent;
+                    const item = (content.symbols || []).find(s => s.id === id) || (content.furniture || []).find(f => f.id === id);
+                    if (item) {
+                        currentPos = { x: item.x, y: item.y };
+                        targetLayerId = layer.id;
+                        currentRotation = item.rotation;
+                    }
+                }
+
+                if (targetLayerId && (currentPos.x !== initialPos.x || currentPos.y !== initialPos.y)) {
+                    const oldState: TransformState = { x: initialPos.x, y: initialPos.y, rotation: currentRotation };
+                    const newState: TransformState = { x: currentPos.x, y: currentPos.y, rotation: currentRotation };
+
+                    // We execute the command to ensure Undo stack is populated
+                    // The command execution will also ensure data consistency
+                    const command = new ModifySymbolCommand(targetLayerId, id, oldState, newState, this.editor.layerSystem);
+                    this.editor.commandManager.execute(command); // Execute to push to history and finalize logic
+                    // Actually, ModifySymbolCommand typically SETS the state.
+                    // Since we already manually set the state in onMouseMove, 
+                    // we can just push to history OR just execute again to be safe.
+                    // Execute is safer as it handles dirty flags and side effects properly.
+                    this.editor.commandManager.execute(command);
+                }
+            });
+
+            this.editor.emit('layers-changed', this.editor.layerSystem.getAllLayers());
+            this.isDraggingSelection = false;
+            this.dragStart = null;
+            this.initialSelectionState.clear();
         }
     }
 

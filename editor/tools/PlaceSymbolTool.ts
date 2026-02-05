@@ -134,7 +134,8 @@ export class PlaceSymbolTool implements Tool {
             fanLightKit: this.activeFanLightKit || (def.metadata as any)?.fanLightKit
         };
 
-        const mesh = meshCreator(def.size.width, def.size.height, metadata);
+        const size = def.size || { width: 16, height: 16 };
+        const mesh = meshCreator(size.width, size.height, metadata);
         // Make preview semi-transparent
         mesh.traverse((obj) => {
             if (obj instanceof THREE.Mesh && obj.material instanceof THREE.MeshBasicMaterial) {

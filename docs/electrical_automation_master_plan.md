@@ -39,8 +39,11 @@ This layout ensures a clean, "server-room" look with zero rework required when P
 *   **Smart Meter / Service Socket**: **Siemens MK0603S1400SCS** (400A Solar Load Center).
     *   **Dims:** 41.7" W x 43.7" H x 8.7" D (NEMA 3R).
 *   **Emergency Disconnect**: 1x External lever (e.g., Siemens 200/320A) marked "EMERGENCY DISCONNECT, SERVICE DISCONNECT".
-*   **PV Rapid Shutdown**: 1x Red Mushroom Button marked "RAPID SHUTDOWN SWITCH FOR SOLAR PV SYSTEM".
-*   *Note:* Must be readily accessible (no locked gates).
+*   **PV Rapid Shutdown (RSD)**: 1x Red Mushroom Button marked "RAPID SHUTDOWN SWITCH FOR SOLAR PV SYSTEM".
+    *   **"Firefighter Cluster"**: Both external switches (Disconnect + RSD) must be grouped together near the designated responder access point.
+    *   **Total Kill Function**: The RSD button is wired to the **Inverter E-Stop** loop. Pressing it performs a "Hard Stop," cutting battery output and solar input simultaneously.
+    *   **Security Strategy**: Locate behind a gated service area if possible, but *never* locked (NEC 690.12). Security cameras monitor this sensitive zone.
+*   **Rough-In Policy**: Install the RSD back-box and conduit during Phase 1. If not installing the inverter immediately, a blank cover or non-functional button (labeled "FUTURE") is acceptable, but the conduit path to the future Inverter location must be established.
 
 ### **3.2 Zone B: Main Distribution (Inside - Left)**
 *   **Equipment:** 2x **SPAN Smart Panel (Gen 2)**.
@@ -51,7 +54,8 @@ This layout ensures a clean, "server-room" look with zero rework required when P
 
 ### **3.3 Zone C: The "Inverter Hub" (Inside - Center)**
 *   **Equipment:** 2x **All-In-One Hybrid Inverters** (Paralleled).
-*   **Benchmark:** EG4 18kPV or Sol-Ark 15K.
+*   **Selection:** **EG4 18kPV** (Preferred "Best in Class" for Reliability/Value).
+    *   *Why EG4 over Sol-Ark?* The EG4 18kPV offers superior "Grid-Zero" native integration with the EG4 PowerPro WallMount batteries (Category 5 closed-loop communication). This eliminates "finger-pointing" between inverter and battery vendors.
 *   **Dimensions (Each):** 20.5" W x 34.3" H x 11.2" D.
 *   **Spacing:** **12" minimum clear space** between units for thermal airflow.
 *   **Layout:** Inverter 1 $\rightarrow$ 12" Gap $\rightarrow$ Inverter 2.

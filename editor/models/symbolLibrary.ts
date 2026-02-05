@@ -561,35 +561,37 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         id: 'span-panel',
         name: 'SPAN Smart Panel',
         category: 'infrastructure',
-        description: 'Next-generation smart electrical panel with telemetry',
+        description: 'SPAN Gen 2 Smart Electrical Panel',
         color: 0x000000,
-        size: { width: 24, height: 24 }, // Standardized square icon
+        size: { width: 24, height: 40 }, // Visual size matches roughly 14x39 ratio
         createMesh: createEquipmentMesh,
         meshType: 'equipment',
         productId: 'SPAN-GEN2',
-        physicalSize: { width: 14.3, depth: 6.0 }
+        physicalSize: { width: 14.3, depth: 6.0 } // Dimensions: 14.3"W x 39.3"H x 6.0"D
     },
     'hybrid-inverter': {
         id: 'hybrid-inverter',
         name: 'Hybrid Inverter',
         category: 'infrastructure',
-        description: 'Multi-mode inverter for solar and storage',
+        description: 'EG4 18kPV All-In-One Hybrid Inverter',
         color: 0x000000,
-        size: { width: 24, height: 24 }, // Standardized square icon
+        size: { width: 24, height: 36 }, // Visual size
         createMesh: createEquipmentMesh,
         meshType: 'equipment',
-        physicalSize: { width: 20.5, depth: 11.2 } // EG4 18kPV
+        productId: 'EG4-18kPV',
+        physicalSize: { width: 18.1, depth: 11.2 } // Dimensions: 18.1"W x 29.9"H x 11.2"D (Depth used for footprint)
     },
     'battery-bank': {
         id: 'battery-bank',
         name: 'Battery Bank',
         category: 'infrastructure',
-        description: 'Lithium iron phosphate storage enclosure',
+        description: 'EG4 PowerPro WallMount Battery (14.3kWh)',
         color: 0x000000,
-        size: { width: 24, height: 24 }, // Standardized square icon
+        size: { width: 24, height: 36 }, // Visual size
         createMesh: createEquipmentMesh,
         meshType: 'equipment',
-        physicalSize: { width: 19.0, depth: 6.5 } // EG4 WallMount
+        productId: 'EG4-WALLMOUNT-280',
+        physicalSize: { width: 18.9, depth: 6.1 } // Dimensions: 18.9"W x 34.6"H x 6.1"D
     },
     'entry-intercom': {
         id: 'entry-intercom',
@@ -627,9 +629,10 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         category: 'infrastructure',
         description: 'Outdoor Emergency Service Disconnect (200A Lever)',
         color: 0x000000,
-        size: { width: 10, height: 20 },
+        size: { width: 20, height: 40 }, // Visual size
         createMesh: createEquipmentMesh,
-        meshType: 'equipment'
+        meshType: 'equipment',
+        physicalSize: { width: 8.0, depth: 6.0 } // Approx Siemens 200A Disconnect size
     },
     'pv-rsd-switch': {
         id: 'pv-rsd-switch',
@@ -637,9 +640,10 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         category: 'infrastructure',
         description: 'Red Mushroom Button (Outdoor)',
         color: 0xff0000,
-        size: { width: 6, height: 6 },
+        size: { width: 16, height: 16 }, // Visual size
         createMesh: createEquipmentMesh,
-        meshType: 'equipment'
+        meshType: 'equipment',
+        physicalSize: { width: 4.0, depth: 4.0 } // Standard 4x4 box
     },
     'utility-meter': {
         id: 'utility-meter',
@@ -661,7 +665,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDefinition> = {
         createMesh: createEquipmentMesh,
         meshType: 'equipment',
         productId: 'MK0603S1400SCS',
-        physicalSize: { width: 41.7, depth: 8.7 },
+        physicalSize: { width: 16.8, depth: 6.3 }, // Corrected: 16.8"W x 39.6"H x 6.3"D
         metadata: {
             rating: '320A Continuous',
             voltage: '120/240V 1Ph',

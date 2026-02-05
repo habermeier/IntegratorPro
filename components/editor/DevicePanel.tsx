@@ -228,6 +228,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
         const devicesToFix = devices.filter(d => {
             const isGenericId = !d.productId || d.productId === 'generic-light' || d.productId === 'generic-product';
             if (!isGenericId) return false;
+            if (!d.deviceTypeId) return false; // Guard against missing type
             const isExplicit2DS = d.deviceTypeId.includes('2ds');
             const typeLabel = (SYMBOL_LIBRARY[d.deviceTypeId] as any)?.metadata?.shorthand || '';
             const isImplied2DS = (d.name || '').toLowerCase().includes('2ds') || typeLabel.toLowerCase().includes('2ds');
@@ -245,6 +246,7 @@ const DevicePanelContent: React.FC<DevicePanelProps> = ({ editor, activeTool, is
         if (projectData?.customSymbols) {
             let defsRepaired = false;
             projectData.customSymbols.forEach(sym => {
+                if (!sym.name) return; // Guard against missing name
                 const isGenericId = !sym.productId || sym.productId === 'generic-light' || sym.productId === 'generic-product';
                 const is2DS = sym.name.includes('2DS') || sym.metadata?.shorthand?.includes('2DS');
                 if (isGenericId && is2DS) {

@@ -215,10 +215,18 @@ export const FloorPlanRenderer: React.FC = () => {
         };
         editor.on('fps-toggled', onFPSToggled);
 
+        // AUTO-DRAG-RESTORE-P30: Handle global drop events from ThreeCanvas
+        const onSymbolDrop = (e: any) => {
+            const { symbolType, x, y } = e.detail;
+            editor.handleSymbolDrop(symbolType, x, y);
+        };
+        window.addEventListener('editor-symbol-drop', onSymbolDrop);
+
         return () => {
             editor.off('room-edit-requested', onRoomEdit);
             editor.off('context-room-changed', onContextRoomChanged);
             editor.off('fps-toggled', onFPSToggled);
+            window.removeEventListener('editor-symbol-drop', onSymbolDrop);
         };
     }, [editor]);
 
@@ -476,7 +484,21 @@ export const FloorPlanRenderer: React.FC = () => {
                     </>
                 )}
 
-                <div className={`flex-1 relative overflow-hidden flex flex-col ${isEditMode ? 'ring-[8px] ring-red-600/50 ring-inset' : ''}`}>
+                <div
+                    className={`flex-1 relative overflow-hidden flex flex-col ${isEditMode ? 'ring-[8px] ring-red-600/50 ring-inset' : ''}`}
+                    onDragOver={(e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'copy';
+                    }}
+                    onDrop={(e) => {
+                        e.preventDefault();
+                        const symbolType = e.dataTransfer.getData('symbol-type');
+                        if (symbolType && editor) {
+                            // Direct call since we have the editor instance here
+                            editor.handleSymbolDrop(symbolType, e.clientX, e.clientY);
+                        }
+                    }}
+                >
                     <ThreeCanvas
                         onMount={initEditor}
                         isEditMode={isEditMode}

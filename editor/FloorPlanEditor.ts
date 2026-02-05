@@ -99,6 +99,27 @@ export class FloorPlanEditor {
         return this.activeLayerId;
     }
 
+    public handleSymbolDrop(symbolType: string, x: number, y: number) {
+        // 1. Activate the tool
+        this.toolSystem.setActiveTool('place-symbol', { symbolType });
+
+        // 2. Immediate Placement (Drag-and-Drop behavior)
+        const mouseEvent = new MouseEvent('mousedown', {
+            button: 0,
+            clientX: x,
+            clientY: y,
+            bubbles: true
+        });
+
+        // We need to route this to the tool's onMouseDown logic
+        const tool = this.toolSystem.activeTool;
+        if (tool && tool.type === 'place-symbol') {
+            const placeTool = tool as PlaceSymbolTool;
+            placeTool.onMouseMove(x, y, new MouseEvent('mousemove')); // Update preview pos first
+            placeTool.onMouseDown(x, y, mouseEvent); // Commit placement
+        }
+    }
+
     public get pixelsMeter(): number {
         return this.pixelsPerMeter;
     }
