@@ -534,3 +534,24 @@ The following products have generic or reseller links and require further direct
 *   **Advanced Track**: LCP-2 NUC monitors PM2.5 and sends a "Force Recirculation" command to all Intesis gateways during wildfire events.
 *   **No Wi-Fi Dependency**: All HVAC control is hardwired digital communication.
 
+---
+
+## **Section 21: LED Detail Spec (KLUS)**
+*Approved Fixture Specification for Wet & Dry Architectural Linear Lighting.*
+
+### **21.1 Wet Areas (Showers / Steam)**
+**Requirement:** Use this specific system to ensure waterproofing warranty.
+*   **Channel:** KLUS HR-ALU Extrusion (Waterproof).
+*   **Cover:** KLUS HR-ALU-15 Cover (Frosted). **Must use this specific rigid cover for the seal.**
+*   **Tape:** KLUS WP-K-CR-1220-24V (IP67 Tunable White).
+*   **Install Note:** Ensure channel is installed perfectly level so water does not pool on the lens. Waterproofing is the responsibility of the installer.
+*   **Est. Part Cost:** ~$150 - $200 per niche.
+
+### **21.2 Dry Areas (Coves / Toe-Kicks)**
+*   **Channel:** KLUS MICRO-NK (Recessed) or MICRO-ALU (Surface).
+*   **Cover:** KLUS LIGER-11 Cover (Frosted). **Required for dot-free diffusion.**
+*   **Tape:** High-Density COB Tunable White 24V Tape.
+*   **Install Note:** For MICRO-NK (Recessed), coordinate with drywall team to ensure flush recessing before mudding.
+*   **Load Limit:** Typical High-Output COB strip is ~10W/ft. Max safe run per driver is 8–10 ft (100W Total Load). Longer runs must be split into multiple drivers/zones.
+*   **Est. Part Cost:** ~$15 - $20 per linear foot.
+
