@@ -41,6 +41,7 @@ export function useEditorInitialization(
   lastSavedPolygonsRef: React.MutableRefObject<string>,
   lastSavedFurnitureRef: React.MutableRefObject<string>,
   lastSavedCablesRef: React.MutableRefObject<string>,
+  lastSavedVisibilityRef: React.MutableRefObject<string>,
   callbacks: EditorInitCallbacks
 ) {
   const applyProjectData = useApplyProjectData(
@@ -48,7 +49,8 @@ export function useEditorInitialization(
     lastSavedSymbolsRef,
     lastSavedPolygonsRef,
     lastSavedFurnitureRef,
-    lastSavedCablesRef
+    lastSavedCablesRef,
+    lastSavedVisibilityRef
   );
 
   const initEditor = useCallback((container: HTMLDivElement) => {
@@ -178,6 +180,9 @@ export function useEditorInitialization(
 
           applyProjectData(editorInstance, project);
 
+          // WAKE UP PHYSICS: Once data is applied and layers are dirty, ensure labels snap into place
+          editorInstance.setDirty();
+
           // Debug Trace: After Server Data
           const postServerLayers = editorInstance.layerSystem.getAllLayers().map(l => ({ id: l.id, visible: l.visible, category: l.category }));
           remoteLog(`Tech Layers AFTER Server Data: ${JSON.stringify(postServerLayers.filter(l => l.category === 'technical'))}`, 'debug', 'Initialization Debug');
@@ -205,6 +210,10 @@ export function useEditorInitialization(
           isInitializedRef.current = true;
           // Defense in Depth: One final mutex check to ensure UI is clean after server load
           editorInstance.enforceTechnicalLayerMutex();
+
+          // FINAL SYNC: Ensure and React UI (sidebars) are in sync with applied visibility/data
+          callbacks.setLayers([...editorInstance.layerSystem.getAllLayers()]);
+
           console.log('✅ Editor initialized and state restored');
         }
       } catch (err) {

@@ -352,7 +352,7 @@ export class LayerSystem {
             });
 
             // Force re-render if we have active selection animation
-            this.scene.userData.editor?.setDirty();
+            this.scene.userData.editor?.setNeedsRender();
         }
 
         // 3. Update Lighting Visuals (Heatmaps & Modes)
@@ -868,41 +868,55 @@ export class LayerSystem {
                 let effectiveShorthand = (metadata as any).shorthand || fallbackShorthand;
 
 
-                const labelsHash = `${!!symbolData.label}|${symbolData.label}|${effectiveShorthand}|${symbolData.category === 'lighting'}|${metadata.phase || ''}`;
+                const labelsHash = `${symbolData.type}|${symbolData.productId}|${!!symbolData.label}|${symbolData.label}|${effectiveShorthand}|${symbolData.category}|${metadata.phase || ''}|${metadata.instanceLabel || ''}|${metadata.panelName || ''}`;
                 if (group.userData.labelsHash !== labelsHash) {
                     const oldLabel = group.getObjectByName('label'); if (oldLabel) group.remove(oldLabel);
                     const oldShorthand = group.getObjectByName('shorthand-label'); if (oldShorthand) group.remove(oldShorthand);
                     const sw = def?.size.width || 16, sh = def?.size.height || 16;
                     const ox = (sw / 2) + 12, oy = -((sh / 2) + 12);
 
-                    // LOGIC CHANGE: For infrastructure, we force the "Big Label" even if the user hasn't typed a custom name.
-                    // We want to show: 1. Description (Name), 2. Make/Model, 3. Phase
+                    // LOGIC CHANGE: For infrastructure / LCPs / Technical items, we prioritize a 3-row layout
                     const isInfra = symbolData.category === 'infrastructure';
+                    const isLCP = symbolData.category === 'lcps';
+                    const isTechnical = symbolData.category === 'technical';
+                    const isPower = isInfra || isLCP || isTechnical;
                     const libraryName = def?.name || symbolData.type;
-                    const primaryLabel = symbolData.label || (isInfra ? libraryName : '');
 
-                    if (primaryLabel) {
+                    const instanceLabel = (metadata as any).instanceLabel;
+                    const primaryLabel = symbolData.label || (isPower ? libraryName : '');
+
+                    if (instanceLabel || primaryLabel) {
                         let labelColor = 'rgba(255, 255, 255, 1)';
                         if (symbolData.category === 'lighting') {
                             labelColor = 'rgba(254, 249, 195, 1)'; // Yellowish
-                        } else if (isInfra) {
+                        } else if (isPower) {
                             labelColor = 'rgba(219, 234, 254, 1)'; // Sky Blue
                         }
 
-                        // Determine secondary detail line (Phase, Panel, or Part Number)
-                        let detailItems: string[] = [];
+                        // Determine rows for 3-line layout
+                        let row1 = "";
+                        let row2 = "";
+                        let row3 = "";
 
-                        if (isInfra) {
-                            // ROW 2: Make / Model (ProductId)
-                            if (symbolData.productId) {
-                                detailItems.push(symbolData.productId);
-                            }
-                            // ROW 3: Phase
-                            if (metadata.phase) {
-                                detailItems.push(metadata.phase.toUpperCase());
-                            }
+                        // Brand & Model Consolidation (e.g. "SPAN Smart Panel (SPAN-GEN2)")
+                        const brandInfo = libraryName; // e.g. "SPAN Smart Panel"
+                        const modelInfo = symbolData.productId && symbolData.productId !== 'generic-product' ? symbolData.productId : "";
+                        const brandModel = (modelInfo && !brandInfo.includes(modelInfo)) ? `${brandInfo} (${modelInfo})` : brandInfo;
+                        const phaseText = metadata.phase ? String(metadata.phase).toUpperCase() : "";
+
+                        if (isPower && instanceLabel) {
+                            // 3-ROW MODE (Custom ID present)
+                            row1 = instanceLabel;
+                            row2 = brandModel;
+                            row3 = phaseText;
+                        } else if (isPower) {
+                            // 2-ROW MODE (Normal technical labeling)
+                            row1 = brandModel;
+                            row2 = phaseText;
                         } else {
-                            // Standard Logic for other items
+                            // Standard Logic for other items (lighting, etc)
+                            row1 = primaryLabel;
+                            const detailItems: string[] = [];
                             if (metadata.phase) {
                                 detailItems.push(`${metadata.phase}${metadata.panelName ? `: ${metadata.panelName}` : ''}`);
                             }
@@ -911,11 +925,13 @@ export class LayerSystem {
                             } else if (symbolData.productId && symbolData.productId !== 'generic-light') {
                                 detailItems.push(symbolData.productId);
                             }
+                            row2 = detailItems.join('\n');
                         }
-                        const detail = detailItems.join('\n');
+
+                        const detail = [row2, row3].filter(Boolean).join('\n');
 
                         // PENDING SYMBOL LOGIC: Check if we need to embed an icon (infrastructure) into this label
-                        let displayText = primaryLabel;
+                        let displayText = row1;
                         const pendingSymbol = group.userData.pendingSymbol as THREE.Group;
 
                         if (pendingSymbol) {
@@ -956,7 +972,7 @@ export class LayerSystem {
                             color: 0x000000,
                             transparent: true,
                             opacity: 0.6,
-                            linewidth: 2
+                            linewidth: 4
                         });
                         const leaderLine = new THREE.Line(lineGeo, lineMat);
                         leaderLine.name = 'leader-line';
@@ -1005,7 +1021,7 @@ export class LayerSystem {
                     // REDUCE REDUNDANCY: Hide generic shorthand if we have a specific logical label for infrastructure.
                     // Since we now FORCE a full label for all infrastructure (using library name if needed), 
                     // we should ALWAYS skip the shorthand for infrastructure to prevent "Double Pills".
-                    const skipShorthand = symbolData.category === 'infrastructure';
+                    const skipShorthand = symbolData.category === 'infrastructure' || symbolData.category === 'lcps';
 
                     if (effectiveShorthand && !skipShorthand) {
                         let shorthandColor = 'rgba(255, 255, 255, 1)';
@@ -1085,7 +1101,7 @@ export class LayerSystem {
                 let line = this.meshCache.get(cacheKey) as THREE.Line;
                 if (!line) {
                     const points = cable.points.map(p => new THREE.Vector3(p.x, p.y, 0.1));
-                    line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 }));
+                    line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 4 }));
                     line.name = `cable-${cable.id}`; line.userData = { id: cable.id, type: 'cable' };
                     layer.container.add(line); this.meshCache.set(cacheKey, line); this.idToMesh.set(cable.id, line);
                 } else {
@@ -1113,15 +1129,18 @@ export class LayerSystem {
         const ctx = canvas.getContext('2d');
         if (!ctx) return new THREE.Sprite();
 
-        // Line detection for dynamic height (AUTO-LABEL-GROW-P5)
-        const lines = [name];
-        if (type) lines.push(type);
-        if (detail) {
-            // If detail contains newlines, split them
-            detail.split('\n').forEach(l => {
+        // Line detection for dynamic height (v2: Multi-line support across all params)
+        const lines: string[] = [];
+        const pushText = (txt: string) => {
+            if (!txt) return;
+            txt.split('\n').forEach(l => {
                 if (l.trim()) lines.push(l);
             });
-        }
+        };
+
+        pushText(name);
+        pushText(type);
+        pushText(detail);
 
         ctx.font = `900 ${fontSize}px Inter, sans-serif`;
         let maxWidth = 0;
@@ -1368,29 +1387,38 @@ export class LayerSystem {
         remoteLog(`[debugLayer] Layer: ${layerId}, Type: ${layer.type}, Children: ${layer.container.children.length} `, 'info', '🔍 LAYER-DEBUG');
     }
 
-    // AUTO-LIVE-UPDATE: Explicit method to force specific symbol update without full re-render
-    public updateSymbolMetadata(id: string, metadata: any): void {
+    /**
+     * AUTO-LIVE-UPDATE: Synchronizes real-time changes from the UI directly into the engine's model.
+     * This ensures that as users type, textures and meshes update instantly without a full load/save cycle.
+     */
+    public updateSymbolProperties(id: string, updates: any): void {
         const group = this.idToMesh.get(id) as THREE.Group;
         if (!group) return;
 
-        // 1. Locate the symbol data in the layer model
-        let found = false;
         for (const layer of this.layers.values()) {
             if (layer.type === 'vector' && layer.content) {
                 const symbol = (layer.content as any).symbols?.find((s: any) => s.id === id);
                 if (symbol) {
-                    symbol.metadata = { ...symbol.metadata, ...metadata };
-                    found = true;
-                    // Trigger re-render of THIS layer only
+                    // Smart Apply: Distinguish between structural properties and metadata
+                    Object.entries(updates).forEach(([key, value]) => {
+                        if (['label', 'name', 'rotation', 'x', 'y', 'installationHeight', 'productId', 'category'].includes(key)) {
+                            (symbol as any)[key] = value;
+                        } else {
+                            // Merge into metadata if not a known top-level property
+                            symbol.metadata = { ...(symbol.metadata || {}), [key]: value };
+                        }
+                    });
+
+                    // Trigger immediate logical re-render of the specific layer
                     this.renderVectorLayer(layer);
                     break;
                 }
             }
         }
+    }
 
-        if (found) {
-            // 2. Force invalidation of labels hash to ensure texture regen
-            // The renderVectorLayer call above 'should' do it, but let's be safe
-        }
+    // Deprecated alias for backward compatibility
+    public updateSymbolMetadata(id: string, metadata: any): void {
+        this.updateSymbolProperties(id, metadata);
     }
 }

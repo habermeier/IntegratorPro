@@ -112,7 +112,7 @@ export class FloorPlanEditor {
         });
 
         // We need to route this to the tool's onMouseDown logic
-        const tool = this.toolSystem.activeTool;
+        const tool = this.toolSystem.getActiveTool();
         if (tool && tool.type === 'place-symbol') {
             const placeTool = tool as PlaceSymbolTool;
             placeTool.onMouseMove(x, y, new MouseEvent('mousemove')); // Update preview pos first
@@ -647,10 +647,10 @@ export class FloorPlanEditor {
             this.lastX = e.clientX;
             this.lastY = e.clientY;
             this.updateCursor();
-            this.setDirty();
+            this.setNeedsRender();
         } else {
             this.toolSystem.handleMouseDown(x, y, e);
-            this.setDirty();
+            this.setNeedsRender();
         }
     };
 
@@ -679,7 +679,7 @@ export class FloorPlanEditor {
             this.cameraSystem.pan(deltaX, deltaY);
             this.lastX = e.clientX;
             this.lastY = e.clientY;
-            this.setDirty();
+            this.setNeedsRender();
         } else if (this.isSpacePressed) {
             // Spacebar hover-pan (new auto-pan behavior)
             if (!this.spaceHoverPanInitialized) {
@@ -695,7 +695,7 @@ export class FloorPlanEditor {
                 this.cameraSystem.pan(deltaX, deltaY);
                 this.lastX = e.clientX;
                 this.lastY = e.clientY;
-                this.setDirty();
+                this.setNeedsRender();
             }
         } else {
             // Normal tool mode
@@ -703,7 +703,7 @@ export class FloorPlanEditor {
             // Mouse move tool handles might need render
             const activeTool = this.toolSystem.getActiveToolType();
             if (activeTool === 'scale-calibrate' || activeTool === 'measure' || activeTool === 'place-symbol' || activeTool === 'place-furniture') {
-                this.setDirty();
+                this.setNeedsRender();
             }
         }
 
@@ -711,7 +711,7 @@ export class FloorPlanEditor {
 
         // Trigger re-render if zoom cursor is active
         if (this.cameraSystem.getZoomCursorEnabled()) {
-            this.setDirty();
+            this.setNeedsRender();
         }
 
         // Only trigger dirty if zoom cursor is visible or moving
@@ -727,10 +727,10 @@ export class FloorPlanEditor {
             this.isDragging = false;
             this.updateCursor();
             this.savePersistentState(); // Save after Pan
-            this.setDirty();
+            this.setNeedsRender();
         } else {
             this.toolSystem.handleMouseUp(x, y, e);
-            this.setDirty();
+            this.setNeedsRender();
         }
     };
 
@@ -760,9 +760,33 @@ export class FloorPlanEditor {
         e.preventDefault();
         const { x, y } = this.getMouseCoords(e);
 
-        // Multiplier: user-defined if Shift is held
-        const delta = e.shiftKey ? e.deltaY * this.fastZoomMultiplier : e.deltaY;
-        this.cameraSystem.zoom(delta, x, y);
+        // Normalize deltas based on deltaMode (Pixels: 0, Lines: 1, Pages: 2)
+        let dx = e.deltaX;
+        let dy = e.deltaY;
+        if (e.deltaMode === 1) { // Lines
+            dx *= 20;
+            dy *= 20;
+        } else if (e.deltaMode === 2) { // Pages
+            dx *= this.container.clientWidth;
+            dy *= this.container.clientHeight;
+        }
+
+        // HEURISTIC: Detect Mac Pinch-to-Zoom or Ctrl+Scroll
+        // On Mac Touchpads, pinch behaves as a wheel event with ctrlKey=true
+        const isPinch = e.ctrlKey;
+        const isZoomRequest = isPinch || (Math.abs(dy) >= 50 && Math.abs(dx) < 10 && !e.shiftKey);
+
+        if (isZoomRequest) {
+            // ZOOM logic
+            // If it's a pinch, we want it to be snappy. Pinch deltas are tiny.
+            const zoomDelta = isPinch ? dy * 25 : dy;
+            this.cameraSystem.zoom(zoomDelta, x, y);
+        } else {
+            // PAN logic (Two-finger scroll or Shift+Scroll)
+            // Note: We negate the deltas because wheel scroll usually follows "Natural Scrolling" 
+            // where moving fingers UP scrolls content UP (which means camera goes DOWN).
+            this.cameraSystem.pan(-dx, -dy);
+        }
 
         // Update label scales dynamically
         const newZoom = this.cameraSystem.getState().zoom;
@@ -771,9 +795,9 @@ export class FloorPlanEditor {
         this.emit('zoom-changed', newZoom);
         this.setDirty();
 
-        // Debounce save for zoom
+        // Debounce save for view state
         window.clearTimeout(this.saveTimeout);
-        this.saveTimeout = window.setTimeout(() => this.savePersistentState(), 500);
+        this.saveTimeout = window.setTimeout(() => this.savePersistentState(), 1000);
     };
 
     // Public API
@@ -865,7 +889,7 @@ export class FloorPlanEditor {
         this.updateFocusMode();
         this.savePersistentState();
         this.emit('edit-mode-changed', { isEditMode: this.isOverlayAlignmentMode, activeLayerId: this.activeLayerId });
-        this.setDirty();
+        this.setNeedsRender();
     }
 
     public addLayer(config: LayerConfig): void {
@@ -908,7 +932,7 @@ export class FloorPlanEditor {
             const currentLayers = this.layerSystem.getAllLayers().map(l => ({ ...l }));
             this.emit('layers-changed', currentLayers);
         }
-        this.setDirty();
+        this.setNeedsRender();
     }
 
     public enforceTechnicalLayerMutex(): void {
@@ -1392,7 +1416,12 @@ export class FloorPlanEditor {
 
             // 3. Label Physics (Springs)
             const zoom = this.cameraSystem.getState().zoom;
-            const isLabelMoving = this.labelSpringSystem.update(zoom, this.layerSystem);
+            let isLabelMoving = false;
+
+            // SUPPRESS PHYSICS WHILE TYPING: Ensure stability when entering data
+            if (!FloorPlanEditor.isTyping()) {
+                isLabelMoving = this.labelSpringSystem.update(zoom, this.layerSystem);
+            }
 
             if (this.needsRender || isLabelMoving) {
                 this.update();
@@ -1461,8 +1490,12 @@ export class FloorPlanEditor {
         }
     }
 
-    public setDirty(): void {
+    public setNeedsRender(): void {
         this.needsRender = true;
+    }
+
+    public setDirty(): void {
+        this.setNeedsRender();
         this.labelSpringSystem.wakeUp();
     }
 
@@ -1501,6 +1534,122 @@ export class FloorPlanEditor {
         }
 
         el.style.cursor = 'none';
+    }
+
+    public async captureHighResImage(width: number, height: number, layerIds?: string[]): Promise<string> {
+        // 0. Save current layer visibility to restore later
+        const originalVisibility = new Map<string, boolean>();
+        this.layerSystem.getAllLayers().forEach(l => {
+            originalVisibility.set(l.id, l.visible);
+        });
+
+        // If specific layers provided, temporarily adjust visibility for capture
+        if (layerIds) {
+            this.layerSystem.getAllLayers().forEach(l => {
+                l.visible = layerIds.includes(l.id);
+            });
+        }
+
+        // 1. Create temporary offscreen renderer
+        const offscreenRenderer = new THREE.WebGLRenderer({
+            antialias: true,
+            alpha: false, // Solid background
+            preserveDrawingBuffer: true
+        });
+        offscreenRenderer.setSize(width, height);
+        offscreenRenderer.setClearColor(0xffffff, 1); // White background for PDF
+
+        // 2. Calculate Bounding Box of all visible content (with our temporary visibility)
+        const box = new THREE.Box3();
+        let hasTechnicalContent = false;
+
+        // First pass: Calculate box of technical layers only (to avoid huge architectural padding)
+        const technicalLayers = ['lighting', 'infrastructure', 'lcps', 'security', 'network', 'hvac', 'receptacles', 'room', 'furniture'];
+
+        this.layerSystem.getAllLayers().forEach(layer => {
+            if (layer.visible && layer.container && technicalLayers.includes(layer.id)) {
+                layer.container.updateMatrixWorld(true);
+                const layerBox = new THREE.Box3().setFromObject(layer.container);
+                if (!layerBox.isEmpty()) {
+                    box.union(layerBox);
+                    hasTechnicalContent = true;
+                }
+            }
+        });
+
+        // If no technical content, use everything visible
+        if (!hasTechnicalContent) {
+            this.layerSystem.getAllLayers().forEach(layer => {
+                if (layer.visible && layer.container) {
+                    layer.container.updateMatrixWorld(true);
+                    const layerBox = new THREE.Box3().setFromObject(layer.container);
+                    if (!layerBox.isEmpty()) {
+                        box.union(layerBox);
+                    }
+                }
+            });
+        }
+
+        const center = new THREE.Vector3();
+        const size = new THREE.Vector3();
+
+        if (box.isEmpty()) {
+            center.set(0, 0, 0);
+            size.set(width, height, 1);
+        } else {
+            box.getCenter(center);
+            box.getSize(size);
+
+            // Log for debugging
+            console.log(`📏 Content World Bounds: ${size.x.toFixed(1)} x ${size.y.toFixed(1)} at center ${center.x.toFixed(1)}, ${center.y.toFixed(1)}`);
+        }
+
+        // 3. Setup Export Camera
+        // We use an Orthographic camera to match the editor's view but sized to the export dimensions
+        const aspect = width / height;
+        const boxAspect = size.x / size.y;
+        let zoom: number;
+
+        if (boxAspect > aspect) {
+            // Width limited
+            zoom = width / size.x;
+        } else {
+            // Height limited
+            zoom = height / size.y;
+        }
+
+        // Apply 5% margin
+        zoom *= 0.95;
+
+        const exportCamera = new THREE.OrthographicCamera(
+            -width / 2, width / 2,
+            height / 2, -height / 2,
+            0.1, 2000
+        );
+        exportCamera.position.set(center.x, center.y, 1000);
+        exportCamera.lookAt(center.x, center.y, 0);
+        exportCamera.zoom = zoom;
+        exportCamera.updateProjectionMatrix();
+
+        // 4. Temporarily update label scales for this zoom level
+        const originalCameraState = this.cameraSystem.getState();
+        this.layerSystem.updateLabelScales(zoom);
+
+        // 5. Render
+        offscreenRenderer.render(this.scene, exportCamera);
+        const dataUrl = offscreenRenderer.domElement.toDataURL('image/png', 0.92);
+
+        // 6. Restore original state
+        this.cameraSystem.setState(originalCameraState);
+        this.layerSystem.updateLabelScales(originalCameraState.zoom);
+        originalVisibility.forEach((visible, id) => {
+            this.layerSystem.setLayerVisible(id, visible);
+        });
+        this.emit('layers-changed', this.layerSystem.getAllLayers());
+
+        offscreenRenderer.dispose();
+
+        return dataUrl;
     }
 
     public on(event: string, callback: Function): void {

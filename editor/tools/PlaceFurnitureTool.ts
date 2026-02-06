@@ -142,7 +142,7 @@ export class PlaceFurnitureTool implements Tool {
 
     private updatePreviewTransform(): void {
         this.previewGroup.rotation.z = (this.currentRotation * Math.PI) / 180;
-        this.editor.setDirty();
+        this.editor.setNeedsRender();
     }
 
     public onMouseMove(x: number, y: number, event: MouseEvent): void {

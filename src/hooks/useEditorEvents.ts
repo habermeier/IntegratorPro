@@ -31,6 +31,7 @@ export interface EditorEventCallbacks {
   lastSavedPolygonsRef: React.MutableRefObject<string>;
   lastSavedFurnitureRef: React.MutableRefObject<string>;
   lastSavedCablesRef: React.MutableRefObject<string>;
+  lastSavedVisibilityRef: React.MutableRefObject<string>;
 }
 
 export function useEditorEvents(
@@ -42,7 +43,8 @@ export function useEditorEvents(
     callbacks.lastSavedSymbolsRef,
     callbacks.lastSavedPolygonsRef,
     callbacks.lastSavedFurnitureRef,
-    callbacks.lastSavedCablesRef
+    callbacks.lastSavedCablesRef,
+    callbacks.lastSavedVisibilityRef
   );
 
   useEffect(() => {

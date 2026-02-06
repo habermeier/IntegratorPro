@@ -28,6 +28,7 @@ export function useAutoSave(
   lastSavedPolygonsRef: React.MutableRefObject<string>,
   lastSavedFurnitureRef: React.MutableRefObject<string>,
   lastSavedCablesRef: React.MutableRefObject<string>,
+  lastSavedVisibilityRef: React.MutableRefObject<string>,
   dataLossThreshold: number = 0.5
 ): AutoSaveHookReturn {
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -111,8 +112,16 @@ export function useAutoSave(
       const cablesStr = JSON.stringify(cables);
       const isCablesDirty = cablesStr !== lastSavedCablesRef.current;
 
+      // -- Layer Visibility --
+      const visibility: Record<string, boolean> = {};
+      layers.forEach(l => {
+        visibility[l.id] = l.visible;
+      });
+      const visibilityStr = JSON.stringify(visibility);
+      const isVisibilityDirty = visibilityStr !== lastSavedVisibilityRef.current;
+
       // 2. Dirty Check: Skip if nothing changed
-      if (!isOverlayDirty && !isSymbolsDirty && !isPolygonsDirty && !isFurnitureDirty && !isCablesDirty && !force) {
+      if (!isOverlayDirty && !isSymbolsDirty && !isPolygonsDirty && !isFurnitureDirty && !isCablesDirty && !isVisibilityDirty && !force) {
         return;
       }
 
@@ -179,13 +188,23 @@ export function useAutoSave(
           await dataService.loadProject();
         }
 
+        // -- Layer Visibility --
+        const layerVisibility: Record<string, boolean> = {};
+        layers.forEach(l => {
+          layerVisibility[l.id] = l.visible;
+        });
+
         const projectUpdate: any = {
-          ...dataService.getCachedProject(),
+          ...currentProject,
           furniture: furniture.map(f => ({ ...f, position: { x: f.x, y: f.y } })),
           cables,
           devices: allDevices,
+          settings: {
+            ...currentProject.settings,
+            layerVisibility
+          },
           floorPlan: {
-            ...dataService.getCachedProject()?.floorPlan,
+            ...currentProject.floorPlan,
             electricalOverlay: overlayPayload,
             polygons: allPolygons
           }
@@ -199,6 +218,7 @@ export function useAutoSave(
         lastSavedPolygonsRef.current = polygonsStr;
         lastSavedFurnitureRef.current = furnitureStr;
         lastSavedCablesRef.current = cablesStr;
+        lastSavedVisibilityRef.current = visibilityStr;
 
         remoteDebug('✅ Monolithic project save successful', 'useAutoSave');
       } catch (err) {
@@ -217,7 +237,7 @@ export function useAutoSave(
     } else {
       saveTimeoutRef.current = setTimeout(performSave, 1500);
     }
-  }, [editorInstanceRef, isInitializedRef, lastSavedPayloadRef, lastSavedSymbolsRef, lastSavedPolygonsRef, lastSavedFurnitureRef, lastSavedCablesRef, dataLossThreshold]);
+  }, [editorInstanceRef, isInitializedRef, lastSavedPayloadRef, lastSavedSymbolsRef, lastSavedPolygonsRef, lastSavedFurnitureRef, lastSavedCablesRef, lastSavedVisibilityRef, dataLossThreshold]);
 
   const resetAnchors = useCallback(() => {
     remoteDebug('Anchors reset', 'useAutoSave');

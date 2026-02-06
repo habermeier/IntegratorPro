@@ -11,6 +11,46 @@
       "manufacturer": "Generic"
     },
     {
+      "name": "ext-disconnect-200a",
+      "quantity": 1,
+      "cost": 0,
+      "total": 0,
+      "description": "Unidentified Component",
+      "manufacturer": "Generic"
+    },
+    {
+      "name": "pv-rsd-switch",
+      "quantity": 1,
+      "cost": 0,
+      "total": 0,
+      "description": "Unidentified Component",
+      "manufacturer": "Generic"
+    },
+    {
+      "name": "battery-bank",
+      "quantity": 1,
+      "cost": 0,
+      "total": 0,
+      "description": "Unidentified Component",
+      "manufacturer": "Generic"
+    },
+    {
+      "name": "hybrid-inverter",
+      "quantity": 1,
+      "cost": 0,
+      "total": 0,
+      "description": "Unidentified Component",
+      "manufacturer": "Generic"
+    },
+    {
+      "name": "span-panel",
+      "quantity": 2,
+      "cost": 0,
+      "total": 0,
+      "description": "Unidentified Component",
+      "manufacturer": "Generic"
+    },
+    {
       "name": "DMF 1",
       "quantity": 81,
       "cost": 0,

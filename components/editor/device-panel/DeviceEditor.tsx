@@ -203,10 +203,21 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
                     <label className="text-[8px] text-sky-300 uppercase font-black shrink-0">Phase</label>
                     <input
                         type="text"
-                        value={formData['metadata.implementationPhase'] || editingDevice.metadata?.implementationPhase || ''}
-                        onChange={(e) => onFieldChange('metadata.implementationPhase', e.target.value)}
+                        value={formData['metadata.phase'] || editingDevice.metadata?.phase || ''}
+                        onChange={(e) => onFieldChange('metadata.phase', e.target.value)}
                         className="bg-transparent text-[11px] text-white font-black font-mono w-full text-right focus:outline-none placeholder:text-slate-600"
                         placeholder="Phase 1, 2, 3..."
+                    />
+                </div>
+
+                <div className="flex items-center gap-2 bg-slate-900 px-2 py-1.5 rounded border border-blue-500/50 group">
+                    <label className="text-[8px] text-blue-400 uppercase font-black shrink-0">Instance UID</label>
+                    <input
+                        type="text"
+                        value={formData['metadata.instanceLabel'] || editingDevice.metadata?.instanceLabel || ''}
+                        onChange={(e) => onFieldChange('metadata.instanceLabel', e.target.value)}
+                        className="bg-transparent text-[11px] text-amber-400 font-black font-mono w-full text-right focus:outline-none placeholder:text-slate-700"
+                        placeholder="e.g. SUB1, INV2..."
                     />
                 </div>
             </div>
@@ -285,23 +296,11 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
                 >
                     <div className="p-2.5 space-y-2">
                         <div className="flex items-center gap-2 bg-slate-950/60 px-2 py-1.5 rounded border border-slate-800">
-                            <label className="text-[8px] text-amber-500 uppercase font-black shrink-0">Phase</label>
-                            <input
-                                type="text"
-                                value={draftMetadata.phase || ''}
-                                onChange={(e) => onFieldChange('metadata.phase', e.target.value)}
-                                onBlur={() => onFieldChange('metadata.phase', draftMetadata.phase)}
-                                className="bg-transparent text-[10px] text-white font-black font-mono w-full text-right focus:outline-none"
-                                placeholder="e.g. Phase 1"
-                            />
-                        </div>
-                        <div className="flex items-center gap-2 bg-slate-950/60 px-2 py-1.5 rounded border border-slate-800">
                             <label className="text-[8px] text-amber-500 uppercase font-black shrink-0">Panel Name</label>
                             <input
                                 type="text"
-                                value={draftMetadata.panelName || ''}
+                                value={formData['metadata.panelName'] || editingDevice.metadata?.panelName || ''}
                                 onChange={(e) => onFieldChange('metadata.panelName', e.target.value)}
-                                onBlur={() => onFieldChange('metadata.panelName', draftMetadata.panelName)}
                                 className="bg-transparent text-[10px] text-white font-black font-mono w-full text-right focus:outline-none"
                                 placeholder="e.g. Main Service"
                             />
@@ -310,9 +309,8 @@ export const DeviceEditor: React.FC<DeviceEditorProps> = ({
                             <label className="text-[8px] text-blue-400 uppercase font-black shrink-0">Part #</label>
                             <input
                                 type="text"
-                                value={draftMetadata.partNumber || ''}
+                                value={formData['metadata.partNumber'] || editingDevice.metadata?.partNumber || ''}
                                 onChange={(e) => onFieldChange('metadata.partNumber', e.target.value)}
-                                onBlur={() => onFieldChange('metadata.partNumber', draftMetadata.partNumber)}
                                 className="bg-transparent text-[10px] text-white font-black font-mono w-full text-right focus:outline-none"
                                 placeholder="Manufacturer Part #"
                             />

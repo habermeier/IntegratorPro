@@ -100,7 +100,7 @@ export class MeasureTool implements Tool {
             this.updatePreview(worldPos);
             const dist = this.calculateDistance(this.points[0], worldPos);
             this.editor.emit('measure-changed', { distance: dist, finalized: false });
-            this.editor.setDirty();
+            this.editor.setNeedsRender();
         }
     }
 

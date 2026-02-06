@@ -155,7 +155,7 @@ export class PlaceSymbolTool implements Tool {
     private updatePreviewTransform(): void {
         this.previewGroup.rotation.z = (this.currentRotation * Math.PI) / 180;
         this.previewGroup.scale.set(this.currentScale, this.currentScale, 1);
-        this.editor.setDirty();
+        this.editor.setNeedsRender();
     }
 
     /**
@@ -334,7 +334,7 @@ export class PlaceSymbolTool implements Tool {
 
         this.editor.emit('hover-room-changed', room);
 
-        this.editor.setDirty();
+        this.editor.setNeedsRender();
     }
 
     public onKeyDown(key: string, event: KeyboardEvent): void {

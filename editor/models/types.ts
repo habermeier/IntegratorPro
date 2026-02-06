@@ -83,6 +83,7 @@ export interface PlacedSymbol {
         panelName?: string;
         shorthand?: string;
         partNumber?: string;
+        instanceLabel?: string;
     };
     createdAt: string;
 }
@@ -179,6 +180,13 @@ export interface ProjectSettings {
     fastZoomMultiplier?: number;
     dataLossThreshold?: number;
     lightingTargets?: Record<string, number>; // Global defaults mapped by RoomType
+    exportSettings?: {
+        paperSize?: string;
+        orientation?: string;
+        exportType?: string;
+        selectedLayers?: string[];
+    };
+    layerVisibility?: Record<string, boolean>;
     [key: string]: unknown;
 }
 

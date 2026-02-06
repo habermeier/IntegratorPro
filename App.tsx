@@ -204,7 +204,13 @@ const App = () => {
               } />
 
               {/* 4. Floor Plan (Full Screen) - Using new Three.js Editor */}
-              <Route path="/floorplan" element={
+              <Route path="/floorplan/:projectId?" element={
+                <div className="absolute inset-0 w-full h-full">
+                  <FloorPlanRenderer />
+                </div>
+              } />
+
+              <Route path="/editor/:projectId?" element={
                 <div className="absolute inset-0 w-full h-full">
                   <FloorPlanRenderer />
                 </div>

@@ -1,11 +1,11 @@
 {
   "version": "2.0",
-  "timestamp": "2026-02-02T09:10:35.146Z",
+  "timestamp": "2026-02-05T16:37:32.569Z",
   "metadata": {
     "name": "270 Bolla Ave",
     "status": "Draft",
     "created": "2025-12-21T17:05:55.950Z",
-    "modified": "2026-02-02T09:10:35.118Z"
+    "modified": "2026-02-05T16:37:32.562Z"
   },
   "floorPlan": {
     "scale": {
@@ -4170,7 +4170,7 @@
       "deviceTypeId": "span-panel",
       "x": 2262.0199989558487,
       "y": -491.01999895586016,
-      "rotation": 123,
+      "rotation": 168,
       "scale": 1,
       "room": "Main",
       "productId": "SPAN-GEN2",
@@ -4183,7 +4183,9 @@
         "pdfUrl": "",
         "shoppingLink": ""
       },
-      "createdAt": 1770008500005
+      "createdAt": 1770008500005,
+      "label": "hello",
+      "name": "hello"
     },
     {
       "id": "lighting-1768153942455",
@@ -10055,7 +10057,36 @@
   "settings": {
     "units": "IMPERIAL",
     "fastZoomMultiplier": 3,
-    "dataLossThreshold": 0.5
+    "dataLossThreshold": 0.5,
+    "exportSettings": {
+      "selectedLayers": [
+        "base",
+        "mask",
+        "lighting",
+        "room",
+        "receptacles",
+        "infrastructure"
+      ],
+      "paperSize": "ARCH_D",
+      "orientation": "landscape",
+      "exportType": "combined"
+    },
+    "layerVisibility": {
+      "base": true,
+      "mask": true,
+      "room": false,
+      "electrical": false,
+      "cables": true,
+      "furniture": false,
+      "receptacles": false,
+      "hvac": false,
+      "infrastructure": true,
+      "lcps": false,
+      "network": false,
+      "security": false,
+      "sensors": false,
+      "lighting": true
+    }
   },
   "force": false,
   "customSymbols": [

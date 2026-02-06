@@ -19,7 +19,8 @@ export function useApplyProjectData(
     lastSavedSymbolsRef: React.MutableRefObject<string>,
     lastSavedPolygonsRef: React.MutableRefObject<string>,
     lastSavedFurnitureRef: React.MutableRefObject<string>,
-    lastSavedCablesRef: React.MutableRefObject<string>
+    lastSavedCablesRef: React.MutableRefObject<string>,
+    lastSavedVisibilityRef: React.MutableRefObject<string>
 ) {
     const applyProjectData = useCallback((editor: FloorPlanEditor, project: ProjectData) => {
         remoteDebug('Incoming Project Data Keys', 'useApplyProjectData', { keys: Object.keys(project) });
@@ -106,7 +107,16 @@ export function useApplyProjectData(
             editor.layerSystem.markDirty('cables');
         }
 
-        // 7. Update Cache Refs
+        // 7. Layer Visibility
+        if (project.settings?.layerVisibility) {
+            Object.entries(project.settings.layerVisibility).forEach(([id, visible]) => {
+                editor.setLayerVisible(id, !!visible, true, true);
+            });
+            // Final emit to sync React UI with restored visibility
+            editor.layerSystem.getAllLayers(); // just to ensure we have current
+        }
+
+        // 8. Update Cache Refs
         lastSavedPayloadRef.current = JSON.stringify({
             x: overlay.x || 0,
             y: overlay.y || 0,
@@ -128,13 +138,14 @@ export function useApplyProjectData(
         lastSavedPolygonsRef.current = JSON.stringify(allPolygons);
         lastSavedFurnitureRef.current = JSON.stringify(furnitureData);
         lastSavedCablesRef.current = JSON.stringify(cablesData);
+        lastSavedVisibilityRef.current = JSON.stringify(project.settings?.layerVisibility || {});
 
         remoteDebug('Applied project data', 'useApplyProjectData', {
             devices: aggregatedDevices.length,
             polygons: allPolygons.length,
             furniture: furnitureData.length
         });
-    }, [lastSavedPayloadRef, lastSavedSymbolsRef, lastSavedPolygonsRef, lastSavedFurnitureRef, lastSavedCablesRef]);
+    }, [lastSavedPayloadRef, lastSavedSymbolsRef, lastSavedPolygonsRef, lastSavedFurnitureRef, lastSavedCablesRef, lastSavedVisibilityRef]);
 
     return applyProjectData;
 }

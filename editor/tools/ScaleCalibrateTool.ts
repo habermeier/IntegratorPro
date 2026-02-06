@@ -96,7 +96,7 @@ export class ScaleCalibrateTool implements Tool {
         if (this.points.length === 1) {
             const worldPos = this.editor.cameraSystem.screenToWorld(x, y);
             this.updatePreview(worldPos);
-            this.editor.setDirty();
+            this.editor.setNeedsRender();
         }
     }
 

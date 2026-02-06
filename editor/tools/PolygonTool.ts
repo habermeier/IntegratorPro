@@ -475,7 +475,7 @@ export class PolygonTool implements Tool {
             this.previewGroup.add(shadowVertex);
         });
 
-        this.editor.setDirty();
+        this.editor.setNeedsRender();
     }
 
     private finishPolygon(): void {

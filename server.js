@@ -497,6 +497,36 @@ app.get('/api/projects', (req, res) => {
     }
 });
 
+// POST /api/export-pdf - Save generated PDF to project exports
+app.post('/api/export-pdf/:projectId', (req, res) => {
+    try {
+        const projectId = req.params.projectId;
+        const filename = req.query.filename || `export-${Date.now()}.pdf`;
+        const projectDir = path.join(__dirname, 'projects', projectId);
+        const exportDir = path.join(projectDir, 'exports');
+
+        if (!fs.existsSync(exportDir)) {
+            fs.mkdirSync(exportDir, { recursive: true });
+        }
+
+        const filePath = path.join(exportDir, filename);
+
+        // Since we're using bodyParser.json, we expect base64 or similar if it's a large blob
+        // But for simplicity if we use a raw body parser or just base64 in JSON:
+        const { data } = req.body; // Expecting base64 string
+        if (!data) return res.status(400).json({ error: 'Missing PDF data' });
+
+        const buffer = Buffer.from(data, 'base64');
+        fs.writeFileSync(filePath, buffer);
+
+        console.log(`📑 PDF Export saved to: ${filePath}`);
+        res.json({ success: true, path: filePath, filename });
+    } catch (err) {
+        console.error('Error saving PDF export:', err);
+        res.status(500).json({ error: 'Failed to save PDF export' });
+    }
+});
+
 // ============================================================================
 // LEGACY ENDPOINTS (for debugging and backward compatibility)
 // ============================================================================

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Download, Upload } from 'lucide-react';
+import { Download, Upload, FileDown } from 'lucide-react';
 import { dataService } from '../src/services/DataService';
 
 export const ProjectManagement: React.FC = () => {
@@ -17,6 +17,11 @@ export const ProjectManagement: React.FC = () => {
             return { valid: false, error: 'Invalid project file: missing or invalid "devices" array' };
         }
         return { valid: true };
+    };
+
+    const handleGeneratePDF = () => {
+        const projectId = window.location.pathname.split('/').pop() || '270-bolla-ave';
+        window.location.href = `/floorplan/${projectId}?export=pdf`;
     };
 
     const handleExportProject = async () => {
@@ -76,6 +81,13 @@ export const ProjectManagement: React.FC = () => {
         <div className="space-y-2">
             <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 mb-1">Project</div>
             <div className="px-4 space-y-2">
+                <button
+                    onClick={handleGeneratePDF}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-900/40 hover:bg-blue-800/40 border border-blue-500/30 rounded text-xs font-bold text-blue-400 uppercase transition-all"
+                >
+                    <FileDown size={14} className="text-blue-500" />
+                    <span>Generate PDF Drawing</span>
+                </button>
                 <button
                     onClick={handleExportProject}
                     className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded text-xs font-bold text-slate-300 uppercase transition-all"

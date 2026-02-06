@@ -4,6 +4,8 @@ import ProjectBOM from './ProjectBOM';
 import { ViewMode } from '../types';
 import { PREFERRED_VENDORS } from '../constants';
 
+import { FileDown } from 'lucide-react';
+
 interface CoverSheetProps {
     modules: HardwareModule[];
     onNavigate?: (mode: ViewMode | 'COVER_SHEET', itemId?: string) => void;
@@ -11,6 +13,11 @@ interface CoverSheetProps {
 }
 
 const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate, highlightedModuleId }) => {
+
+    const handleGeneratePDF = () => {
+        const projectId = window.location.pathname.split('/').pop() || '270-bolla-ave';
+        window.location.href = `/floorplan/${projectId}?export=pdf`;
+    };
 
     // Auto-scroll logic for text sections
     React.useEffect(() => {
@@ -25,7 +32,16 @@ const CoverSheet: React.FC<CoverSheetProps> = ({ modules, onNavigate, highlighte
 
     return (
         <div className="p-0 md:p-8 bg-slate-950 text-slate-300 font-sans max-w-5xl mx-auto">
-            <h1 id="header-brief" className="hidden md:block text-4xl font-bold text-white mb-2">Project Brief</h1>
+            <div className="flex items-center justify-between mb-4 md:mb-6">
+                <h1 id="header-brief" className="hidden md:block text-4xl font-bold text-white uppercase tracking-tight">Project Brief</h1>
+                <button
+                    onClick={handleGeneratePDF}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-sm transition-all shadow-lg shadow-blue-600/20 active:scale-95"
+                >
+                    <FileDown size={18} />
+                    <span>Generate PDF Drawing</span>
+                </button>
+            </div>
 
             <div className="flex flex-col md:flex-row gap-2 md:gap-4 text-xs md:text-sm mb-6 md:mb-8 text-slate-400 bg-slate-900/50 p-2 md:p-0 rounded-lg md:bg-transparent">
                 <div className="flex justify-between md:justify-start gap-2">

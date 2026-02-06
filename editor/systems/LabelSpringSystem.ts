@@ -14,19 +14,23 @@ export class LabelSpringSystem {
     private velocities: Map<string, THREE.Vector3> = new Map();
 
     // Physics Constants (HYPER-STABLE)
-    private readonly K_REPEL_LABEL = 8;        // Reduced from 15
-    private readonly K_REPEL_OBSTACLE = 40;    // Reduced from 180 (Preventing explosive overshoot)
-    private readonly K_ATTRACT = 0.08;         // Slightly stronger to snap back efficiently
-    private readonly DAMPING = 0.2;            // Extreme damping (80% energy loss per frame)
-    private readonly MAX_VELOCITY = 10.0;      // Lower cap
-    private readonly EPSILON = 0.2;            // Higher convergence threshold
-    private readonly MIN_FORCE = 0.01;         // Ignore tiny forces
+    private readonly K_REPEL_LABEL = 30;        // Was 8
+    private readonly K_REPEL_OBSTACLE = 80;    // Was 40
+    private readonly K_ATTRACT_START = 0.05;   // Initial weak pull
+    private readonly K_ATTRACT_END = 0.3;      // Final strong tension (settling)
+    private readonly DAMPING_START = 0.8;      // Fluid initially
+    private readonly DAMPING_END = 0.05;       // High resistance at the end
+    private readonly MAX_VELOCITY = 15.0;      // Was 10
+    private readonly EPSILON = 0.1;            // Lower threshold for finer settling
+    private readonly MIN_FORCE = 0.005;        // Was 0.01
 
     private isActive: boolean = false;
     private isDirty: boolean = true;
     private lastZoom: number = -1;
     private activeFrames: number = 0;
-    private readonly MAX_ACTIVE_FRAMES = 120; // Hard limit for any single "simulation run"
+    private readonly MAX_ACTIVE_FRAMES = 450; // Increased to allow for break-out and re-settle
+    private readonly ENTROPY_START_FRAME = 150; // When to start the jitter
+    private readonly K_ENTROPY = 8.0;          // Magnitude of random break-out force
     private lastSyncTime: number = 0;
     private readonly SYNC_THROTTLE = 1000; // ms
 
@@ -65,6 +69,26 @@ export class LabelSpringSystem {
         let totalMotion = 0;
         this.activeFrames++;
 
+        // --- CALCULATE PHYSICS PARAMETERS (Annealing Model) ---
+        let tightness = 0;
+        let entropy = 0;
+
+        if (this.activeFrames <= this.ENTROPY_START_FRAME) {
+            // Phase 1: Initial stabilization attempt (0 -> 1)
+            tightness = this.activeFrames / this.ENTROPY_START_FRAME;
+            entropy = 0;
+        } else {
+            // Phase 2: Break-out and Re-settle (Multi-stage)
+            const breakoutProgress = (this.activeFrames - this.ENTROPY_START_FRAME) / (this.MAX_ACTIVE_FRAMES - this.ENTROPY_START_FRAME);
+
+            // Dip tightness in the middle (creating fluidity) and then tighten back up at the very end
+            // tightness: 1.0 -> 0.3 -> 1.0
+            tightness = 1.0 - (Math.sin(breakoutProgress * Math.PI) * 0.7);
+
+            // Increase entropy jitter during the loose phase
+            entropy = Math.sin(breakoutProgress * Math.PI);
+        }
+
         const forces = new Map<string, THREE.Vector3>();
 
         // 3. Calculate Forces
@@ -83,7 +107,14 @@ export class LabelSpringSystem {
             toAnchor.z = 0;
 
             if (toAnchor.length() > 0.001) {
-                force.add(toAnchor.multiplyScalar(this.K_ATTRACT));
+                const currentAttract = this.K_ATTRACT_START + (this.K_ATTRACT_END - this.K_ATTRACT_START) * tightness;
+                force.add(toAnchor.multiplyScalar(currentAttract));
+
+                // Add Entropy Jitter to break local minima
+                if (entropy > 0.01) {
+                    force.x += (Math.random() - 0.5) * this.K_ENTROPY * entropy;
+                    force.y += (Math.random() - 0.5) * this.K_ENTROPY * entropy;
+                }
             }
 
             // OBSTACLE AVOIDANCE
@@ -94,9 +125,9 @@ export class LabelSpringSystem {
                 diff.z = 0;
                 let distSq = diff.lengthSq();
 
-                // Nudge perfect overlaps
+                // Nudge perfect overlaps with a real kick to break symmetry
                 if (distSq < 0.0001) {
-                    diff.set(Math.random() - 0.5, Math.random() - 0.5, 0).normalize().multiplyScalar(0.01);
+                    diff.set(Math.random() - 0.5, Math.random() - 0.5, 0).normalize().multiplyScalar(0.5);
                     distSq = diff.lengthSq();
                 }
 
@@ -111,7 +142,7 @@ export class LabelSpringSystem {
                     labelRadius = label.scale.x * 0.5; // Fallback for Sprites
                 }
 
-                const combinedRadius = (obsRadius + labelRadius) * 1.1;
+                const combinedRadius = (obsRadius + labelRadius) * 1.5; // Was 1.1
                 const minDistanceSq = combinedRadius * combinedRadius;
 
                 if (distSq < minDistanceSq) {
@@ -129,13 +160,13 @@ export class LabelSpringSystem {
                 let distSq = diff.lengthSq();
 
                 if (distSq < 0.0001) {
-                    diff.set(Math.random() - 0.5, Math.random() - 0.5, 0).normalize().multiplyScalar(0.01);
+                    diff.set(Math.random() - 0.5, Math.random() - 0.5, 0).normalize().multiplyScalar(0.5);
                     distSq = diff.lengthSq();
                 }
 
                 const r1 = label.userData.physicsRadius || (label.scale.x * 0.5);
                 const r2 = other.userData.physicsRadius || (other.scale.x * 0.5);
-                const combinedRadius = (r1 + r2) * 1.05; // 5% Padding
+                const combinedRadius = (r1 + r2) * 1.5; // Was 1.05 (MUCH more padding)
                 const minDistanceSq = combinedRadius * combinedRadius;
 
                 if (distSq < minDistanceSq) {
@@ -164,7 +195,8 @@ export class LabelSpringSystem {
                 velocity.normalize().multiplyScalar(this.MAX_VELOCITY);
             }
 
-            velocity.multiplyScalar(this.DAMPING);
+            const currentDamping = this.DAMPING_START + (this.DAMPING_END - this.DAMPING_START) * tightness;
+            velocity.multiplyScalar(currentDamping);
 
             if (velocity.length() < this.EPSILON) {
                 velocity.set(0, 0, 0);
@@ -220,8 +252,8 @@ export class LabelSpringSystem {
         const currentLabels: THREE.Object3D[] = [];
         const currentObstacles: THREE.Object3D[] = [];
 
-        // Updated Layers: Added 'infrastructure' for new components (Disconnect, RSD, Inverter)
-        const targetLayerIds = ['lighting', 'room', 'furniture', 'technical', 'infrastructure'];
+        // Monitor all device-containing layers for obstacles and labels
+        const targetLayerIds = ['lighting', 'room', 'furniture', 'technical', 'infrastructure', 'lcps', 'network', 'security', 'sensors', 'hvac'];
 
         targetLayerIds.forEach(id => {
             const layer = layerSystem.getLayer(id);

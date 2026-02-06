@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import { FloorPlanEditor } from '../editor/FloorPlanEditor';
 import { Layer, ToolType } from '../editor/models/types';
 import BASE_IMAGE from '../images/floor-plan-clean.jpg';
@@ -26,6 +27,7 @@ import { AddPolygonCommand } from '../editor/commands/AddPolygonCommand';
 import { ScaleRuler } from './editor/ScaleRuler';
 import { FPSCounter } from './editor/FPSCounter';
 import { Layers } from 'lucide-react';
+import { ExportDialog } from './editor/ExportDialog';
 
 export const FloorPlanRenderer: React.FC = () => {
     const [editor, setEditor] = useState<FloorPlanEditor | null>(null);
@@ -77,6 +79,7 @@ export const FloorPlanRenderer: React.FC = () => {
     const lastSavedPolygonsRef = useRef<string>('');
     const lastSavedFurnitureRef = useRef<string>('');
     const lastSavedCablesRef = useRef<string>('');
+    const lastSavedVisibilityRef = useRef<string>('');
 
     // Auto-save functionality (extracted to useAutoSave hook)
     const {
@@ -90,6 +93,7 @@ export const FloorPlanRenderer: React.FC = () => {
         lastSavedPolygonsRef,
         lastSavedFurnitureRef,
         lastSavedCablesRef,
+        lastSavedVisibilityRef,
         dataLossThreshold
     );
 
@@ -110,7 +114,8 @@ export const FloorPlanRenderer: React.FC = () => {
         lastSavedSymbolsRef,
         lastSavedPolygonsRef,
         lastSavedFurnitureRef,
-        lastSavedCablesRef
+        lastSavedCablesRef,
+        lastSavedVisibilityRef
     }), [debouncedSaveProject]);
 
     // Auto-activate & show layers based on tool selection (extracted to useEditorEvents hook)
@@ -155,13 +160,22 @@ export const FloorPlanRenderer: React.FC = () => {
         lastSavedPolygonsRef,
         lastSavedFurnitureRef,
         lastSavedCablesRef,
+        lastSavedVisibilityRef,
         editorInitCallbacks
     );
+
+    const { projectId } = useParams<{ projectId: string }>();
 
     // Wire up the zoom cursor ref to the editor
     useEffect(() => {
         if (editor) {
             editor.setZoomCursorRef(zoomCursorRef);
+
+            // Sync Project ID from URL if provided
+            if (projectId) {
+                console.log(`📂 Routing detected Project ID: ${projectId}`);
+                dataService.setProjectId(projectId);
+            }
 
             // AUTO-DEBUG: Enable Lighting Intensity Mode if requested via URL
             const params = new URLSearchParams(window.location.search);
@@ -178,6 +192,12 @@ export const FloorPlanRenderer: React.FC = () => {
                     }
                 }, 500);
             }
+
+            // AUTO-EXPORT: Handle deep link export
+            if (params.get('export') === 'pdf') {
+                setIsExportOpen(true);
+                setIsAutoExport(true);
+            }
         }
     }, [editor]);
 
@@ -193,6 +213,8 @@ export const FloorPlanRenderer: React.FC = () => {
 
     const [showFPS, setShowFPS] = useState(false);
     const [isPresentationMode, setIsPresentationMode] = useState(false);
+    const [isExportOpen, setIsExportOpen] = useState(false);
+    const [isAutoExport, setIsAutoExport] = useState(false);
 
     useEffect(() => {
         if (!editor) return;
@@ -240,6 +262,14 @@ export const FloorPlanRenderer: React.FC = () => {
             }
 
             if (e.key === 'Escape') {
+                // 0. Priority: Dismiss Export Overlay
+                if (isExportOpen) {
+                    setIsExportOpen(false);
+                    setIsAutoExport(false);
+                    e.stopImmediatePropagation();
+                    return;
+                }
+
                 // 1. Priority: Clear Selection
                 if (selectedIds.length > 0) {
                     editor?.selectionSystem.clearSelection();
@@ -438,6 +468,7 @@ export const FloorPlanRenderer: React.FC = () => {
                     activeLayerName={layers.find(l => l.id === activeLayerId)?.name}
                     lastKey={lastKey || ''}
                     isZoomCursorEnabled={editor?.cameraSystem.getZoomCursorEnabled() ?? true}
+                    onExportClick={() => setIsExportOpen(true)}
                 />
             )}
 
@@ -595,6 +626,17 @@ export const FloorPlanRenderer: React.FC = () => {
                     }
                     onSave={handleSaveRoom}
                     onCancel={handleCancelRoom}
+                />
+            )}
+            {/* Export Dialog */}
+            {isExportOpen && (
+                <ExportDialog
+                    editor={editor}
+                    onClose={() => {
+                        setIsExportOpen(false);
+                        setIsAutoExport(false);
+                    }}
+                    autoStart={isAutoExport}
                 />
             )}
 

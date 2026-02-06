@@ -1,5 +1,5 @@
 import React from 'react';
-import { HelpCircle, Menu, Home, ChevronLeft } from 'lucide-react';
+import { HelpCircle, Menu, Home, ChevronLeft, FileDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ToolType } from '../../editor/models/types';
 import { FloorPlanEditor } from '../../editor/FloorPlanEditor';
@@ -13,9 +13,10 @@ interface EditorHUDProps {
     activeLayerName?: string;
     lastKey?: string;
     isZoomCursorEnabled?: boolean;
+    onExportClick?: () => void;
 }
 
-export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeTool, isEditMode, activeLayerName, lastKey, isZoomCursorEnabled }) => {
+export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeTool, isEditMode, activeLayerName, lastKey, isZoomCursorEnabled, onExportClick }) => {
     const navigate = useNavigate();
     const [isPrimary, setIsPrimary] = React.useState(() => dataService.isPrimary());
     const [showHelp, setShowHelp] = React.useState(false);
@@ -174,6 +175,15 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
                     >
                         🗑️
                     </button>
+                    <button
+                        onClick={onExportClick}
+                        className="p-2 hover:bg-blue-600/20 focus:bg-blue-600/20 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1.5 px-3 border border-blue-500/30 ml-2"
+                        title="Export high-quality architectural PDF (Ctrl+P)"
+                        aria-label="Generate PDF"
+                    >
+                        <FileDown size={18} />
+                        <span className="text-[10px] font-black uppercase tracking-widest hidden lg:inline">Generate PDF</span>
+                    </button>
                 </div>
             </div>
 
@@ -296,7 +306,8 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
                         </div>
                     </div>
                 </div>
-            )}
+            )
+            }
 
             {/* Unified Command Bar - Fixed at bottom for Zen Mode (AUTO-MAX-REAL-ESTATE-P21, AUTO-ULTIMATE-UX-P26) */}
             <div className="fixed bottom-16 left-1/2 transform -translate-x-1/2 z-[60] w-full px-4 pointer-events-none">
@@ -336,7 +347,7 @@ export const EditorHUD: React.FC<EditorHUDProps> = React.memo(({ editor, activeT
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 });
 

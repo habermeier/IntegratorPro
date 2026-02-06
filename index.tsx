@@ -1,7 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { Buffer } from 'buffer';
 import App from './App';
 import { BrowserRouter } from 'react-router-dom';
+
+// Polyfill Buffer for browser (required by @react-pdf/renderer)
+window.Buffer = Buffer;
+(window as any).process = { env: {} };
+(window as any).global = window;
 
 console.log('IntegratorPro: Starting index.tsx');
 

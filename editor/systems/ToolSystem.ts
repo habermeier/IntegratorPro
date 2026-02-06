@@ -48,6 +48,10 @@ export class ToolSystem {
         return this.activeTool?.type;
     }
 
+    public getActiveTool(): Tool | null {
+        return this.activeTool;
+    }
+
     public handleMouseDown(x: number, y: number, event: MouseEvent): void {
         this.activeTool?.onMouseDown?.(x, y, event);
     }

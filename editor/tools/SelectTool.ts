@@ -69,7 +69,7 @@ export class SelectTool implements Tool {
         remoteDebug('Selected IDs', 'SelectTool', { selectedIds });
         this.editor.emit('selection-changed', selectedIds);
         this.updateHandles();
-        this.editor.setDirty();
+        this.editor.setNeedsRender();
 
         // 4. Initiate Drag if we resolved a selection
         if (selectedIds.length > 0) {
@@ -119,7 +119,7 @@ export class SelectTool implements Tool {
                     poly.points[index] = { x: worldPos.x, y: worldPos.y };
                     this.editor.layerSystem.markDirty(layerId);
                     this.updateHandles();
-                    this.editor.setDirty();
+                    this.editor.setNeedsRender();
                 }
             }
         } else if (this.isDraggingSelection && this.dragStart) {
@@ -152,7 +152,7 @@ export class SelectTool implements Tool {
                     }
                 }
             });
-            this.editor.setDirty();
+            this.editor.setNeedsRender();
         } else if (hoverHit) {
             el.style.cursor = 'pointer';
         } else {
@@ -443,6 +443,6 @@ export class SelectTool implements Tool {
             this.handlesGroup.add(borderPoints);
         }
 
-        this.editor.setDirty();
+        this.editor.setNeedsRender();
     }
 }
